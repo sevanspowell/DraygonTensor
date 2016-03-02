@@ -295,7 +295,7 @@ Use namespaces as much as possible. Namespaces are primarily used to prevent
 name conflicts between our code and external libraries.
 
 ```
-namespace bb 
+namespace sea 
 {
 	class MyClass
 	{
@@ -305,12 +305,12 @@ namespace bb
 }
 ```
 
-`bb::MyClass variableName = bb::MyClass();`
+`sea::MyClass variableName = sea::MyClass();`
 
 Namespaces can also be used to group classes by function.
 
 ```
-namespace bb_math
+namespace sea_math
 {
 	class Mat4
 	{
@@ -320,9 +320,9 @@ namespace bb_math
 }
 ```
 
-`bb_math::Mat4 matrix = bb_math::Mat4();`
+`sea_math::Mat4 matrix = sea_math::Mat4();`
 
-New namespaces are always lowercase and prepended with the string “bb_”.
+New namespaces are always lowercase and prepended with the string “sea_”.
 
 ## Const usage
 
@@ -388,5 +388,5 @@ class Channel;
 
 All code should be sufficiently well-documented using Doxygen-style comments. In
 addition to this, systems or larger bodies of code should be appropriately
-documentated in the [Programmer's Manual](https://github.com/Izabia/DrunkenSailor/blob/master/docs/PROGRAMMERSMANUAL.md), this should include appropriate
-usage examples. 
+documentated in the [Programmer's Manual](https://github.com/Izabia/DrunkenSailorEngine/blob/master/docs/PROGRAMMERSMANUAL.md), this should include appropriate
+usage examples.
