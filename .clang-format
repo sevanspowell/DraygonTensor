@@ -1,0 +1,16 @@
+AlignTrailingComments: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortFunctionsOnASingleLine: false
+AlwaysBreakTemplateDeclarations: true
+AccessModifierOffset: -4
+BinPackParameters: false
+BreakBeforeBraces: Allman
+ColumnLimit: 80
+ConstructorInitializerAllOnOneLineOrOnePerLine: true 
+IndentWidth: 4
+Language: Cpp
+MaxEmptyLinesToKeep: 2
+PointerBindsToType: false
+Standard: Cpp11
+TabWidth: 4
+UseTab: Never
