@@ -87,7 +87,7 @@ Use the summary to briefly describe what changed, use the more detailed explanat
 The project structure is as follows:
 ```
  .
- +-- bin      // Output of build, that is the engine library file and header files.
+ +-- bin      // Output of build, i.e. the engine library file and header files.
  +-- build    // Out of source build directory, filled with CMake and compiler-specific files generated at compile time. 
               // May be deleted at any time to trigger a fresh build. This is where your project files will appear.
  +-- cmake    // Contains all the configuration files for the CMake build
