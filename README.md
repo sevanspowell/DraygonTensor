@@ -82,5 +82,5 @@ Also, please note that the first build may take upwards of 15 minutes as the dep
 
 ## Contributing
 
-Before contributing, consult the [contribution guidelines](https://github.com/Izabia/DrunkenSailorEngine/blob/sevanspowell_createBuildSystem/CONTRIBUTING.md).
+Before contributing, consult the [contribution guidelines](https://github.com/Izabia/DrunkenSailorEngine/blob/develop/CONTRIBUTING.md).
     
