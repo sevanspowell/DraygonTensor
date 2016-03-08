@@ -52,7 +52,7 @@ The `generate_project_buildtype` batch scripts will create an out-of-source buil
 OR
 
     git clone https://github.com/Izabia/DrunkenSailorEngine.git
-    cd bangbang
+    cd DrunkenSailorEngine
     mkdir build\superbuild
     cd build\superbuild
     cmake.exe ..\..\cmake\superbuild -DCMAKE_BUILD_TYPE=<Debug OR Release>
@@ -60,8 +60,8 @@ OR
 
 ### Xcode
 
-    git clone https://github.com/samdelion/bangbang.git
-    cd bangbang
+    git clone https://github.com/samdelion/DrunkenSailorEngine.git
+    cd DrunkenSailorEngine
     mkdir -p build/superbuild
     cd build/superbuild
     cmake ../../cmake/superbuild -G Xcode -DCMAKE_BUILD_TYPE=Debug
@@ -69,8 +69,8 @@ OR
 
 ### Makefile 
 
-    git clone https://github.com/samdelion/bangbang.git
-    cd bangbang
+    git clone https://github.com/samdelion/DrunkenSailorEngine.git
+    cd DrunkenSailorEngine
     mkdir -p build/superbuild
     cd build/superbuild
     cmake ../../cmake/superbuild
