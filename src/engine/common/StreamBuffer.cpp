@@ -67,7 +67,8 @@ const void *StreamBuffer::GetDataPtr() const
 {
     const void *ptr = nullptr;
 
-    if (m_buffer.size() > 0)
+    // Only get data ptr if buffer size is greater than 0 and less than size of buffer
+    if (m_buffer.size() > 0 && m_readPos < m_buffer.size())
     {
         ptr = &m_buffer[m_readPos];
     }

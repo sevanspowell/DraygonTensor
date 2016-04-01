@@ -6,7 +6,7 @@
 #include "engine/system/platform/Platform.h"
 #include "engine/system/input/Input.h"
 
-int main(void)
+int main(int argc, char **argv)
 {
     ds::Engine engine;
 
