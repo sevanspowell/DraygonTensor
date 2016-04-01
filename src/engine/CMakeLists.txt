@@ -1,11 +1,45 @@
 include_directories(..)
 
 set(ENGINE_INCLUDE_FILES
-  temp/Hello.h
+  Config.h
+  Engine.h
+  common/Common.h
+  common/StreamBuffer.h
+  common/StreamBuffer.hpp
+  common/StringIntern.h
+  message/Message.h
+  message/MessageBus.h
+  message/MessageFactory.h
+  system/Console.h
+  system/input/Input.h
+  system/input/InputContext.h
+  system/platform/Input.h
+  system/platform/Keyboard.h
+  system/platform/Platform.h
+  system/platform/Video.h
+  system/script/LuaEnvironment.h
+  system/script/LuaHelper.h
+  system/script/Script.h
 )
 
 set(ENGINE_SRC_FILES
-  temp/Hello.cpp
+  Config.cpp
+  Engine.cpp
+  common/Common.cpp
+  common/StreamBuffer.cpp
+  common/StringIntern.cpp
+  message/MessageBus.cpp
+  message/MessageFactory.cpp
+  system/Console.cpp
+  system/input/Input.cpp
+  system/input/InputContext.cpp
+  system/platform/Input.cpp
+  system/platform/Platform.cpp
+  system/platform/Video.cpp
+  system/script/LuaAPI.cpp
+  system/script/LuaEnvironment.cpp
+  system/script/LuaHelper.cpp
+  system/script/Script.cpp
 )
 
 add_library(drunken_sailor_engine STATIC ${ENGINE_INCLUDE_FILES} ${ENGINE_SRC_FILES})

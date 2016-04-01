@@ -1,3 +1,7 @@
 subdirs(
-  sound
+    console
+    platform
+    script
+    script_console
+    sound
 )

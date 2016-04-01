@@ -1,0 +1,30 @@
+{
+    "Video": {
+        "redBits": 8,
+        "greenBits": 8,
+        "blueBits": 8,
+        "alphaBits": 8,
+        
+        "depthBits": 24,
+        "stencilBits": 8,
+
+        "fullscreen": false,
+        "lockMouse": false,
+
+        "Dimensions" : {
+            "width": 800,
+            "height": 600
+        },
+
+        "title": "Hello world!",
+
+        "renderer": "openGL",
+        "majorVersion": 3,
+        "minorVersion": 3,
+        "profile": "core"
+    },
+
+    "Script": {
+        "bootScript": "../assets/boot.lua"
+    }
+}
