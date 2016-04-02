@@ -14,6 +14,11 @@
 
 namespace ds
 {
+Config::Config()
+{
+    m_isLoaded = false;
+}
+
 bool Config::LoadFile(const std::string &filePath)
 {
     bool result = false;
@@ -56,7 +61,15 @@ bool Config::LoadFile(const std::string &filePath)
         free(readBuffer);
     }
 
+    // Update our status
+    m_isLoaded = result;
+
     return result;
+}
+
+bool Config::IsLoaded() const
+{
+    return m_isLoaded;
 }
 
 rapidjson::Value::ConstMemberIterator
@@ -181,17 +194,20 @@ bool Config::GetUnsignedInt(const std::string &key, unsigned int *uint) const
 
     rapidjson::Value::ConstMemberIterator valueIt = GetDocumentMember(key);
 
-    if (valueIt != m_document.MemberEnd())
+    if (IsLoaded())
     {
-        if (valueIt->value.IsUint())
+        if (valueIt != m_document.MemberEnd())
         {
-            *uint = valueIt->value.GetUint();
-            result = true;
-        }
-        else
-        {
-            std::cerr << "Config::GetUnsignedInt: Warning: '" << key
-                      << "' is not an unsigned int." << std::endl;
+            if (valueIt->value.IsUint())
+            {
+                *uint = valueIt->value.GetUint();
+                result = true;
+            }
+            else
+            {
+                std::cerr << "Config::GetUnsignedInt: Warning: '" << key
+                          << "' is not an unsigned int." << std::endl;
+            }
         }
     }
 
@@ -202,19 +218,22 @@ bool Config::GetBool(const std::string &key, bool *boolean) const
 {
     bool result = false;
 
-    rapidjson::Value::ConstMemberIterator valueIt = GetDocumentMember(key);
-
-    if (valueIt != m_document.MemberEnd())
+    if (IsLoaded())
     {
-        if (valueIt->value.IsBool())
+        rapidjson::Value::ConstMemberIterator valueIt = GetDocumentMember(key);
+
+        if (valueIt != m_document.MemberEnd())
         {
-            *boolean = valueIt->value.GetBool();
-            result = true;
-        }
-        else
-        {
-            std::cerr << "Config::GetBool: Warning: '" << key
-                      << "' is not a bool." << std::endl;
+            if (valueIt->value.IsBool())
+            {
+                *boolean = valueIt->value.GetBool();
+                result = true;
+            }
+            else
+            {
+                std::cerr << "Config::GetBool: Warning: '" << key
+                          << "' is not a bool." << std::endl;
+            }
         }
     }
 
@@ -225,19 +244,22 @@ bool Config::GetString(const std::string &key, std::string *string) const
 {
     bool result = false;
 
-    rapidjson::Value::ConstMemberIterator valueIt = GetDocumentMember(key);
-
-    if (valueIt != m_document.MemberEnd())
+    if (IsLoaded())
     {
-        if (valueIt->value.IsString())
+        rapidjson::Value::ConstMemberIterator valueIt = GetDocumentMember(key);
+
+        if (valueIt != m_document.MemberEnd())
         {
-            *string = valueIt->value.GetString();
-            result = true;
-        }
-        else
-        {
-            std::cerr << "Config::GetString: Warning: '" << key
-                      << "' is not a string." << std::endl;
+            if (valueIt->value.IsString())
+            {
+                *string = valueIt->value.GetString();
+                result = true;
+            }
+            else
+            {
+                std::cerr << "Config::GetString: Warning: '" << key
+                          << "' is not a string." << std::endl;
+            }
         }
     }
 
@@ -248,24 +270,27 @@ std::vector<std::string> Config::GetObjectKeys(const std::string &key) const
 {
     std::vector<std::string> contents;
 
-    rapidjson::Value::ConstMemberIterator valueIt = GetDocumentMember(key);
-
-    if (valueIt != m_document.MemberEnd())
+    if (IsLoaded())
     {
-        if (valueIt->value.IsObject())
-        {
-            rapidjson::Value::ConstObject object = valueIt->value.GetObject();
+        rapidjson::Value::ConstMemberIterator valueIt = GetDocumentMember(key);
 
-            rapidjson::Value::ConstMemberIterator it = object.MemberBegin();
-            for (; it != object.MemberEnd(); ++it)
-            {
-                contents.push_back(it->name.GetString());
-            }
-        }
-        else
+        if (valueIt != m_document.MemberEnd())
         {
-            std::cerr << "Config::GetString: Warning: '" << key
-                      << "' is not an object." << std::endl;
+            if (valueIt->value.IsObject())
+            {
+                rapidjson::Value::ConstObject object = valueIt->value.GetObject();
+
+                rapidjson::Value::ConstMemberIterator it = object.MemberBegin();
+                for (; it != object.MemberEnd(); ++it)
+                {
+                    contents.push_back(it->name.GetString());
+                }
+            }
+            else
+            {
+                std::cerr << "Config::GetString: Warning: '" << key
+                          << "' is not an object." << std::endl;
+            }
         }
     }
 
