@@ -17,6 +17,7 @@ set(ENGINE_INCLUDE_FILES
   system/platform/Keyboard.h
   system/platform/Platform.h
   system/platform/Video.h
+  system/platform/Window.h
   system/script/LuaEnvironment.h
   system/script/LuaHelper.h
   system/script/Script.h
@@ -36,6 +37,7 @@ set(ENGINE_SRC_FILES
   system/platform/Input.cpp
   system/platform/Platform.cpp
   system/platform/Video.cpp
+  system/platform/Window.cpp
   system/script/LuaAPI.cpp
   system/script/LuaEnvironment.cpp
   system/script/LuaHelper.cpp

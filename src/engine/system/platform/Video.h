@@ -1,7 +1,7 @@
 #pragma once
 
-// #include "engine/system/platform/Window.h"
 #include "engine/Config.h"
+#include "engine/system/platform/Window.h"
 
 namespace ds_platform
 {
@@ -31,6 +31,6 @@ public:
     void Shutdown();
 
 private:
-    // Window m_window;
+    Window m_window;
 };
 }

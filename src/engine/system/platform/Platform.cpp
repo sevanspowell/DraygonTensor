@@ -53,6 +53,8 @@ void Platform::Update(float deltaTime)
 
 void Platform::Shutdown()
 {
+    m_video.Shutdown();
+
     SDL_Quit();
 }
 
