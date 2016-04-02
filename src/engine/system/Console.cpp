@@ -7,7 +7,7 @@ bool Console::Initialize(const Config &config)
 {
     bool result = true;
 
-    isConsoleOpen = false;
+    m_isConsoleOpen = false;
 
     // Send system init message
     ds_msg::MessageHeader header;
@@ -79,8 +79,8 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::SystemInit initMsg;
             (*messages) >> initMsg;
 
-            m_buffer << initMsg.systemName << " system initialized."
-                     << std::endl;
+            m_buffer << "Console out: " << initMsg.systemName
+                     << " system initialized." << std::endl;
             break;
         case ds_msg::MessageType::ConfigLoad:
             ds_msg::ConfigLoad configLoadMsg;
@@ -88,12 +88,14 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
 
             if (configLoadMsg.didLoad)
             {
-                m_buffer << "Loaded config file: \""
+                m_buffer << "Console out: "
+                         << "Loaded config file: \""
                          << configLoadMsg.configFilePath << "\"" << std::endl;
             }
             else
             {
-                m_buffer << "Failed to load config file: \""
+                m_buffer << "Console out: "
+                         << "Failed to load config file: \""
                          << configLoadMsg.configFilePath << "\"" << std::endl;
             }
             break;
@@ -101,7 +103,8 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::ScriptInterpret scriptMsg;
             (*messages) >> scriptMsg;
 
-            m_buffer << "Executed script command: "
+            m_buffer << "Console out: "
+                     << "Executed script command: "
                      << StringIntern::Instance().GetString(scriptMsg.stringId)
                      << std::endl;
             break;
@@ -109,17 +112,21 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::KeyboardEvent keyEvent;
             (*messages) >> keyEvent;
 
-            if (keyEvent.state == ds::Keyboard::State::Key_Pressed)
+            if (keyEvent.state == ds_platform::Keyboard::State::Key_Pressed)
             {
-                m_buffer << "Key pressed: '" << (char)keyEvent.key << "'."
-                         << std::endl;
+                m_buffer << "Console out: "
+                         << "Key pressed: '"
+                         << ds_platform::Keyboard::PrintKey(keyEvent.key)
+                         << "'." << std::endl;
 
-                if (keyEvent.key == Keyboard::Key::Key_Backspace &&
+                if (keyEvent.key == ds_platform::Keyboard::Key::Key_Backspace &&
                     m_inputText.length() > 0)
                 {
                     m_inputText.pop_back();
                 }
-                else if (keyEvent.key == Keyboard::Key::Key_Return)
+                else if (keyEvent.key ==
+                             ds_platform::Keyboard::Key::Key_Return &&
+                         m_isConsoleOpen)
                 {
                     // Send message to Script system to execute Lua code
                     // inputted into console.
@@ -137,23 +144,28 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
                     m_inputText.clear();
                 }
             }
-            else if (keyEvent.state == ds::Keyboard::State::Key_Released)
+            else if (keyEvent.state ==
+                     ds_platform::Keyboard::State::Key_Released)
             {
-                m_buffer << "Key released: '" << (char)keyEvent.key << "'."
-                         << std::endl;
+                m_buffer << "Console out: "
+                         << "Key released: '"
+                         << ds_platform::Keyboard::PrintKey(keyEvent.key)
+                         << "'." << std::endl;
             }
             break;
         case ds_msg::MessageType::QuitEvent:
             ds_msg::QuitEvent quitEvent;
             (*messages) >> quitEvent;
 
-            m_buffer << "Quit event." << std::endl;
+            m_buffer << "Console out: "
+                     << "Quit event." << std::endl;
             break;
         case ds_msg::MessageType::ConsoleToggle:
             ds_msg::ConsoleToggle consoleToggle;
             (*messages) >> consoleToggle;
 
-            m_buffer << "Console toggled." << std::endl;
+            m_buffer << "Console out:"
+                     << "Console toggled." << std::endl;
 
             if (m_inputText.length() > 0)
             {
@@ -162,18 +174,19 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             }
 
             // Open or close console
-            isConsoleOpen = !isConsoleOpen;
+            m_isConsoleOpen = !m_isConsoleOpen;
             break;
         case ds_msg::MessageType::TextInput:
             ds_msg::TextInput textInput;
             (*messages) >> textInput;
 
-            m_buffer << "Text input: "
+            m_buffer << "Console out: "
+                     << "Text input: "
                      << StringIntern::Instance().GetString(textInput.stringId)
                      << std::endl;
 
             // If console is open, accept text input.
-            if (isConsoleOpen == true)
+            if (m_isConsoleOpen == true)
             {
                 m_inputText +=
                     StringIntern::Instance().GetString(textInput.stringId);

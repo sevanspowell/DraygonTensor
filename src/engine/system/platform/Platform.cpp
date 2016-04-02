@@ -114,25 +114,27 @@ void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
     }
 }
 
-Keyboard::Key Platform::ConvertSDL2KeyToPlatformKey(SDL_Keycode keyCode) const
+ds_platform::Keyboard::Key
+Platform::ConvertSDL2KeyToPlatformKey(SDL_Keycode keyCode) const
 {
-    Keyboard::Key key = (Keyboard::Key)keyCode;
+    ds_platform::Keyboard::Key key = (ds_platform::Keyboard::Key)keyCode;
 
     return key;
 }
 
-Keyboard::State
+ds_platform::Keyboard::State
 Platform::ConvertSDL2KeyStateToPlatformKeyState(uint8_t state) const
 {
-    Keyboard::State keyState = Keyboard::State::Key_Pressed;
+    ds_platform::Keyboard::State keyState =
+        ds_platform::Keyboard::State::Key_Pressed;
 
     switch (state)
     {
     case SDL_PRESSED:
-        keyState = Keyboard::State::Key_Pressed;
+        keyState = ds_platform::Keyboard::State::Key_Pressed;
         break;
     case SDL_RELEASED:
-        keyState = Keyboard::State::Key_Released;
+        keyState = ds_platform::Keyboard::State::Key_Released;
         break;
     default:
         assert("Unhandled key state\n");

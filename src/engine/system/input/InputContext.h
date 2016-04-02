@@ -37,20 +37,21 @@ public:
      *
      * Note: will overwrite previous key bind if it already exists.
      *
-     * @param  key            Keyboard::Key, key to bind message string to
+     * @param  key            ds_platform::Keyboard::Key, key to bind message
+     * string to
      * @param  messageString  std::string, message string.
      */
-    void BindKey(Keyboard::Key key, std::string messageString);
+    void BindKey(ds_platform::Keyboard::Key key, std::string messageString);
 
     /**
      * Gets the message string bound to the given key.
      *
      * Returns an empty string if no keybind for that key exists.
      *
-     * @param   key  Keyboard::Key, key to get message string for.
+     * @param   key  ds_platform::Keyboard::Key, key to get message string for.
      * @return       std::string, message string.
      */
-    std::string GetMessageString(Keyboard::Key key) const;
+    std::string GetMessageString(ds_platform::Keyboard::Key key) const;
 
     /**
      * Get the input context's name.
@@ -62,7 +63,7 @@ public:
 private:
     // Map key code to message string (message string is passed to message
     // factory to create message)
-    std::map<Keyboard::Key, std::string> m_keyToMessageStringMap;
+    std::map<ds_platform::Keyboard::Key, std::string> m_keyToMessageStringMap;
 
     // Name of context
     std::string m_name;

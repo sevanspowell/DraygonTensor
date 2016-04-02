@@ -1,6 +1,8 @@
 #pragma once
 
-namespace ds
+#include <string>
+
+namespace ds_platform
 {
 class Keyboard
 {
@@ -102,8 +104,28 @@ public:
         Key_Insert = 0x40000049,
         Key_Home = 0x4000004A,
         Key_PageUp = 0x4000004B,
+        Key_End = 0x4000004D,
+        Key_PageDown = 0x4000004E,
+        Key_RightArrow = 0x4000004F,
+        Key_LeftArrow = 0x40000050,
+        Key_DownArrow = 0x40000051,
+        Key_UpArrow = 0x40000052,
+        Key_LCtrl = 0x400000E0,
+        Key_LShift = 0x400000E1,
+        Key_LAlt = 0x400000E2,
+        Key_RCtrl = 0x400000E4,
+        Key_RShift = 0x400000E5,
+        Key_RAlt = 0x400000E6,
 
         Key_Last = ~0x0,
     };
+
+    /**
+     * Get a string representing the given key.
+     *
+     * @param   key  Key, key to get string for.
+     * @return       std::string, string representing key.
+     */
+    static std::string PrintKey(Key key);
 };
 }

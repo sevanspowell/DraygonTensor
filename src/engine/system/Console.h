@@ -78,6 +78,6 @@ private:
     std::string m_inputText;
 
     // Has the input console been opened
-    bool isConsoleOpen;
+    bool m_isConsoleOpen;
 };
 }

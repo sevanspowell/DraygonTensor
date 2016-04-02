@@ -68,11 +68,11 @@ struct ScriptInterpret
 
 struct KeyboardEvent
 {
-    ds::Keyboard::Key key;     // Key that was pressed/released
-    ds::Keyboard::State state; // State of the key (pressed/released)
-    bool repeat;               // TRUE if this is a key repeat, FALSE otherwise.
-    uint32_t timeStamp;        // Time stamp of key event
-    uint32_t windowID;         // ID of window with focus (if any)
+    ds_platform::Keyboard::Key key;     // Key that was pressed/released
+    ds_platform::Keyboard::State state; // State of the key (pressed/released)
+    bool repeat;        // TRUE if this is a key repeat, FALSE otherwise.
+    uint32_t timeStamp; // Time stamp of key event
+    uint32_t windowID;  // ID of window with focus (if any)
 };
 
 struct QuitEvent

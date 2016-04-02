@@ -35,6 +35,7 @@ set(ENGINE_SRC_FILES
   system/input/Input.cpp
   system/input/InputContext.cpp
   system/platform/Input.cpp
+  system/platform/Keyboard.cpp
   system/platform/Platform.cpp
   system/platform/Video.cpp
   system/platform/Window.cpp
