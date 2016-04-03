@@ -72,17 +72,20 @@ private:
      * Convert an SDL2 key state to an API-independent representation.
      *
      * @param   state  uint8_t, SDL2 key state.
-     * @return         Keyboard::State, engine keyboard state representation.
+     * @return         ds_platform::Keyboard::State, engine keyboard state
+     * representation.
      */
-    Keyboard::State ConvertSDL2KeyStateToPlatformKeyState(uint8_t state) const; 
+    ds_platform::Keyboard::State
+    ConvertSDL2KeyStateToPlatformKeyState(uint8_t state) const;
 
     /**
      * Convert an SDL2 key to an API-independent representation.
      *
      * @param   state  uint8_t, SDL2 key.
-     * @return         Keyboard::State, engine key representation.
+     * @return         ds_platform::Keyboard::State, engine key representation.
      */
-    Keyboard::Key ConvertSDL2KeyToPlatformKey(SDL_Keycode keyCode) const;
+    ds_platform::Keyboard::Key
+    ConvertSDL2KeyToPlatformKey(SDL_Keycode keyCode) const;
 
     /**
      * Process messages in the given message stream.

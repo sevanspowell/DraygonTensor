@@ -86,11 +86,12 @@ private:
      * Get the key code for the given key name.
      *
      * @param   keyName  std::string, name of the key to get keycode for.
-     * @param   key      Keyboard::Key *, where to place key code if method
-     *                   is successful.
+     * @param   key      ds_platform::Keyboard::Key *, where to place key code
+     *                   if method is successful.
      * @return           bool, TRUE if key name is found, FALSE otherwise.
      */
-    bool GetKeyCodeForKeyName(std::string keyName, Keyboard::Key *key) const;
+    bool GetKeyCodeForKeyName(std::string keyName,
+                              ds_platform::Keyboard::Key *key) const;
 
     /**
      * Process messages in the given message stream.
@@ -101,7 +102,8 @@ private:
 
     // Map key string provided by user in their config to a key code
     // Eg. map "w" to Key::Key_w
-    std::unordered_map<std::string, Keyboard::Key> m_keyNameToKeyCodeMap;
+    std::unordered_map<std::string, ds_platform::Keyboard::Key>
+        m_keyNameToKeyCodeMap;
 
     // Input context stack
     std::vector<InputContext> m_inputContextStack;
