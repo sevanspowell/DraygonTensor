@@ -6,7 +6,7 @@ int main(void)
 {
     sf::SoundBuffer buffer;
 
-    if (!buffer.loadFromFile("sound.wav"))
+    if (!buffer.loadFromFile("../assets/sound.wav"))
         return -1;
 
     sf::Sound sound;
