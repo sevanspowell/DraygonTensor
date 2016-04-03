@@ -55,7 +55,7 @@ public:
         Key_At = '@',
         Key_LeftBracket = '[',
         Key_RightBracket = ']',
-        Caret = '^',
+        Key_Caret = '^',
         Key_UnderScore = '_',
         Key_BackQuote = '`',
         Key_a = 'a',

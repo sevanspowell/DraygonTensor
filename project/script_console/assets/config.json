@@ -11,10 +11,8 @@
         "fullscreen": false,
         "lockMouse": false,
 
-        "Dimensions" : {
-            "width": 800,
-            "height": 600
-        },
+        "width": 800,
+        "height": 600,
 
         "title": "Hello world!",
 
@@ -31,7 +29,7 @@
     "Input": {
         "Default": {
             "`": "console_toggle",
-            "q": "quit"
+            "Escape": "quit"
         }
     }
 }

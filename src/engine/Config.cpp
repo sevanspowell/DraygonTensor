@@ -157,11 +157,13 @@ Config::GetDocumentMember(const std::string &key) const
                     {
                         std::cerr << "Config::GetDocumentMember: Warning: "
                                      "Could not find '";
-                        for (std::vector<std::string>::const_iterator
-                                 tokenPrint = tokens.begin();
-                             tokenPrint != tokenIt + 1; ++tokenPrint)
+                        std::vector<std::string>::const_iterator tokenPrint =
+                            tokens.begin();
+                        std::cerr << *tokenPrint;
+                        ++tokenPrint;
+                        for (; tokenPrint != tokenIt + 1; ++tokenPrint)
                         {
-                            std::cerr << *tokenPrint << ".";
+                            std::cerr << "." << *tokenPrint;
                         }
                         std::cerr << "' in config file." << std::endl;
                         break;
@@ -278,7 +280,8 @@ std::vector<std::string> Config::GetObjectKeys(const std::string &key) const
         {
             if (valueIt->value.IsObject())
             {
-                rapidjson::Value::ConstObject object = valueIt->value.GetObject();
+                rapidjson::Value::ConstObject object =
+                    valueIt->value.GetObject();
 
                 rapidjson::Value::ConstMemberIterator it = object.MemberBegin();
                 for (; it != object.MemberEnd(); ++it)
