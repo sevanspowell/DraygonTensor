@@ -132,3 +132,89 @@ TEST(StreamBuffer, OperatorsInsertExtractLargerStructure)
     EXPECT_EQ(pA.y, pB.y);
     EXPECT_EQ(pA.z, pB.z);
 }
+
+TEST(StreamBuffer, PeekDataWorks)
+{
+    ds_com::StreamBuffer stream;
+
+    struct Vector3
+    {
+        float x, y, z;
+    };
+
+    Vector3 point = {0.1f, 1.0f, -3.0f};
+    point.x = 1.0f;
+    point.y = 1.0f;
+    point.z = 1.0f;
+
+    stream.Insert(sizeof(Vector3), &point);
+
+    Vector3 extractedPoint = {0.0f, 0.0f, 0.0f};
+    EXPECT_EQ(true, stream.Peek<Vector3>(&extractedPoint));
+    EXPECT_EQ(point.x, extractedPoint.x);
+    EXPECT_EQ(point.y, extractedPoint.y);
+    EXPECT_EQ(point.z, extractedPoint.z);
+}
+
+TEST(StreamBuffer, PeekDataDoesntMoveReadHead)
+{
+    ds_com::StreamBuffer stream;
+
+    struct Vector3
+    {
+        float x, y, z;
+    };
+
+    Vector3 point = {0.1f, 1.0f, -3.0f};
+    point.x = 1.0f;
+    point.y = 1.0f;
+    point.z = 1.0f;
+
+    stream.Insert(sizeof(Vector3), &point);
+
+    Vector3 extractedPoint = {0.0f, 0.0f, 0.0f};
+    EXPECT_EQ(true, stream.Peek<Vector3>(&extractedPoint));
+    EXPECT_EQ(point.x, extractedPoint.x);
+    EXPECT_EQ(point.y, extractedPoint.y);
+    EXPECT_EQ(point.z, extractedPoint.z);
+
+    extractedPoint = {0.0f, 0.0f, 0.0f};
+    EXPECT_EQ(true, stream.Peek<Vector3>(&extractedPoint));
+    EXPECT_EQ(point.x, extractedPoint.x);
+    EXPECT_EQ(point.y, extractedPoint.y);
+    EXPECT_EQ(point.z, extractedPoint.z);
+}
+
+TEST(StreamBuffer, SetStreamBuffer)
+{
+    ds_com::StreamBuffer stream;
+
+    char write = 'a';
+    stream.Set(&write);
+    // stream.Insert(sizeof(char), &write);
+
+    char read;
+    EXPECT_EQ(true, stream.Extract(sizeof(char), &read));
+
+    EXPECT_EQ(write, read);
+}
+
+TEST(StreamBuffer, SetStreamBufferLargerStructure)
+{
+    ds_com::StreamBuffer stream;
+
+    struct Vector3
+    {
+        float x, y, z;
+    };
+
+    Vector3 pA = {-1.34f, 3.04f, 0.99f};
+    Vector3 pB = {0.0f, 0.0f, 0.0f};
+
+    stream.Set(&pA);
+    stream >> pB;
+
+    EXPECT_EQ(pA.x, pB.x);
+    EXPECT_EQ(pA.y, pB.y);
+    EXPECT_EQ(pA.z, pB.z);
+}

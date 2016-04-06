@@ -41,8 +41,33 @@ public:
      * @param  dataOut  void *const, pointer to where extracted data should be
      *                  stored. Nullptr if you don't want to store the data
      *                  anywhere.
+     * @return          bool, TRUE if extraction was successful (enough data to
+     *                  read), FALSE otherwise.
      */
     bool Extract(size_t size, void *const dataOut = nullptr);
+
+    /**
+     * Extract data from the stream buffer, of the size of the parameterized
+     * type, but do not advance the read head.
+     *
+     * @param  dataOut  T *const, pointer to parameterized type, where extracted
+     *                  data should be stored. Nullptr if you don't want to
+     *                  store the data anywhere.
+     * @return          bool, TRUE if extraction was successful (enough data to
+     *                  read), FALSE otherwise.
+     */
+    template <typename T>
+    bool Peek(T *const dataOut = nullptr) const;
+
+    /**
+     * Set the data in the stream buffer. Clears any data already in the
+     * stream buffer and puts the new data at the start of the stream buffer.
+     *
+     * @param  dataIn  const T *const, pointer to data to insert into the
+     *                 buffer.
+     */
+    template <typename T>
+    void Set(const T *const dataIn);
 
     /**
      * Return the number of bytes left in the buffer.
