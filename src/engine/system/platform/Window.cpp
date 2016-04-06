@@ -27,7 +27,7 @@ bool Window::Create()
 {
     return CreateSDL2Window(redBits, greenBits, blueBits, alphaBits, depthBits,
                             stencilBits, lockMouse, fullscreen, title, width,
-                            height, &_window);
+                            height, contextInfo, &_window);
 }
 
 void Window::Destroy()
@@ -51,7 +51,7 @@ bool Window::CreateSDL2Window(unsigned int redBits,
                               const std::string &title,
                               unsigned int width,
                               unsigned int height,
-                              // Context::ContextInfo contextInfo,
+                              GraphicsContext::ContextInfo contextInfo,
                               SDL_Window **window)
 {
     bool result = false;
@@ -83,14 +83,14 @@ bool Window::CreateSDL2Window(unsigned int redBits,
     }
 
     // Pre-window creation steps
-    // switch (contextInfo.type)
-    // {
-    // case Context::ContextType::OpenGL:
-    //     flags |= SDL_WINDOW_OPENGL;
-    //     break;
-    // default:
-    //     break;
-    // }
+    switch (contextInfo.type)
+    {
+    case GraphicsContext::ContextType::OpenGL:
+        flags |= SDL_WINDOW_OPENGL;
+        break;
+    default:
+        break;
+    }
 
     // Create window
     *window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED,
@@ -106,28 +106,29 @@ bool Window::CreateSDL2Window(unsigned int redBits,
     }
 
     // Post-window creation steps
-    // switch (contextInfo.type)
-    // {
-    // case Context::ContextType::OpenGL:
-    //     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,
-    //                         contextInfo.openGL.majorVersion);
-    //     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,
-    //                         contextInfo.openGL.minorVersion);
+    switch (contextInfo.type)
+    {
+    case GraphicsContext::ContextType::OpenGL:
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,
+                            contextInfo.openGL.majorVersion);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,
+                            contextInfo.openGL.minorVersion);
 
-    //     strcmp(contextInfo.openGL.profile, "core") == 0
-    //         ? SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-    //                               SDL_GL_CONTEXT_PROFILE_CORE)
-    //         : SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-    //                               SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+        contextInfo.openGL.profile ==
+                GraphicsContext::ContextProfileOpenGL::Core
+            ? SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                                  SDL_GL_CONTEXT_PROFILE_CORE)
+            : SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                                  SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 
-    //     _openGLContext = SDL_GL_CreateContext(_window);
+        _openGLContext = SDL_GL_CreateContext(_window);
 
-    //     // Disable VSync
-    //     // SDL_GL_SetSwapInterval(0);
-    //     break;
-    // default:
-    //     break;
-    // }
+        // Disable VSync
+        // SDL_GL_SetSwapInterval(0);
+        break;
+    default:
+        break;
+    }
 
     std::cout << SDL_GetError() << std::endl;
 

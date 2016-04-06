@@ -41,11 +41,16 @@ void Platform::Update(float deltaTime)
 {
     SDL_Event event;
 
+    // Grab events from platform
     while (SDL_PollEvent(&event))
     {
         AppendSDL2EventToGeneratedMessages(event);
     }
 
+    // Grab events from video system and add them to messages generated
+    AppendStreamBuffer(m_messagesGenerated, m_video.CollectMessages());
+
+    // Process events
     ProcessEvents(&m_messagesReceived);
 
     m_video.Update();

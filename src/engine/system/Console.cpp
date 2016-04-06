@@ -193,6 +193,29 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
                 std::cout << m_inputText << std::endl;
             }
             break;
+        case ds_msg::MessageType::GraphicsContextCreated:
+            ds_msg::GraphicsContextCreated gfxContext;
+            (*messages) >> gfxContext;
+
+            if (gfxContext.contextInfo.type ==
+                ds_platform::GraphicsContext::ContextType::OpenGL)
+            {
+                m_buffer << "Console out: ";
+                m_buffer << "OpenGL context created version "
+                         << gfxContext.contextInfo.openGL.majorVersion << "."
+                         << gfxContext.contextInfo.openGL.minorVersion;
+                if (gfxContext.contextInfo.openGL.profile ==
+                    ds_platform::GraphicsContext::ContextProfileOpenGL::
+                        Compatability)
+                {
+                    m_buffer << " (compatability profile)." << std::endl;
+                }
+                else
+                {
+                    m_buffer << " (core profile)." << std::endl;
+                }
+            }
+            break;
         default:
             messages->Extract(header.size);
 

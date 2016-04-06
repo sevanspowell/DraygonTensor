@@ -2,6 +2,7 @@
 
 #include "engine/common/StreamBuffer.h"
 #include "engine/common/StringIntern.h"
+#include "engine/system/platform/GraphicsContext.h"
 #include "engine/system/platform/Keyboard.h"
 
 namespace ds_msg
@@ -37,6 +38,8 @@ enum class MessageType
     ConsoleToggle,
     // On text input
     TextInput,
+    // On graphics context creation
+    GraphicsContextCreated,
 };
 
 /**
@@ -89,5 +92,11 @@ struct TextInput
                                          // by this text input event.
     uint32_t timeStamp;                  // Time stamp of text input event
     uint32_t windowID;                   // ID of window with focus (if any)
+};
+
+struct GraphicsContextCreated
+{
+    ds_platform::GraphicsContext::ContextInfo
+        contextInfo; // Information on the graphics context created
 };
 }

@@ -4,6 +4,8 @@
 
 #include <SDL2/SDL.h>
 
+#include "engine/system/platform/GraphicsContext.h"
+
 namespace ds_platform
 {
 /**
@@ -99,7 +101,7 @@ public:
     std::string title;
 
     // Graphics context
-    // Context::ContextInfo contextInfo;
+    GraphicsContext::ContextInfo contextInfo;
 
 private:
     /**
@@ -136,10 +138,10 @@ private:
                           const std::string &title,
                           unsigned int width,
                           unsigned int height,
-                          // Context::ContextInfo context,
+                          GraphicsContext::ContextInfo context,
                           SDL_Window **window);
 
     SDL_Window *_window;
-    // SDL_GLContext _openGLContext;
+    SDL_GLContext _openGLContext;
 };
 }
