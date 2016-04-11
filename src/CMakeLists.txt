@@ -1,1 +1,1 @@
-subdirs(engine)
+subdirs(engine math)

@@ -47,7 +47,7 @@ set(ENGINE_SRC_FILES
 
 add_library(drunken_sailor_engine STATIC ${ENGINE_INCLUDE_FILES} ${ENGINE_SRC_FILES})
 
-target_link_libraries(drunken_sailor_engine ${LIBS})
+target_link_libraries(drunken_sailor_engine ${LIBS} ds_math)
 
 install(TARGETS drunken_sailor_engine DESTINATION lib)
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/ DESTINATION include
