@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/system/ISystem.h"
+#include "engine/resource/ResourceFactory.h"
 
 namespace ds
 {
@@ -62,5 +63,7 @@ private:
     void ProcessEvents(ds_msg::MessageStream *messages);
 
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
+
+    ResourceFactory m_factory;
 };
 }
