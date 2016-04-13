@@ -2,7 +2,7 @@
 
 #include "Precision.h"
 
-namespace bb_math
+namespace ds_math
 {
 class MathHelper
 {

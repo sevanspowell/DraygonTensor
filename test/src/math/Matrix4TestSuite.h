@@ -6,55 +6,55 @@
 
 TEST(Matrix4, TestDefaultConstructor)
 {
-    bb_math::Matrix4 mat = bb_math::Matrix4();
+    ds_math::Matrix4 mat = ds_math::Matrix4();
 
-    EXPECT_EQ(bb_math::Vector4(1.0f, 0.0f, 0.0f, 0.0f), mat[0]);
-    EXPECT_EQ(bb_math::Vector4(0.0f, 1.0f, 0.0f, 0.0f), mat[1]);
-    EXPECT_EQ(bb_math::Vector4(0.0f, 0.0f, 1.0f, 0.0f), mat[2]);
-    EXPECT_EQ(bb_math::Vector4(0.0f, 0.0f, 0.0f, 1.0f), mat[3]);
+    EXPECT_EQ(ds_math::Vector4(1.0f, 0.0f, 0.0f, 0.0f), mat[0]);
+    EXPECT_EQ(ds_math::Vector4(0.0f, 1.0f, 0.0f, 0.0f), mat[1]);
+    EXPECT_EQ(ds_math::Vector4(0.0f, 0.0f, 1.0f, 0.0f), mat[2]);
+    EXPECT_EQ(ds_math::Vector4(0.0f, 0.0f, 0.0f, 1.0f), mat[3]);
 }
 
 TEST(Matrix4, TestLeadingConstructor)
 {
-    bb_math::scalar a = 3.0f;
-    bb_math::Matrix4 mat = bb_math::Matrix4(a);
+    ds_math::scalar a = 3.0f;
+    ds_math::Matrix4 mat = ds_math::Matrix4(a);
 
-    EXPECT_EQ(bb_math::Vector4(a, 0.0f, 0.0f, 0.0f), mat[0]);
-    EXPECT_EQ(bb_math::Vector4(0.0f, a, 0.0f, 0.0f), mat[1]);
-    EXPECT_EQ(bb_math::Vector4(0.0f, 0.0f, a, 0.0f), mat[2]);
-    EXPECT_EQ(bb_math::Vector4(0.0f, 0.0f, 0.0f, a), mat[3]);
+    EXPECT_EQ(ds_math::Vector4(a, 0.0f, 0.0f, 0.0f), mat[0]);
+    EXPECT_EQ(ds_math::Vector4(0.0f, a, 0.0f, 0.0f), mat[1]);
+    EXPECT_EQ(ds_math::Vector4(0.0f, 0.0f, a, 0.0f), mat[2]);
+    EXPECT_EQ(ds_math::Vector4(0.0f, 0.0f, 0.0f, a), mat[3]);
 }
 
 TEST(Matrix4, TestElementConstructor)
 {
-    bb_math::Matrix4 mat = bb_math::Matrix4(
+    ds_math::Matrix4 mat = ds_math::Matrix4(
         23.3f, 10.0f, 0.0f, -2.333f, 10e3f, -10e-4f, -200.0f, 0.1f, 0.3f,
         993.4f, 0.32f, -3.3f, 9073.3f, 2.3f, -3.3f, 4.9f);
 
-    EXPECT_EQ(bb_math::Vector4(23.3f, 10e3f, 0.3f, 9073.3f), mat[0]);
-    EXPECT_EQ(bb_math::Vector4(10.0f, -10e-4f, 993.4f, 2.3f), mat[1]);
-    EXPECT_EQ(bb_math::Vector4(0.0f, -200.0f, 0.32f, -3.3f), mat[2]);
-    EXPECT_EQ(bb_math::Vector4(-2.333f, 0.1f, -3.3f, 4.9f), mat[3]);
+    EXPECT_EQ(ds_math::Vector4(23.3f, 10e3f, 0.3f, 9073.3f), mat[0]);
+    EXPECT_EQ(ds_math::Vector4(10.0f, -10e-4f, 993.4f, 2.3f), mat[1]);
+    EXPECT_EQ(ds_math::Vector4(0.0f, -200.0f, 0.32f, -3.3f), mat[2]);
+    EXPECT_EQ(ds_math::Vector4(-2.333f, 0.1f, -3.3f, 4.9f), mat[3]);
 }
 
 TEST(Matrix4, TestVectorConstructor)
 {
-    bb_math::Matrix4 mat =
-        bb_math::Matrix4(bb_math::Vector4(23.3f, 10.0f, 0.0f, -2.333f),
-                         bb_math::Vector4(10e3f, -10e-4f, -200.0f, 0.1f),
-                         bb_math::Vector4(0.3f, 993.4f, 0.32f, -3.3f),
-                         bb_math::Vector4(9073.3f, 2.3f, -3.3f, 4.9f));
+    ds_math::Matrix4 mat =
+        ds_math::Matrix4(ds_math::Vector4(23.3f, 10.0f, 0.0f, -2.333f),
+                         ds_math::Vector4(10e3f, -10e-4f, -200.0f, 0.1f),
+                         ds_math::Vector4(0.3f, 993.4f, 0.32f, -3.3f),
+                         ds_math::Vector4(9073.3f, 2.3f, -3.3f, 4.9f));
 
-    EXPECT_EQ(bb_math::Vector4(23.3f, 10.0f, 0.0f, -2.333f), mat[0]);
-    EXPECT_EQ(bb_math::Vector4(10e3f, -10e-4f, -200.0f, 0.1f), mat[1]);
-    EXPECT_EQ(bb_math::Vector4(0.3f, 993.4f, 0.32f, -3.3f), mat[2]);
-    EXPECT_EQ(bb_math::Vector4(9073.3f, 2.3f, -3.3f, 4.9f), mat[3]);
+    EXPECT_EQ(ds_math::Vector4(23.3f, 10.0f, 0.0f, -2.333f), mat[0]);
+    EXPECT_EQ(ds_math::Vector4(10e3f, -10e-4f, -200.0f, 0.1f), mat[1]);
+    EXPECT_EQ(ds_math::Vector4(0.3f, 993.4f, 0.32f, -3.3f), mat[2]);
+    EXPECT_EQ(ds_math::Vector4(9073.3f, 2.3f, -3.3f, 4.9f), mat[3]);
 }
 
 TEST(Matrix4, TestEquivalenceOperator)
 {
-    bb_math::Matrix4 mat1(1.0f);
-    bb_math::Matrix4 mat2(1.0f);
+    ds_math::Matrix4 mat1(1.0f);
+    ds_math::Matrix4 mat2(1.0f);
 
     EXPECT_TRUE(mat1 == mat2);
 
@@ -65,8 +65,8 @@ TEST(Matrix4, TestEquivalenceOperator)
 
 TEST(Matrix4, TestInequivalenceOperator)
 {
-    bb_math::Matrix4 mat1(1.0f);
-    bb_math::Matrix4 mat2(1.0f);
+    ds_math::Matrix4 mat1(1.0f);
+    ds_math::Matrix4 mat2(1.0f);
 
     EXPECT_FALSE(mat1 != mat2);
 
@@ -77,28 +77,28 @@ TEST(Matrix4, TestInequivalenceOperator)
 
 TEST(Matrix4, TestCopyConstructor)
 {
-    bb_math::Matrix4 mat1 = bb_math::Matrix4(3.0f);
-    bb_math::Matrix4 mat2 = bb_math::Matrix4(mat1);
+    ds_math::Matrix4 mat1 = ds_math::Matrix4(3.0f);
+    ds_math::Matrix4 mat2 = ds_math::Matrix4(mat1);
 
     EXPECT_EQ(mat1, mat2);
 }
 
 TEST(Matrix4, TestCopyAssignmentOperator)
 {
-    bb_math::Matrix4 mat1 = bb_math::Matrix4(3.0f);
-    bb_math::Matrix4 mat2 = mat1;
+    ds_math::Matrix4 mat1 = ds_math::Matrix4(3.0f);
+    ds_math::Matrix4 mat2 = mat1;
 
     EXPECT_EQ(mat1, mat2);
 }
 
 TEST(Matrix4, TestIndexOperator)
 {
-    bb_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
-    bb_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
-    bb_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
-    bb_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
+    ds_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
+    ds_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
+    ds_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
+    ds_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
 
-    bb_math::Matrix4 mat(col0, col1, col2, col3);
+    ds_math::Matrix4 mat(col0, col1, col2, col3);
 
     EXPECT_EQ(col0, mat[0]);
     EXPECT_EQ(col1, mat[1]);
@@ -108,12 +108,12 @@ TEST(Matrix4, TestIndexOperator)
 
 TEST(Matrix4, TestConstIndexOperator)
 {
-    bb_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
-    bb_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
-    bb_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
-    bb_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
+    ds_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
+    ds_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
+    ds_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
+    ds_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
 
-    const bb_math::Matrix4 mat(col0, col1, col2, col3);
+    const ds_math::Matrix4 mat(col0, col1, col2, col3);
 
     EXPECT_EQ(col0, mat[0]);
     EXPECT_EQ(col1, mat[1]);
@@ -123,13 +123,13 @@ TEST(Matrix4, TestConstIndexOperator)
 
 TEST(Matrix4, TestMultiplicationAssignmentOperator)
 {
-    bb_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
-    bb_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
-    bb_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
-    bb_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
+    ds_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
+    ds_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
+    ds_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
+    ds_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
 
-    bb_math::Matrix4 mat(col0, col1, col2, col3);
-    bb_math::scalar factor = 0.24f;
+    ds_math::Matrix4 mat(col0, col1, col2, col3);
+    ds_math::scalar factor = 0.24f;
     mat *= factor;
 
     EXPECT_EQ(col0 * factor, mat[0]);
@@ -140,13 +140,13 @@ TEST(Matrix4, TestMultiplicationAssignmentOperator)
 
 TEST(Matrix4, TestAdditionAssignmentOperator)
 {
-    bb_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
-    bb_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
-    bb_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
-    bb_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
+    ds_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
+    ds_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
+    ds_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
+    ds_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
 
-    bb_math::Matrix4 mat1(col0, col1, col2, col3);
-    bb_math::Matrix4 mat2(col0, col1, col2, col3);
+    ds_math::Matrix4 mat1(col0, col1, col2, col3);
+    ds_math::Matrix4 mat2(col0, col1, col2, col3);
 
     mat1 += mat2;
 
@@ -158,13 +158,13 @@ TEST(Matrix4, TestAdditionAssignmentOperator)
 
 TEST(Matrix4, TestSubtractionAssignmentOperator)
 {
-    bb_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
-    bb_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
-    bb_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
-    bb_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
+    ds_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
+    ds_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
+    ds_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
+    ds_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
 
-    bb_math::Matrix4 mat1(col0, col1, col2, col3);
-    bb_math::Matrix4 mat2(col0, col1, col2, col3);
+    ds_math::Matrix4 mat1(col0, col1, col2, col3);
+    ds_math::Matrix4 mat2(col0, col1, col2, col3);
 
     mat1 -= mat2;
 
@@ -176,19 +176,19 @@ TEST(Matrix4, TestSubtractionAssignmentOperator)
 
 TEST(Matrix4, TestTranspose)
 {
-    bb_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
-    bb_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
-    bb_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
-    bb_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
+    ds_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
+    ds_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
+    ds_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
+    ds_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
 
-    bb_math::Vector4 transRow0(col0.x, col1.x, col2.x, col3.x);
-    bb_math::Vector4 transRow1(col0.y, col1.y, col2.y, col3.y);
-    bb_math::Vector4 transRow2(col0.z, col1.z, col2.z, col3.z);
-    bb_math::Vector4 transRow3(col0.w, col1.w, col2.w, col3.w);
+    ds_math::Vector4 transRow0(col0.x, col1.x, col2.x, col3.x);
+    ds_math::Vector4 transRow1(col0.y, col1.y, col2.y, col3.y);
+    ds_math::Vector4 transRow2(col0.z, col1.z, col2.z, col3.z);
+    ds_math::Vector4 transRow3(col0.w, col1.w, col2.w, col3.w);
 
-    bb_math::Matrix4 mat(col0, col1, col2, col3);
+    ds_math::Matrix4 mat(col0, col1, col2, col3);
 
-    mat = bb_math::Matrix4::Transpose(mat);
+    mat = ds_math::Matrix4::Transpose(mat);
 
     EXPECT_EQ(transRow0, mat[0]);
     EXPECT_EQ(transRow1, mat[1]);
@@ -198,35 +198,35 @@ TEST(Matrix4, TestTranspose)
 
 TEST(Matrix4, TestInverse)
 {
-    bb_math::Matrix4 identity = bb_math::Matrix4();
+    ds_math::Matrix4 identity = ds_math::Matrix4();
 
-    EXPECT_EQ(identity, bb_math::Matrix4::Inverse(identity));
+    EXPECT_EQ(identity, ds_math::Matrix4::Inverse(identity));
 
-    bb_math::Matrix4 mat =
-        bb_math::Matrix4(122.0f, 1.0f, 3.0f, 23.0f, 32.0f, 3.0f, 0.0f, 0.0f,
+    ds_math::Matrix4 mat =
+        ds_math::Matrix4(122.0f, 1.0f, 3.0f, 23.0f, 32.0f, 3.0f, 0.0f, 0.0f,
                          0.0f, 0.0f, 4.0f, 0.0f, 0.0f, 0.0f, 0.0f, 5.0f);
 
-    bb_math::Matrix4 result = bb_math::Matrix4(
+    ds_math::Matrix4 result = ds_math::Matrix4(
         3 / 334.0f, -1 / 334.0f, -9 / 1336.0f, -69 / 1670.0f, -16 / 167.0f,
         61 / 167.0f, 12 / 167.0f, 368 / 835.0f, 0.0f, 0.0f, 1 / 4.0f, 0.0f,
         0.0f, 0.0f, 0.0f, 1 / 5.0f);
 
-    bb_math::Matrix4 inv = bb_math::Matrix4::Inverse(mat);
+    ds_math::Matrix4 inv = ds_math::Matrix4::Inverse(mat);
 
     EXPECT_EQ(result, inv);
 }
 
 TEST(Matrix4, TestCreateTranslationMatrix)
 {
-    bb_math::Vector3 translation(1.0f, -2.3f, 0.3f);
-    bb_math::Matrix4 mat =
-        bb_math::Matrix4::CreateTranslationMatrix(translation);
-    bb_math::Matrix4 expectedResult(1.0f);
-    expectedResult[3] = bb_math::Vector4(translation, 1.0f);
+    ds_math::Vector3 translation(1.0f, -2.3f, 0.3f);
+    ds_math::Matrix4 mat =
+        ds_math::Matrix4::CreateTranslationMatrix(translation);
+    ds_math::Matrix4 expectedResult(1.0f);
+    expectedResult[3] = ds_math::Vector4(translation, 1.0f);
 
     EXPECT_EQ(expectedResult, mat);
 
-    mat = bb_math::Matrix4::CreateTranslationMatrix(
+    mat = ds_math::Matrix4::CreateTranslationMatrix(
         translation.x, translation.y, translation.z);
 
     EXPECT_EQ(expectedResult, mat);
@@ -234,32 +234,32 @@ TEST(Matrix4, TestCreateTranslationMatrix)
 
 TEST(Matrix4, TestCreateScaleMatrix)
 {
-    bb_math::Vector3 scale(3.4f, 0.2f, -2.33f);
-    bb_math::Matrix4 mat = bb_math::Matrix4::CreateScaleMatrix(scale);
+    ds_math::Vector3 scale(3.4f, 0.2f, -2.33f);
+    ds_math::Matrix4 mat = ds_math::Matrix4::CreateScaleMatrix(scale);
 
-    bb_math::Matrix4 expectedResult(1.0f);
+    ds_math::Matrix4 expectedResult(1.0f);
     expectedResult[0].x = scale.x;
     expectedResult[1].y = scale.y;
     expectedResult[2].z = scale.z;
 
     EXPECT_EQ(expectedResult, mat);
 
-    mat = bb_math::Matrix4::CreateScaleMatrix(scale.x, scale.y, scale.z);
+    mat = ds_math::Matrix4::CreateScaleMatrix(scale.x, scale.y, scale.z);
 
     EXPECT_EQ(expectedResult, mat);
 }
 
 TEST(Matrix4, TestBinaryAdditionOperator)
 {
-    bb_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
-    bb_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
-    bb_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
-    bb_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
+    ds_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
+    ds_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
+    ds_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
+    ds_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
 
-    bb_math::Matrix4 mat1(col0, col1, col2, col3);
-    bb_math::Matrix4 mat2(col0, col1, col2, col3);
+    ds_math::Matrix4 mat1(col0, col1, col2, col3);
+    ds_math::Matrix4 mat2(col0, col1, col2, col3);
 
-    bb_math::Matrix4 mat3 = mat1 + mat2;
+    ds_math::Matrix4 mat3 = mat1 + mat2;
 
     EXPECT_EQ(col0 + col0, mat3[0]);
     EXPECT_EQ(col1 + col1, mat3[1]);
@@ -269,15 +269,15 @@ TEST(Matrix4, TestBinaryAdditionOperator)
 
 TEST(Matrix4, TestBinarySubtractionOperator)
 {
-    bb_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
-    bb_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
-    bb_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
-    bb_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
+    ds_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
+    ds_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
+    ds_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
+    ds_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
 
-    bb_math::Matrix4 mat1(col0, col1, col2, col3);
-    bb_math::Matrix4 mat2(col0, col1, col2, col3);
+    ds_math::Matrix4 mat1(col0, col1, col2, col3);
+    ds_math::Matrix4 mat2(col0, col1, col2, col3);
 
-    bb_math::Matrix4 mat3 = mat1 - mat2;
+    ds_math::Matrix4 mat3 = mat1 - mat2;
 
     EXPECT_EQ(col0 - col0, mat3[0]);
     EXPECT_EQ(col1 - col1, mat3[1]);
@@ -287,27 +287,27 @@ TEST(Matrix4, TestBinarySubtractionOperator)
 
 TEST(Matrix4, TestMatrixMultiplication)
 {
-    bb_math::Matrix4 identity;
-    bb_math::Matrix4 mat1 =
-        bb_math::Matrix4::CreateScaleMatrix(3.0f, 3.0f, 3.0f);
+    ds_math::Matrix4 identity;
+    ds_math::Matrix4 mat1 =
+        ds_math::Matrix4::CreateScaleMatrix(3.0f, 3.0f, 3.0f);
 
     EXPECT_EQ(mat1, identity * mat1);
 
-    bb_math::Matrix4 mat2 =
-        bb_math::Matrix4::CreateScaleMatrix(2.0f, 2.0f, 2.0f);
+    ds_math::Matrix4 mat2 =
+        ds_math::Matrix4::CreateScaleMatrix(2.0f, 2.0f, 2.0f);
 
-    EXPECT_EQ(bb_math::Matrix4::CreateScaleMatrix(6.0f, 6.0f, 6.0f),
+    EXPECT_EQ(ds_math::Matrix4::CreateScaleMatrix(6.0f, 6.0f, 6.0f),
               mat1 * mat2);
 }
 
 TEST(Matrix4, TestMatrixColumnMultiplication)
 {
-    bb_math::Vector3 translate = bb_math::Vector3(10.0f, 3.04f, -4.3f);
-    bb_math::Matrix4 mat = bb_math::Matrix4::CreateTranslationMatrix(translate);
+    ds_math::Vector3 translate = ds_math::Vector3(10.0f, 3.04f, -4.3f);
+    ds_math::Matrix4 mat = ds_math::Matrix4::CreateTranslationMatrix(translate);
 
-    bb_math::Vector4 point = bb_math::Vector4(1.0f, 3.0f, 10.0f);
+    ds_math::Vector4 point = ds_math::Vector4(1.0f, 3.0f, 10.0f);
 
-    bb_math::Vector4 result = mat * point;
+    ds_math::Vector4 result = mat * point;
 
     EXPECT_EQ(point.x + translate.x, result.x);
     EXPECT_EQ(point.y + translate.y, result.y);
@@ -316,14 +316,14 @@ TEST(Matrix4, TestMatrixColumnMultiplication)
 
 TEST(Matrix4, TestMatrixRowMultiplication)
 {
-    bb_math::scalar scale = 3.0f;
+    ds_math::scalar scale = 3.0f;
 
-    bb_math::Matrix4 mat =
-        bb_math::Matrix4::CreateScaleMatrix(scale, scale, scale);
+    ds_math::Matrix4 mat =
+        ds_math::Matrix4::CreateScaleMatrix(scale, scale, scale);
 
-    bb_math::Vector4 point = bb_math::Vector4(1.0f, 3.0f, 10.0f);
+    ds_math::Vector4 point = ds_math::Vector4(1.0f, 3.0f, 10.0f);
 
-    bb_math::Vector4 result = point * mat;
+    ds_math::Vector4 result = point * mat;
 
     EXPECT_EQ(point.x * scale, result.x);
     EXPECT_EQ(point.y * scale, result.y);
@@ -332,14 +332,14 @@ TEST(Matrix4, TestMatrixRowMultiplication)
 
 TEST(Matrix4, TestMatrixFactorMultiplication)
 {
-    bb_math::scalar factor = 3.44f;
+    ds_math::scalar factor = 3.44f;
 
-    bb_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
-    bb_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
-    bb_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
-    bb_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
+    ds_math::Vector4 col0(0.3f, 10e3f, 0.98e5f, -2.3f);
+    ds_math::Vector4 col1(-0.3f, -10e3f, 0.928e5f, 2.3f);
+    ds_math::Vector4 col2(0.33f, 8e3f, -0.98e5f, -24.33f);
+    ds_math::Vector4 col3(3.0f, -2e3f, 0.9338e5f, -3.3f);
 
-    bb_math::Matrix4 mat1(col0, col1, col2, col3);
+    ds_math::Matrix4 mat1(col0, col1, col2, col3);
 
     mat1 = mat1 * factor;
 
@@ -348,7 +348,7 @@ TEST(Matrix4, TestMatrixFactorMultiplication)
     EXPECT_EQ(col2 * factor, mat1[2]);
     EXPECT_EQ(col3 * factor, mat1[3]);
 
-    mat1 = bb_math::Matrix4(col0, col1, col2, col3);
+    mat1 = ds_math::Matrix4(col0, col1, col2, col3);
 
     mat1 = factor * mat1;
 
@@ -360,7 +360,7 @@ TEST(Matrix4, TestMatrixFactorMultiplication)
 
 TEST(Matrix4, TestOutputStreamOperator)
 {
-    bb_math::Matrix4 mat;
+    ds_math::Matrix4 mat;
 
     std::stringstream stream, resultStream;
 

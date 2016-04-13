@@ -1,6 +1,6 @@
 #pragma once
 
-namespace bb_math
+namespace ds_math
 {
 /**
  * This typedef is used throughout the math classes. It allows the programmer to

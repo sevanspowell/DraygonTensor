@@ -2,7 +2,7 @@
 
 #include "Vector4.h"
 
-namespace bb_math
+namespace ds_math
 {
 class Matrix4
 {

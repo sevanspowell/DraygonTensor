@@ -4,7 +4,7 @@
 #include "MathHelper.h"
 #include "Matrix4.h"
 
-namespace bb_math
+namespace ds_math
 {
 Matrix4::Matrix4()
 {

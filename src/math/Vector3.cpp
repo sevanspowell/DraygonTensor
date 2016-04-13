@@ -3,7 +3,7 @@
 
 #include "Vector3.h"
 
-namespace bb_math
+namespace ds_math
 {
 Vector3::Vector3(scalar x, scalar y, scalar z) : x(x), y(y), z(z)
 {

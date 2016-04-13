@@ -4,7 +4,7 @@
 
 TEST(Vector3, TestDefaultConstructor)
 {
-    bb_math::Vector3 vec = bb_math::Vector3();
+    ds_math::Vector3 vec = ds_math::Vector3();
 
     EXPECT_EQ(0.0f, vec.x);
     EXPECT_EQ(0.0f, vec.y);
@@ -17,7 +17,7 @@ TEST(Vector3, TestConstructor)
     float y = -10e6;
     float z = 10e-8;
 
-    bb_math::Vector3 vec = bb_math::Vector3(x, y, z);
+    ds_math::Vector3 vec = ds_math::Vector3(x, y, z);
 
     EXPECT_EQ(x, vec.x);
     EXPECT_EQ(y, vec.y);
@@ -30,8 +30,8 @@ TEST(Vector3, TestCopyConstructor)
     float y = -10e6;
     float z = 10e-8;
 
-    bb_math::Vector3 vec1 = bb_math::Vector3(x, y, z);
-    bb_math::Vector3 vec2 = bb_math::Vector3(vec1);
+    ds_math::Vector3 vec1 = ds_math::Vector3(x, y, z);
+    ds_math::Vector3 vec2 = ds_math::Vector3(vec1);
 
     EXPECT_EQ(vec1.x, vec2.x);
     EXPECT_EQ(vec1.y, vec2.y);
@@ -44,7 +44,7 @@ TEST(Vector3, TestIndexOperator)
     float y = -10e6;
     float z = 10e-8;
 
-    bb_math::Vector3 vec = bb_math::Vector3(x, y, z);
+    ds_math::Vector3 vec = ds_math::Vector3(x, y, z);
 
     EXPECT_EQ(x, vec[0]);
     EXPECT_EQ(y, vec[1]);
@@ -57,7 +57,7 @@ TEST(Vector3, TestConstIndexOperator)
     float y = -10e6;
     float z = 10e-8;
 
-    const bb_math::Vector3 vec = bb_math::Vector3(x, y, z);
+    const ds_math::Vector3 vec = ds_math::Vector3(x, y, z);
 
     EXPECT_EQ(x, vec[0]);
     EXPECT_EQ(y, vec[1]);
@@ -71,7 +71,7 @@ TEST(Vector3, TestMultiplicationAssignmentOperator)
     float z = 10e-8;
     float factor = -3.99f;
 
-    bb_math::Vector3 vec = bb_math::Vector3(x, y, z);
+    ds_math::Vector3 vec = ds_math::Vector3(x, y, z);
     vec *= factor;
 
     EXPECT_EQ(x * factor, vec.x);
@@ -85,8 +85,8 @@ TEST(Vector3, TestAdditionAssignmentOperator)
     float y = -10e6;
     float z = 10e-8;
 
-    bb_math::Vector3 vec1 = bb_math::Vector3(x, y, z);
-    bb_math::Vector3 vec2 = bb_math::Vector3(x, y, z);
+    ds_math::Vector3 vec1 = ds_math::Vector3(x, y, z);
+    ds_math::Vector3 vec2 = ds_math::Vector3(x, y, z);
     vec1 += vec2;
 
     EXPECT_EQ(x * 2, vec1.x);
@@ -100,8 +100,8 @@ TEST(Vector3, TestSubtractionAssignmentOperator)
     float y = -10e6;
     float z = 10e-8;
 
-    bb_math::Vector3 vec1 = bb_math::Vector3(x, y, z);
-    bb_math::Vector3 vec2 = bb_math::Vector3(x, y, z);
+    ds_math::Vector3 vec1 = ds_math::Vector3(x, y, z);
+    ds_math::Vector3 vec2 = ds_math::Vector3(x, y, z);
     vec1 -= vec2;
 
     EXPECT_EQ(0.0f, vec1.x);
@@ -115,8 +115,8 @@ TEST(Vector3, TestEquivalenceOperator)
     float y = -10e6;
     float z = 10e-8;
 
-    bb_math::Vector3 vec1 = bb_math::Vector3(x, y, z);
-    bb_math::Vector3 vec2 = bb_math::Vector3(x, y, z);
+    ds_math::Vector3 vec1 = ds_math::Vector3(x, y, z);
+    ds_math::Vector3 vec2 = ds_math::Vector3(x, y, z);
 
     EXPECT_TRUE(vec1 == vec2);
 
@@ -130,8 +130,8 @@ TEST(Vector3, TestInequivalenceOperator)
     float y = -10e6;
     float z = 10e-8;
 
-    bb_math::Vector3 vec1 = bb_math::Vector3(x, y, z);
-    bb_math::Vector3 vec2 = bb_math::Vector3(x, y, z);
+    ds_math::Vector3 vec1 = ds_math::Vector3(x, y, z);
+    ds_math::Vector3 vec2 = ds_math::Vector3(x, y, z);
 
     EXPECT_FALSE(vec1 != vec2);
 
@@ -145,13 +145,13 @@ TEST(Vector3, TestMagnitude)
     float y = 2;
     float z = -99.0f;
 
-    bb_math::Vector3 vec = bb_math::Vector3(x, y, z);
+    ds_math::Vector3 vec = ds_math::Vector3(x, y, z);
 
     EXPECT_TRUE(fabs(vec.Magnitude() - sqrt((x * x) + (y * y) + (z * z))) <=
-                bb_math::FLOAT_ACCURACY);
-    EXPECT_TRUE(fabs(bb_math::Vector3::Magnitude(vec) -
+                ds_math::FLOAT_ACCURACY);
+    EXPECT_TRUE(fabs(ds_math::Vector3::Magnitude(vec) -
                      sqrt((x * x) + (y * y) + (z * z))) <=
-                bb_math::FLOAT_ACCURACY);
+                ds_math::FLOAT_ACCURACY);
 }
 
 TEST(Vector3, TestNormalize)
@@ -160,23 +160,23 @@ TEST(Vector3, TestNormalize)
     float y = 0.0f;
     float z = 0.0f;
 
-    bb_math::Vector3 vec = bb_math::Vector3(x, y, z);
+    ds_math::Vector3 vec = ds_math::Vector3(x, y, z);
 
     vec.Normalize();
-    EXPECT_EQ(bb_math::Vector3(x, y, z), vec);
+    EXPECT_EQ(ds_math::Vector3(x, y, z), vec);
 
     x = 993.0f;
     y = 0.2f;
     z = -3.321f;
 
-    vec = bb_math::Vector3(x, y, z);
+    vec = ds_math::Vector3(x, y, z);
     float mag = vec.Magnitude();
     vec.Normalize();
 
-    EXPECT_EQ(bb_math::Vector3(x / mag, y / mag, z / mag), vec);
+    EXPECT_EQ(ds_math::Vector3(x / mag, y / mag, z / mag), vec);
 
-    vec = bb_math::Vector3(x, y, z);
-    bb_math::Vector3 normalized = bb_math::Vector3::Normalize(vec);
+    vec = ds_math::Vector3(x, y, z);
+    ds_math::Vector3 normalized = ds_math::Vector3::Normalize(vec);
     vec.Normalize();
 
     EXPECT_EQ(vec, normalized);
@@ -188,21 +188,21 @@ TEST(Vector3, TestInvert)
     float y = 2.0f;
     float z = 0.0f;
 
-    bb_math::Vector3 vec = bb_math::Vector3(x, y, z);
+    ds_math::Vector3 vec = ds_math::Vector3(x, y, z);
     vec.Invert();
 
     EXPECT_EQ(-x, vec.x);
     EXPECT_EQ(-y, vec.y);
     EXPECT_EQ(-z, vec.z);
 
-    vec = bb_math::Vector3(x, y, z);
-    vec = bb_math::Vector3::Invert(vec);
+    vec = ds_math::Vector3(x, y, z);
+    vec = ds_math::Vector3::Invert(vec);
 
     EXPECT_EQ(-x, vec.x);
     EXPECT_EQ(-y, vec.y);
     EXPECT_EQ(-z, vec.z);
 
-    vec = bb_math::Vector3(x, y, z);
+    vec = ds_math::Vector3(x, y, z);
     vec = -vec;
 
     EXPECT_EQ(-x, vec.x);
@@ -212,21 +212,21 @@ TEST(Vector3, TestInvert)
 
 TEST(Vector3, TestDotProduct)
 {
-    bb_math::Vector3 vec1 = bb_math::Vector3(3.0f, 1.0f, -23.03f);
-    bb_math::Vector3 vec2 = bb_math::Vector3(-3.4f, 100.0f, -3.897f);
+    ds_math::Vector3 vec1 = ds_math::Vector3(3.0f, 1.0f, -23.03f);
+    ds_math::Vector3 vec2 = ds_math::Vector3(-3.4f, 100.0f, -3.897f);
     float expectedResult = 179.54791f;
 
-    EXPECT_EQ(expectedResult, bb_math::Vector3::Dot(vec1, vec2));
+    EXPECT_EQ(expectedResult, ds_math::Vector3::Dot(vec1, vec2));
 }
 
 TEST(Vector3, TestCrossProduct)
 {
-    bb_math::Vector3 vec1 = bb_math::Vector3(3.0f, 1.0f, -23.03f);
-    bb_math::Vector3 vec2 = bb_math::Vector3(-3.4f, 100.0f, -3.897f);
-    bb_math::Vector3 cross = bb_math::Vector3::Cross(vec1, vec2);
+    ds_math::Vector3 vec1 = ds_math::Vector3(3.0f, 1.0f, -23.03f);
+    ds_math::Vector3 vec2 = ds_math::Vector3(-3.4f, 100.0f, -3.897f);
+    ds_math::Vector3 cross = ds_math::Vector3::Cross(vec1, vec2);
 
-    bb_math::Vector3 expectedResult =
-        bb_math::Vector3((vec1.y * vec2.z) - (vec1.z * vec2.y),
+    ds_math::Vector3 expectedResult =
+        ds_math::Vector3((vec1.y * vec2.z) - (vec1.z * vec2.y),
                          (vec1.z * vec2.x) - (vec1.x * vec2.z),
                          (vec1.x * vec2.y) - (vec1.y * vec2.x));
 
@@ -242,9 +242,9 @@ TEST(Vector3, TestAdditionOperator)
     float y2 = 10e-9f;
     float z2 = -10e2f;
 
-    bb_math::Vector3 vec1 = bb_math::Vector3(x1, y1, z1);
-    bb_math::Vector3 vec2 = bb_math::Vector3(x2, y2, z2);
-    bb_math::Vector3 result = vec1 + vec2;
+    ds_math::Vector3 vec1 = ds_math::Vector3(x1, y1, z1);
+    ds_math::Vector3 vec2 = ds_math::Vector3(x2, y2, z2);
+    ds_math::Vector3 result = vec1 + vec2;
 
     EXPECT_EQ(x1 + x2, result.x);
     EXPECT_EQ(y1 + y2, result.y);
@@ -260,9 +260,9 @@ TEST(Vector3, TestSubtractionOperator)
     float y2 = 10e-9f;
     float z2 = -10e2f;
 
-    bb_math::Vector3 vec1 = bb_math::Vector3(x1, y1, z1);
-    bb_math::Vector3 vec2 = bb_math::Vector3(x2, y2, z2);
-    bb_math::Vector3 result = vec1 - vec2;
+    ds_math::Vector3 vec1 = ds_math::Vector3(x1, y1, z1);
+    ds_math::Vector3 vec2 = ds_math::Vector3(x2, y2, z2);
+    ds_math::Vector3 result = vec1 - vec2;
 
     EXPECT_EQ(x1 - x2, result.x);
     EXPECT_EQ(y1 - y2, result.y);
@@ -276,9 +276,9 @@ TEST(Vector3, TestScaleOperator)
     float z = 10e9f;
     float scale = -9.4f;
 
-    bb_math::Vector3 vec = bb_math::Vector3(x, y, z);
+    ds_math::Vector3 vec = ds_math::Vector3(x, y, z);
 
-    bb_math::Vector3 result = vec * scale;
+    ds_math::Vector3 result = vec * scale;
 
     EXPECT_EQ(x * scale, result.x);
     EXPECT_EQ(y * scale, result.y);
@@ -297,7 +297,7 @@ TEST(Vector3, TestOutputStreamOperator)
     float y = 1.0f;
     float z = 1.0f;
     std::stringstream stream, resultStream;
-    bb_math::Vector3 vec = bb_math::Vector3(x, y, z);
+    ds_math::Vector3 vec = ds_math::Vector3(x, y, z);
 
     resultStream << "{" << x << ", " << y << ", " << z << "}";
     stream << vec;
@@ -307,15 +307,15 @@ TEST(Vector3, TestOutputStreamOperator)
 
 TEST(Vector3, TestUnitX)
 {
-    EXPECT_EQ(bb_math::Vector3(1.0f, 0.0f, 0.0f), bb_math::Vector3::UnitX);
+    EXPECT_EQ(ds_math::Vector3(1.0f, 0.0f, 0.0f), ds_math::Vector3::UnitX);
 }
 
 TEST(Vector3, TestUnitY)
 {
-    EXPECT_EQ(bb_math::Vector3(0.0f, 1.0f, 0.0f), bb_math::Vector3::UnitY);
+    EXPECT_EQ(ds_math::Vector3(0.0f, 1.0f, 0.0f), ds_math::Vector3::UnitY);
 }
 
 TEST(Vector3, TestUnitZ)
 {
-    EXPECT_EQ(bb_math::Vector3(0.0f, 0.0f, 1.0f), bb_math::Vector3::UnitZ);
+    EXPECT_EQ(ds_math::Vector3(0.0f, 0.0f, 1.0f), ds_math::Vector3::UnitZ);
 }

@@ -2,7 +2,7 @@
 
 #include "MathHelper.h"
 
-namespace bb_math
+namespace ds_math
 {
 scalar MathHelper::ToDegrees(scalar radians)
 {

@@ -4,7 +4,7 @@
 
 #include "Precision.h"
 
-namespace bb_math
+namespace ds_math
 {
 /**
  *  Vector-3 class.

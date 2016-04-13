@@ -3,7 +3,7 @@
 
 #include "Vector4.h"
 
-namespace bb_math
+namespace ds_math
 {
 Vector4::Vector4(scalar x, scalar y, scalar z, scalar w)
     : x(x), y(y), z(z), w(w)

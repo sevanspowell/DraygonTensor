@@ -3,7 +3,7 @@
 
 #include "Quaternion.h"
 
-namespace bb_math
+namespace ds_math
 {
 Quaternion::Quaternion(scalar x, scalar y, scalar z, scalar w)
     : x(x), y(y), z(z), w(w)
