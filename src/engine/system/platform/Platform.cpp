@@ -5,6 +5,7 @@
 
 #include "engine/common/StringIntern.h"
 #include "engine/system/platform/Platform.h"
+#include "engine/message/MessageHelper.h"
 
 namespace ds
 {
@@ -24,14 +25,12 @@ bool Platform::Initialize(const Config &config)
         if (result == true)
         {
             // Send system init message
-            ds_msg::MessageHeader header;
-            header.type = ds_msg::MessageType::SystemInit;
-            header.size = sizeof(ds_msg::SystemInit);
-
             ds_msg::SystemInit initMsg;
             initMsg.systemName = "Platform";
 
-            m_messagesGenerated << header << initMsg;
+            ds_msg::AppendMessage(&m_messagesGenerated,
+                                  ds_msg::MessageType::SystemInit,
+                                  sizeof(ds_msg::SystemInit), &initMsg);
         }
     }
 
@@ -95,10 +94,9 @@ void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
         keyEvent.windowID = event.key.windowID;
         keyEvent.timeStamp = event.key.timestamp;
 
-        header.type = ds_msg::MessageType::KeyboardEvent;
-        header.size = sizeof(ds_msg::KeyboardEvent);
-
-        m_messagesGenerated << header << keyEvent;
+        ds_msg::AppendMessage(&m_messagesGenerated,
+                              ds_msg::MessageType::KeyboardEvent,
+                              sizeof(ds_msg::KeyboardEvent), &keyEvent);
         break;
     case SDL_TEXTINPUT:
         ds_msg::TextInput textInput;
@@ -109,15 +107,16 @@ void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
         header.type = ds_msg::MessageType::TextInput;
         header.size = sizeof(ds_msg::TextInput);
 
-        m_messagesGenerated << header << textInput;
+        ds_msg::AppendMessage(&m_messagesGenerated,
+                              ds_msg::MessageType::KeyboardEvent,
+                              sizeof(ds_msg::KeyboardEvent), &keyEvent);
         break;
     case SDL_QUIT:
         ds_msg::QuitEvent quitEvent;
 
-        header.type = ds_msg::MessageType::QuitEvent;
-        header.size = sizeof(ds_msg::QuitEvent);
-
-        m_messagesGenerated << header << quitEvent;
+        ds_msg::AppendMessage(&m_messagesGenerated,
+                              ds_msg::MessageType::QuitEvent,
+                              sizeof(ds_msg::QuitEvent), &quitEvent);
         break;
     }
 }

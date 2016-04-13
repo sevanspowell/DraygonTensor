@@ -1,5 +1,6 @@
 #include "engine/common/StringIntern.h"
 #include "engine/system/Console.h"
+#include "engine/message/MessageHelper.h"
 
 namespace ds
 {
@@ -10,14 +11,11 @@ bool Console::Initialize(const Config &config)
     m_isConsoleOpen = false;
 
     // Send system init message
-    ds_msg::MessageHeader header;
-    header.type = ds_msg::MessageType::SystemInit;
-    header.size = sizeof(ds_msg::SystemInit);
-
     ds_msg::SystemInit initMsg;
     initMsg.systemName = "Console";
 
-    m_messagesGenerated << header << initMsg;
+    ds_msg::AppendMessage(&m_messagesGenerated, ds_msg::MessageType::SystemInit,
+                          sizeof(ds_msg::SystemInit), &initMsg);
 
     return result;
 }
@@ -134,11 +132,10 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
                     scriptMsg.stringId =
                         StringIntern::Instance().Intern(m_inputText);
 
-                    ds_msg::MessageHeader header;
-                    header.type = ds_msg::MessageType::ScriptInterpret;
-                    header.size = sizeof(ds_msg::ScriptInterpret);
-
-                    m_messagesGenerated << header << scriptMsg;
+                    ds_msg::AppendMessage(&m_messagesGenerated,
+                                          ds_msg::MessageType::ScriptInterpret,
+                                          sizeof(ds_msg::ScriptInterpret),
+                                          &scriptMsg);
 
                     // Clear input text
                     m_inputText.clear();

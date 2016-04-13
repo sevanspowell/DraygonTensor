@@ -1,6 +1,7 @@
 #include "engine/Config.h"
 #include "engine/common/StringIntern.h"
 #include "engine/system/script/Script.h"
+#include "engine/message/MessageHelper.h"
 
 namespace ds_lua
 {
@@ -62,14 +63,11 @@ bool Script::Initialize(const Config &config)
     }
 
     // Send system init message
-    ds_msg::MessageHeader header;
-    header.type = ds_msg::MessageType::SystemInit;
-    header.size = sizeof(ds_msg::SystemInit);
-
     ds_msg::SystemInit initMsg;
     initMsg.systemName = "Script";
 
-    m_messagesGenerated << header << initMsg;
+    ds_msg::AppendMessage(&m_messagesGenerated, ds_msg::MessageType::SystemInit,
+                          sizeof(ds_msg::SystemInit), &initMsg);
 
     // We don't need these pointers anymore
     m_registeredSystems.clear();
@@ -151,17 +149,20 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
 
 void Script::RegisterScriptBindings(ISystem *systemPtr)
 {
-    if (systemPtr != nullptr)
-    {
-        std::vector<std::pair<const char *, SCRIPT_FN>> metaMethods;
-        std::vector<std::pair<const char *, SCRIPT_FN>> methods;
+    //     if (systemPtr != nullptr)
+    //     {
+    //         std::vector<std::pair<const char *, SCRIPT_FN>> metaMethods;
+    //         std::vector<std::pair<const char *, SCRIPT_FN>> methods;
 
-        ScriptBindingSet scriptBindings = systemPtr->GetScriptBindings();
-        for (unsigned int i = 0; i < scriptBindings.size(); ++i)
-        {
-            const std::pair<const char *, SCRIPT_FN> &functionPair =
-                scriptBinding.GetFunctionPair(i);
-        }
-    }
+    //         ScriptBindingSet scriptBindings = systemPtr->GetScriptBindings();
+    //         for (unsigned int i = 0; i < scriptBindings.size(); ++i)
+    //         {
+    //             const std::pair<const char *, SCRIPT_FN> &functionPair =
+    //                 scriptBinding.GetFunctionPair(i);
+
+    //             // If script binding is a meta method, add to metaMethods
+    //             // Else add to methods
+    //         }
+    //     }
 }
 }
