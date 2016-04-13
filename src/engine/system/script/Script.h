@@ -71,6 +71,22 @@ public:
      */
     virtual ds_msg::MessageStream CollectMessages();
 
+    /**
+     * Register another system's script bindings.
+     *
+     * @param  systemName  const char *, name of the registering system.
+     * @param  systemPtr   ISystem *, pointer to registering system.
+     */
+    void RegisterScriptBindings(const char *systemName, ISystem *systemPtr);
+
+    /**
+     * Spawn a unit in the world.
+     *
+     * @param  unitFile  std::string, path to unit, relative to the assets
+     * directory.
+     */
+    void SpawnUnit(std::string unitFile);
+
 private:
     /**
      * Process messages in the given message stream.
@@ -79,8 +95,23 @@ private:
      */
     void ProcessEvents(ds_msg::MessageStream *messages);
 
-    bool m_bootScriptLoaded;
-    ds_lua::LuaEnvironment m_lua;
+    /**
+     * Register the script bindings of a particular system.
+     *
+     * @param  systemPtr  ISystem *, pointer to system to register script
+     * bindings of.
+     */
+    void RegisterScriptBindings(ISystem *systemPtr);
+
+    // Messaging
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
+
+    // Did the boot script load successfully?
+    bool m_bootScriptLoaded;
+    // Lua environment
+    ds_lua::LuaEnvironment m_lua;
+
+    // Systems wanting their script bindings registered
+    std::vector<std::pair<const char *, ISystem *>> m_registeredSystems;
 };
 }

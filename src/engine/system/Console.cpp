@@ -217,6 +217,7 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             }
             break;
         default:
+            // Always extract the payload
             messages->Extract(header.size);
 
             // Console should handle all message types, so crash if not handled.

@@ -21,6 +21,7 @@ set(ENGINE_INCLUDE_FILES
   system/script/LuaEnvironment.h
   system/script/LuaHelper.h
   system/script/Script.h
+  system/script/ScriptBindingSet.h
 )
 
 set(ENGINE_SRC_FILES
@@ -43,6 +44,7 @@ set(ENGINE_SRC_FILES
   system/script/LuaEnvironment.cpp
   system/script/LuaHelper.cpp
   system/script/Script.cpp
+  system/script/ScriptBindingSet.cpp
 )
 
 add_library(drunken_sailor_engine STATIC ${ENGINE_INCLUDE_FILES} ${ENGINE_SRC_FILES})

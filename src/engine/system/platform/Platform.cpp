@@ -18,6 +18,9 @@ bool Platform::Initialize(const Config &config)
 
         result &= m_video.Initialize(config);
 
+        // Grab events from video system and add them to messages generated
+        AppendStreamBuffer(m_messagesGenerated, m_video.CollectMessages());
+
         if (result == true)
         {
             // Send system init message

@@ -5,6 +5,7 @@
 #include "engine/message/Message.h"
 #include "engine/message/MessageBus.h"
 #include "engine/system/ISystem.h"
+#include "engine/system/script/Script.h"
 
 namespace ds
 {

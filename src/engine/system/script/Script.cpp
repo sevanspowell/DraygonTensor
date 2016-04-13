@@ -2,6 +2,11 @@
 #include "engine/common/StringIntern.h"
 #include "engine/system/script/Script.h"
 
+namespace ds_lua
+{
+extern void LoadMathAPI(LuaEnvironment &luaEnv);
+}
+
 namespace ds
 {
 Script::Script()
@@ -16,10 +21,22 @@ bool Script::Initialize(const Config &config)
     // Initialize lua environment
     if (m_lua.Init())
     {
-        std::string bootScriptPath;
+        // Load our Lua/C APIs
+        ds_lua::LoadMathAPI(m_lua);
+        // Loop thru and load script bindings
+        for (auto namePtr : m_registeredSystems)
+        {
+            RegisterScriptBindings(namePtr.second);
+        }
 
-        // Push pointer to this class onto lua stack
-        m_lua.PushLightUserData(this);
+        // Register all systems with the lua environment as light userdata
+        m_lua.RegisterLightUserData("Script", (void *)this);
+        for (auto namePtr : m_registeredSystems)
+        {
+            m_lua.RegisterLightUserData(namePtr.first, (void *)namePtr.second);
+        }
+
+        std::string bootScriptPath;
 
         // Get path to boot script
         config.GetString("Script.bootScript", &bootScriptPath);
@@ -53,6 +70,9 @@ bool Script::Initialize(const Config &config)
     initMsg.systemName = "Script";
 
     m_messagesGenerated << header << initMsg;
+
+    // We don't need these pointers anymore
+    m_registeredSystems.clear();
 
     return result;
 }
@@ -94,6 +114,17 @@ ds_msg::MessageStream Script::CollectMessages()
     return tmp;
 }
 
+void Script::RegisterScriptBindings(const char *systemName, ISystem *systemPtr)
+{
+    m_registeredSystems.push_back(
+        std::pair<const char *, ISystem *>(systemName, systemPtr));
+}
+
+void Script::SpawnUnit(std::string unitFile)
+{
+    std::cout << "Unit spawned: " << unitFile << std::endl;
+}
+
 void Script::ProcessEvents(ds_msg::MessageStream *messages)
 {
     while (messages->AvailableBytes() != 0)
@@ -114,6 +145,22 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
         default:
             messages->Extract(header.size);
             break;
+        }
+    }
+}
+
+void Script::RegisterScriptBindings(ISystem *systemPtr)
+{
+    if (systemPtr != nullptr)
+    {
+        std::vector<std::pair<const char *, SCRIPT_FN>> metaMethods;
+        std::vector<std::pair<const char *, SCRIPT_FN>> methods;
+
+        ScriptBindingSet scriptBindings = systemPtr->GetScriptBindings();
+        for (unsigned int i = 0; i < scriptBindings.size(); ++i)
+        {
+            const std::pair<const char *, SCRIPT_FN> &functionPair =
+                scriptBinding.GetFunctionPair(i);
         }
     }
 }

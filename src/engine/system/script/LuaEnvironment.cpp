@@ -5,8 +5,6 @@
 
 namespace ds_lua
 {
-extern void LoadAPI(LuaEnvironment &luaEnv);
-
 LuaEnvironment::LuaEnvironment()
 {
 }
@@ -25,8 +23,6 @@ bool LuaEnvironment::Init()
 
         // Load lua libraries
         luaL_openlibs(m_lua);
-
-        LoadAPI(*this);
 
         // Ensure stack is clean
         assert(lua_gettop(m_lua) == oldStackSize);
@@ -158,8 +154,15 @@ void LuaEnvironment::RegisterCFunction(const char *funcName, lua_CFunction func)
     ds_lua::RegisterCFunction(m_lua, funcName, func);
 }
 
-void LuaEnvironment::PushLightUserData(void *p)
+void LuaEnvironment::RegisterLightUserData(const char *userDataName, void *p)
 {
-    lua_pushlightuserdata(m_lua, p);
+    ds_lua::RegisterLightUserData(m_lua, userDataName, p);
+}
+
+void LuaEnvironment::RegisterClass(const char *className,
+                                   const luaL_Reg *metaMethods,
+                                   const luaL_Reg *methods)
+{
+    ds_lua::RegisterClass(m_lua, className, metaMethods, methods);
 }
 }

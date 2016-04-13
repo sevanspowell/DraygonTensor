@@ -2,6 +2,7 @@
 
 #include "engine/Config.h"
 #include "engine/message/Message.h"
+#include "engine/system/script/ScriptBindingSet.h"
 
 namespace ds
 {
@@ -70,5 +71,16 @@ public:
      * system.
      */
     virtual ds_msg::MessageStream CollectMessages() = 0;
+
+    /**
+     * Optionally return any required script bindings.
+     *
+     * @return  ScriptBindingSet, the script bindings the system wants to
+     * register with the Script system.
+     */
+    virtual ScriptBindingSet GetScriptBindings()
+    {
+        return ScriptBindingSet();
+    }
 };
 }
