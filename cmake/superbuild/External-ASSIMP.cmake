@@ -1,0 +1,13 @@
+# Get and build STB
+ExternalProject_Add(
+  assimp
+  GIT_REPOSITORY https://github.com/assimp/assimp.git
+  GIT_TAG master
+  INSTALL_DIR "${ASSIMP_ROOT_DIR}"
+  INSTALL_COMMAND
+  CMAKE_ARGS
+    -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+    -DASSIMP_BUILD_ASSIMP_TOOLS=OFF
+    -DASSIMP_BUILD_SAMPLES=OFF
+    -DASSIMP_BUILD_TESTS=OFF
+  )

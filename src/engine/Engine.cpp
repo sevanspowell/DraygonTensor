@@ -12,6 +12,8 @@ void Engine::Start()
         {
             Update(0.1f);
         }
+
+        Shutdown();
     }
     else
     {

@@ -1,6 +1,9 @@
+#include <algorithm> 
+
 #include <SDL2/SDL.h>
 
 #include "engine/system/platform/Video.h"
+#include "engine/message/MessageHelper.h"
 
 namespace ds_platform
 {
@@ -66,14 +69,13 @@ bool Video::Initialize(const ds::Config &config)
         if (result == true && renderer != "none")
         {
             // Tell everyone that a graphics context has been created
-            ds_msg::MessageHeader header;
-            header.type = ds_msg::MessageType::GraphicsContextCreated;
-            header.size = sizeof(ds_msg::GraphicsContextCreated);
-
             ds_msg::GraphicsContextCreated gfxContext;
             gfxContext.contextInfo = m_window.contextInfo;
 
-            m_messagesGenerated << header << gfxContext;
+            ds_msg::AppendMessage(&m_messagesGenerated,
+                                  ds_msg::MessageType::GraphicsContextCreated,
+                                  sizeof(ds_msg::GraphicsContextCreated),
+                                  &gfxContext);
         }
     }
 

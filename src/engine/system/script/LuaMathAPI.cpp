@@ -156,8 +156,9 @@ static int LVector3SetX(lua_State *L)
     return 0;
 }
 
-static const luaL_Reg vector3Methods[] = {
-    {"get_x", LVector3GetX}, {"set_x", LVector3SetX}, {NULL, NULL}};
+static const luaL_Reg vector3Methods[] = {{"get_x", LVector3GetX},
+                                          {"set_x", LVector3SetX},
+                                          {NULL, NULL}};
 
 static const luaL_Reg vector3MetaMethods[] = {
     {"__call", LVector3Ctor}, {"__tostring", LVector3ToString}, {NULL, NULL},

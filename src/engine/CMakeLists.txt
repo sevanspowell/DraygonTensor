@@ -10,6 +10,14 @@ set(ENGINE_INCLUDE_FILES
   message/Message.h
   message/MessageBus.h
   message/MessageFactory.h
+  message/MessageHelper.h
+  resource/IResource.h
+  resource/MaterialResource.h
+  resource/MeshResource.h
+  resource/ResourceFactory.h
+  resource/ResourceFactory.hpp
+  resource/ShaderResource.h
+  resource/TextureResource.h
   system/Console.h
   system/input/Input.h
   system/input/InputContext.h
@@ -18,9 +26,11 @@ set(ENGINE_INCLUDE_FILES
   system/platform/Platform.h
   system/platform/Video.h
   system/platform/Window.h
+  system/render/Render.h
   system/script/LuaEnvironment.h
   system/script/LuaHelper.h
   system/script/Script.h
+  system/script/ScriptBindingSet.h
 )
 
 set(ENGINE_SRC_FILES
@@ -31,6 +41,11 @@ set(ENGINE_SRC_FILES
   common/StringIntern.cpp
   message/MessageBus.cpp
   message/MessageFactory.cpp
+  message/MessageHelper.cpp
+  resource/MaterialResource.cpp
+  resource/MeshResource.cpp
+  resource/ShaderResource.cpp
+  resource/TextureResource.cpp
   system/Console.cpp
   system/input/Input.cpp
   system/input/InputContext.cpp
@@ -39,15 +54,17 @@ set(ENGINE_SRC_FILES
   system/platform/Platform.cpp
   system/platform/Video.cpp
   system/platform/Window.cpp
+  system/render/Render.cpp
   system/script/LuaAPI.cpp
   system/script/LuaEnvironment.cpp
   system/script/LuaHelper.cpp
   system/script/Script.cpp
+  system/script/ScriptBindingSet.cpp
 )
 
 add_library(drunken_sailor_engine STATIC ${ENGINE_INCLUDE_FILES} ${ENGINE_SRC_FILES})
 
-target_link_libraries(drunken_sailor_engine ${LIBS})
+target_link_libraries(drunken_sailor_engine ${LIBS} ds_math)
 
 install(TARGETS drunken_sailor_engine DESTINATION lib)
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/ DESTINATION include
