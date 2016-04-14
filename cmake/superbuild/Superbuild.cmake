@@ -97,14 +97,14 @@ endif (NOT STB_FOUND)
 
 # Try to find assimp
 set(ASSIMP_ROOT_DIR ${CMAKE_SOURCE_DIR}/../../external/assimp)
-find_package(assimp REQUIRED)
-#if (NOT assimp_FOUND)
-#  message("Will download assimp..")
-#  include(${CMAKE_SOURCE_DIR}/External-ASSIMP.cmake)
-#  list(APPEND DRUNKEN_SAILOR_ENGINE_DEPENDENCIES assimp)
-#else (NOT assimp_FOUND)
-#  set (ASSIMP_ROOT_DIR ${ASSIMP_INCLUDE_DIRS}/..)
-#endif (NOT assimp_FOUND)
+find_package(assimp)
+if (NOT assimp_FOUND)
+  message("Will download assimp..")
+  include(${CMAKE_SOURCE_DIR}/External-ASSIMP.cmake)
+  list(APPEND DRUNKEN_SAILOR_ENGINE_DEPENDENCIES assimp)
+else (NOT assimp_FOUND)
+  set (ASSIMP_ROOT_DIR ${ASSIMP_INCLUDE_DIRS}/..)
+endif (NOT assimp_FOUND)
 
 ExternalProject_Add(
 	drunken_sailor_engine
