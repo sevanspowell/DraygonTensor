@@ -1,3 +1,5 @@
 subdirs(
-  sound
+    script
+    script_console
+    sound
 )
