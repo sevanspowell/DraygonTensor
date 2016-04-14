@@ -21,7 +21,6 @@ set(ENGINE_INCLUDE_FILES
   system/Console.h
   system/input/Input.h
   system/input/InputContext.h
-  system/platform/Input.h
   system/platform/Keyboard.h
   system/platform/Platform.h
   system/platform/Video.h
@@ -49,16 +48,16 @@ set(ENGINE_SRC_FILES
   system/Console.cpp
   system/input/Input.cpp
   system/input/InputContext.cpp
-  system/platform/Input.cpp
   system/platform/Keyboard.cpp
   system/platform/Platform.cpp
   system/platform/Video.cpp
   system/platform/Window.cpp
   system/render/Render.cpp
-  system/script/LuaAPI.cpp
+  system/script/LuaMathAPI.cpp
   system/script/LuaEnvironment.cpp
   system/script/LuaHelper.cpp
   system/script/Script.cpp
+  system/script/ScriptLuaBindings.cpp
   system/script/ScriptBindingSet.cpp
 )
 

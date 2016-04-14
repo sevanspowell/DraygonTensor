@@ -80,15 +80,21 @@ void RegisterLightUserData(lua_State *L, const char *userDataName, void *p);
  *
  * @param  L            lua_Stat *, lua_State to register the C function with.
  * @param  className    const char *, name of the class to register.
- * @param  metaMethods  const luaL_reg *, metamethods to be registered with
+ * @param  methods      const luaL_reg *, class methods to be registered with
  * the class, must be a NULL terminated table of luaL_Reg
  * (http://www.lua.org/manual/5.3/manual.html#luaL_Reg).
- * @param  metaMethods  const luaL_reg *, methods to be registered with the
- * class, must be a NULL terminated table of luaL_Reg
+ * @param  functions    const luaL_reg *, class static methods to be registered
+ * with the class, must be a NULL terminated table of luaL_Reg
  * (http://www.lua.org/manual/5.3/manual.html#luaL_Reg).
+ * @param  special      const luaL_reg *, class special methods to be registered
+ * with the class, must be a NULL terminated table of luaL_Reg
+ * (http://www.lua.org/manual/5.3/manual.html#luaL_Reg). Special methods are
+ * filled in the metable of the static methods table. This is useful for
+ * constructors (__call).
  */
 void RegisterClass(lua_State *L,
                    const char *className,
-                   const luaL_Reg *metaMethods,
-                   const luaL_Reg *methods);
+                   const luaL_Reg *methods,
+                   const luaL_Reg *functions,
+                   const luaL_Reg *special);
 }

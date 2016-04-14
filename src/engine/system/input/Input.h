@@ -75,6 +75,14 @@ public:
      */
     virtual ds_msg::MessageStream CollectMessages();
 
+    /**
+     * Return required script bindings.
+     *
+     * @return  ScriptBindingSet, the script bindings the input system wants to
+     * register with the Script system.
+     */
+    virtual ScriptBindingSet GetScriptBindings() const;
+
 private:
     /**
      * Pre-populates the key name to key code map, mapping key name to a key
