@@ -11,13 +11,9 @@ std::unique_ptr<IResource> TextureResource::CreateFromFile(std::fstream &fileIn)
     std::unique_ptr<IResource> textureResource(nullptr);
 
     // TODO: Parse file
-    int width, height, channels;
-    // unsigned char *heightMap = SOIL_load_image("../assets/terrain.tga",
-    // &width,
-    //                                            &height, &channels,
-    //                                            SOIL_LOAD_L);
-    unsigned char *image =
-        stbi_load("../assets/terrain.tga", &width, &height, &channels, 0);
+    // int width, height, channels;
+    // unsigned char *image =
+    //     stbi_load("../assets/terrain.tga", &width, &height, &channels, 0);
 
     // TODO: Create texture resource
 

@@ -31,7 +31,7 @@ if(WIN32)
 	endif(MSVC12)
 	
 	if(MSVC12 OR MSVC14)
-	
+
 		find_path(ASSIMP_LIBRARY_DIR
 			NAMES
 				assimp-${ASSIMP_MSVC_VERSION}-mt.lib
@@ -78,29 +78,19 @@ if(WIN32)
 else(WIN32)
 
 	find_path(
-	  assimp_INCLUDE_DIRS
-	  NAMES postprocess.h scene.h version.h config.h cimport.h
-	  PATHS /usr/local/include/
+	  ASSIMP_INCLUDE_DIRS
+	  NAMES assimp/postprocess.h assimp/scene.h assimp/version.h assimp/config.h assimp/cimport.h
+	  PATHS /usr/local/include/ ${ASSIMP_ROOT_DIR}/include
 	)
 
 	find_library(
-	  assimp_LIBRARIES
+	  ASSIMP_LIBRARIES
 	  NAMES assimp
-	  PATHS /usr/local/lib/
+	  PATHS /usr/local/lib/ ${ASSIMP_ROOT_DIR}/lib
 	)
-
-	if (assimp_INCLUDE_DIRS AND assimp_LIBRARIES)
-	  SET(assimp_FOUND TRUE)
-	ENDIF (assimp_INCLUDE_DIRS AND assimp_LIBRARIES)
-
-	if (assimp_FOUND)
-	  if (NOT assimp_FIND_QUIETLY)
-		message(STATUS "Found asset importer library: ${assimp_LIBRARIES}")
-	  endif (NOT assimp_FIND_QUIETLY)
-	else (assimp_FOUND)
-	  if (assimp_FIND_REQUIRED)
-		message(FATAL_ERROR "Could not find asset importer library")
-	  endif (assimp_FIND_REQUIRED)
-	endif (assimp_FOUND)
 	
+  # handle the QUIETLY and REQUIRED arguments and set ASSIMP_FOUND to TRUE if # all listed variables are TRUE
+  INCLUDE(FindPackageHandleStandardArgs)
+  FIND_PACKAGE_HANDLE_STANDARD_ARGS(assimp DEFAULT_MSG ASSIMP_LIBRARIES ASSIMP_INCLUDE_DIRS)
+
 endif(WIN32)
