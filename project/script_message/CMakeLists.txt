@@ -1,4 +1,4 @@
-project(render_system)
+project(script_system)
 
 include(Common)
 
