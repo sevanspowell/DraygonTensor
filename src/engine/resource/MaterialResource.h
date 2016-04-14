@@ -1,4 +1,5 @@
 #include <memory>
+#include <string>
 
 #include "engine/resource/IResource.h"
 
@@ -10,12 +11,12 @@ public:
     /**
      * Create a material resource from file.
      *
-     * @param   fileIn  std::fstream &, file stream to create material resource
+     * @param   filePath  std::string &, file path to create material resource
      * from.
      * @return          std::unique_ptr<IResource>, pointer to material resource
      * created.
      */
-    static std::unique_ptr<IResource> CreateFromFile(std::fstream &fileIn);
+    static std::unique_ptr<IResource> CreateFromFile(std::string &filePath);
 
 private:
 };

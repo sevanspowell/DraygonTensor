@@ -1,5 +1,6 @@
 #include <fstream>
 
+
 #include "engine/resource/MaterialResource.h"
 #include "engine/resource/MeshResource.h"
 #include "engine/resource/ShaderResource.h"
@@ -20,11 +21,30 @@ bool Render::Initialize(const Config &config)
     m_factory.RegisterCreator<TextureResource>(TextureResource::CreateFromFile);
 
     // Example ...
-    std::fstream fs;
-    fs.open("../assets/boot.lua", std::fstream::in);
+	std::string meshResourcePath = "../assets/boot.lua";
+
     std::unique_ptr<IResource> meshResource =
-        m_factory.CreateResource<MeshResource>(fs);
-    fs.close();
+        m_factory.CreateResource<MeshResource>(meshResourcePath);
+
+
+	/* Example using the texture gen */
+	std::string textureExamplePath = "../assets/test.png";
+	std::unique_ptr<IResource> texResource =
+		m_factory.CreateResource<TextureResource>(textureExamplePath);
+	std::unique_ptr<TextureResource> changedResourcePointer
+		(static_cast<TextureResource*>(texResource.release()));
+
+	std::cout << "width: " << changedResourcePointer->GetWidthInPixels() << std::endl;
+	std::cout << "height: " << changedResourcePointer->GetHeightInPixels() << std::endl;
+
+	if (changedResourcePointer->GetImageFormat() == TextureResource::PNG) {
+		std::cout << "Format read - Yes." << std::endl;
+	}
+
+	std::cout << "Components/Channels: " << (int)changedResourcePointer->GetComponentFlag() << std::endl;
+	
+
+
 
     return result;
 }

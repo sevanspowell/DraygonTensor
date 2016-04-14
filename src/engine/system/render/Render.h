@@ -2,6 +2,7 @@
 
 #include "engine/system/ISystem.h"
 #include "engine/resource/ResourceFactory.h"
+#include <string>
 
 namespace ds
 {
