@@ -11,9 +11,6 @@ namespace ds
 
 /**
  * A texture resource.
- *
- * @author	Luke Sharland
- * @date	14/04/2016
  */
 class TextureResource : public IResource
 {
@@ -21,7 +18,7 @@ public:
     /**
      * Create a texture resource from file.
      *
-     * @param   fileIn  std::string &, file path to create texture resource
+     * @param   fileIn  std::string, file path to create texture resource
      * from.
      * @return          std::unique_ptr<IResource>, pointer to texture resource
      * created.
@@ -30,27 +27,18 @@ public:
 
     /**
      * Default constructor.
-     *
-     * @author	Luke Sharland
-     * @date	14/04/2016
      */
 
     TextureResource();
 
 	/**
 	 * Destructor.
-	 *
-	 * @author	Luke Sharland
-	 * @date	14/04/2016
 	 */
 
 	~TextureResource();
 
     /**
      * Gets width in pixels.
-     *
-     * @author	Luke Sharland
-     * @date	14/04/2016
      *
      * @return	The width in pixels.
      */
@@ -60,9 +48,6 @@ public:
     /**
      * Gets height in pixels.
      *
-     * @author	Luke Sharland
-     * @date	14/04/2016
-     *
      * @return	The height in pixels.
      */
 
@@ -70,9 +55,6 @@ public:
 
     /**
      * Query if this object is RGB.
-     *
-     * @author	Luke Sharland
-     * @date	14/04/2016
      *
      * @return	true if rgb, false if not.
      */
@@ -82,9 +64,6 @@ public:
     /**
      * Query if this object is RGBA.
      *
-     * @author	Luke Sharland
-     * @date	14/04/2016
-     *
      * @return	true if rgba, false if not.
      */
 
@@ -92,9 +71,6 @@ public:
 
     /**
      * Query if this object is grey alpha.
-     *
-     * @author	Luke Sharland
-     * @date	14/04/2016
      *
      * @return	true if grey alpha, false if not.
      */
@@ -104,9 +80,6 @@ public:
     /**
      * Query if this object is grey.
      *
-     * @author	Luke Sharland
-     * @date	14/04/2016
-     *
      * @return	true if grey, false if not.
      */
 
@@ -114,9 +87,6 @@ public:
 
     /**
      * Gets image format.
-     *
-     * @author	Luke Sharland
-     * @date	14/04/2016
      *
      * @return	The image format.
      */
@@ -126,9 +96,6 @@ public:
     /**
      * Gets component flag.
      *
-     * @author	Luke Sharland
-     * @date	14/04/2016
-     *
      * @return	The component flag.
      */
 
@@ -136,9 +103,6 @@ public:
 
     /**
      * Gets texture contents.
-     *
-     * @author	Luke Sharland
-     * @date	14/04/2016
      *
      * @return	null if it fails, else the texture contents.
      */
@@ -182,11 +146,7 @@ private:
     /**
      * Extracts the extension described by path.
      *
-     * @author	Luke Sharland
-     * @date	14/04/2016
-     *
      * @param	path	Full pathname of the file.
-     *
      * @return	The extracted extension.
      */
 
@@ -195,11 +155,7 @@ private:
     /**
      * Determine type flag.
      *
-     * @author	Luke Sharland
-     * @date	14/04/2016
-     *
      * @param	ext	The extentension.
-     *
      * @return	An ImageFormat.
      */
 
@@ -207,9 +163,6 @@ private:
 
     /**
      * Sets image format.
-     *
-     * @author	Luke Sharland
-     * @date	14/04/2016
      *
      * @param	format	Describes the format loaded.
      */
@@ -219,9 +172,6 @@ private:
     /**
      * Sets component flag.
      *
-     * @author	Luke Sharland
-     * @date	14/04/2016
-     *
      * @param	comp	The component/channel.
      */
 
@@ -230,9 +180,6 @@ private:
     /**
      * Sets width in pixels.
      *
-     * @author	Luke Sharland
-     * @date	14/04/2016
-     *
      * @param	width	The width in pixels.
      */
 
@@ -240,10 +187,7 @@ private:
 
     /**
      * Sets height in pixels.
-     *
-     * @author	Luke Sharland
-     * @date	14/04/2016
-     *
+     * 
      * @param	height	The height in pixels.
      */
 
@@ -251,10 +195,7 @@ private:
 
     /**
      * Sets texture contents.
-     *
-     * @author	Luke Sharland
-     * @date	14/04/2016
-     *
+     * 
      * @param [in,out]	textCont	If non-null, the text container.
      */
 

@@ -11,12 +11,12 @@ public:
     /**
      * Create a material resource from file.
      *
-     * @param   filePath  std::string &, file path to create material resource
+     * @param   filePath  std::string, file path to create material resource
      * from.
      * @return          std::unique_ptr<IResource>, pointer to material resource
      * created.
      */
-    static std::unique_ptr<IResource> CreateFromFile(std::string &filePath);
+    static std::unique_ptr<IResource> CreateFromFile(std::string filePath);
 
 private:
 };

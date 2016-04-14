@@ -2,7 +2,7 @@
 
 namespace ds
 {
-std::unique_ptr<IResource> ShaderResource::CreateFromFile(std::string &filePath)
+std::unique_ptr<IResource> ShaderResource::CreateFromFile(std::string filePath)
 {
     std::unique_ptr<IResource> shaderResource(nullptr);
 

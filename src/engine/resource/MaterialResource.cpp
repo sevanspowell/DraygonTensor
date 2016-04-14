@@ -2,7 +2,7 @@
 
 namespace ds
 {
-std::unique_ptr<IResource> MaterialResource::CreateFromFile(std::string &filePath)
+std::unique_ptr<IResource> MaterialResource::CreateFromFile(std::string filePath)
 {
     std::unique_ptr<IResource> materialResource(nullptr);
 
