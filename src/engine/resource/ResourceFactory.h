@@ -1,10 +1,11 @@
 #pragma once
 
-#include <fstream>
+
 #include <functional>
 #include <map>
 #include <typeindex>
 #include <typeinfo>
+#include <string>
 
 #include "engine/resource/IResource.h"
 
@@ -22,28 +23,28 @@ public:
      * resources of the given type.
      *
      * @param  creatorFunction
-     * std::function<std::unique_ptr<IResource>(std::fstream &), pointer to
+     * std::function<std::unique_ptr<IResource>(std::string), pointer to
      * function to be used to create resource.
      */
     template <typename T>
     void
-    RegisterCreator(std::function<std::unique_ptr<IResource>(std::fstream &)>
+    RegisterCreator(std::function<std::unique_ptr<IResource>(std::string)>
                         creatorFunction);
 
     /**
      * Create a resource of the given type.
      *
-     * @param   fileIn  std::fstream &, file stream to load resource from.
+     * @param   fileIn  std::string, file path to the resource
      * @return          std::unique_ptr<IResource>, pointer to resource created,
      * resource factory maintains no ownership of the pointer and no
      * responsibility for freeing it's associated memory.
      */
     template <typename T>
-    std::unique_ptr<IResource> CreateResource(std::fstream &fileIn) const;
+    std::unique_ptr<IResource> CreateResource(std::string fileIn) const;
 
 private:
     std::map<std::type_index,
-             std::function<std::unique_ptr<IResource>(std::fstream &)>>
+             std::function<std::unique_ptr<IResource>(std::string)>>
         m_creators;
 };
 

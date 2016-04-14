@@ -4,7 +4,7 @@
 
 namespace ds
 {
-std::unique_ptr<IResource> MeshResource::CreateFromFile(std::fstream &fileIn)
+std::unique_ptr<IResource> MeshResource::CreateFromFile(std::string filePath)
 {
     std::unique_ptr<IResource> meshResource(nullptr);
 
