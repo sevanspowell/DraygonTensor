@@ -5,7 +5,6 @@
 #include "engine/message/Message.h"
 #include "engine/message/MessageBus.h"
 #include "engine/system/ISystem.h"
-#include "engine/system/script/Script.h"
 
 namespace ds
 {
@@ -100,9 +99,13 @@ private:
      */
     void ProcessMessages(ds_msg::MessageStream *messages);
 
+    // For message passing between systems
     MessageBus m_messageBus;
+    // Is the engine running?
     bool m_running;
+    // Internal message stream
     ds_msg::MessageStream m_messagesInternal;
+    // Systems managed by the engine
     std::vector<std::shared_ptr<ISystem>> m_systems;
 };
 }

@@ -3,8 +3,45 @@
 #include "engine/message/MessageFactory.h"
 #include "engine/system/input/Input.h"
 
+namespace ds_lua
+{
+static int LHelloWorld(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expected = 0;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push input system pointer onto stack
+    lua_getglobal(L, "__Input");
+
+    // If first item on stack isn't user data (our input system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Input *inputPtr = (ds::Input *)lua_touserdata(L, -1);
+        assert(inputPtr != NULL);
+
+        // inputPtr->HelloWorld();
+    }
+
+    // Return input system pointer
+    assert(lua_gettop(L) == 1);
+
+    return 1;
+}
+}
+
 namespace ds
 {
+
 bool Input::Initialize(const Config &config)
 {
     bool result = true;
@@ -83,6 +120,14 @@ ds_msg::MessageStream Input::CollectMessages()
     m_messagesGenerated.Clear();
 
     return tmp;
+}
+
+ScriptBindingSet Input::GetScriptBindings() const
+{
+    ScriptBindingSet scriptBindings;
+    scriptBindings.AddFunction("hello_world", ds_lua::LHelloWorld);
+
+    return scriptBindings;
 }
 
 bool Input::GetKeyCodeForKeyName(std::string keyName,

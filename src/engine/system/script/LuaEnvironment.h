@@ -161,16 +161,24 @@ public:
      * (http://lua-users.org/wiki/MetatableEvents) for a list of possibilities.
      *
      * @param  className    const char *, name of the class to register.
-     * @param  metaMethods  const luaL_reg *, metamethods to be registered with
+     * @param  methods      const luaL_reg *, class methods to be registered
+     * with
      * the class, must be a NULL terminated table of luaL_Reg
      * (http://www.lua.org/manual/5.3/manual.html#luaL_Reg).
-     * @param  metaMethods  const luaL_reg *, methods to be registered with the
-     * class, must be a NULL terminated table of luaL_Reg
+     * @param  functions    const luaL_reg *, class static methods to be
+     * registered
+     * with the class, must be a NULL terminated table of luaL_Reg
      * (http://www.lua.org/manual/5.3/manual.html#luaL_Reg).
+     * @param  special      const luaL_reg *, class special methods to be
+     * registered with the class, must be a NULL terminated table of luaL_Reg
+     * (http://www.lua.org/manual/5.3/manual.html#luaL_Reg). Special methods are
+     * filled in the metable of the static methods table. This is useful for
+     * constructors (i.e. __call).
      */
     void RegisterClass(const char *className,
-                       const luaL_Reg *metaMethods,
-                       const luaL_Reg *methods);
+                       const luaL_Reg *methods,
+                       const luaL_Reg *functions,
+                       const luaL_Reg *special);
 
 private:
     // Prevent the LuaEnvironment from being copied.

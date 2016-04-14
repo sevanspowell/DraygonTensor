@@ -172,45 +172,86 @@ void RegisterLightUserData(lua_State *L, const char *userDataName, void *p)
     assert(lua_gettop(L) == oldStackSize);
 }
 
+// void RegisterClass(lua_State *L,
+//                    const char *className,
+//                    const luaL_Reg *metaMethods,
+//                    const luaL_Reg *methods)
+// {
+//     // Create global methods table
+//     lua_newtable(L);
+//     luaL_setfuncs(L, methods, 0);
+//     lua_setglobal(L, className); // Pops table off stack
+//     // Push methods table back on stack
+//     lua_getglobal(L, className);
+
+//     std::cout << "Reached: " << std::string(className) << std::endl;
+//     // Create metatable for class and add it to Lua registry
+//     luaL_newmetatable(L, className);
+//     // Fill metatable
+//     luaL_setfuncs(L, metaMethods, 0);
+//     std::cout << "Reached: " << std::string(className) << std::endl;
+
+//     // Create metatable index field
+//     lua_pushliteral(L, "__index");
+//     // Duplicate methods table
+//     lua_pushvalue(L, -3);
+//     // Set methods table to metatable index field (metatable.__index =
+//     methods)
+//     lua_rawset(L, -3); // Pops key, value from stack
+
+//     // Create metatable metatable field
+//     lua_pushliteral(L, "__metatable");
+//     // Duplicate methods table
+//     lua_pushvalue(L, -3);
+//     // Hide metatable: metatable.__metatable = methods. When
+//     getmetatable(table)
+//     // is called, methods table is returned rather than the metatable itself
+//     lua_rawset(L, -3); // Pops key, value from stack
+
+//     // Pop metatable and methods table off stack (stack is now clean)
+//     // lua_pop(L, 2);
+
+//     // Set metatable of methods table
+//     lua_setmetatable(L, -2); // Pops metatable off stack
+
+//     // Pop methods table off stack
+//     lua_pop(L, 1);
+// }
 void RegisterClass(lua_State *L,
                    const char *className,
-                   const luaL_Reg *metaMethods,
-                   const luaL_Reg *methods)
+                   const luaL_Reg *methods,
+                   const luaL_Reg *functions,
+                   const luaL_Reg *special)
 {
-    // Create global methods table
-    lua_newtable(L);
-    luaL_setfuncs(L, methods, 0);
-    lua_setglobal(L, className); // Pops table off stack
-    // Push methods table back on stack
-    lua_getglobal(L, className);
-
-    // Create metatable for class and add it to Lua registry
+    // Create a new metatable and add it to the registry under the class name
     luaL_newmetatable(L, className);
-    // Fill metatable
-    luaL_setfuncs(L, metaMethods, 0);
+    // When metarray is indexed, metarray itself is returned
+    lua_pushstring(L, "__index");
+    lua_pushvalue(L, -2); // Push metatable
+    lua_settable(L, -3);  // metatable.__index = metatable
 
-    // Create metatable index field
-    lua_pushliteral(L, "__index");
-    // Duplicate methods table
-    lua_pushvalue(L, -3);
-    // Set methods table to metatable index field (metatable.__index = methods)
-    lua_rawset(L, -3); // Pops key, value from stack
+    // Fill metarray with member functions (methods)
+    luaL_setfuncs(L, methods, 0);
 
-    // Create metatable metatable field
-    lua_pushliteral(L, "__metatable");
-    // Duplicate methods table
-    lua_pushvalue(L, -3);
-    // Hide metatable: metatable.__metatable = methods. When getmetatable(table)
-    // is called, methods table is returned rather than the metatable itself
-    lua_rawset(L, -3); // Pops key, value from stack
-
-    // Pop metatable and methods table off stack (stack is now clean)
-    // lua_pop(L, 2);
-
-    // Set metatable of methods table
-    lua_setmetatable(L, -2); // Pops metatable off stack
-
-    // Pop methods table off stack
+    // Pop off metarray
     lua_pop(L, 1);
+
+    // Create static functions
+    lua_newtable(L);
+    luaL_setfuncs(L, functions, 0);
+    lua_pushvalue(L, -1); // Duplicate static functions table because set global
+                          // pops table off stack.
+    lua_setglobal(L, className); // Can now access static functions using only
+                                 // class name i.e. Vec3.new
+
+    lua_newtable(L);
+    luaL_setfuncs(L, special, 0);
+    lua_setmetatable(L, -2); // Set special functions of static function table
+
+    // Pop off static functions table
+    lua_pop(L, 1);
+
+    // Ensure stack is clean
+    assert(lua_gettop(L) == 0);
 }
 }
