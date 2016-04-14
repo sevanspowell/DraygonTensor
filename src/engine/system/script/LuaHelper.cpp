@@ -172,51 +172,6 @@ void RegisterLightUserData(lua_State *L, const char *userDataName, void *p)
     assert(lua_gettop(L) == oldStackSize);
 }
 
-// void RegisterClass(lua_State *L,
-//                    const char *className,
-//                    const luaL_Reg *metaMethods,
-//                    const luaL_Reg *methods)
-// {
-//     // Create global methods table
-//     lua_newtable(L);
-//     luaL_setfuncs(L, methods, 0);
-//     lua_setglobal(L, className); // Pops table off stack
-//     // Push methods table back on stack
-//     lua_getglobal(L, className);
-
-//     std::cout << "Reached: " << std::string(className) << std::endl;
-//     // Create metatable for class and add it to Lua registry
-//     luaL_newmetatable(L, className);
-//     // Fill metatable
-//     luaL_setfuncs(L, metaMethods, 0);
-//     std::cout << "Reached: " << std::string(className) << std::endl;
-
-//     // Create metatable index field
-//     lua_pushliteral(L, "__index");
-//     // Duplicate methods table
-//     lua_pushvalue(L, -3);
-//     // Set methods table to metatable index field (metatable.__index =
-//     methods)
-//     lua_rawset(L, -3); // Pops key, value from stack
-
-//     // Create metatable metatable field
-//     lua_pushliteral(L, "__metatable");
-//     // Duplicate methods table
-//     lua_pushvalue(L, -3);
-//     // Hide metatable: metatable.__metatable = methods. When
-//     getmetatable(table)
-//     // is called, methods table is returned rather than the metatable itself
-//     lua_rawset(L, -3); // Pops key, value from stack
-
-//     // Pop metatable and methods table off stack (stack is now clean)
-//     // lua_pop(L, 2);
-
-//     // Set metatable of methods table
-//     lua_setmetatable(L, -2); // Pops metatable off stack
-
-//     // Pop methods table off stack
-//     lua_pop(L, 1);
-// }
 void RegisterClass(lua_State *L,
                    const char *className,
                    const luaL_Reg *methods,

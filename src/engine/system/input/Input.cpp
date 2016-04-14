@@ -5,7 +5,7 @@
 
 namespace ds_lua
 {
-static int LHelloWorld(lua_State *L)
+static int l_HelloWorld(lua_State *L)
 {
     // Get number of arguments provided
     int n = lua_gettop(L);
@@ -125,7 +125,7 @@ ds_msg::MessageStream Input::CollectMessages()
 ScriptBindingSet Input::GetScriptBindings() const
 {
     ScriptBindingSet scriptBindings;
-    scriptBindings.AddFunction("hello_world", ds_lua::LHelloWorld);
+    scriptBindings.AddFunction("hello_world", ds_lua::l_HelloWorld);
 
     return scriptBindings;
 }
