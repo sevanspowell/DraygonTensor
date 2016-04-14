@@ -1,3 +1,4 @@
+#include <memory>
 #include <vector>
 
 #include "math/Vector3.h"

@@ -84,6 +84,28 @@ else (NOT SFML_FOUND)
   set (SFML_ROOT ${SFML_INCLUDE_DIR}/..)
 endif (NOT SFML_FOUND)
 
+# Try to find stb
+set(STB_BASE_DIR ${CMAKE_SOURCE_DIR}/../../external/stb)
+find_package(stb)
+if (NOT STB_FOUND)
+  message("Will download stb..")
+  include(${CMAKE_SOURCE_DIR}/External-STB.cmake)
+  list(APPEND DRUNKEN_SAILOR_ENGINE_DEPENDENCIES stb)
+else (NOT STB_FOUND)
+  set (STB_BASE_DIR ${STB_INCLUDE_DIR})
+endif (NOT STB_FOUND)
+
+# Try to find assimp
+set(ASSIMP_ROOT_DIR ${CMAKE_SOURCE_DIR}/../../external/assimp)
+find_package(assimp REQUIRED)
+#if (NOT assimp_FOUND)
+#  message("Will download assimp..")
+#  include(${CMAKE_SOURCE_DIR}/External-ASSIMP.cmake)
+#  list(APPEND DRUNKEN_SAILOR_ENGINE_DEPENDENCIES assimp)
+#else (NOT assimp_FOUND)
+#  set (ASSIMP_ROOT_DIR ${ASSIMP_INCLUDE_DIRS}/..)
+#endif (NOT assimp_FOUND)
+
 ExternalProject_Add(
 	drunken_sailor_engine
 	DEPENDS ${DRUNKEN_SAILOR_ENGINE_DEPENDENCIES}
@@ -98,6 +120,8 @@ ExternalProject_Add(
     -DRAPIDJSON_INCLUDEDIR=${RAPIDJSON_INCLUDEDIR}
     -DGLEW_DIR=${GLEW_DIR}
     -DSFML_ROOT=${SFML_ROOT}
+    -DASSIMP_ROOT_DIR=${ASSIMP_ROOT_DIR}
+    -DSTB_BASE_DIR=${STB_BASE_DIR}
 		-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
 	)

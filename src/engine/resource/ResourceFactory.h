@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fstream>
+#include <functional>
 #include <map>
 #include <typeindex>
 #include <typeinfo>

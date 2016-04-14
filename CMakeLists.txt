@@ -12,6 +12,10 @@ endif (UNIX)
 if (MSVC)
 	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /SAFESEH:NO")
 endif (MSVC)
 
 set(REQUIRED_DLLS)
@@ -60,5 +64,15 @@ if (WIN32)
 	list (APPEND REQUIRED_DLLS ${SFML_ROOT}/bin/sfml-audio-d-2.dll)
 	list (APPEND REQUIRED_DLLS ${SFML_ROOT}/bin/sfml-system-d-2.dll)
 endif (WIN32)
+
+find_package(stb REQUIRED)
+include_directories(${STB_INCLUDE_DIR})
+
+find_package(assimp REQUIRED)
+include_directories(${ASSIMP_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${ASSIMP_LIBRARIES})
+if (WIN32)
+  list(APPEND REQUIRED_DLLS ${ASSIMP_ROOT_DIR}/bin/assimp-${ASSIMP_MSVC_VERSION}-mt.dll)
+endif(WIN32)
 
 subdirs(src test project)

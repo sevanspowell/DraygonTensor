@@ -1,3 +1,5 @@
+#include <algorithm> 
+
 #include <SDL2/SDL.h>
 
 #include "engine/system/platform/Video.h"
