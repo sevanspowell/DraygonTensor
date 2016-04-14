@@ -16,12 +16,12 @@ public:
     /**
      * Create a mesh resource from file.
      *
-     * @param   fileIn  std::fstream &, file stream to create mesh resource
+     * @param   filePath  std::string , file path to create mesh resource
      * from.
      * @return          std::unique_ptr<IResource>, pointer to mesh resource
      * created.
      */
-    static std::unique_ptr<IResource> CreateFromFile(std::fstream &fileIn);
+    static std::unique_ptr<IResource> CreateFromFile(std::string filePath);
 
 private:
     // TODO: std::vector<ds_math::Vector3> m_vertices;
