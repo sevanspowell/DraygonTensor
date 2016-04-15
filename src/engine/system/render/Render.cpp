@@ -1,11 +1,11 @@
 #include <fstream>
 
-
 #include "engine/resource/MaterialResource.h"
 #include "engine/resource/MeshResource.h"
 #include "engine/resource/ShaderResource.h"
 #include "engine/resource/TextureResource.h"
 #include "engine/system/render/Render.h"
+#include "math/Vector4.h"
 
 namespace ds
 {
@@ -29,15 +29,40 @@ bool Render::Initialize(const Config &config)
 
 
     /* Example using shader gen */
-    std::string shaderExamplePath = "../assets/diffuse.shader";
-    std::unique_ptr<ShaderResource> shaderResource =
-        m_factory.CreateResource<ShaderResource>(shaderExamplePath);
-    std::cout << shaderResource->GetResourceFilePath() << std::endl;
-    // For each shader type
-    for (auto shaderType : shaderResource->GetShaderTypes())
+    // std::string shaderExamplePath = "../assets/diffuse.shader";
+    // std::unique_ptr<ShaderResource> shaderResource =
+    //     m_factory.CreateResource<ShaderResource>(shaderExamplePath);
+    // std::cout << shaderResource->GetResourceFilePath() << std::endl;
+    // // For each shader type
+    // for (auto shaderType : shaderResource->GetShaderTypes())
+    // {
+    //     std::cout << shaderResource->GetShaderSource(shaderType) <<
+    //     std::endl;
+    // }
+
+    /* Example using material gen */
+    std::string materialExamplePath = "../assets/test.material";
+    std::unique_ptr<MaterialResource> materialResource =
+        m_factory.CreateResource<MaterialResource>(materialExamplePath);
+    std::cout << materialResource->GetResourceFilePath() << std::endl;
+    const std::vector<ds_render::Uniform> &uniforms =
+        materialResource->GetUniforms();
+    for (const ds_render::Uniform &uniform : uniforms)
     {
-        std::cout << shaderResource->GetShaderSource(shaderType) << std::endl;
+        switch (uniform.GetDataType())
+        {
+        case ds_render::RenderDataType::Int:
+            std::cout << uniform.GetName() << " int "
+                      << *((const int *)uniform.GetUniformData()) << std::endl;
+            break;
+        case ds_render::RenderDataType::Vec4:
+            std::cout << uniform.GetName() << " vec4 "
+                      << *((ds_math::Vector4 *)uniform.GetUniformData())
+                      << std::endl;
+            break;
+        }
     }
+
     /* Example using the texture gen */
     // std::string textureExamplePath = "../assets/test.png";
     // std::unique_ptr<IResource> texResource =

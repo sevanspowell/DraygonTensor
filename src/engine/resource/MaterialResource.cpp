@@ -1,11 +1,176 @@
+#include <cassert>
+#include <iostream>
+#include <sstream>
+
+#include "engine/Config.h"
+#include "engine/common/Common.h"
 #include "engine/resource/MaterialResource.h"
 
 namespace ds
 {
-std::unique_ptr<IResource> MaterialResource::CreateFromFile(std::string filePath)
+std::unique_ptr<IResource>
+MaterialResource::CreateFromFile(std::string filePath)
 {
     std::unique_ptr<IResource> materialResource(nullptr);
 
+    // Open material resource file
+    Config config;
+    bool didLoad = config.LoadFile(filePath);
+
+    if (didLoad)
+    {
+        // Create empty material resource
+        materialResource = std::unique_ptr<IResource>(new MaterialResource());
+        materialResource->SetResourceFilePath(filePath);
+
+        // Get containing folder of this material resource
+        std::string folder = ds_com::GetParentDirectory(filePath);
+
+        // Get path to shader to use
+        std::string relShaderPath;
+        if (config.GetString("shader", &relShaderPath))
+        {
+            std::stringstream fullShaderPath;
+            fullShaderPath << folder << relShaderPath;
+
+            static_cast<MaterialResource *>(materialResource.get())
+                ->SetShaderResourceFilePath(fullShaderPath.str());
+
+            // Get path to textures to use
+            std::vector<std::string> textureKeys =
+                config.GetObjectKeys("textures");
+
+            // For each texture
+            for (auto key : textureKeys)
+            {
+                std::string relTexturePath;
+
+                std::stringstream configKey;
+                configKey << "textures"
+                          << "." << key;
+
+                if (config.GetString(configKey.str(), &relTexturePath))
+                {
+                    std::stringstream fullTexturePath;
+                    fullTexturePath << folder << relTexturePath;
+
+                    // Set texture resource path of texture uniform name
+                    static_cast<MaterialResource *>(materialResource.get())
+                        ->SetTextureResourceFilePath(key, fullShaderPath.str());
+                }
+                else
+                {
+                    std::cerr << "MaterialResource::CreateFromFile: could not "
+                                 "get texture path from key: '"
+                              << configKey.str() << "': " << filePath
+                              << std::endl;
+                }
+            }
+
+            // Get and load uniforms
+            std::vector<std::string> uniformKeys =
+                config.GetObjectKeys("uniforms");
+
+            // For each uniform
+            for (auto uniformName : uniformKeys)
+            {
+                // Create new uniform
+                ds_render::Uniform uniform;
+                // Was the uniform read in correctly?
+                bool loadedCorrectly = false;
+
+                // Set uniform name
+                uniform.SetName(uniformName);
+
+                // Get type (key)
+                std::stringstream typeKey;
+                typeKey << "uniforms"
+                        << "." << uniformName;
+
+                // Should only be one key, the type
+                std::vector<std::string> typeKeys =
+                    config.GetObjectKeys(typeKey.str());
+                if (typeKeys.size() > 0)
+                {
+                    // Type of the uniform: int, vec4, float etc.
+                    std::string type = typeKeys[0];
+
+                    // Switch on type
+                    if (type == "int")
+                    {
+                        // Set appropriate type
+                        uniform.SetDataType(ds_render::RenderDataType::Int);
+
+                        std::stringstream dataKey;
+                        dataKey << "uniforms"
+                                << "." << uniformName << "." << type;
+
+                        // Get uniform data
+                        int integer;
+                        if (config.GetInt(dataKey.str(), &integer))
+                        {
+                            uniform.SetUniformData(sizeof(int), &integer);
+                            loadedCorrectly = true;
+                        }
+                    }
+                    else if (type == "vec4")
+                    {
+                        // Set appropriate type
+                        uniform.SetDataType(ds_render::RenderDataType::Vec4);
+
+                        std::stringstream dataKey;
+                        dataKey << "uniforms"
+                                << "." << uniformName << "." << type;
+
+                        // Get uniform data
+                        std::vector<float> vec4;
+                        config.GetFloatArray(dataKey.str(), &vec4);
+
+                        if (vec4.size() == 4)
+                        {
+                            uniform.SetUniformData(sizeof(float) * 4, &vec4[0]);
+                            loadedCorrectly = true;
+                        }
+                        else
+                        {
+                            std::cerr
+                                << "MaterialResource::CreateFromFile: vec4 '"
+                                << dataKey.str() << "' must be of size 4! "
+                                << "In material resource: " << filePath
+                                << std::endl;
+                        }
+                    }
+                }
+                else
+                {
+                    std::cerr
+                        << "MaterialResource::CreateFromFile: could not find "
+                           "uniform data for uniform: "
+                        << uniformName << "in material resource: " << filePath
+                        << std::endl;
+                }
+
+                if (loadedCorrectly == true)
+                {
+                    static_cast<MaterialResource *>(materialResource.get())
+                        ->AddUniform(uniform);
+                }
+            }
+        }
+        else
+        {
+            std::cerr << "MaterialResource::CreateFromFile: could not find "
+                         "'shader' field in material resource: "
+                      << filePath << std::endl;
+        }
+    }
+    else
+    {
+        std::cerr
+            << "MaterialResource::CreateFromFile: could not open material "
+               "resource file (json file): "
+            << filePath << std::endl;
+    }
     // TODO: Parse file
 
     // TODO: Create mesh resource
@@ -24,5 +189,83 @@ void MaterialResource::SetResourceFilePath(const std::string &filePath)
     m_filePath = filePath;
 }
 
-// TODO: other methods (e.g. GetVertices...)
+const std::string &MaterialResource::GetShaderResourceFilePath() const
+{
+    return m_shaderPath;
+}
+
+void MaterialResource::SetShaderResourceFilePath(
+    const std::string &shaderFilePath)
+{
+    m_shaderPath = shaderFilePath;
+}
+
+std::vector<std::string> MaterialResource::GetTextureUniformNames() const
+{
+    std::vector<std::string> textureUniformNames;
+
+    for (auto uniformPath : m_textures)
+    {
+        textureUniformNames.push_back(uniformPath.first);
+    }
+
+    return textureUniformNames;
+}
+
+const std::string &MaterialResource::GetTextureResourceFilePath(
+    const std::string &textureUniformName) const
+{
+    std::map<std::string, std::string>::const_iterator it =
+        m_textures.find(textureUniformName);
+
+    if (it == m_textures.end())
+    {
+        assert("MaterialResource::GetTextureResourceFilePath: No texture with "
+               "that uniform name exists.");
+    }
+
+    return it->second;
+}
+
+void MaterialResource::SetTextureResourceFilePath(
+    const std::string &textureUniformName,
+    const std::string &textureResourceFilePath)
+{
+    m_textures[textureUniformName] = textureResourceFilePath;
+}
+
+void MaterialResource::AddUniform(const ds_render::Uniform &uniform)
+{
+    // Find a uniform with the same name
+    std::vector<ds_render::Uniform>::iterator it =
+        find_if(m_uniforms.begin(), m_uniforms.end(),
+                [&](const ds_render::Uniform &materialUniform)
+                {
+                    if (materialUniform.GetName() == uniform.GetName())
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                });
+
+    // If one exists
+    if (it != m_uniforms.end())
+    {
+        // Overwrite it
+        (*it) = uniform;
+    }
+    else
+    {
+        // Add a new uniform
+        m_uniforms.push_back(uniform);
+    }
+}
+
+const std::vector<ds_render::Uniform> &MaterialResource::GetUniforms() const
+{
+    return m_uniforms;
+}
 }

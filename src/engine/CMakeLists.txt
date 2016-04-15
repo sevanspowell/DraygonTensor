@@ -26,6 +26,7 @@ set(ENGINE_INCLUDE_FILES
   system/platform/Video.h
   system/platform/Window.h
   system/render/Render.h
+  system/render/Uniform.h
   system/script/LuaEnvironment.h
   system/script/LuaHelper.h
   system/script/Script.h
@@ -53,6 +54,7 @@ set(ENGINE_SRC_FILES
   system/platform/Video.cpp
   system/platform/Window.cpp
   system/render/Render.cpp
+  system/render/Uniform.cpp
   system/script/LuaMathAPI.cpp
   system/script/LuaEnvironment.cpp
   system/script/LuaHelper.cpp
