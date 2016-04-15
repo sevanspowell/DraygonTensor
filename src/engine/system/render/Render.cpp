@@ -20,30 +20,42 @@ bool Render::Initialize(const Config &config)
     m_factory.RegisterCreator<ShaderResource>(ShaderResource::CreateFromFile);
     m_factory.RegisterCreator<TextureResource>(TextureResource::CreateFromFile);
 
- //   // Example ...
-	//std::string meshResourcePath = "../assets/boot.lua";
 
- //   std::unique_ptr<IResource> meshResource =
- //       m_factory.CreateResource<MeshResource>(meshResourcePath);
+    //   // Example ...
+    // std::string meshResourcePath = "../assets/boot.lua";
+
+    //   std::unique_ptr<IResource> meshResource =
+    //       m_factory.CreateResource<MeshResource>(meshResourcePath);
 
 
-	///* Example using the texture gen */
-	//std::string textureExamplePath = "../assets/test.png";
-	//std::unique_ptr<IResource> texResource =
-	//	m_factory.CreateResource<TextureResource>(textureExamplePath);
-	//std::unique_ptr<TextureResource> changedResourcePointer
-	//	(static_cast<TextureResource*>(texResource.release()));
+    /* Example using shader gen */
+    std::string shaderExamplePath = "../assets/diffuse.shader";
+    std::unique_ptr<ShaderResource> shaderResource =
+        m_factory.CreateResource<ShaderResource>(shaderExamplePath);
+    std::cout << shaderResource->GetResourceFilePath() << std::endl;
+    // For each shader type
+    for (auto shaderType : shaderResource->GetShaderTypes())
+    {
+        std::cout << shaderResource->GetShaderSource(shaderType) << std::endl;
+    }
+    /* Example using the texture gen */
+    // std::string textureExamplePath = "../assets/test.png";
+    // std::unique_ptr<IResource> texResource =
+    //	m_factory.CreateResource<TextureResource>(textureExamplePath);
+    // std::unique_ptr<TextureResource> changedResourcePointer
+    //	(static_cast<TextureResource*>(texResource.release()));
 
-	//std::cout << "width: " << changedResourcePointer->GetWidthInPixels() << std::endl;
-	//std::cout << "height: " << changedResourcePointer->GetHeightInPixels() << std::endl;
+    // std::cout << "width: " << changedResourcePointer->GetWidthInPixels() <<
+    // std::endl;
+    // std::cout << "height: " << changedResourcePointer->GetHeightInPixels() <<
+    // std::endl;
 
-	//if (changedResourcePointer->GetImageFormat() == TextureResource::PNG) {
-	//	std::cout << "Format read - Yes." << std::endl;
-	//}
+    // if (changedResourcePointer->GetImageFormat() == TextureResource::PNG) {
+    //	std::cout << "Format read - Yes." << std::endl;
+    //}
 
-	//std::cout << "Components/Channels: " << (int)changedResourcePointer->GetComponentFlag() << std::endl;
-	
-
+    // std::cout << "Components/Channels: " <<
+    // (int)changedResourcePointer->GetComponentFlag() << std::endl;
 
 
     return result;

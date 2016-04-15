@@ -14,5 +14,15 @@ std::unique_ptr<IResource> MaterialResource::CreateFromFile(std::string filePath
     return materialResource;
 }
 
+const std::string &MaterialResource::GetResourceFilePath() const
+{
+    return m_filePath;
+}
+
+void MaterialResource::SetResourceFilePath(const std::string &filePath)
+{
+    m_filePath = filePath;
+}
+
 // TODO: other methods (e.g. GetVertices...)
 }

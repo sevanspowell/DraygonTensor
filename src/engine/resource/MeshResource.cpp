@@ -18,4 +18,13 @@ std::unique_ptr<IResource> MeshResource::CreateFromFile(std::string filePath)
 }
 
 // TODO: other methods (e.g. GetVertices...)
+const std::string &MeshResource::GetResourceFilePath() const
+{
+    return m_filePath;
+}
+
+void MeshResource::SetResourceFilePath(const std::string &filePath)
+{
+    m_filePath = filePath;
+}
 }
