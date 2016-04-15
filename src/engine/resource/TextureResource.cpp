@@ -25,6 +25,8 @@ namespace ds
 		int heightInPixels = 0;
 		int components = 0;
 		ComponentFlag channels;
+		
+		
 
 
 		unsigned char *imageContents =

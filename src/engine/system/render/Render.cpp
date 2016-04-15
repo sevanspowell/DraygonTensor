@@ -20,33 +20,27 @@ bool Render::Initialize(const Config &config)
     m_factory.RegisterCreator<ShaderResource>(ShaderResource::CreateFromFile);
     m_factory.RegisterCreator<TextureResource>(TextureResource::CreateFromFile);
 
- //   // Example ...
-	//std::string meshResourcePath = "../assets/boot.lua";
 
- //   std::unique_ptr<IResource> meshResource =
- //       m_factory.CreateResource<MeshResource>(meshResourcePath);
+	//// Example of new mesh loading.
+	//std::unique_ptr<MeshResource> changedResourcePointer =
+	//	m_factory.CreateResource<MeshResource>("../assets/cube.obj");
+	//
+	//std::cout << "Ind: " << changedResourcePointer->GetIndicesCount() << std::endl;
+	//std::cout << "Vert: " << changedResourcePointer->GetVertCount()<< std::endl;
+	//std::cout << "Mesh: " << changedResourcePointer->GetMeshCount() << std::endl;
+	//std::cout << "Tex: " << changedResourcePointer->GetTexCoordCount() << std::endl;
+	//std::cout << "Norm: " << changedResourcePointer->GetNormalsCount() << std::endl;
 
-
-	///* Example using the texture gen */
-	//std::string textureExamplePath = "../assets/test.png";
-	//std::unique_ptr<IResource> texResource =
-	//	m_factory.CreateResource<TextureResource>(textureExamplePath);
-	//std::unique_ptr<TextureResource> changedResourcePointer
-	//	(static_cast<TextureResource*>(texResource.release()));
-
-	//std::cout << "width: " << changedResourcePointer->GetWidthInPixels() << std::endl;
-	//std::cout << "height: " << changedResourcePointer->GetHeightInPixels() << std::endl;
-
-	//if (changedResourcePointer->GetImageFormat() == TextureResource::PNG) {
-	//	std::cout << "Format read - Yes." << std::endl;
+	//std::vector<ds_math::Vector3> verts = changedResourcePointer->GetVerts();
+	//for (int i = 0; i < changedResourcePointer->GetVertCount(); i++)
+	//{
+	//	std::cout << "x: " << verts[i].x;
+	//	std::cout << ", Y: " << verts[i].y;
+	//	std::cout << ", Z :" << verts[i].z << std::endl;
 	//}
-
-	//std::cout << "Components/Channels: " << (int)changedResourcePointer->GetComponentFlag() << std::endl;
+	// 
 	
-
-
-
-    return result;
+	return result;
 }
 
 void Render::Update(float deltaTime)
