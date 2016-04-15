@@ -106,6 +106,17 @@ else (NOT assimp_FOUND)
   set (ASSIMP_ROOT_DIR ${ASSIMP_INCLUDE_DIRS}/..)
 endif (NOT assimp_FOUND)
 
+# Try to find Bullet
+SET(BULLET_ROOT ${CMAKE_SOURCE_DIR}/../../external/bullet)
+find_package(Bullet)
+if (NOT BULLET_FOUND)
+  message("Will download Bullet..")
+  include(${CMAKE_SOURCE_DIR}/External-Bullet.cmake)
+  list(APPEND DRUNKEN_SAILOR_ENGINE_DEPENDENCIES Bullet)
+else (NOT BULLET_FOUND)
+  set (BULLET_ROOT ${BULLET_INCLUDE_DIRS}/..)
+endif (NOT BULLET_FOUND)
+
 ExternalProject_Add(
 	drunken_sailor_engine
 	DEPENDS ${DRUNKEN_SAILOR_ENGINE_DEPENDENCIES}
@@ -114,6 +125,7 @@ ExternalProject_Add(
 	BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../build
   INSTALL_DIR ${CMAKE_SOURCE_DIR}/../../bin
 	CMAKE_ARGS
+    # Set variables for various packages to find
 		-DLUA_DIR:PATH=${LUA_DIR}
 		-DGTEST_ROOT:PATH=${GTEST_ROOT}
     -DSDL2DIR=${SDL2DIR}
@@ -122,6 +134,8 @@ ExternalProject_Add(
     -DSFML_ROOT=${SFML_ROOT}
     -DASSIMP_ROOT_DIR=${ASSIMP_ROOT_DIR}
     -DSTB_BASE_DIR=${STB_BASE_DIR}
+    -DBULLET_ROOT=${BULLET_ROOT}
+
 		-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
 	)
