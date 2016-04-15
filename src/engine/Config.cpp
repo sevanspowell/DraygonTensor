@@ -216,6 +216,83 @@ bool Config::GetUnsignedInt(const std::string &key, unsigned int *uint) const
     return result;
 }
 
+bool Config::GetInt(const std::string &key, int *integer) const
+{
+    bool result = false;
+
+    rapidjson::Value::ConstMemberIterator valueIt = GetDocumentMember(key);
+
+    if (IsLoaded())
+    {
+        if (valueIt != m_document.MemberEnd())
+        {
+            if (valueIt->value.IsInt())
+            {
+                *integer = valueIt->value.GetInt();
+                result = true;
+            }
+            else
+            {
+                std::cerr << "Config::GetInt: Warning: '" << key
+                          << "' is not an int." << std::endl;
+            }
+        }
+    }
+
+    return result;
+}
+
+bool Config::GetFloatArray(const std::string &key,
+                           std::vector<float> *array) const
+{
+    bool result = false;
+
+    rapidjson::Value::ConstMemberIterator valueIt = GetDocumentMember(key);
+
+    if (IsLoaded())
+    {
+        if (valueIt != m_document.MemberEnd())
+        {
+            if (valueIt->value.IsArray())
+            {
+                if (array != nullptr)
+                {
+                    // Was the array read successfully?
+                    bool arrayResult = true;
+                    const rapidjson::Value &jsonArray = valueIt->value;
+                    for (rapidjson::SizeType i = 0; i < jsonArray.Size(); ++i)
+                    {
+                        if (jsonArray[i].IsFloat())
+                        {
+                            array->push_back(jsonArray[i].GetFloat());
+                        }
+                        else
+                        {
+                            std::cerr << "Config::GetFloatArray: Warning: "
+                                         "Array element "
+                                      << i << " of " << key
+                                      << " array is not a float." << std::endl;
+                            arrayResult = false;
+                        }
+                    }
+
+                    if (arrayResult == true)
+                    {
+                        result = true;
+                    }
+                }
+            }
+            else
+            {
+                std::cerr << "Config::GetFloatArray: Warning: '" << key
+                          << "' is not an array." << std::endl;
+            }
+        }
+    }
+
+    return result;
+}
+
 bool Config::GetBool(const std::string &key, bool *boolean) const
 {
     bool result = false;

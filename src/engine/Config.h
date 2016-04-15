@@ -60,10 +60,8 @@ public:
 
     /**
      * Attempt to get an unsigned int value from a string key-value pair in
-     * the
-     * config file. If the key isnt' found or the value isn't an unsigned
-     * int,
-     * the function will return FALSE.
+     * the config file. If the key isn't found or the value isn't an int, the
+     * function will return FALSE.
      *
      * Key may be specified in 'table access form' (i.e.
      * 'Window.dimensions.x').
@@ -72,21 +70,66 @@ public:
      *
      * @pre  A configuration file has been loaded via this classes 'Load'
      * method. This method will return FALSE if no config has been loaded.
-     * @post Unsigned int pointed to by second parameter will not be
-     * modified if
-     * the method returns FALSE.
+     * @post Unsigned Int pointed to by second parameter will not be
+     * modified if the method returns FALSE.
      *
      * @param   key   const std::string &, period seperated list of tokens,
      *                uniquely identifying an unsigned int primitive in the
      *                configuration file.
-     * @param   uint  unsigned int *, where unsigned int value should be
-     * placed
-     *                if successfully retrieved.
+     * @param   int   uint *, where unsigned int value should be placed if
+     * successfully retrieved.
      * @return        bool, TRUE if the value was retrieved successfully,
-     * FALSE
-     *                otherwise.
+     * FALSE otherwise.
      */
     bool GetUnsignedInt(const std::string &key, unsigned int *uint) const;
+
+    /**
+     * Attempt to get an int value from a string key-value pair in
+     * the config file. If the key isn't found or the value isn't an int, the
+     * function will return FALSE.
+     *
+     * Key may be specified in 'table access form' (i.e.
+     * 'Window.dimensions.x').
+     * In this case, each successive token (seperated by period character)
+     * indexes into the object the previous token refers to.
+     *
+     * @pre  A configuration file has been loaded via this classes 'Load'
+     * method. This method will return FALSE if no config has been loaded.
+     * @post Int pointed to by second parameter will not be
+     * modified if the method returns FALSE.
+     *
+     * @param   key      const std::string &, period seperated list of tokens,
+     * uniquely identifying an unsigned int primitive in the configuration file.
+     * @param   integer  int *, where int value should be placed if successfully
+     * retrieved.
+     * @return           bool, TRUE if the value was retrieved successfully,
+     * FALSE otherwise.
+     */
+    bool GetInt(const std::string &key, int *integer) const;
+
+    /**
+     * Attempt to get a float array from a string key-value pair in the config
+     * file. If the key isn't found or the value isn't an ALL float array, the
+     * function will return FALSE.
+     *
+     * Key may be specified in 'table access form' (i.e.
+     * 'Window.dimensions.x').
+     * In this case, each successive token (seperated by period character)
+     * indexes into the object the previous token refers to.
+     *
+     * @pre  A configuration file has been loaded via this classes 'Load'
+     * method. This method will return FALSE if no config has been loaded.
+     * @post vector pointed to by second parameter will not be
+     * modified if the method returns FALSE.
+     *
+     * @param   key    const std::string &, period seperated list of tokens,
+     * uniquely identifying an array in the configuration file.
+     * @param   array  std::vector<float> *, where array data will be placed if
+     * successfuly retrieved.
+     * @return         bool, TRUE if the value was retrieved successfully,
+     * FALSE otherwise.
+     */
+    bool GetFloatArray(const std::string &key, std::vector<float> *array) const;
 
     /**
      * Attempt to get a bool value from a string key-value pair in the
