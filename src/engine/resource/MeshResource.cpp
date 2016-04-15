@@ -177,6 +177,8 @@ namespace ds
 		if (m_meshCollection.size() >= meshNumber) {
 			norms = m_meshCollection[meshNumber].m_normals.size();
 		}
+
+		return norms;
 	}
 
 
