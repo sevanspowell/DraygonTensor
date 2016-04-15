@@ -10,7 +10,8 @@ namespace ds
 
 		const aiScene * ourScene = importer.ReadFile(filePath.c_str(),
 			aiProcess_Triangulate);
-
+		
+		
 		if (!ourScene)
 		{
 			std::cout << "Could not load model: " << std::endl;
@@ -19,9 +20,8 @@ namespace ds
 		}
 
 		int meshCount = ourScene->mNumMeshes;
-
 		std::unique_ptr<MeshResource> meshCollection(new MeshResource(meshCount));
-
+		
 		for (unsigned int iMesh = 0; iMesh < meshCount; iMesh++)
 		{
 			meshCollection->StoreMeshPositions(iMesh, ourScene->mMeshes[iMesh]);
@@ -29,8 +29,8 @@ namespace ds
 			meshCollection->StoreTextureCoords(iMesh, ourScene->mMeshes[iMesh]);
 			meshCollection->StoreFaces(iMesh, ourScene->mMeshes[iMesh]);
 		}
-
-		importer.FreeScene();
+		
+		importer.FreeScene();;
 		std::unique_ptr<IResource> meshResource = std::move(meshCollection);
 
 		return meshResource;
@@ -64,7 +64,7 @@ namespace ds
 			int numOfFaces = singleMesh->mNumFaces;
 			m_meshCollection[meshNumber].m_indices.reserve(numOfFaces * 3);
 
-			for (int iFaces = 0; iFaces < numOfFaces; iFaces)
+			for (int iFaces = 0; iFaces < numOfFaces; iFaces++)
 			{
 				unsigned int firstInd;
 				unsigned int secondInd;
@@ -86,6 +86,7 @@ namespace ds
 	{
 		if (singleMesh->HasPositions())
 		{
+			
 			int numberOfVerts = singleMesh->mNumVertices;
 			m_meshCollection[meshNumber].m_vertices.reserve(numberOfVerts);
 
@@ -104,7 +105,7 @@ namespace ds
 
 	void MeshResource::StoreTextureCoords(unsigned int meshNumber, aiMesh * singleMesh)
 	{
-
+		
 		int textExistIdxIndicator = 0;
 
 		if (singleMesh->HasTextureCoords(textExistIdxIndicator))
@@ -129,7 +130,6 @@ namespace ds
 	{
 		if (singleMesh->HasNormals())
 		{
-
 			int numberOfVerts = singleMesh->mNumVertices;
 			m_meshCollection[meshNumber].m_normals.resize(numberOfVerts);
 
@@ -185,7 +185,7 @@ namespace ds
 	unsigned int MeshResource::GetIndicesCount(unsigned int meshNumber) const
 	{
 		unsigned int indcs = 0;
-
+		
 		if (m_meshCollection.size() >= meshNumber) {
 			indcs = m_meshCollection[meshNumber].m_indices.size();
 		}
