@@ -27,9 +27,8 @@ public:
      * function to be used to create resource.
      */
     template <typename T>
-    void
-    RegisterCreator(std::function<std::unique_ptr<IResource>(std::string)>
-                        creatorFunction);
+    void RegisterCreator(
+        std::function<std::unique_ptr<IResource>(std::string)> creatorFunction);
 
     /**
      * Create a resource of the given type.
@@ -40,12 +39,11 @@ public:
      * responsibility for freeing it's associated memory.
      */
     template <typename T>
-    std::unique_ptr<IResource> CreateResource(std::string fileIn) const;
+    std::unique_ptr<T> CreateResource(std::string fileIn) const;
 
 private:
     std::map<std::type_index,
-             std::function<std::unique_ptr<IResource>(std::string)>>
-        m_creators;
+             std::function<std::unique_ptr<IResource>(std::string)>> m_creators;
 };
 
 #include "engine/resource/ResourceFactory.hpp"
