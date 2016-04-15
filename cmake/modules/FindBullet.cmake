@@ -47,6 +47,7 @@
 #  License text for the above reference.)
 
 macro(_FIND_BULLET_LIBRARY _var)
+LIST(APPEND CMAKE_FIND_LIBRARY_SUFFIXES ".a")
   find_library(${_var}
      NAMES
         ${ARGN}
@@ -57,9 +58,10 @@ macro(_FIND_BULLET_LIBRARY _var)
         ${BULLET_ROOT}/lib/Debug
         ${BULLET_ROOT}/out/release8/libs
         ${BULLET_ROOT}/out/debug8/libs
-     PATH_SUFFIXES lib
+     PATH_SUFFIXES lib a
   )
   mark_as_advanced(${_var})
+LIST(REMOVE_ITEM CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 endmacro()
 
 macro(_BULLET_APPEND_LIBRARIES _list _release)
