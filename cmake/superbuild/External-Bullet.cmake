@@ -4,13 +4,13 @@ if (WIN32)
 	  GIT_REPOSITORY https://github.com/bulletphysics/bullet3.git
 	  GIT_TAG master
 	  # CONFIGURE_COMMAND ${CMAKE_COMMAND} <SOURCE_DIR> -DCMAKE_BUILD_TYPE=Release
-	  BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release
+	  #BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release
 	  INSTALL_DIR "${BULLET_ROOT}"
-	  INSTALL_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release --target install
+	  #INSTALL_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release --target install
 	  CMAKE_ARGS
 	    -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-	    -DCMAKE_INSTALL_CONFIG_NAME="Release"
-	    -DCMAKE_BUILD_TYPE="Release"
+	    #-DCMAKE_INSTALL_CONFIG_NAME="Release"
+	    #-DCMAKE_BUILD_TYPE="Release"
 	    -DBUILD_BULLET2_DEMOS=OFF
 	    -DBUILD_BULLET3=OFF
 	    -DBUILD_CPU_DEMOS=OFF
