@@ -21,6 +21,7 @@ set(ENGINE_INCLUDE_FILES
   system/Console.h
   system/physics/Physics.h
   system/physics/PhysicsHandler.h
+  system/physics/MotionStateExample.h
   system/input/Input.h
   system/input/InputContext.h
   system/platform/Keyboard.h
@@ -50,6 +51,7 @@ set(ENGINE_SRC_FILES
   system/Console.cpp
   system/physics/Physics.cpp
   system/physics/PhysicsHandler.cpp
+  system/physics/MotionStateExample.cpp
   system/input/Input.cpp
   system/input/InputContext.cpp
   system/platform/Keyboard.cpp

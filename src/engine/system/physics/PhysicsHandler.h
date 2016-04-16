@@ -28,6 +28,7 @@ namespace ds
 		bool DoesEntityExist(int entityID);
 		void SetPhysicsWorldIntertia(float inert);
 		void UpdateWorldSimulation(float deltaTime);
+		static void SimulationTickCallback(btDynamicsWorld * word, btScalar timeStep);
 		
 		enum ColBoxType
 		{
@@ -44,8 +45,9 @@ namespace ds
 		btSequentialImpulseConstraintSolver * m_worldLogic;
 		
 		ResourceFactory m_factory;
-		//std::map<int, btCollisionShape> m_entityShapeContainer;
+		std::map<int, btRigidBody*> m_rigidCollection;
 		std::map<int, ColBoxType> m_entityShapeType;
+		
 
 		void SetupPhysicsWorld();
 	};
