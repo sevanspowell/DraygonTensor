@@ -29,6 +29,10 @@ namespace ds
 		void SetPhysicsWorldIntertia(float inert);
 		void UpdateWorldSimulation(float deltaTime);
 		static void SimulationTickCallback(btDynamicsWorld * word, btScalar timeStep);
+		void InnerTickCallback(btScalar timeStep);
+
+		
+		void MoveEntity(int entityID, ds_math::Vector3 moveVec);
 		
 		enum ColBoxType
 		{

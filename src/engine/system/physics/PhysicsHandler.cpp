@@ -78,8 +78,10 @@ namespace ds
 		// // entityID - assignedRigid.
 		m_rigidCollection.insert(std::pair<int, btRigidBody*>(entityID, rigidBodyForEntity));
 
-		// function to be called every tick.
-		m_physicalWorld->setInternalTickCallback(SimulationTickCallback);
+		// function to be called every tick. passing in details
+		// and true for the pre-tick. (will clear all forces)
+		m_physicalWorld->setInternalTickCallback(SimulationTickCallback,
+			static_cast<void *>(this), true);
 
 		delete groundMotionState;
 		delete colBounds;
@@ -87,7 +89,12 @@ namespace ds
 
 	void PhysicsHandler::SetEntityPosition(int entityID, ds_math::Vector3 pos)
 	{
-		// may have to use motionstate to transition character
+		btTransform objTrans;
+		// sets new origin but keeps rotation. 
+		m_rigidCollection[entityID]->getMotionState()->getWorldTransform(objTrans);
+		btVector3 newOrig(pos.x, pos.y, pos.z);
+		objTrans.setOrigin(newOrig);
+		m_rigidCollection[entityID]->getMotionState()->setWorldTransform(objTrans);
 	}
 
 	ds_math::Vector3 PhysicsHandler::GetEntityPosition(int entityID)
@@ -148,7 +155,7 @@ namespace ds
 
 	bool PhysicsHandler::DoesEntityExist(int entityID)
 	{
-		return false;
+		return true;
 	}
 
 	void PhysicsHandler::SetPhysicsWorldIntertia(float inert)
@@ -167,6 +174,7 @@ namespace ds
 			// of new position.
 			btTransform trans;
 			m_rigidCollection[0]->getMotionState()->getWorldTransform(trans);
+			
 			std::cout << "height: " << trans.getOrigin().getY() << std::endl;
 		}
 		
@@ -185,6 +193,48 @@ namespace ds
 		//	rigidBody->applyGravity();
 		//	rigidBody->applyForce(btVector3(-10., 0., 0.), btVector3(0., 0., 0.));
 		//}
+		
+
+		//// To see all contacts between objects
+		//int manifoldCount = world->getDispatcher()->getNumManifolds();
+
+		//for (int iMani = 0; iMani < manifoldCount; iMani++)
+		//{
+		//	btPersistentManifold * contactManifold = 
+		//		world->getDispatcher()->getManifoldByIndexInternal(iMani);
+		//	
+		//	const btCollisionObject * objOne = contactManifold->getBody0();
+		//	const btCollisionObject * objTwo = contactManifold->getBody1();
+
+		//	int numberTouched = contactManifold->getNumContacts();
+
+		//	for (int iTouches = 0; iTouches < numberTouched; iTouches++)
+		//	{
+		//		btManifoldPoint& pointTouch = 
+		//			contactManifold->getContactPoint(iTouches);
+
+		//		if (pointTouch.getDistance() < 0.0f)
+		//		{
+		//			const btVector3& ptA = pointTouch.getPositionWorldOnA();
+		//			const btVector3& ptB = pointTouch.getPositionWorldOnB();
+		//			const btVector3& normalOnB = pointTouch.m_normalWorldOnB;
+		//		}
+		//	}
+		//}
+		
+		PhysicsHandler * w = static_cast<PhysicsHandler *>(world->getWorldUserInfo());
+		w->InnerTickCallback(timeStep);
+	}
+
+	void PhysicsHandler::InnerTickCallback(btScalar timeStep)
+	{
+		// add actions every tick.
+	}
+	
+	void PhysicsHandler::MoveEntity(int entityID, ds_math::Vector3 moveVec)
+	{
+		btVector3 moveVecRightFormat(moveVec.x, moveVec.y, moveVec.z);
+		m_rigidCollection[entityID]->setLinearVelocity(moveVecRightFormat);
 	}
 
 	void PhysicsHandler::SetupPhysicsWorld()
