@@ -26,7 +26,7 @@ namespace ds
 
 	}
 
-	void PhysicsHandler::ConstructEntity(int entityID, std::string modelPath, bool staticObject)
+	void PhysicsHandler::ConstructEntity(int entityID, std::string modelPath, bool staticObject, float mass)
 	{
 		std::unique_ptr<MeshResource> meshUsedForEntity =
 				m_factory.CreateResource<MeshResource>(modelPath);
@@ -57,8 +57,16 @@ namespace ds
 
 		// TODO: Figure out base inert.
 		// Mass set to 0 and inert set to 0 = immovable.
+		if (staticObject)
+		{
+
+		}
+		else
+		{
+
+		}
 		btVector3 inert(0, 0, 0);
-		int mass = 0;
+		//int mass = 0;
 
 		/*Anything fed into here is copied. Therefore, you can delete everything
 		that makes up this construction object and save the construction object
@@ -112,8 +120,10 @@ namespace ds
 
 	void PhysicsHandler::ApplyRotationToEntity(int entityID, ds_math::Vector3 axis, float angle)
 	{
-		// may have to use motionstate to transition character
-		// // sam's math class has rotation conversion from quat
+		btMatrix3x3 orn = m_rigidCollection[entityID]->getWorldTransform().getBasis();
+		btVector3 axisDetails(axis.x, axis.y, axis.z);
+		orn *= btMatrix3x3(btQuaternion(axisDetails, angle));     
+		m_rigidCollection[entityID]->getWorldTransform().setBasis(orn);
 	}
 
 	void PhysicsHandler::SetWorldGravity(float yAmount)

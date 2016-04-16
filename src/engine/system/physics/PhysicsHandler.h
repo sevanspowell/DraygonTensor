@@ -14,7 +14,7 @@ namespace ds
 	public:
 		PhysicsHandler();
 		~PhysicsHandler();
-		void ConstructEntity(int entityID, std::string modelPath, bool staticObject);
+		void ConstructEntity(int entityID, std::string modelPath, bool staticObject, float mass);
 		void SetEntityPosition(int entityID, ds_math::Vector3 pos);
 		ds_math::Vector3 GetEntityPosition(int entityID);
 		void ApplyRotationToEntity(int entityID, ds_math::Vector3 axis, float angle);
