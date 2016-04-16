@@ -1,6 +1,10 @@
 #include <string>
-#include "math/Vector3.h"
+#include <memory>
+#include <map>
 #include <btBulletDynamicsCommon.h>
+
+#include "math/Vector3.h"
+#include "engine/resource/ResourceFactory.h"
 
 
 namespace ds
@@ -23,8 +27,14 @@ namespace ds
 		void RemoveEntity(int entityID);
 		bool DoesEntityExist(int entityID);
 		void SetPhysicsWorldIntertia(float inert);
+		void UpdateWorldSimulation(float deltaTime);
 		
-
+		enum ColBoxType
+		{
+			HEIGHTFIELD = 1,
+			TRIANGLE_MESH = 2,
+			COVEX_TRIANGLE_MESH = 3
+		};
 
 	private:
 		btDiscreteDynamicsWorld * m_physicalWorld;
@@ -32,5 +42,11 @@ namespace ds
 		btDefaultCollisionConfiguration * m_collisionConfig;
 		btCollisionDispatcher * m_dispatcher;
 		btSequentialImpulseConstraintSolver * m_worldLogic;
+		
+		ResourceFactory m_factory;
+		//std::map<int, btCollisionShape> m_entityShapeContainer;
+		std::map<int, ColBoxType> m_entityShapeType;
+
+		void SetupPhysicsWorld();
 	};
 }
