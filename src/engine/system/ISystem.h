@@ -78,7 +78,7 @@ public:
      * @return  ScriptBindingSet, the script bindings the system wants to
      * register with the Script system.
      */
-    virtual ScriptBindingSet GetScriptBindings()
+    virtual ScriptBindingSet GetScriptBindings() const
     {
         return ScriptBindingSet();
     }

@@ -5,7 +5,6 @@
 #include "engine/system/ISystem.h"
 #include "engine/system/platform/Keyboard.h"
 #include "engine/system/platform/Video.h"
-#include "engine/system/platform/Input.h"
 
 namespace ds
 {
@@ -94,8 +93,12 @@ private:
      */
     void ProcessEvents(ds_msg::MessageStream *messages);
 
+    /**
+     * Toggle the receiving of text input events from the operating system.
+     */
+    void ToggleTextInput() const;
+
     ds_platform::Video m_video;
-    ds_platform::Input m_input;
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
 };
 }

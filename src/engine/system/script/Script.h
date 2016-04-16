@@ -72,6 +72,14 @@ public:
     virtual ds_msg::MessageStream CollectMessages();
 
     /**
+     * Return script bindings required by script system.
+     *
+     * @return  ScriptBindingSet, the script bindings the script system wants to
+     * register.
+     */
+    virtual ScriptBindingSet GetScriptBindings() const;
+
+    /**
      * Register another system's script bindings.
      *
      * @param  systemName  const char *, name of the registering system.
@@ -87,6 +95,23 @@ public:
      */
     void SpawnUnit(std::string unitFile);
 
+    /**
+     * Is a new message available for the external script?
+     *
+     * Should be used by external scripts only.
+     *
+     * @return  bool, TRUE if a message is available, FALSE otherwise.
+     */
+    bool IsNextScriptMessage() const;
+
+    /**
+     * Get the next message available to the external script, returns an empty
+     * message stream if no messages available.
+     *
+     * @return  ds_msg::MessageStream, next script message available.
+     */
+    ds_msg::MessageStream GetNextScriptMessage();
+
 private:
     /**
      * Process messages in the given message stream.
@@ -98,10 +123,11 @@ private:
     /**
      * Register the script bindings of a particular system.
      *
+     * @param  systemName  const char *, name of the registering system.
      * @param  systemPtr  ISystem *, pointer to system to register script
      * bindings of.
      */
-    void RegisterScriptBindings(ISystem *systemPtr);
+    void RegisterScriptBindingSet(const char *systemName, ISystem *systemPtr);
 
     // Messaging
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
@@ -113,5 +139,8 @@ private:
 
     // Systems wanting their script bindings registered
     std::vector<std::pair<const char *, ISystem *>> m_registeredSystems;
+
+    // Messages to pass to script
+    ds_msg::MessageStream m_toScriptMessages;
 };
 }

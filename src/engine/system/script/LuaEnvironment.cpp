@@ -160,9 +160,10 @@ void LuaEnvironment::RegisterLightUserData(const char *userDataName, void *p)
 }
 
 void LuaEnvironment::RegisterClass(const char *className,
-                                   const luaL_Reg *metaMethods,
-                                   const luaL_Reg *methods)
+                                   const luaL_Reg *methods,
+                                   const luaL_Reg *functions,
+                                   const luaL_Reg *special)
 {
-    ds_lua::RegisterClass(m_lua, className, metaMethods, methods);
+    ds_lua::RegisterClass(m_lua, className, methods, functions, special);
 }
 }

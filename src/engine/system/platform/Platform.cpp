@@ -34,7 +34,8 @@ bool Platform::Initialize(const Config &config)
         }
     }
 
-    m_input.ToggleTextInput();
+    // Begin taking text input
+    ToggleTextInput();
 
     return result;
 }
@@ -108,8 +109,8 @@ void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
         header.size = sizeof(ds_msg::TextInput);
 
         ds_msg::AppendMessage(&m_messagesGenerated,
-                              ds_msg::MessageType::KeyboardEvent,
-                              sizeof(ds_msg::KeyboardEvent), &keyEvent);
+                              ds_msg::MessageType::TextInput,
+                              sizeof(ds_msg::TextInput), &textInput);
         break;
     case SDL_QUIT:
         ds_msg::QuitEvent quitEvent;
@@ -165,13 +166,25 @@ void Platform::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::ConsoleToggle consoleToggle;
             (*messages) >> consoleToggle;
 
-            m_input.ToggleTextInput();
+            ToggleTextInput();
             break;
         default:
             messages->Extract(header.size);
 
             break;
         }
+    }
+}
+
+void Platform::ToggleTextInput() const
+{
+    if (SDL_IsTextInputActive())
+    {
+        SDL_StopTextInput();
+    }
+    else
+    {
+        SDL_StartTextInput();
     }
 }
 }

@@ -9,7 +9,7 @@
 
 namespace ds_lua
 {
-static int spawnUnit(lua_State *L)
+static int l_SpawnUnit(lua_State *L)
 {
     // Get number of arguments provided
     int n = lua_gettop(L);
@@ -21,7 +21,7 @@ static int spawnUnit(lua_State *L)
     const char *unitFile = luaL_checklstring(L, 1, NULL);
 
     // Push script system pointer to stack
-    lua_getglobal(L, "Script");
+    lua_getglobal(L, "__Script");
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -50,7 +50,7 @@ static int spawnUnit(lua_State *L)
     return 0;
 }
 
-static int LVector3Ctor(lua_State *L)
+static int l_Vector3Ctor(lua_State *L)
 {
     // Get number of arguments provided
     int n = lua_gettop(L);
@@ -69,8 +69,6 @@ static int LVector3Ctor(lua_State *L)
 
     *v = ds_math::Vector3(x, y, z);
 
-    std::cout << "Called: " << *v << std::endl;
-
     // Get Vector3 metatable
     luaL_getmetatable(L, "Vector3");
     // Set it as metatable of new user data (the Vector3)
@@ -82,7 +80,37 @@ static int LVector3Ctor(lua_State *L)
     return 1;
 }
 
-static int LVector3ToString(lua_State *L)
+static int l_Vector3New(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 3)
+    {
+        return luaL_error(L, "Got %d arguments, expected 3.", n);
+    }
+
+    // Allocate memory for Vector3
+    ds_math::Vector3 *v =
+        (ds_math::Vector3 *)lua_newuserdata(L, sizeof(ds_math::Vector3));
+
+    ds_math::scalar x = (ds_math::scalar)luaL_checknumber(L, 1);
+    ds_math::scalar y = (ds_math::scalar)luaL_checknumber(L, 2);
+    ds_math::scalar z = (ds_math::scalar)luaL_checknumber(L, 3);
+
+    *v = ds_math::Vector3(x, y, z);
+
+    // Get Vector3 metatable
+    luaL_getmetatable(L, "Vector3");
+    // Set it as metatable of new user data (the Vector3)
+    lua_setmetatable(L, -2);
+
+    // userdata that called this method, x, y, z values and Vector3 constructed
+    assert(lua_gettop(L) == 4);
+
+    return 1;
+}
+
+static int l_Vector3ToString(lua_State *L)
 {
     // Get number of arguments provided
     int n = lua_gettop(L);
@@ -108,7 +136,7 @@ static int LVector3ToString(lua_State *L)
     return 1;
 }
 
-static int LVector3GetX(lua_State *L)
+static int l_Vector3GetX(lua_State *L)
 {
     // Get number of arguments provided
     int n = lua_gettop(L);
@@ -132,7 +160,7 @@ static int LVector3GetX(lua_State *L)
     return 1;
 }
 
-static int LVector3SetX(lua_State *L)
+static int l_Vector3SetX(lua_State *L)
 {
     // Get number of arguments provided
     int n = lua_gettop(L);
@@ -156,18 +184,24 @@ static int LVector3SetX(lua_State *L)
     return 0;
 }
 
-static const luaL_Reg vector3Methods[] = {{"get_x", LVector3GetX},
-                                          {"set_x", LVector3SetX},
+static const luaL_Reg vector3Methods[] = {{"__tostring", l_Vector3ToString},
+                                          {"get_x", l_Vector3GetX},
+                                          {"set_x", l_Vector3SetX},
                                           {NULL, NULL}};
 
-static const luaL_Reg vector3MetaMethods[] = {
-    {"__call", LVector3Ctor}, {"__tostring", LVector3ToString}, {NULL, NULL},
+static const luaL_Reg vector3Functions[] = {
+    {"new", l_Vector3New}, {NULL, NULL},
+};
+
+static const luaL_Reg vector3Special[] = {
+    {"__call", l_Vector3Ctor}, {NULL, NULL},
 };
 
 void LoadMathAPI(LuaEnvironment &luaEnv)
 {
-    luaEnv.RegisterCFunction("World.spawn_unit", spawnUnit);
+    luaEnv.RegisterCFunction("World.spawn_unit", l_SpawnUnit);
 
-    luaEnv.RegisterClass("Vector3", vector3MetaMethods, vector3Methods);
+    luaEnv.RegisterClass("Vector3", vector3Methods, vector3Functions,
+                         vector3Special);
 }
 }

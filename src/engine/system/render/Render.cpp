@@ -1,5 +1,6 @@
 #include <fstream>
 
+
 #include "engine/resource/MaterialResource.h"
 #include "engine/resource/MeshResource.h"
 #include "engine/resource/ShaderResource.h"
@@ -19,14 +20,27 @@ bool Render::Initialize(const Config &config)
     m_factory.RegisterCreator<ShaderResource>(ShaderResource::CreateFromFile);
     m_factory.RegisterCreator<TextureResource>(TextureResource::CreateFromFile);
 
-    // Example ...
-    std::fstream fs;
-    fs.open("../assets/boot.lua", std::fstream::in);
-    std::unique_ptr<IResource> meshResource =
-        m_factory.CreateResource<MeshResource>(fs);
-    fs.close();
 
-    return result;
+	//// Example of new mesh loading.
+	//std::unique_ptr<MeshResource> changedResourcePointer =
+	//	m_factory.CreateResource<MeshResource>("../assets/cube.obj");
+	//
+	//std::cout << "Ind: " << changedResourcePointer->GetIndicesCount() << std::endl;
+	//std::cout << "Vert: " << changedResourcePointer->GetVertCount()<< std::endl;
+	//std::cout << "Mesh: " << changedResourcePointer->GetMeshCount() << std::endl;
+	//std::cout << "Tex: " << changedResourcePointer->GetTexCoordCount() << std::endl;
+	//std::cout << "Norm: " << changedResourcePointer->GetNormalsCount() << std::endl;
+
+	//std::vector<ds_math::Vector3> verts = changedResourcePointer->GetVerts();
+	//for (int i = 0; i < changedResourcePointer->GetVertCount(); i++)
+	//{
+	//	std::cout << "x: " << verts[i].x;
+	//	std::cout << ", Y: " << verts[i].y;
+	//	std::cout << ", Z :" << verts[i].z << std::endl;
+	//}
+	// 
+	
+	return result;
 }
 
 void Render::Update(float deltaTime)

@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "engine/Config.h"
 #include "engine/common/StringIntern.h"
 #include "engine/system/script/Script.h"
@@ -6,6 +8,9 @@
 namespace ds_lua
 {
 extern void LoadMathAPI(LuaEnvironment &luaEnv);
+
+extern int l_IsNextMessage(lua_State *L);
+extern int l_GetNextMessage(lua_State *L);
 }
 
 namespace ds
@@ -24,17 +29,21 @@ bool Script::Initialize(const Config &config)
     {
         // Load our Lua/C APIs
         ds_lua::LoadMathAPI(m_lua);
+        RegisterScriptBindingSet("Script", (ISystem *)this);
         // Loop thru and load script bindings
         for (auto namePtr : m_registeredSystems)
         {
-            RegisterScriptBindings(namePtr.second);
+            RegisterScriptBindingSet(namePtr.first, namePtr.second);
         }
 
         // Register all systems with the lua environment as light userdata
-        m_lua.RegisterLightUserData("Script", (void *)this);
+        m_lua.RegisterLightUserData("__Script", (void *)this);
         for (auto namePtr : m_registeredSystems)
         {
-            m_lua.RegisterLightUserData(namePtr.first, (void *)namePtr.second);
+            std::stringstream ss;
+            ss << "__" << std::string(namePtr.first);
+            m_lua.RegisterLightUserData(ss.str().c_str(),
+                                        (void *)namePtr.second);
         }
 
         std::string bootScriptPath;
@@ -112,6 +121,15 @@ ds_msg::MessageStream Script::CollectMessages()
     return tmp;
 }
 
+ScriptBindingSet Script::GetScriptBindings() const
+{
+    ScriptBindingSet scriptBindings;
+    scriptBindings.AddFunction("is_next_message", ds_lua::l_IsNextMessage);
+    scriptBindings.AddFunction("get_next_message", ds_lua::l_GetNextMessage);
+
+    return scriptBindings;
+}
+
 void Script::RegisterScriptBindings(const char *systemName, ISystem *systemPtr)
 {
     m_registeredSystems.push_back(
@@ -121,6 +139,38 @@ void Script::RegisterScriptBindings(const char *systemName, ISystem *systemPtr)
 void Script::SpawnUnit(std::string unitFile)
 {
     std::cout << "Unit spawned: " << unitFile << std::endl;
+}
+
+bool Script::IsNextScriptMessage() const
+{
+    return (m_toScriptMessages.AvailableBytes() > 0);
+}
+
+ds_msg::MessageStream Script::GetNextScriptMessage()
+{
+    ds_msg::MessageStream msg;
+
+    if (IsNextScriptMessage())
+    {
+        // Get message header
+        ds_msg::MessageHeader header;
+        m_toScriptMessages >> header;
+
+        // Insert message header
+        msg << header;
+
+        // Get message payload
+        void *msgPayload = malloc(header.size);
+        m_toScriptMessages.Extract(header.size, msgPayload);
+
+        // Insert message payload
+        msg.Insert(header.size, msgPayload);
+
+        // Free payload memory
+        free(msgPayload);
+    }
+
+    return msg;
 }
 
 void Script::ProcessEvents(ds_msg::MessageStream *messages)
@@ -137,6 +187,11 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::ScriptInterpret scriptMsg;
             (*messages) >> scriptMsg;
 
+            // Insert header into messages to be sent to script
+            m_toScriptMessages << header;
+            // Insert payload into messages to be sent script
+            m_toScriptMessages << scriptMsg;
+
             m_lua.ExecuteString(
                 StringIntern::Instance().GetString(scriptMsg.stringId).c_str());
             break;
@@ -147,22 +202,52 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
     }
 }
 
-void Script::RegisterScriptBindings(ISystem *systemPtr)
+void Script::RegisterScriptBindingSet(const char *systemName,
+                                      ISystem *systemPtr)
 {
-    //     if (systemPtr != nullptr)
-    //     {
-    //         std::vector<std::pair<const char *, SCRIPT_FN>> metaMethods;
-    //         std::vector<std::pair<const char *, SCRIPT_FN>> methods;
+    if (systemPtr != nullptr)
+    {
+        ScriptBindingSet scriptBindings = systemPtr->GetScriptBindings();
 
-    //         ScriptBindingSet scriptBindings = systemPtr->GetScriptBindings();
-    //         for (unsigned int i = 0; i < scriptBindings.size(); ++i)
-    //         {
-    //             const std::pair<const char *, SCRIPT_FN> &functionPair =
-    //                 scriptBinding.GetFunctionPair(i);
+        // Allocate enough memory for methods and functions plus one extra for
+        // NULL terminator
+        luaL_Reg *methods = new luaL_Reg[scriptBindings.GetNumMethods() + 1];
+        luaL_Reg *functions =
+            new luaL_Reg[scriptBindings.GetNumFunctions() + 1];
+        // No special functions in a ScriptBindingSet
+        luaL_Reg special[] = {{NULL, NULL}};
 
-    //             // If script binding is a meta method, add to metaMethods
-    //             // Else add to methods
-    //         }
-    //     }
+        // Fill methods table
+        for (unsigned int i = 0; i < scriptBindings.GetNumMethods(); ++i)
+        {
+            const std::pair<const char *, SCRIPT_FN> &methodPair =
+                scriptBindings.GetMethodPair(i);
+
+            methods[i].name = methodPair.first;
+            methods[i].func = methodPair.second;
+        }
+        // Null-terminate methods table
+        methods[scriptBindings.GetNumMethods()].name = NULL;
+        methods[scriptBindings.GetNumMethods()].func = NULL;
+
+        // Fill functions table
+        for (unsigned int i = 0; i < scriptBindings.GetNumFunctions(); ++i)
+        {
+            const std::pair<const char *, SCRIPT_FN> &functionPair =
+                scriptBindings.GetFunctionPair(i);
+
+            functions[i].name = functionPair.first;
+            functions[i].func = functionPair.second;
+        }
+        // Null-terminate functions table
+        functions[scriptBindings.GetNumFunctions()].name = NULL;
+        functions[scriptBindings.GetNumFunctions()].func = NULL;
+
+        m_lua.RegisterClass(systemName, methods, functions, special);
+
+        // Free method & function arrays
+        delete[] methods;
+        delete[] functions;
+    }
 }
 }

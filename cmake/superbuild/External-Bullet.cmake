@@ -1,0 +1,41 @@
+# Get and build Bullet
+if (WIN32)
+	ExternalProject_Add(Bullet
+	  GIT_REPOSITORY https://github.com/bulletphysics/bullet3.git
+	  GIT_TAG master
+	  # CONFIGURE_COMMAND ${CMAKE_COMMAND} <SOURCE_DIR> -DCMAKE_BUILD_TYPE=Release
+	  #BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release
+	  INSTALL_DIR "${BULLET_ROOT}"
+	  #INSTALL_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release --target install
+	  CMAKE_ARGS
+	    -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+	    #-DCMAKE_INSTALL_CONFIG_NAME="Release"
+	    #-DCMAKE_BUILD_TYPE="Release"
+	    -DBUILD_BULLET2_DEMOS=OFF
+	    -DBUILD_BULLET3=OFF
+	    -DBUILD_CPU_DEMOS=OFF
+	    -DBUILD_EXTRAS=OFF
+	    -DBUILD_OPENGL3_DEMOS=OFF
+	    -DBUILD_UNIT_TESTS=OFF
+	    -DINSTALL_LIBS=ON
+	  )
+endif (WIN32)
+
+if (UNIX)
+	ExternalProject_Add(Bullet
+	  GIT_REPOSITORY https://github.com/bulletphysics/bullet3.git
+	  GIT_TAG master
+	  INSTALL_DIR "${BULLET_ROOT}"
+	  CMAKE_ARGS
+	    -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+	    -DCMAKE_INSTALL_CONFIG_NAME="Release"
+	    -DCMAKE_BUILD_TYPE="Release"
+	    -DBUILD_BULLET2_DEMOS=OFF
+	    -DBUILD_BULLET3=OFF
+	    -DBUILD_CPU_DEMOS=OFF
+	    -DBUILD_EXTRAS=OFF
+	    -DBUILD_OPENGL3_DEMOS=OFF
+	    -DBUILD_UNIT_TESTS=OFF
+	    -DINSTALL_LIBS=ON
+	  )
+endif (UNIX)
