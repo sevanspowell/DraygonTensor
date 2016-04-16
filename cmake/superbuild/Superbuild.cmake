@@ -114,7 +114,7 @@ if (NOT BULLET_FOUND)
   include(${CMAKE_SOURCE_DIR}/External-Bullet.cmake)
   list(APPEND DRUNKEN_SAILOR_ENGINE_DEPENDENCIES Bullet)
 else (NOT BULLET_FOUND)
-  set (BULLET_ROOT ${BULLET_INCLUDE_DIRS}/..)
+  set (BULLET_ROOT ${BULLET_INCLUDE_DIRS}/../..)
 endif (NOT BULLET_FOUND)
 
 ExternalProject_Add(
