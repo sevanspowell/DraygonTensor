@@ -1,6 +1,6 @@
 #include "engine/common/StringIntern.h"
 #include "engine/message/MessageHelper.h"
-#include "engine/system/Physics.h"
+#include "engine/system/physics/Physics.h"
 
 namespace ds
 {
@@ -46,6 +46,7 @@ namespace ds
 
 			switch (header.type)
 			{
+				//case ds_msg::MessageType::CreateComponent
 			default:
 				messages->Extract(header.size);
 				break;
