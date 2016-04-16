@@ -7,6 +7,9 @@ set(ENGINE_INCLUDE_FILES
   common/StreamBuffer.h
   common/StreamBuffer.hpp
   common/StringIntern.h
+  entity/Entity.h
+  entity/EntityManager.h
+  entity/Instance.h
   message/Message.h
   message/MessageBus.h
   message/MessageFactory.h
@@ -39,6 +42,8 @@ set(ENGINE_SRC_FILES
   common/Common.cpp
   common/StreamBuffer.cpp
   common/StringIntern.cpp
+  entity/Entity.cpp
+  entity/EntityManager.cpp
   message/MessageBus.cpp
   message/MessageFactory.cpp
   message/MessageHelper.cpp
