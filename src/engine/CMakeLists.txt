@@ -19,6 +19,7 @@ set(ENGINE_INCLUDE_FILES
   resource/ShaderResource.h
   resource/TextureResource.h
   system/Console.h
+  system/Physics.h
   system/input/Input.h
   system/input/InputContext.h
   system/platform/Keyboard.h
@@ -46,6 +47,7 @@ set(ENGINE_SRC_FILES
   resource/ShaderResource.cpp
   resource/TextureResource.cpp
   system/Console.cpp
+  system/Physics.cpp
   system/input/Input.cpp
   system/input/InputContext.cpp
   system/platform/Keyboard.cpp
