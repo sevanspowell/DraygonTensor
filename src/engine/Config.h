@@ -207,6 +207,33 @@ public:
      */
     std::vector<std::string> GetObjectKeys(const std::string &key) const;
 
+    /**
+     * Stringify an object with the given key
+     *
+     * For example, given the following config file:
+     * "Input": {
+     *   "InputContextName": {
+     *     "keyName": "message string"
+     *   },
+     *   "Default": {
+     *      "`": "console_toggle"
+     *   }
+     * }
+     * StringifyObject("Input.Default") would return:
+     * "Default": {
+     *   "`": "console_toggle"
+     * }
+     *
+     * @pre  A configuration file has been loaded via this classes 'Load'
+     * method.
+     *
+     * @param   key     const std::string &, period seperated list of tokens,
+     *                  uniquely identifying an object in the
+     *                  configuration file.
+     * @return          std::string, stringified object
+     */
+    std::string StringifyObject(const std::string &key) const;
+
 private:
     rapidjson::Value::ConstMemberIterator
     GetDocumentMember(const std::string &key) const;

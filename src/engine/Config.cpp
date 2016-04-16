@@ -163,7 +163,7 @@ Config::GetDocumentMember(const std::string &key) const
                         ++tokenPrint;
                         for (; tokenPrint != tokenIt + 1; ++tokenPrint)
                         {
-                            std::cerr << "." << *tokenPrint;
+                            std::cerr << "." << *tokenPrint << "a"; 
                         }
                         std::cerr << "' in config file." << std::endl;
                         break;
@@ -375,5 +375,27 @@ std::vector<std::string> Config::GetObjectKeys(const std::string &key) const
     }
 
     return contents;
+}
+
+std::string Config::StringifyObject(const std::string &key) const
+{
+    std::string stringifiedObject;
+
+    if (IsLoaded())
+    {
+        rapidjson::Value::ConstMemberIterator valueIt = GetDocumentMember(key);
+
+        if (valueIt != m_document.MemberEnd())
+        {
+            rapidjson::StringBuffer buffer;
+            rapidjson::PrettyWriter<rapidjson::StringBuffer> prettyWriter(
+                buffer);
+            valueIt->value.Accept(prettyWriter);
+
+            stringifiedObject = buffer.GetString();
+        }
+    }
+
+    return stringifiedObject;
 }
 }
