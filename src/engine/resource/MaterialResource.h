@@ -1,3 +1,5 @@
+#pragma once
+
 #include <map>
 #include <memory>
 #include <string>
@@ -16,8 +18,8 @@ public:
      *
      * @param   filePath  std::string, file path to create material resource
      * from.
-     * @return          std::unique_ptr<IResource>, pointer to material resource
-     * created.
+     * @return            std::unique_ptr<IResource>, pointer to material
+     * resource created.
      */
     static std::unique_ptr<IResource> CreateFromFile(std::string filePath);
 

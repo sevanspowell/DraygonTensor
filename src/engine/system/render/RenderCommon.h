@@ -6,5 +6,5 @@ enum class RenderDataType
 {
     Int,
     Vec4,
-        };
+};
 }
