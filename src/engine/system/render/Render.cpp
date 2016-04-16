@@ -41,27 +41,27 @@ bool Render::Initialize(const Config &config)
     // }
 
     /* Example using material gen */
-    std::string materialExamplePath = "../assets/test.material";
-    std::unique_ptr<MaterialResource> materialResource =
-        m_factory.CreateResource<MaterialResource>(materialExamplePath);
-    std::cout << materialResource->GetResourceFilePath() << std::endl;
-    const std::vector<ds_render::Uniform> &uniforms =
-        materialResource->GetUniforms();
-    for (const ds_render::Uniform &uniform : uniforms)
-    {
-        switch (uniform.GetDataType())
-        {
-        case ds_render::RenderDataType::Int:
-            std::cout << uniform.GetName() << " int "
-                      << *((const int *)uniform.GetUniformData()) << std::endl;
-            break;
-        case ds_render::RenderDataType::Vec4:
-            std::cout << uniform.GetName() << " vec4 "
-                      << *((ds_math::Vector4 *)uniform.GetUniformData())
-                      << std::endl;
-            break;
-        }
-    }
+    // std::string materialExamplePath = "../assets/test.material";
+    // std::unique_ptr<MaterialResource> materialResource =
+    //     m_factory.CreateResource<MaterialResource>(materialExamplePath);
+    // std::cout << materialResource->GetResourceFilePath() << std::endl;
+    // const std::vector<ds_render::Uniform> &uniforms =
+    //     materialResource->GetUniforms();
+    // for (const ds_render::Uniform &uniform : uniforms)
+    // {
+    //     switch (uniform.GetDataType())
+    //     {
+    //     case ds_render::RenderDataType::Int:
+    //         std::cout << uniform.GetName() << " int "
+    //                   << *((const int *)uniform.GetUniformData()) << std::endl;
+    //         break;
+    //     case ds_render::RenderDataType::Vec4:
+    //         std::cout << uniform.GetName() << " vec4 "
+    //                   << *((ds_math::Vector4 *)uniform.GetUniformData())
+    //                   << std::endl;
+    //         break;
+    //     }
+    // }
 
     /* Example using the texture gen */
     // std::string textureExamplePath = "../assets/test.png";
@@ -82,8 +82,26 @@ bool Render::Initialize(const Config &config)
     // std::cout << "Components/Channels: " <<
     // (int)changedResourcePointer->GetComponentFlag() << std::endl;
 
+	//// Example of new mesh loading.
+	//std::unique_ptr<MeshResource> changedResourcePointer =
+	//	m_factory.CreateResource<MeshResource>("../assets/cube.obj");
+	//
+	//std::cout << "Ind: " << changedResourcePointer->GetIndicesCount() << std::endl;
+	//std::cout << "Vert: " << changedResourcePointer->GetVertCount()<< std::endl;
+	//std::cout << "Mesh: " << changedResourcePointer->GetMeshCount() << std::endl;
+	//std::cout << "Tex: " << changedResourcePointer->GetTexCoordCount() << std::endl;
+	//std::cout << "Norm: " << changedResourcePointer->GetNormalsCount() << std::endl;
 
-    return result;
+	//std::vector<ds_math::Vector3> verts = changedResourcePointer->GetVerts();
+	//for (int i = 0; i < changedResourcePointer->GetVertCount(); i++)
+	//{
+	//	std::cout << "x: " << verts[i].x;
+	//	std::cout << ", Y: " << verts[i].y;
+	//	std::cout << ", Z :" << verts[i].z << std::endl;
+	//}
+	// 
+
+	return result;
 }
 
 void Render::Update(float deltaTime)
