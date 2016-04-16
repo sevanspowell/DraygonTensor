@@ -9,7 +9,7 @@
 
 namespace ds_lua
 {
-static int l_SpawnUnit(lua_State *L)
+static int l_SpawnPrefab(lua_State *L)
 {
     // Get number of arguments provided
     int n = lua_gettop(L);
@@ -18,7 +18,7 @@ static int l_SpawnUnit(lua_State *L)
         return luaL_error(L, "Got %d arguments, expected 1.", n);
     }
 
-    const char *unitFile = luaL_checklstring(L, 1, NULL);
+    const char *prefabFile = luaL_checklstring(L, 1, NULL);
 
     // Push script system pointer to stack
     lua_getglobal(L, "__Script");
@@ -34,9 +34,9 @@ static int l_SpawnUnit(lua_State *L)
         ds::Script *p = (ds::Script *)lua_touserdata(L, -1);
 
         assert(p != NULL &&
-               "spawnUnit: Tried to deference userdata pointer which was null");
+               "spawnPrefab: Tried to deference userdata pointer which was null");
 
-        p->SpawnUnit(unitFile);
+        p->SpawnPrefab(prefabFile);
     }
 
     // Pop arguments
@@ -199,7 +199,7 @@ static const luaL_Reg vector3Special[] = {
 
 void LoadMathAPI(LuaEnvironment &luaEnv)
 {
-    luaEnv.RegisterCFunction("World.spawn_unit", l_SpawnUnit);
+    luaEnv.RegisterCFunction("World.spawn_prefab", l_SpawnPrefab);
 
     luaEnv.RegisterClass("Vector3", vector3Methods, vector3Functions,
                          vector3Special);

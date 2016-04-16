@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/entity/EntityManager.h"
 #include "engine/system/ISystem.h"
 #include "engine/system/script/LuaEnvironment.h"
 
@@ -88,12 +89,12 @@ public:
     void RegisterScriptBindings(const char *systemName, ISystem *systemPtr);
 
     /**
-     * Spawn a unit in the world.
+     * Spawn a prefab in the world.
      *
-     * @param  unitFile  std::string, path to unit, relative to the assets
+     * @param  prefabFile  std::string, path to prefab, relative to the assets
      * directory.
      */
-    void SpawnUnit(std::string unitFile);
+    void SpawnPrefab(std::string prefabFile);
 
     /**
      * Is a new message available for the external script?
@@ -142,5 +143,8 @@ private:
 
     // Messages to pass to script
     ds_msg::MessageStream m_toScriptMessages;
+
+    // Used to co-ordinate the creation of components in the system.
+    EntityManager m_entityManager;
 };
 }

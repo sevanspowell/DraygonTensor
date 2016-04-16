@@ -136,9 +136,49 @@ void Script::RegisterScriptBindings(const char *systemName, ISystem *systemPtr)
         std::pair<const char *, ISystem *>(systemName, systemPtr));
 }
 
-void Script::SpawnUnit(std::string unitFile)
+void Script::SpawnPrefab(std::string prefabFile)
 {
-    std::cout << "Unit spawned: " << unitFile << std::endl;
+    std::cout << "Prefab spawned: " << prefabFile << std::endl;
+
+    // Create new Entity
+    Entity entity = m_entityManager.Create();
+
+    // Open prefab file
+    std::stringstream fullPrefabFilePath;
+    fullPrefabFilePath << "../assets/" << prefabFile << ".prefab";
+    Config prefab;
+    if (prefab.LoadFile(fullPrefabFilePath.str()))
+    {
+        // Get components
+        std::vector<std::string> components =
+            prefab.GetObjectKeys("components");
+        for (auto component : components)
+        {
+            // Build config access key
+            std::stringstream fullComponentKey;
+            fullComponentKey << "components"
+                             << "." << component;
+
+            std::string componentData =
+                prefab.StringifyObject(fullComponentKey.str());
+
+            ds_msg::CreateComponent createComponentMsg;
+            createComponentMsg.entity = entity;
+            createComponentMsg.componentType =
+                StringIntern::Instance().Intern(component);
+            createComponentMsg.componentData =
+                StringIntern::Instance().Intern(componentData);
+
+            ds_msg::AppendMessage(
+                &m_messagesGenerated, ds_msg::MessageType::CreateComponent,
+                sizeof(ds_msg::CreateComponent), &createComponentMsg);
+        }
+    }
+    else
+    {
+        std::cerr << "Script::SpawnPrefab: Failed to open prefab file: "
+                  << fullPrefabFilePath.str() << std::endl;
+    }
 }
 
 bool Script::IsNextScriptMessage() const

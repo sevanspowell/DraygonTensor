@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/entity/Entity.h"
 #include "engine/common/StreamBuffer.h"
 #include "engine/common/StringIntern.h"
 #include "engine/system/platform/GraphicsContext.h"
@@ -40,6 +41,8 @@ enum class MessageType
     TextInput,
     // On graphics context creation
     GraphicsContextCreated,
+    // On component creation
+    CreateComponent
 };
 
 /**
@@ -98,5 +101,13 @@ struct GraphicsContextCreated
 {
     ds_platform::GraphicsContext::ContextInfo
         contextInfo; // Information on the graphics context created
+};
+
+struct CreateComponent
+{
+    ds::Entity entity; // Entity to create component for
+    ds::StringIntern::StringId
+        componentType; // Type of component to create  as a string
+    ds::StringIntern::StringId componentData; // Component config string.
 };
 }
