@@ -67,6 +67,37 @@ bool Config::LoadFile(const std::string &filePath)
     return result;
 }
 
+bool Config::LoadMemory(const std::string &string)
+{
+    bool result = false;
+
+    rapidjson::Document tmp;
+    // Clear previous document
+    m_document.Swap(tmp);
+
+    // Read file in
+    rapidjson::StringStream stream(string.c_str());
+
+    // Attempt to parse file stream
+    rapidjson::ParseResult parseResult = m_document.ParseStream(stream);
+    if (parseResult == false)
+    {
+        fprintf(stderr, "JSON parse error: %s (%zu)\n",
+                rapidjson::GetParseError_En(parseResult.Code()),
+                parseResult.Offset());
+    }
+    else
+    {
+        // Parsing was successful
+        result = true;
+    }
+
+    // Update our status
+    m_isLoaded = result;
+
+    return result;
+}
+
 bool Config::IsLoaded() const
 {
     return m_isLoaded;
@@ -163,7 +194,7 @@ Config::GetDocumentMember(const std::string &key) const
                         ++tokenPrint;
                         for (; tokenPrint != tokenIt + 1; ++tokenPrint)
                         {
-                            std::cerr << "." << *tokenPrint << "a"; 
+                            std::cerr << "." << *tokenPrint << "a";
                         }
                         std::cerr << "' in config file." << std::endl;
                         break;

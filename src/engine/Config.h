@@ -34,19 +34,19 @@ public:
      */
     bool LoadFile(const std::string &filePath);
 
-    // /**
-    //  * Attempt to load the configuration from memory.
-    //  *
-    //  * This method (or LoadFile) must be called before the class is used.
-    //  *
-    //  * Note: will clear any previous config loaded.
-    //  *
-    //  * @param   filePath  const std::string &, path to file on disk.
-    //  * @return            bool, TRUE if the file was loaded successfully,
-    //  FALSE
-    //  *                    otherwise.
-    //  */
-    // bool LoadMemory(const std::string &string);
+    /**
+     * Attempt to load the configuration from memory.
+     *
+     * This method (or LoadFile) must be called before the class is used.
+     *
+     * Note: will clear any previous config loaded.
+     *
+     * @param   filePath  const std::string &, path to file on disk.
+     * @return            bool, TRUE if the file was loaded successfully,
+     FALSE
+     *                    otherwise.
+     */
+    bool LoadMemory(const std::string &string);
 
     /**
      * Has a config file been loaded successfully?
