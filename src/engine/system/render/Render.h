@@ -1,8 +1,10 @@
 #pragma once
 
-#include "engine/system/ISystem.h"
-#include "engine/resource/ResourceFactory.h"
 #include <string>
+
+#include "engine/resource/ResourceFactory.h"
+#include "engine/system/ISystem.h"
+#include "engine/system/render/IRenderer.h"
 
 namespace ds
 {
@@ -55,7 +57,6 @@ public:
     virtual ds_msg::MessageStream CollectMessages();
 
 private:
-
     /**
      * Process messages in the given message stream.
      *
@@ -63,8 +64,23 @@ private:
      */
     void ProcessEvents(ds_msg::MessageStream *messages);
 
+    /**
+     * Create a render component for the given entity using the given component
+     * data string.
+     *
+     * @param  entity         Entity, entity to create render component for.
+     * @param  componentData  const std::string &, component data string to
+     * create render component from.
+     */
+    // void CreateRenderComponentFor(Entity entity,
+    //                               const std::string &componentData);
+
+    /** Messages generated and received by this system */
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
 
     ResourceFactory m_factory;
+
+    /** Renderer */
+    std::unique_ptr<ds_render::IRenderer> m_renderer;
 };
 }

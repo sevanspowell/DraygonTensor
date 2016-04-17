@@ -4,6 +4,8 @@ set(ENGINE_INCLUDE_FILES
   Config.h
   Engine.h
   common/Common.h
+  common/Handle.h
+  common/HandleManager.h
   common/StreamBuffer.h
   common/StreamBuffer.hpp
   common/StringIntern.h
@@ -28,8 +30,11 @@ set(ENGINE_INCLUDE_FILES
   system/platform/Platform.h
   system/platform/Video.h
   system/platform/Window.h
+  system/render/GLRenderer.h
+  system/render/IRenderer.h
   system/render/Render.h
   system/render/Uniform.h
+  system/render/VertexBufferDescription.h
   system/script/LuaEnvironment.h
   system/script/LuaHelper.h
   system/script/Script.h
@@ -40,6 +45,7 @@ set(ENGINE_SRC_FILES
   Config.cpp
   Engine.cpp
   common/Common.cpp
+  common/HandleManager.cpp
   common/StreamBuffer.cpp
   common/StringIntern.cpp
   entity/Entity.cpp
@@ -58,14 +64,16 @@ set(ENGINE_SRC_FILES
   system/platform/Platform.cpp
   system/platform/Video.cpp
   system/platform/Window.cpp
+  system/render/GLRenderer.cpp
   system/render/Render.cpp
+  system/render/VertexBufferDescription.cpp
   system/render/Uniform.cpp
-  system/script/LuaMathAPI.cpp
   system/script/LuaEnvironment.cpp
   system/script/LuaHelper.cpp
+  system/script/LuaMathAPI.cpp
   system/script/Script.cpp
-  system/script/ScriptLuaBindings.cpp
   system/script/ScriptBindingSet.cpp
+  system/script/ScriptLuaBindings.cpp
 )
 
 add_library(drunken_sailor_engine STATIC ${ENGINE_INCLUDE_FILES} ${ENGINE_SRC_FILES})

@@ -1,9 +1,11 @@
 #include <fstream>
+#include <sstream>
 
 #include "engine/resource/MaterialResource.h"
 #include "engine/resource/MeshResource.h"
 #include "engine/resource/ShaderResource.h"
 #include "engine/resource/TextureResource.h"
+#include "engine/system/render/GLRenderer.h"
 #include "engine/system/render/Render.h"
 #include "math/Vector4.h"
 
@@ -20,93 +22,23 @@ bool Render::Initialize(const Config &config)
     m_factory.RegisterCreator<ShaderResource>(ShaderResource::CreateFromFile);
     m_factory.RegisterCreator<TextureResource>(TextureResource::CreateFromFile);
 
+    m_renderer =
+        std::unique_ptr<ds_render::IRenderer>(new ds_render::GLRenderer());
 
-    //   // Example ...
-    // std::string meshResourcePath = "../assets/boot.lua";
+    // TODO: Handle resize messages to change this
+    unsigned int viewportWidth = 800;
+    unsigned int viewportHeight = 600;
+    
+    m_renderer->Init(viewportWidth, viewportHeight);
 
-    //   std::unique_ptr<IResource> meshResource =
-    //       m_factory.CreateResource<MeshResource>(meshResourcePath);
-
-
-    /* Example using shader gen */
-    // std::string shaderExamplePath = "../assets/diffuse.shader";
-    // std::unique_ptr<ShaderResource> shaderResource =
-    //     m_factory.CreateResource<ShaderResource>(shaderExamplePath);
-    // std::cout << shaderResource->GetResourceFilePath() << std::endl;
-    // // For each shader type
-    // for (auto shaderType : shaderResource->GetShaderTypes())
-    // {
-    //     std::cout << shaderResource->GetShaderSource(shaderType) <<
-    //     std::endl;
-    // }
-
-    /* Example using material gen */
-    // std::string materialExamplePath = "../assets/test.material";
-    // std::unique_ptr<MaterialResource> materialResource =
-    //     m_factory.CreateResource<MaterialResource>(materialExamplePath);
-    // std::cout << materialResource->GetResourceFilePath() << std::endl;
-    // const std::vector<ds_render::Uniform> &uniforms =
-    //     materialResource->GetUniforms();
-    // for (const ds_render::Uniform &uniform : uniforms)
-    // {
-    //     switch (uniform.GetDataType())
-    //     {
-    //     case ds_render::RenderDataType::Int:
-    //         std::cout << uniform.GetName() << " int "
-    //                   << *((const int *)uniform.GetUniformData()) << std::endl;
-    //         break;
-    //     case ds_render::RenderDataType::Vec4:
-    //         std::cout << uniform.GetName() << " vec4 "
-    //                   << *((ds_math::Vector4 *)uniform.GetUniformData())
-    //                   << std::endl;
-    //         break;
-    //     }
-    // }
-
-    /* Example using the texture gen */
-    // std::string textureExamplePath = "../assets/test.png";
-    // std::unique_ptr<IResource> texResource =
-    //	m_factory.CreateResource<TextureResource>(textureExamplePath);
-    // std::unique_ptr<TextureResource> changedResourcePointer
-    //	(static_cast<TextureResource*>(texResource.release()));
-
-    // std::cout << "width: " << changedResourcePointer->GetWidthInPixels() <<
-    // std::endl;
-    // std::cout << "height: " << changedResourcePointer->GetHeightInPixels() <<
-    // std::endl;
-
-    // if (changedResourcePointer->GetImageFormat() == TextureResource::PNG) {
-    //	std::cout << "Format read - Yes." << std::endl;
-    //}
-
-    // std::cout << "Components/Channels: " <<
-    // (int)changedResourcePointer->GetComponentFlag() << std::endl;
-
-	//// Example of new mesh loading.
-	//std::unique_ptr<MeshResource> changedResourcePointer =
-	//	m_factory.CreateResource<MeshResource>("../assets/cube.obj");
-	//
-	//std::cout << "Ind: " << changedResourcePointer->GetIndicesCount() << std::endl;
-	//std::cout << "Vert: " << changedResourcePointer->GetVertCount()<< std::endl;
-	//std::cout << "Mesh: " << changedResourcePointer->GetMeshCount() << std::endl;
-	//std::cout << "Tex: " << changedResourcePointer->GetTexCoordCount() << std::endl;
-	//std::cout << "Norm: " << changedResourcePointer->GetNormalsCount() << std::endl;
-
-	//std::vector<ds_math::Vector3> verts = changedResourcePointer->GetVerts();
-	//for (int i = 0; i < changedResourcePointer->GetVertCount(); i++)
-	//{
-	//	std::cout << "x: " << verts[i].x;
-	//	std::cout << ", Y: " << verts[i].y;
-	//	std::cout << ", Z :" << verts[i].z << std::endl;
-	//}
-	// 
-
-	return result;
+    return result;
 }
 
 void Render::Update(float deltaTime)
 {
     ProcessEvents(&m_messagesReceived);
+
+    m_renderer->ClearBuffers();
 }
 
 void Render::Shutdown()
@@ -141,7 +73,7 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
         //     (*messages) >> gfxContext;
 
         //     // If we haven't already created a renderer
-        //     if (m_renderer == nullptr)
+        //     if (m_renderer->== nullptr)
         //     {
         //         // Create a renderer to match graphics context type
         //         // GL renderer for GL context, etc...
@@ -151,6 +83,52 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
         //         }
         //     }
         //     break;
+        case ds_msg::MessageType::CreateComponent:
+        {
+            ds_msg::CreateComponent createComponentMsg;
+            (*messages) >> createComponentMsg;
+
+            // Load up component data for component
+            Config componentData;
+            if (componentData.LoadMemory(StringIntern::Instance().GetString(
+                    createComponentMsg.componentData)))
+            {
+                if (StringIntern::Instance().GetString(
+                        createComponentMsg.componentType) == "renderComponent")
+                {
+                    std::string meshName;
+                    std::string materialName;
+                    if (componentData.GetString("mesh", &meshName) &&
+                        componentData.GetString("material", &materialName))
+                    {
+                        // Get mesh resource path
+                        std::stringstream meshResourcePath;
+                        meshResourcePath << "../assets/" << meshName;
+
+                        // Get mesh resource
+                        std::unique_ptr<MeshResource> meshResource =
+                            m_factory.CreateResource<MeshResource>(
+                                meshResourcePath.str());
+
+                        // TODO: Renderer create mesh
+
+                        // Get material resource path
+                        std::stringstream materialResourcePath;
+                        materialResourcePath << "../assets/" << materialName;
+
+                        // Get material resource
+                        std::unique_ptr<MaterialResource> materialResource =
+                            m_factory.CreateResource<MaterialResource>(
+                                materialResourcePath.str());
+
+                        // TODO: Renderer create material
+
+                        // Create render Component for entity
+                    }
+                }
+            }
+            break;
+        }
         default:
             messages->Extract(header.size);
             break;
