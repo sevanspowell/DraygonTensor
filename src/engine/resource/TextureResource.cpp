@@ -6,8 +6,6 @@
 
 namespace ds
 {
-
-<<<<<<< HEAD
 TextureResource::TextureResource()
 {
     m_textureData = nullptr;
