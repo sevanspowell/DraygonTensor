@@ -235,6 +235,24 @@ void GLRenderer::SetProgram(ProgramHandle programHandle)
     }
 }
 
+void GLRenderer::DrawVertices(VertexBufferHandle buffer,
+                              PrimitiveType primitiveType,
+                              size_t startingVertex,
+                              size_t numVertices)
+{
+    BindVertexBuffer(buffer);
+    glDrawArrays(ToGLPrimitiveType(primitiveType), startingVertex, numVertices);
+    UnbindVertexBuffer();
+}
+
+void GLRenderer::DrawVerticesIndexed(VertexBufferHandle buffer,
+                         IndexBufferHandle indexBuffer,
+                         PrimitiveType primitiveType,
+                         size_t startingVertex,
+                         size_t numVertices)
+{
+}
+
 ds::Handle GLRenderer::StoreOpenGLObject(GLuint glObject, GLObjectType type)
 {
     // Construct GLObject
@@ -250,7 +268,7 @@ ds::Handle GLRenderer::StoreOpenGLObject(GLuint glObject, GLObjectType type)
     ds::Handle handle =
         m_handleManager.Add((void *)&m_openGLObjects[loc], (uint32_t)type);
     // Store handle with GLObject
-    m_openGLObjects[loc - 1].handle = handle;
+    m_openGLObjects[loc].handle = handle;
 
     // Because pushing an element back on the vector might cause the vector to
     // realloc, and hence the address of all GLObjects in the vector change,
@@ -266,7 +284,7 @@ ds::Handle GLRenderer::StoreOpenGLObject(GLuint glObject, GLObjectType type)
 
 bool GLRenderer::GetOpenGLObject(ds::Handle handle,
                                  GLObjectType type,
-                                 GLuint *openGLObject)
+                                 GLuint *openGLObject) const
 {
     bool result = false;
     GLObject *objectTmp = nullptr;
@@ -301,7 +319,28 @@ bool GLRenderer::GetOpenGLObject(ds::Handle handle,
     return result;
 }
 
-GLenum GLRenderer::ToGLBufferUsageType(BufferUsageType usage)
+void GLRenderer::BindVertexBuffer(VertexBufferHandle vertexBufferHandle)
+{
+    GLuint vao;
+    if (GetOpenGLObject(vertexBufferHandle, GLObjectType::VertexArrayObject,
+                        &vao))
+    {
+        glBindVertexArray(vao);
+    }
+    else
+    {
+        std::cerr
+            << "GLRenderer::BindVertexBuffer: Failed to bind vertex buffer."
+            << std::endl;
+    }
+}
+
+void GLRenderer::UnbindVertexBuffer()
+{
+    glBindVertexArray(0);
+}
+
+GLenum GLRenderer::ToGLBufferUsageType(BufferUsageType usage) const
 {
     GLenum type = GL_INVALID_ENUM;
 
@@ -320,7 +359,7 @@ GLenum GLRenderer::ToGLBufferUsageType(BufferUsageType usage)
     return type;
 }
 
-GLenum GLRenderer::ToGLDataType(RenderDataType dataType)
+GLenum GLRenderer::ToGLDataType(RenderDataType dataType) const
 {
     GLenum type = GL_INVALID_ENUM;
 
@@ -337,12 +376,12 @@ GLenum GLRenderer::ToGLDataType(RenderDataType dataType)
     return type;
 }
 
-GLenum GLRenderer::ToGLBool(bool boolean)
+GLenum GLRenderer::ToGLBool(bool boolean) const
 {
     return (boolean == true ? GL_TRUE : GL_FALSE);
 }
 
-GLenum GLRenderer::ToGLShaderType(ShaderType shaderType)
+GLenum GLRenderer::ToGLShaderType(ShaderType shaderType) const
 {
     GLenum type = GL_INVALID_ENUM;
 
@@ -354,6 +393,32 @@ GLenum GLRenderer::ToGLShaderType(ShaderType shaderType)
     case ShaderType::FragmentShader:
         type = GL_FRAGMENT_SHADER;
         break;
+    default:
+        break;
+    }
+
+    return type;
+}
+
+GLenum GLRenderer::ToGLPrimitiveType(PrimitiveType primitiveType) const
+{
+    GLenum type = GL_INVALID_ENUM;
+
+    switch (primitiveType)
+    {
+    case PrimitiveType::Triangles:
+        type = GL_TRIANGLES;
+        break;
+    case PrimitiveType::TriangleStrip:
+        type = GL_TRIANGLE_STRIP;
+        break;
+    case PrimitiveType::Lines:
+        type = GL_LINES;
+        break;
+    case PrimitiveType::Points:
+        type = GL_POINTS;
+        break;
+    /** TODO: More... */
     default:
         break;
     }

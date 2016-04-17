@@ -130,6 +130,42 @@ public:
      */
     virtual void SetProgram(ProgramHandle programHandle);
 
+    /**
+     * Draw a number of vertices in a vertex buffer.
+     *
+     * The vertices are drawn one-by-one from the given starting vertex.
+     *
+     * @param  buffer          VertexBufferHandle, vertex buffer to draw from.
+     * @param  primitiveType   PrimitiveType, primitives to draw with vertices.
+     * @param  startingVertex  size_t, index of vertex in vertex buffer to begin
+     * drawing from.
+     * @param  numVertices     size_t, number of vertices to draw from vertex
+     * buffer.
+     */
+    virtual void DrawVertices(VertexBufferHandle buffer,
+                              PrimitiveType primitiveType,
+                              size_t startingVertex,
+                              size_t numVertices);
+
+    /**
+     * Draw a number of vertices in a vertex buffer using the index buffer to
+     * choose which vertices to draw and in which order.
+     *
+     * @param  buffer          VertexBufferHandle, vertex buffer to draw from.
+     * @param  indexBuffer     IndexBufferHandle, index buffer to determine
+     * which vertices to draw and in what order.
+     * @param  primitiveType   PrimitiveType, primitives to draw with vertices.
+     * @param  startingVertex  size_t, index of vertex in vertex buffer to begin
+     * drawing from.
+     * @param  numVertices     size_t, number of vertices to draw from vertex
+     * buffer.
+     */
+    virtual void DrawVerticesIndexed(VertexBufferHandle buffer,
+                                     IndexBufferHandle indexBuffer,
+                                     PrimitiveType primitiveType,
+                                     size_t startingVertex,
+                                     size_t numVertices);
+
 private:
     /**
      * A GLuint can represent one of many different OpenGL objects,
@@ -180,8 +216,21 @@ private:
      * @return                  bool, TRUE if the method retrieved OpenGLObject
      * successfully, FALSE otherwise.
      */
-    bool
-    GetOpenGLObject(ds::Handle handle, GLObjectType type, GLuint *openGLObject);
+    bool GetOpenGLObject(ds::Handle handle,
+                         GLObjectType type,
+                         GLuint *openGLObject) const;
+
+    /**
+     * Bind a vertex buffer for drawing.
+     *
+     * @param  handle  VertexBufferHandle, handle to vertex buffer to draw.
+     */
+    void BindVertexBuffer(VertexBufferHandle vertexBufferHandle);
+
+    /**
+     * Unbind all vertex buffers.
+     */
+    void UnbindVertexBuffer();
 
     /**
      * Convert a BufferUsageType to an OpenGL-specific equivalent.
@@ -189,7 +238,7 @@ private:
      * @param   usage  BufferUsageType, buffer usage type.
      * @return         GLenum, OpenGL buffer usage type.
      */
-    GLenum ToGLBufferUsageType(BufferUsageType usage);
+    GLenum ToGLBufferUsageType(BufferUsageType usage) const;
 
     /**
      * Convert a RenderDataType to an OpenGL-specific equivalent.
@@ -197,7 +246,7 @@ private:
      * @param   datatype  RenderDataType, data type to convert.
      * @return            GLenum, OpenGL data type.
      */
-    GLenum ToGLDataType(RenderDataType dataType);
+    GLenum ToGLDataType(RenderDataType dataType) const;
 
     /**
      * Convert a boolean value to an OpenGL bool.
@@ -205,15 +254,23 @@ private:
      * @param   boolean  bool, boolean to convert.
      * @return           GLenum, OpenGL bool.
      */
-    GLenum ToGLBool(bool boolean);
+    GLenum ToGLBool(bool boolean) const;
 
     /**
-     * Convert a Shadertype to an OpenGL-specific equivalent.
+     * Convert a ShaderType to an OpenGL-specific equivalent.
      *
      * @param   shaderType  ShaderType, shader type to convert.
      * @return              GLenum, OpenGL shader type.
      */
-    GLenum ToGLShaderType(ShaderType shaderType);
+    GLenum ToGLShaderType(ShaderType shaderType) const;
+
+    /**
+     * Convert a PrimitiveType to an OpenGL-specific equivalent.
+     *
+     * @param   primitiveType  PrimitiveType, primitive type to convert.
+     * @return                 GLenum, OpenGL primitive type.
+     */
+    GLenum ToGLPrimitiveType(PrimitiveType primitiveType) const;
 
     /**
      * All OpenGL objects that have been created by this renderer and their

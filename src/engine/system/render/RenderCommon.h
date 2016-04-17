@@ -42,6 +42,15 @@ enum class ShaderType
     FragmentShader
 };
 
+/** Drawing primitive type */
+enum class PrimitiveType
+{
+    Triangles,
+    TriangleStrip,
+    Lines,
+    Points
+};
+
 /** Handle to a vertex buffer */
 typedef ds::Handle VertexBufferHandle;
 /** Handle to a index buffer */

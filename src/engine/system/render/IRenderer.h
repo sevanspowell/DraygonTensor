@@ -131,6 +131,41 @@ public:
      */
     virtual void SetProgram(ProgramHandle programHandle) = 0;
 
+    /**
+     * Draw a number of vertices in a vertex buffer.
+     *
+     * The vertices are drawn one-by-one from the given starting vertex.
+     *
+     * @param  buffer          VertexBufferHandle, vertex buffer to draw from.
+     * @param  primitiveType   PrimitiveType, primitives to draw with vertices.
+     * @param  startingVertex  size_t, index of vertex in vertex buffer to begin
+     * drawing from.
+     * @param  numVertices     size_t, number of vertices to draw from vertex
+     * buffer.
+     */
+    virtual void DrawVertices(VertexBufferHandle buffer,
+                              PrimitiveType primitiveType,
+                              size_t startingVertex,
+                              size_t numVertices) = 0;
+
+    /**
+     * Draw a number of vertices in a vertex buffer using the index buffer to
+     * choose which vertices to draw and in which order.
+     *
+     * @param  buffer          VertexBufferHandle, vertex buffer to draw from.
+     * @param  indexBuffer     IndexBufferHandle, index buffer to determine
+     * which vertices to draw and in what order.
+     * @param  primitiveType   PrimitiveType, primitives to draw with vertices.
+     * @param  startingVertex  size_t, index of vertex in vertex buffer to begin
+     * drawing from.
+     * @param  numVertices     size_t, number of vertices to draw from vertex
+     * buffer.
+     */
+    virtual void DrawVerticesIndexed(VertexBufferHandle buffer,
+                                     IndexBufferHandle indexBuffer,
+                                     PrimitiveType primitiveType,
+                                     size_t startingVertex,
+                                     size_t numVertices) = 0;
 
 private:
 };

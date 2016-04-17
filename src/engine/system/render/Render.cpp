@@ -28,8 +28,46 @@ bool Render::Initialize(const Config &config)
     // TODO: Handle resize messages to change this
     unsigned int viewportWidth = 800;
     unsigned int viewportHeight = 600;
-    
+
     m_renderer->Init(viewportWidth, viewportHeight);
+
+    // Create position data
+    m_points.push_back(ds_math::Vector3(0.0f, 0.5f, 0.0f));
+    m_points.push_back(ds_math::Vector3(0.5f, -0.5f, 0.0f));
+    m_points.push_back(ds_math::Vector3(-0.5f, -0.5f, 0.0f));
+
+    // Describe position data
+    ds_render::VertexBufferDescription::AttributeDescription
+        positionAttributeDescriptor;
+    positionAttributeDescriptor.attributeType =
+        ds_render::AttributeType::Position;
+    positionAttributeDescriptor.attributeDataType =
+        ds_render::RenderDataType::Float;
+    positionAttributeDescriptor.numElementsPerAttribute = 3;
+    positionAttributeDescriptor.stride = 0;
+    positionAttributeDescriptor.offset = 0;
+    positionAttributeDescriptor.normalized = false;
+
+    // Add position attribute description to vertex buffer descriptor
+    ds_render::VertexBufferDescription vertexBufferDescriptor;
+    vertexBufferDescriptor.AddAttributeDescription(positionAttributeDescriptor);
+
+    // Create vertex buffer
+    m_vb = m_renderer->CreateVertexBuffer(
+        ds_render::BufferUsageType::Static, vertexBufferDescriptor,
+        sizeof(ds_math::Vector3) * 3, &m_points[0]);
+
+    ds_render::ShaderHandle vs =
+        m_renderer->CreateShaderObject(ds_render::ShaderType::VertexShader,
+                                       strlen(m_vertexShader), m_vertexShader);
+    ds_render::ShaderHandle fs = m_renderer->CreateShaderObject(
+        ds_render::ShaderType::FragmentShader, strlen(m_fragmentShader),
+        m_fragmentShader);
+
+    std::vector<ds_render::ShaderHandle> shaders;
+    shaders.push_back(vs);
+    shaders.push_back(fs);
+    m_program = m_renderer->CreateProgram(shaders);
 
     return result;
 }
@@ -39,6 +77,10 @@ void Render::Update(float deltaTime)
     ProcessEvents(&m_messagesReceived);
 
     m_renderer->ClearBuffers();
+
+    m_renderer->SetProgram(m_program);
+
+    m_renderer->DrawVertices(m_vb, ds_render::PrimitiveType::Triangles, 0, 3);
 }
 
 void Render::Shutdown()
