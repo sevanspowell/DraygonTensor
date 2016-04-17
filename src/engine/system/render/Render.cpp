@@ -7,6 +7,7 @@
 #include "engine/resource/TextureResource.h"
 #include "engine/system/render/GLRenderer.h"
 #include "engine/system/render/Render.h"
+#include "math/Matrix4.h"
 #include "math/Vector4.h"
 
 namespace ds
@@ -68,6 +69,7 @@ bool Render::Initialize(const Config &config)
     m_ib = m_renderer->CreateIndexBuffer(ds_render::BufferUsageType::Static,
                                          sizeof(unsigned int) * 3, &indices[0]);
 
+    // Create shader program
     ds_render::ShaderHandle vs =
         m_renderer->CreateShaderObject(ds_render::ShaderType::VertexShader,
                                        strlen(m_vertexShader), m_vertexShader);
@@ -79,6 +81,32 @@ bool Render::Initialize(const Config &config)
     shaders.push_back(vs);
     shaders.push_back(fs);
     m_program = m_renderer->CreateProgram(shaders);
+
+    // Create shader data
+    struct Scene
+    {
+        ds_math::Matrix4 modelMatrix;
+        ds_math::Matrix4 viewMatrix;
+        ds_math::Matrix4 projectionMatrix;
+    };
+    Scene sceneConstants;
+    sceneConstants.modelMatrix = ds_math::Matrix4(1.0f);
+    sceneConstants.viewMatrix = ds_math::Matrix4(1.0f);
+    sceneConstants.projectionMatrix = ds_math::Matrix4(1.0f);
+
+    // Describe shader data
+    ds_render::ConstantBuffer cBuffer;
+    cBuffer.SetData(sizeof(Scene), &sceneConstants);
+    cBuffer.DescribeBufferMember("Scene.modelMatrix", 0,
+                                 sizeof(ds_math::Matrix4));
+    cBuffer.DescribeBufferMember("Scene.viewMatrix", sizeof(ds_math::Matrix4),
+                                 sizeof(ds_math::Matrix4));
+    cBuffer.DescribeBufferMember("Scene.projectionMatrix",
+                                 2 * sizeof(ds_math::Matrix4),
+                                 sizeof(ds_math::Matrix4));
+
+    // Update shader data
+    m_renderer->UpdateConstantBuffer(m_program, "Scene", cBuffer);
 
     return result;
 }

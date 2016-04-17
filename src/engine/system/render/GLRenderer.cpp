@@ -235,6 +235,103 @@ void GLRenderer::SetProgram(ProgramHandle programHandle)
     }
 }
 
+void GLRenderer::UpdateConstantBuffer(ProgramHandle programHandle,
+                                      const std::string &constantBufferName,
+                                      const ConstantBuffer &constantBufferData)
+{
+    GLuint program;
+    if (GetOpenGLObject(programHandle, GLObjectType::ProgramObject, &program))
+    {
+        // From
+        // https://www.packtpub.com/books/content/opengl-40-using-uniform-blocks-and-uniform-buffer-objects
+        // Get index of uniform block
+        GLuint blockIndex =
+            glGetUniformBlockIndex(program, constantBufferName.c_str());
+
+        // Get size of uniform block (GL size may differ from C++ size)
+        GLint blockSize;
+        glGetActiveUniformBlockiv(program, blockIndex,
+                                  GL_UNIFORM_BLOCK_DATA_SIZE, &blockSize);
+
+        // Create our own temporary data store that matches the size and
+        // alignment of data that OpenGL expects
+        GLubyte *blockBuffer = (GLubyte *)malloc(blockSize);
+
+        // Number of members in constant buffer
+        const size_t numMembers = constantBufferData.GetNumMembers();
+
+        // Get names for each uniform block member
+        GLchar **names = (GLchar **)malloc(numMembers * sizeof(GLchar *));
+        for (unsigned int i = 0; i < numMembers; ++i)
+        {
+            names[i] = (GLchar *)constantBufferData.GetMemberName(i).c_str();
+        }
+
+        // Get index of each uniform block member
+        GLuint *indices = (GLuint *)malloc(numMembers * sizeof(GLuint));
+        glGetUniformIndices(program, numMembers, names, indices);
+
+        // Check that indices are found
+        bool shouldContinue = true;
+        for (unsigned int i = 0; i < numMembers; ++i)
+        {
+            if (indices[i] == GL_INVALID_INDEX)
+            {
+                std::cerr
+                    << "GLRenderer::UpdateConstantBuffer: Found no "
+                       "uniform block member with name: "
+                    << names[i] << ". "
+                    << "Note: If this uniform block member exists in your "
+                       "shader but you aren't using it, "
+                       "OpenGL might be optimizing it away."
+                    << std::endl;
+                shouldContinue = false;
+            }
+        }
+
+        if (shouldContinue)
+        {
+            // Get offset of each member in GL buffer
+            GLint *offset = (GLint *)malloc(numMembers * sizeof(GLint));
+            glGetActiveUniformsiv(program, numMembers, indices,
+                                  GL_UNIFORM_OFFSET, offset);
+
+            // Get offset of each member in C++ buffer and copy to correct place
+            // in GL buffer
+            const void *data = constantBufferData.GetData();
+            for (unsigned int i = 0; i < numMembers; ++i)
+            {
+                memcpy(blockBuffer + offset[i],
+                       (uint8_t *)data + constantBufferData.GetMemberOffset(i),
+                       constantBufferData.GetMemberSize(i));
+            }
+
+            // Create OpenGL buffer object, copy data to it
+            GLuint ubo;
+            glGenBuffers(1, &ubo);
+            glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+            glBufferData(GL_UNIFORM_BUFFER, blockSize, blockBuffer,
+                         GL_DYNAMIC_DRAW);
+
+            // Bind ubo to uniform block in shader
+            glBindBufferBase(GL_UNIFORM_BUFFER, blockIndex, ubo);
+
+            // Free temporary memory
+            free(offset);
+        }
+
+        // Free temporary memory
+        free(indices);
+        free(names);
+        free(blockBuffer);
+    }
+    else
+    {
+        std::cerr << "GLRenderer::UpdateConstantBuffer: invalid program handle"
+                  << std::endl;
+    }
+}
+
 void GLRenderer::DrawVertices(VertexBufferHandle buffer,
                               PrimitiveType primitiveType,
                               size_t startingVertex,

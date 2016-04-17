@@ -133,6 +133,22 @@ public:
     virtual void SetProgram(ProgramHandle programHandle);
 
     /**
+     * Update the given constant buffer name in the given program with the given
+     * data.
+     *
+     * @param  programHandle  ProgramHandle, handle to program to update
+     * constant buffer of.
+     * @param  constanBufferName  const std::string &, name of the constant
+     * buffer in the shader to update.
+     * @param  constantBufferData  const ConstantBuffer &, constant buffer data
+     * to update with.
+     */
+    virtual void
+    UpdateConstantBuffer(ProgramHandle programHandle,
+                         const std::string &constantBufferName,
+                         const ConstantBuffer &constantBufferData);
+
+    /**
      * Draw a number of vertices in a vertex buffer.
      *
      * The vertices are drawn one-by-one from the given starting vertex.

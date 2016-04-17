@@ -2,6 +2,7 @@
 
 #include "engine/system/render/RenderCommon.h"
 #include "engine/system/render/VertexBufferDescription.h"
+#include "engine/system/render/ConstantBuffer.h"
 
 namespace ds_render
 {
@@ -134,6 +135,22 @@ public:
     virtual void SetProgram(ProgramHandle programHandle) = 0;
 
     /**
+     * Update the given constant buffer name in the given program with the given
+     * data.
+     *
+     * @param  programHandle  ProgramHandle, handle to program to update
+     * constant buffer of.
+     * @param  constanBufferName  const std::string &, name of the constant
+     * buffer in the shader to update.
+     * @param  constantBufferData  const ConstantBuffer &, constant buffer data
+     * to update with.
+     */
+    virtual void
+    UpdateConstantBuffer(ProgramHandle programHandle,
+                         const std::string &constantBufferName,
+                         const ConstantBuffer &constantBufferData) = 0;
+
+    /**
      * Draw a number of vertices in a vertex buffer.
      *
      * The vertices are drawn one-by-one from the given starting vertex.
@@ -158,8 +175,8 @@ public:
      * @param  indexBuffer     IndexBufferHandle, index buffer to determine
      * which vertices to draw and in what order.
      * @param  primitiveType   PrimitiveType, primitives to draw with vertices.
-     * @param  startingIndex   size_t, index to begin drawing from. 
-     * @param  numIndices      size_t, number of indices to draw. 
+     * @param  startingIndex   size_t, index to begin drawing from.
+     * @param  numIndices      size_t, number of indices to draw.
      */
     virtual void DrawVerticesIndexed(VertexBufferHandle buffer,
                                      IndexBufferHandle indexBuffer,

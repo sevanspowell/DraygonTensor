@@ -30,6 +30,7 @@ set(ENGINE_INCLUDE_FILES
   system/platform/Platform.h
   system/platform/Video.h
   system/platform/Window.h
+  system/render/ConstantBuffer.h
   system/render/GLRenderer.h
   system/render/IRenderer.h
   system/render/Render.h
@@ -64,6 +65,7 @@ set(ENGINE_SRC_FILES
   system/platform/Platform.cpp
   system/platform/Video.cpp
   system/platform/Window.cpp
+  system/render/ConstantBuffer.cpp
   system/render/GLRenderer.cpp
   system/render/Render.cpp
   system/render/VertexBufferDescription.cpp
