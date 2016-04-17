@@ -1,6 +1,8 @@
 #include <fstream>
 #include <sstream>
 
+#include <stb_image.h>
+
 #include "engine/resource/MaterialResource.h"
 #include "engine/resource/MeshResource.h"
 #include "engine/resource/ShaderResource.h"
@@ -32,11 +34,13 @@ bool Render::Initialize(const Config &config)
 
     m_renderer->Init(viewportWidth, viewportHeight);
 
+    // Create vertex buffer data store
+    ds_com::StreamBuffer vertexBufferStore;
+
     // Create position data
-    std::vector<ds_math::Vector3> points;
-    points.push_back(ds_math::Vector3(0.0f, 0.5f, 0.0f));
-    points.push_back(ds_math::Vector3(0.5f, -0.5f, 0.0f));
-    points.push_back(ds_math::Vector3(-0.5f, -0.5f, 0.0f));
+    vertexBufferStore << ds_math::Vector3(0.0f, 0.5f, 0.0f);
+    vertexBufferStore << ds_math::Vector3(0.5f, -0.5f, 0.0f);
+    vertexBufferStore << ds_math::Vector3(-0.5f, -0.5f, 0.0f);
 
     // Describe position data
     ds_render::VertexBufferDescription::AttributeDescription
@@ -50,14 +54,36 @@ bool Render::Initialize(const Config &config)
     positionAttributeDescriptor.offset = 0;
     positionAttributeDescriptor.normalized = false;
 
-    // Add position attribute description to vertex buffer descriptor
+    // Create texCoord data
+    vertexBufferStore << 0.5f;
+    vertexBufferStore << 0.0f;
+    vertexBufferStore << 1.0f;
+    vertexBufferStore << 1.0f;
+    vertexBufferStore << 0.0f;
+    vertexBufferStore << 1.0f;
+
+    // Describe texCoord data
+    ds_render::VertexBufferDescription::AttributeDescription
+        texCoordAttributeDescriptor;
+    texCoordAttributeDescriptor.attributeType =
+        ds_render::AttributeType::TextureCoordinate;
+    texCoordAttributeDescriptor.attributeDataType =
+        ds_render::RenderDataType::Float;
+    texCoordAttributeDescriptor.numElementsPerAttribute = 2;
+    texCoordAttributeDescriptor.stride = 0;
+    texCoordAttributeDescriptor.offset = 3 * sizeof(ds_math::Vector3);
+    texCoordAttributeDescriptor.normalized = false;
+
+    // Add position and texcoord attribute descriptions to vertex buffer
+    // descriptor
     ds_render::VertexBufferDescription vertexBufferDescriptor;
     vertexBufferDescriptor.AddAttributeDescription(positionAttributeDescriptor);
+    vertexBufferDescriptor.AddAttributeDescription(texCoordAttributeDescriptor);
 
     // Create vertex buffer
     m_vb = m_renderer->CreateVertexBuffer(
         ds_render::BufferUsageType::Static, vertexBufferDescriptor,
-        sizeof(ds_math::Vector3) * 3, &points[0]);
+        vertexBufferStore.AvailableBytes(), vertexBufferStore.GetDataPtr());
 
     // Create index data
     std::vector<unsigned int> indices;
@@ -108,6 +134,19 @@ bool Render::Initialize(const Config &config)
     // Update shader data
     m_renderer->UpdateConstantBuffer(m_program, "Scene", cBuffer);
 
+    // Load texture data
+    int width = 0;
+    int height = 0;
+    int components = 0;
+    unsigned char *imageContents =
+        stbi_load("../assets/test.png", &width, &height, &components, 0);
+
+    // Create texture
+    m_texture = m_renderer->Create2DTexture(
+        ds_render::ImageFormat::RGB, ds_render::RenderDataType::UnsignedByte,
+        ds_render::InternalImageFormat::SRGB8, true, width, height,
+        imageContents);
+
     return result;
 }
 
@@ -118,6 +157,8 @@ void Render::Update(float deltaTime)
     m_renderer->ClearBuffers();
 
     m_renderer->SetProgram(m_program);
+
+    m_renderer->BindTextureToSampler(m_program, "tex", m_texture);
 
     // m_renderer->DrawVertices(m_vb, ds_render::PrimitiveType::Triangles, 0,
     // 3);

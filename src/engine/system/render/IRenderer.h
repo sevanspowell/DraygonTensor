@@ -151,15 +151,59 @@ public:
                          const ConstantBuffer &constantBufferData) = 0;
 
     /**
+     * Create a two-dimensional texture.
+     *
+     * @param  format           ImageFormat, composition of each element in
+     * data. Number of colour components in the texture.
+     * @param  imageDataType    RenderDataType, data type of pixel data.
+     * @param  internalFormat   InternalImageFormat, request the renderer to
+     * store the image data in a specific format.
+     * @param  generateMipMaps  bool, TRUE to generate mipmaps, FALSE to not.
+     * @param  width            unsigned int, width of the image in pixels.
+     * @param  height           unsigend int, height of the image in pixels.
+     * @param  data             const void *, pointer to image data.
+     */
+    virtual TextureHandle Create2DTexture(ImageFormat format,
+                                          RenderDataType imageDataType,
+                                          InternalImageFormat internalFormat,
+                                          bool generateMipMaps,
+                                          unsigned int width,
+                                          unsigned int height,
+                                          const void *data) = 0;
+
+    /**
+     * Bind a texture to a sampler in the shader.
+     *
+     * @param  programHandle  ProgramHandle, shader program containing sampler.
+     * @param  samplerName    const std::string &, name of the sampler in the
+     * shader
+     * @param  textureHandle  TextureHandle, texture to bind to sampler.
+     */
+    virtual void BindTextureToSampler(ProgramHandle programHandle,
+                                      const std::string &samplerName,
+                                      TextureHandle textureHandle) = 0;
+
+    /**
+     * Unbind texture from sampler.
+     *
+     * @param  textureHandle  TextureHandle, texture to unbind. 
+     */
+    virtual void UnbindTextureFromSampler(TextureHandle textureHandle) = 0;
+
+    /**
      * Draw a number of vertices in a vertex buffer.
      *
      * The vertices are drawn one-by-one from the given starting vertex.
      *
-     * @param  buffer          VertexBufferHandle, vertex buffer to draw from.
-     * @param  primitiveType   PrimitiveType, primitives to draw with vertices.
-     * @param  startingVertex  size_t, index of vertex in vertex buffer to begin
+     * @param  buffer          VertexBufferHandle, vertex buffer to draw
+     * from.
+     * @param  primitiveType   PrimitiveType, primitives to draw with
+     * vertices.
+     * @param  startingVertex  size_t, index of vertex in vertex buffer to
+     * begin
      * drawing from.
-     * @param  numVertices     size_t, number of vertices to draw from vertex
+     * @param  numVertices     size_t, number of vertices to draw from
+     * vertex
      * buffer.
      */
     virtual void DrawVertices(VertexBufferHandle buffer,

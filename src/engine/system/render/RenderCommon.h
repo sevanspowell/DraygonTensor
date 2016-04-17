@@ -11,6 +11,7 @@ enum class RenderDataType
 {
     Int,
     Float,
+    UnsignedByte,
 };
 
 /**
@@ -32,7 +33,7 @@ enum class AttributeType
 {
     Position,
     Normal,
-    TexturCoordinate
+    TextureCoordinate
 };
 
 /** Shader source type */
@@ -51,6 +52,22 @@ enum class PrimitiveType
     Points
 };
 
+/** Colour components of an image */
+enum class ImageFormat
+{
+    RGB,
+    RGBA
+};
+
+/** Image storage format */
+enum class InternalImageFormat
+{
+    RGB8,
+    SRGB8,
+    RGBA8,
+    SRGBA8
+};
+
 /** Handle to a vertex buffer */
 typedef ds::Handle VertexBufferHandle;
 /** Handle to a index buffer */
@@ -59,4 +76,6 @@ typedef ds::Handle IndexBufferHandle;
 typedef ds::Handle ShaderHandle;
 /** Handle to a shader program */
 typedef ds::Handle ProgramHandle;
+/** Handle to a texture */
+typedef ds::Handle TextureHandle;
 }

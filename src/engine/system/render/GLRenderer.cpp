@@ -332,6 +332,132 @@ void GLRenderer::UpdateConstantBuffer(ProgramHandle programHandle,
     }
 }
 
+TextureHandle GLRenderer::Create2DTexture(ImageFormat format,
+                                          RenderDataType imageDataType,
+                                          InternalImageFormat internalFormat,
+                                          bool generateMipMaps,
+                                          unsigned int width,
+                                          unsigned int height,
+                                          const void *data)
+{
+    // Create OpenGL texture object
+    GLuint tex;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, ToGLInternalImageFormat(internalFormat),
+                 width, height, 0, ToGLImageFormat(format),
+                 ToGLDataType(imageDataType), data);
+
+    // Set texture wrapping
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    // Generate mips
+    if (generateMipMaps)
+    {
+        glGenerateMipmap(GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR_MIPMAP_LINEAR);
+    }
+    else
+    {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    }
+
+    // Setup anisotropic filtering
+    GLfloat maxAnisotropy = 0.0f;
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+                    maxAnisotropy);
+
+    // Unbind texture object
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // Create handle to texture object
+    return (TextureHandle)StoreOpenGLObject(tex, GLObjectType::TextureObject);
+}
+
+void GLRenderer::BindTextureToSampler(ProgramHandle programHandle,
+                                      const std::string &samplerName,
+                                      TextureHandle textureHandle)
+{
+    // Is texture already bound to a texture slot?
+    std::vector<TextureHandle>::iterator it =
+        std::find(m_textureSlots.begin(), m_textureSlots.end(), textureHandle);
+
+    // Texture not already bound
+    if (it == m_textureSlots.end())
+    {
+        // Find an empty texture slot
+        it = std::find(m_textureSlots.begin(), m_textureSlots.end(),
+                       TextureHandle());
+
+        // Insert into slot
+        if (it != m_textureSlots.end())
+        {
+            *it = textureHandle;
+        }
+        // Or add it to end if no empty texture slot found
+        else
+        {
+            // Update iterator
+            it = m_textureSlots.insert(m_textureSlots.end(), textureHandle);
+        }
+    }
+
+    // Calculate texture slot index
+    unsigned int textureSlot = it - m_textureSlots.begin();
+
+    // Bind GL texture
+    GLuint tex = 0;
+    if (GetOpenGLObject(textureHandle, GLObjectType::TextureObject, &tex))
+    {
+        glActiveTexture(GL_TEXTURE0 + textureSlot);
+        glBindTexture(GL_TEXTURE_2D, tex);
+
+        GLuint program = 0;
+        if (GetOpenGLObject(programHandle, GLObjectType::ProgramObject,
+                            &program))
+        {
+            glUniform1i(glGetUniformLocation(program, samplerName.c_str()),
+                        textureSlot);
+        }
+        else
+        {
+            std::cerr << "GLRenderer::BindTextureToSampler: Failed to get "
+                         "program associated with program handle provided."
+                      << std::endl;
+        }
+    }
+    else
+    {
+        std::cerr << "GLRenderer::BindTextureToSampler: Failed to get texture "
+                     "associated with texture handle provided."
+                  << std::endl;
+    }
+}
+
+void GLRenderer::UnbindTextureFromSampler(TextureHandle textureHandle)
+{
+    // Find texture slot of texture
+    std::vector<TextureHandle>::iterator it =
+        std::find(m_textureSlots.begin(), m_textureSlots.end(), textureHandle);
+    unsigned int textureSlot = it - m_textureSlots.begin();
+
+    // Insert into empty texture handle
+    if (it != m_textureSlots.end())
+    {
+        *it = TextureHandle();
+    }
+
+    // Unbind OpenGL texture from sampler
+    glActiveTexture(GL_TEXTURE0 + textureSlot);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void GLRenderer::DrawVertices(VertexBufferHandle buffer,
                               PrimitiveType primitiveType,
                               size_t startingVertex,
@@ -494,6 +620,9 @@ GLenum GLRenderer::ToGLDataType(RenderDataType dataType) const
     case RenderDataType::Float:
         type = GL_FLOAT;
         break;
+    case RenderDataType::UnsignedByte:
+        type = GL_UNSIGNED_BYTE;
+        break;
     }
 
     return type;
@@ -547,5 +676,50 @@ GLenum GLRenderer::ToGLPrimitiveType(PrimitiveType primitiveType) const
     }
 
     return type;
+}
+
+GLenum GLRenderer::ToGLImageFormat(ImageFormat imageFormat) const
+{
+    GLenum format = GL_INVALID_ENUM;
+
+    switch (imageFormat)
+    {
+    case ImageFormat::RGB:
+        format = GL_RGB;
+        break;
+    case ImageFormat::RGBA:
+        format = GL_RGBA;
+        break;
+    default:
+        break;
+    }
+
+    return format;
+}
+
+GLenum GLRenderer::ToGLInternalImageFormat(
+    InternalImageFormat internalImageFormat) const
+{
+    GLenum format = GL_INVALID_ENUM;
+
+    switch (internalImageFormat)
+    {
+    case InternalImageFormat::RGB8:
+        format = GL_RGB8;
+        break;
+    case InternalImageFormat::SRGB8:
+        format = GL_SRGB8;
+        break;
+    case InternalImageFormat::RGBA8:
+        format = GL_RGBA8;
+        break;
+    case InternalImageFormat::SRGBA8:
+        format = GL_SRGB8_ALPHA8;
+        break;
+    default:
+        break;
+    }
+
+    return format;
 }
 }

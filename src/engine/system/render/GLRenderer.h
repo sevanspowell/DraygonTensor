@@ -143,10 +143,49 @@ public:
      * @param  constantBufferData  const ConstantBuffer &, constant buffer data
      * to update with.
      */
-    virtual void
-    UpdateConstantBuffer(ProgramHandle programHandle,
-                         const std::string &constantBufferName,
-                         const ConstantBuffer &constantBufferData);
+    virtual void UpdateConstantBuffer(ProgramHandle programHandle,
+                                      const std::string &constantBufferName,
+                                      const ConstantBuffer &constantBufferData);
+
+    /**
+     * Create a two-dimensional texture.
+     *
+     * @param  format           ImageFormat, composition of each element in
+     * data. Number of colour components in the texture.
+     * @param  imageDataType    RenderDataType, data type of pixel data.
+     * @param  internalFormat   InternalImageFormat, request the renderer to
+     * store the image data in a specific format.
+     * @param  generateMipMaps  bool, TRUE to generate mipmaps, FALSE to not.
+     * @param  width            unsigned int, width of the image in pixels.
+     * @param  height           unsigend int, height of the image in pixels.
+     * @param  data             const void *, pointer to image data.
+     */
+    virtual TextureHandle Create2DTexture(ImageFormat format,
+                                          RenderDataType imageDataType,
+                                          InternalImageFormat internalFormat,
+                                          bool generateMipMaps,
+                                          unsigned int width,
+                                          unsigned int height,
+                                          const void *data);
+
+    /**
+     * Bind a texture to a sampler in the shader.
+     *
+     * @param  programHandle  ProgramHandle, shader program containing sampler.
+     * @param  samplerName    const std::string &, name of the sampler in the
+     * shader
+     * @param  textureHandle  TextureHandle, texture to bind to sampler.
+     */
+    virtual void BindTextureToSampler(ProgramHandle programHandle,
+                                      const std::string &samplerName,
+                                      TextureHandle textureHandle);
+
+    /**
+     * Unbind texture from sampler.
+     *
+     * @param  textureHandle  TextureHandle, texture to unbind.
+     */
+    virtual void UnbindTextureFromSampler(TextureHandle textureHandle);
 
     /**
      * Draw a number of vertices in a vertex buffer.
@@ -173,8 +212,8 @@ public:
      * @param  indexBuffer     IndexBufferHandle, index buffer to determine
      * which vertices to draw and in what order.
      * @param  primitiveType   PrimitiveType, primitives to draw with vertices.
-     * @param  startingIndex   size_t, index to begin drawing from. 
-     * @param  numIndices      size_t, number of indices to draw. 
+     * @param  startingIndex   size_t, index to begin drawing from.
+     * @param  numIndices      size_t, number of indices to draw.
      */
     virtual void DrawVerticesIndexed(VertexBufferHandle buffer,
                                      IndexBufferHandle indexBuffer,
@@ -239,7 +278,8 @@ private:
     /**
      * Bind a vertex buffer for drawing.
      *
-     * @param  vertexBufferHandle  VertexBufferHandle, handle to vertex buffer to draw.
+     * @param  vertexBufferHandle  VertexBufferHandle, handle to vertex buffer
+     * to draw.
      */
     void BindVertexBuffer(VertexBufferHandle vertexBufferHandle);
 
@@ -251,7 +291,8 @@ private:
     /**
      * Bind an index buffer for drawing.
      *
-     * @param  indexBufferHandle  IndexBufferHandle, handle to index buffer to draw.
+     * @param  indexBufferHandle  IndexBufferHandle, handle to index buffer to
+     * draw.
      */
     void BindIndexBuffer(IndexBufferHandle indexBufferHandle);
 
@@ -301,12 +342,34 @@ private:
     GLenum ToGLPrimitiveType(PrimitiveType primitiveType) const;
 
     /**
+     * Convert an image format to an OpenGL-specific equivalent.
+     *
+     * @param   imageFormat  ImageFormat, image format to convert.
+     * @return               GLenum, OpenGL image format.
+     */
+    GLenum ToGLImageFormat(ImageFormat imageFormat) const;
+
+    /**
+     * Convert an internal image storage format to an OpenGL-specific
+     * equivalent.
+     *
+     * @param   internalImageFormat  InternalImageFormat, internal image format
+     * to convert.
+     * @return                       GLenum, OpenGL internal image format.
+     */
+    GLenum
+    ToGLInternalImageFormat(InternalImageFormat internalImageFormat) const;
+
+    /** Handle manager used to manage the handles of all OpenGL objects we
+     * create */
+    ds::HandleManager m_handleManager;
+    /**
      * All OpenGL objects that have been created by this renderer and their
      * handles.
      */
     std::vector<GLObject> m_openGLObjects;
-    /** Handle manager used to manage the handles of all OpenGL objects we
-     * create */
-    ds::HandleManager m_handleManager;
+
+    /** Texture slots used/available */
+    std::vector<TextureHandle> m_textureSlots;
 };
 }
