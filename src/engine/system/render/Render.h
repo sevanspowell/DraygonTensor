@@ -85,8 +85,8 @@ private:
     /** Renderer */
     std::unique_ptr<ds_render::IRenderer> m_renderer;
 
-    std::vector<ds_math::Vector3> m_points;
     ds_render::VertexBufferHandle m_vb;
+    ds_render::IndexBufferHandle m_ib;
     ds_render::ProgramHandle m_program;
 
     const char *m_vertexShader =
@@ -103,12 +103,12 @@ private:
         "  gl_Position = vec4(vp, 1.0);"
         "}";
     const char *m_fragmentShader = "#version 330\n"
-        // "in vec2 texCoord;"
-        "out vec4 frag_colour;"
-        "uniform sampler2D tex;"
-        "void main() {"
-        "  frag_colour = vec4(1.0, 0.0, 0.0, 1.0);"
-        // "frag_colour = texture(tex, texCoord);"
-        "}";
+                                   // "in vec2 texCoord;"
+                                   "out vec4 frag_colour;"
+                                   "uniform sampler2D tex;"
+                                   "void main() {"
+                                   "  frag_colour = vec4(1.0, 0.0, 0.0, 1.0);"
+                                   // "frag_colour = texture(tex, texCoord);"
+                                   "}";
 };
 }

@@ -87,6 +87,8 @@ public:
      * A index buffer is a collection of indices which are used to determine the
      * order in which the vertices in a vertes buffer are drawn.
      *
+     * @pre  Each index provided is an unsigned int.
+     *
      * @param   usage     BufferUsageType, how the buffer will be used. See
      * BufferUsageType.
      * @param   numBytes  size_t, number of bytes if data in the index buffer.
@@ -155,16 +157,14 @@ public:
      * @param  indexBuffer     IndexBufferHandle, index buffer to determine
      * which vertices to draw and in what order.
      * @param  primitiveType   PrimitiveType, primitives to draw with vertices.
-     * @param  startingVertex  size_t, index of vertex in vertex buffer to begin
-     * drawing from.
-     * @param  numVertices     size_t, number of vertices to draw from vertex
-     * buffer.
+     * @param  startingIndex   size_t, index to begin drawing from. 
+     * @param  numIndices      size_t, number of indices to draw. 
      */
     virtual void DrawVerticesIndexed(VertexBufferHandle buffer,
                                      IndexBufferHandle indexBuffer,
                                      PrimitiveType primitiveType,
-                                     size_t startingVertex,
-                                     size_t numVertices);
+                                     size_t startingIndex,
+                                     size_t numIndices);
 
 private:
     /**
@@ -223,14 +223,26 @@ private:
     /**
      * Bind a vertex buffer for drawing.
      *
-     * @param  handle  VertexBufferHandle, handle to vertex buffer to draw.
+     * @param  vertexBufferHandle  VertexBufferHandle, handle to vertex buffer to draw.
      */
     void BindVertexBuffer(VertexBufferHandle vertexBufferHandle);
 
     /**
-     * Unbind all vertex buffers.
+     * Unbind current vertex buffers.
      */
     void UnbindVertexBuffer();
+
+    /**
+     * Bind an index buffer for drawing.
+     *
+     * @param  indexBufferHandle  IndexBufferHandle, handle to index buffer to draw.
+     */
+    void BindIndexBuffer(IndexBufferHandle indexBufferHandle);
+
+    /**
+     * Unbind current index buffer.
+     */
+    void UnbindIndexBuffer();
 
     /**
      * Convert a BufferUsageType to an OpenGL-specific equivalent.

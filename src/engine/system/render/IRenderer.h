@@ -87,6 +87,8 @@ public:
      * A index buffer is a collection of indices which are used to determine the
      * order in which the vertices in a vertes buffer are drawn.
      *
+     * @pre  Each index provided is an unsigned int.
+     *
      * @param   usage     BufferUsageType, how the buffer will be used. See
      * BufferUsageType.
      * @param   numBytes  size_t, number of bytes if data in the index buffer.
@@ -156,16 +158,14 @@ public:
      * @param  indexBuffer     IndexBufferHandle, index buffer to determine
      * which vertices to draw and in what order.
      * @param  primitiveType   PrimitiveType, primitives to draw with vertices.
-     * @param  startingVertex  size_t, index of vertex in vertex buffer to begin
-     * drawing from.
-     * @param  numVertices     size_t, number of vertices to draw from vertex
-     * buffer.
+     * @param  startingIndex   size_t, index to begin drawing from. 
+     * @param  numIndices      size_t, number of indices to draw. 
      */
     virtual void DrawVerticesIndexed(VertexBufferHandle buffer,
                                      IndexBufferHandle indexBuffer,
                                      PrimitiveType primitiveType,
-                                     size_t startingVertex,
-                                     size_t numVertices) = 0;
+                                     size_t startingIndex,
+                                     size_t numIndices) = 0;
 
 private:
 };

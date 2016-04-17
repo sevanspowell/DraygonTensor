@@ -246,11 +246,17 @@ void GLRenderer::DrawVertices(VertexBufferHandle buffer,
 }
 
 void GLRenderer::DrawVerticesIndexed(VertexBufferHandle buffer,
-                         IndexBufferHandle indexBuffer,
-                         PrimitiveType primitiveType,
-                         size_t startingVertex,
-                         size_t numVertices)
+                                     IndexBufferHandle indexBuffer,
+                                     PrimitiveType primitiveType,
+                                     size_t startingIndex,
+                                     size_t numIndices)
 {
+    BindVertexBuffer(buffer);
+    BindIndexBuffer(indexBuffer);
+    glDrawElements(ToGLPrimitiveType(primitiveType), numIndices,
+                   GL_UNSIGNED_INT, (unsigned int *)NULL + startingIndex);
+    UnbindIndexBuffer();
+    UnbindVertexBuffer();
 }
 
 ds::Handle GLRenderer::StoreOpenGLObject(GLuint glObject, GLObjectType type)
@@ -338,6 +344,26 @@ void GLRenderer::BindVertexBuffer(VertexBufferHandle vertexBufferHandle)
 void GLRenderer::UnbindVertexBuffer()
 {
     glBindVertexArray(0);
+}
+
+void GLRenderer::BindIndexBuffer(IndexBufferHandle indexBufferHandle)
+{
+    GLuint ibo;
+    if (GetOpenGLObject(indexBufferHandle, GLObjectType::IndexBufferObject,
+                        &ibo))
+    {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    }
+    else
+    {
+        std::cerr << "GLRenderer::BindIndexBuffer: Failed to bind index buffer."
+                  << std::endl;
+    }
+}
+
+void GLRenderer::UnbindIndexBuffer()
+{
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 GLenum GLRenderer::ToGLBufferUsageType(BufferUsageType usage) const

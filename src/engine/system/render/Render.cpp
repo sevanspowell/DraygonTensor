@@ -32,9 +32,10 @@ bool Render::Initialize(const Config &config)
     m_renderer->Init(viewportWidth, viewportHeight);
 
     // Create position data
-    m_points.push_back(ds_math::Vector3(0.0f, 0.5f, 0.0f));
-    m_points.push_back(ds_math::Vector3(0.5f, -0.5f, 0.0f));
-    m_points.push_back(ds_math::Vector3(-0.5f, -0.5f, 0.0f));
+    std::vector<ds_math::Vector3> points;
+    points.push_back(ds_math::Vector3(0.0f, 0.5f, 0.0f));
+    points.push_back(ds_math::Vector3(0.5f, -0.5f, 0.0f));
+    points.push_back(ds_math::Vector3(-0.5f, -0.5f, 0.0f));
 
     // Describe position data
     ds_render::VertexBufferDescription::AttributeDescription
@@ -55,7 +56,17 @@ bool Render::Initialize(const Config &config)
     // Create vertex buffer
     m_vb = m_renderer->CreateVertexBuffer(
         ds_render::BufferUsageType::Static, vertexBufferDescriptor,
-        sizeof(ds_math::Vector3) * 3, &m_points[0]);
+        sizeof(ds_math::Vector3) * 3, &points[0]);
+
+    // Create index data
+    std::vector<unsigned int> indices;
+    indices.push_back(0);
+    indices.push_back(1);
+    indices.push_back(2);
+
+    // Create index buffer
+    m_ib = m_renderer->CreateIndexBuffer(ds_render::BufferUsageType::Static,
+                                         sizeof(unsigned int) * 3, &indices[0]);
 
     ds_render::ShaderHandle vs =
         m_renderer->CreateShaderObject(ds_render::ShaderType::VertexShader,
@@ -80,7 +91,10 @@ void Render::Update(float deltaTime)
 
     m_renderer->SetProgram(m_program);
 
-    m_renderer->DrawVertices(m_vb, ds_render::PrimitiveType::Triangles, 0, 3);
+    // m_renderer->DrawVertices(m_vb, ds_render::PrimitiveType::Triangles, 0,
+    // 3);
+    m_renderer->DrawVerticesIndexed(m_vb, m_ib,
+                                    ds_render::PrimitiveType::Triangles, 0, 3);
 }
 
 void Render::Shutdown()
