@@ -7,7 +7,7 @@ Uniform::Uniform()
 }
 
 Uniform::Uniform(const std::string &name,
-                 RenderDataType dataType,
+                 Uniform::UniformType dataType,
                  size_t dataSize,
                  const void *dataIn)
 {
@@ -27,12 +27,12 @@ void Uniform::SetName(const std::string &uniformName)
     m_name = uniformName;
 }
 
-RenderDataType Uniform::GetDataType() const
+Uniform::UniformType Uniform::GetDataType() const
 {
     return m_dataType;
 }
 
-void Uniform::SetDataType(RenderDataType dataType)
+void Uniform::SetDataType(Uniform::UniformType dataType)
 {
     m_dataType = dataType;
 }

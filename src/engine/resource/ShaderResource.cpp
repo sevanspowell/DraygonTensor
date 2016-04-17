@@ -61,15 +61,16 @@ std::unique_ptr<IResource> ShaderResource::CreateFromFile(std::string filePath)
                     if (key == "Vertex" || key == "Fragment")
                     {
                         // Get shader type
-                        ShaderType type = ShaderType::Vertex;
+                        ds_render::ShaderType type =
+                            ds_render::ShaderType::VertexShader;
 
                         if (key == "Vertex")
                         {
-                            type = ShaderType::Vertex;
+                            type = ds_render::ShaderType::VertexShader;
                         }
                         if (key == "Fragment")
                         {
-                            type = ShaderType::Fragment;
+                            type = ds_render::ShaderType::FragmentShader;
                         }
 
                         // Add to list of sources
@@ -113,14 +114,14 @@ void ShaderResource::SetResourceFilePath(const std::string &filePath)
     m_filePath = filePath;
 }
 
-void ShaderResource::AddSource(ShaderType type, std::string source)
+void ShaderResource::AddSource(ds_render::ShaderType type, std::string source)
 {
     m_sources[type] = source;
 }
 
-std::vector<ShaderResource::ShaderType> ShaderResource::GetShaderTypes() const
+std::vector<ds_render::ShaderType> ShaderResource::GetShaderTypes() const
 {
-    std::vector<ShaderType> types;
+    std::vector<ds_render::ShaderType> types;
 
     for (auto typeSource : m_sources)
     {
@@ -130,9 +131,11 @@ std::vector<ShaderResource::ShaderType> ShaderResource::GetShaderTypes() const
     return types;
 }
 
-const std::string &ShaderResource::GetShaderSource(ShaderType type) const
+const std::string &
+ShaderResource::GetShaderSource(ds_render::ShaderType type) const
 {
-    std::map<ShaderType, std::string>::const_iterator it = m_sources.find(type);
+    std::map<ds_render::ShaderType, std::string>::const_iterator it =
+        m_sources.find(type);
 
     if (it == m_sources.end())
     {

@@ -15,6 +15,14 @@ namespace ds_render
 class Uniform
 {
 public:
+    /** Type of the uniform data */
+    enum class UniformType
+    {
+        Float,
+        Int,
+        Vec4,
+    };
+
     /**
      * Uniform default constructor
      */
@@ -24,12 +32,12 @@ public:
      * Uniform constructor.
      *
      * @param  name      const std::string &, name of the uniform.
-     * @param  dataType  RenderDataType, data type of the uniform.
+     * @param  dataType  UniformType, data type of the uniform.
      * @param  dataSize  size_t, size of the uniform data.
      * @param  dataIn    const void *, pointer to uniform data.
      */
     Uniform(const std::string &name,
-            RenderDataType dataType,
+            UniformType dataType,
             size_t dataSize,
             const void *dataIn);
 
@@ -50,16 +58,16 @@ public:
     /**
      * Get the data type of the uniform.
      *
-     * @return  RenderDataType, data type of the uniform.
+     * @return  UniformType, data type of the uniform.
      */
-    RenderDataType GetDataType() const;
+    UniformType GetDataType() const;
 
     /**
      * Set the data type of the uniform.
      *
-     * @param  RenderDataType, data type of the uniform
+     * @param  UniformType, data type of the uniform
      */
-    void SetDataType(RenderDataType dataType);
+    void SetDataType(UniformType dataType);
 
     /**
      * Get the uniform's data.
@@ -87,7 +95,7 @@ private:
     /** Uniform name */
     std::string m_name;
     /** Uniform data type */
-    RenderDataType m_dataType;
+    UniformType m_dataType;
     /** Uniform data */
     ds_com::StreamBuffer m_dataBuffer;
 };

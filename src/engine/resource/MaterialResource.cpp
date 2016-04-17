@@ -99,7 +99,8 @@ MaterialResource::CreateFromFile(std::string filePath)
                     if (type == "int")
                     {
                         // Set appropriate type
-                        uniform.SetDataType(ds_render::RenderDataType::Int);
+                        uniform.SetDataType(
+                            ds_render::Uniform::UniformType::Int);
 
                         std::stringstream dataKey;
                         dataKey << "uniforms"
@@ -113,10 +114,12 @@ MaterialResource::CreateFromFile(std::string filePath)
                             loadedCorrectly = true;
                         }
                     }
+                    // TODO: Handle float, vec3, mat4, etc.
                     else if (type == "vec4")
                     {
                         // Set appropriate type
-                        uniform.SetDataType(ds_render::RenderDataType::Vec4);
+                        uniform.SetDataType(
+                            ds_render::Uniform::UniformType::Vec4);
 
                         std::stringstream dataKey;
                         dataKey << "uniforms"
