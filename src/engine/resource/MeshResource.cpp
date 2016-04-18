@@ -31,7 +31,7 @@ std::unique_ptr<IResource> MeshResource::CreateFromFile(std::string filePath)
     }
 
     importer.FreeScene();
-    ;
+
     std::unique_ptr<IResource> meshResource = std::move(meshCollection);
 
     return meshResource;
@@ -123,7 +123,7 @@ void MeshResource::StoreTextureCoords(unsigned int meshNumber,
     {
 
         int numberOfVerts = singleMesh->mNumVertices;
-        m_meshCollection[meshNumber].m_texCoords.resize(numberOfVerts);
+        m_meshCollection[meshNumber].m_texCoords.reserve(numberOfVerts);
 
         for (int iTex = 0; iTex < numberOfVerts; iTex++)
         {
@@ -133,6 +133,7 @@ void MeshResource::StoreTextureCoords(unsigned int meshNumber,
             singleTexCoord.z = 0.0f;
             m_meshCollection[meshNumber].m_texCoords.push_back(singleTexCoord);
         }
+
     }
 }
 
