@@ -234,9 +234,30 @@ public:
      */
     std::string StringifyObject(const std::string &key) const;
 
+    /**
+     * Add a float array with the given key to the config.
+     *
+     * Key may be specified in 'table access form' (i.e.
+     * 'Window.dimensions.x').
+     * In this case, each successive token (seperated by period character)
+     * indexes into the object the previous token refers to.
+     *
+     * @param   key    const std::string &, period seperated list of tokens,
+     * uniquely identifying an array in the configuration file.
+     * @param   array  const std::vector<float> &, array data to add to
+     * document.
+     */
+    void AddFloatArray(const std::string &key,
+                       const std::vector<float> &array);
+
 private:
+    // TODO: Documentation
     rapidjson::Value::ConstMemberIterator
     GetDocumentMember(const std::string &key) const;
+
+    // TODO: Documentation
+    rapidjson::Value::MemberIterator
+    GetDocumentMember(const std::string &key);
 
     rapidjson::Document m_document;
 

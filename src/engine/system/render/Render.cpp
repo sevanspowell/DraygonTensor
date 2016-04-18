@@ -41,6 +41,46 @@ bool Render::Initialize(const Config &config)
     // Create material
     m_material = CreateMaterialFromMaterialResource("../assets/test.material");
 
+    Entity testEntity;
+    testEntity.id = 0;
+    Instance i = m_renderComponentManager.CreateComponentForEntity(testEntity);
+    m_renderComponentManager.SetMaterial(i, m_material);
+    m_renderComponentManager.SetMesh(i, m_mesh);
+
+    // Get shader data descriptions
+    m_sceneBufferDescrip.AddMember("Scene.viewMatrix");
+    m_sceneBufferDescrip.AddMember("Scene.projectionMatrix");
+    m_renderer->GetConstantBufferDescription(m_material.GetProgram(), "Scene",
+                                             &m_sceneBufferDescrip);
+
+    m_objectBufferDescrip.AddMember("Object.modelMatrix");
+    m_renderer->GetConstantBufferDescription(m_material.GetProgram(), "Object",
+                                             &m_objectBufferDescrip);
+
+    // Create shader data
+    ds_math::Matrix4 viewMatrix = ds_math::Matrix4(1.0f);
+    ds_math::Matrix4 projectionMatrix =
+        ds_math::Matrix4::CreatePerspectiveFieldOfView(
+            ds_math::MathHelper::PI / 3.0f, 800.0f / 600.0f, 0.1f, 100.0f);
+    m_sceneBufferDescrip.InsertMemberData(
+        "Scene.viewMatrix", sizeof(ds_math::Matrix4), &viewMatrix);
+    m_sceneBufferDescrip.InsertMemberData(
+        "Scene.projectionMatrix", sizeof(ds_math::Matrix4), &projectionMatrix);
+
+    ds_math::Matrix4 modelMatrix =
+        ds_math::Matrix4::CreateTranslationMatrix(-4.0f, -3.0f, -10.0f);
+    m_objectBufferDescrip.InsertMemberData(
+        "Object.modelMatrix", sizeof(ds_math::Matrix4), &modelMatrix);
+
+
+    m_sceneMatrices = m_renderer->CreateConstantBuffer(m_sceneBufferDescrip);
+    m_renderer->BindConstantBuffer(m_material.GetProgram(), "Scene",
+                                   m_sceneMatrices);
+
+    m_objectMatrices = m_renderer->CreateConstantBuffer(m_objectBufferDescrip);
+    m_renderer->BindConstantBuffer(m_material.GetProgram(), "Object",
+                                   m_objectMatrices);
+
     return result;
 }
 
@@ -50,62 +90,36 @@ void Render::Update(float deltaTime)
 
     m_renderer->ClearBuffers();
 
-    // m_renderer->SetProgram(m_program);
-
-    // m_renderer->BindTextureToSampler(m_program, "tex",
-    //                                  m_texture.GetTextureHandle());
-    m_renderer->SetProgram(m_material.GetProgram());
-
-    // For each texture in material, bind it to shader
-    for (auto samplerTexture : m_material.GetTextures())
+    // For each render component instance
+    for (unsigned int i = 0; i < m_renderComponentManager.GetNumInstances();
+         ++i)
     {
-        m_renderer->BindTextureToSampler(
-            m_material.GetProgram(), samplerTexture.first,
-            samplerTexture.second.GetTextureHandle());
-    }
+        Instance instance = Instance::MakeInstance(i);
 
-    // Create shader data
-    struct Scene
-    {
-        ds_math::Matrix4 modelMatrix;
-        ds_math::Matrix4 viewMatrix;
-        ds_math::Matrix4 projectionMatrix;
-    };
-    Scene sceneConstants;
-    sceneConstants.modelMatrix = ds_math::Matrix4(1.0f);
-    sceneConstants.viewMatrix =
-        ds_math::Matrix4::CreateTranslationMatrix(-4.0f, -3.0f, -10.0f);
-    sceneConstants.projectionMatrix =
-        ds_math::Matrix4::CreatePerspectiveFieldOfView(
-            ds_math::MathHelper::PI / 3.0f, 800.0f / 600.0f, 0.1f, 100.0f);
+        // Set shader program
+        m_renderer->SetProgram(
+            m_renderComponentManager.GetMaterial(instance).GetProgram());
 
-    // Describe shader data
-    ds_render::ConstantBuffer cBuffer;
-    cBuffer.SetData(sizeof(Scene), &sceneConstants);
-    cBuffer.DescribeBufferMember("Scene.modelMatrix", 0,
-                                 sizeof(ds_math::Matrix4));
-    cBuffer.DescribeBufferMember("Scene.viewMatrix", sizeof(ds_math::Matrix4),
-                                 sizeof(ds_math::Matrix4));
-    cBuffer.DescribeBufferMember("Scene.projectionMatrix",
-                                 2 * sizeof(ds_math::Matrix4),
-                                 sizeof(ds_math::Matrix4));
+        // For each texture in material, bind it to shader
+        for (auto samplerTexture : m_material.GetTextures())
+        {
+            m_renderer->BindTextureToSampler(
+                m_material.GetProgram(), samplerTexture.first,
+                samplerTexture.second.GetTextureHandle());
+        }
 
-    // Update shader data
-    // m_renderer->UpdateConstantBuffer(m_program, "Scene", cBuffer);
-    m_renderer->UpdateConstantBuffer(m_material.GetProgram(), "Scene", cBuffer);
+        // Draw mesh
+        m_renderer->DrawVerticesIndexed(
+            m_mesh.GetVertexBuffer(), m_mesh.GetIndexBuffer(),
+            ds_render::PrimitiveType::Triangles, m_mesh.GetStartingIndex(),
+            m_mesh.GetNumIndices());
 
-    // m_renderer->DrawVertices(m_vb, ds_render::PrimitiveType::Triangles, 0,
-    // 3);
-    m_renderer->DrawVerticesIndexed(
-        m_mesh.GetVertexBuffer(), m_mesh.GetIndexBuffer(),
-        ds_render::PrimitiveType::Triangles, m_mesh.GetStartingIndex(),
-        m_mesh.GetNumIndices());
-
-    // For each texture in material, unbind
-    for (auto samplerTexture : m_material.GetTextures())
-    {
-        m_renderer->UnbindTextureFromSampler(
-            samplerTexture.second.GetTextureHandle());
+        // For each texture in material, unbind
+        for (auto samplerTexture : m_material.GetTextures())
+        {
+            m_renderer->UnbindTextureFromSampler(
+                samplerTexture.second.GetTextureHandle());
+        }
     }
 }
 

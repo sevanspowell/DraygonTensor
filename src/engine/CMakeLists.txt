@@ -9,8 +9,11 @@ set(ENGINE_INCLUDE_FILES
   common/StreamBuffer.h
   common/StreamBuffer.hpp
   common/StringIntern.h
+  entity/ComponentManager.h
+  entity/ComponentManager.hpp
   entity/Entity.h
   entity/EntityManager.h
+  entity/IComponentManager.h
   entity/Instance.h
   message/Message.h
   message/MessageBus.h
@@ -31,11 +34,14 @@ set(ENGINE_INCLUDE_FILES
   system/platform/Video.h
   system/platform/Window.h
   system/render/ConstantBuffer.h
+  system/render/ConstantBufferDescription.h
   system/render/GLRenderer.h
   system/render/IRenderer.h
   system/render/Material.h
   system/render/Mesh.h
   system/render/Render.h
+  system/render/RenderComponent.h
+  system/render/RenderComponentManager.h
   system/render/Texture.h
   system/render/Uniform.h
   system/render/UniformBlock.h
@@ -70,10 +76,12 @@ set(ENGINE_SRC_FILES
   system/platform/Video.cpp
   system/platform/Window.cpp
   system/render/ConstantBuffer.cpp
+  system/render/ConstantBufferDescription.cpp
   system/render/GLRenderer.cpp
   system/render/Material.cpp
   system/render/Mesh.cpp
   system/render/Render.cpp
+  system/render/RenderComponentManager.cpp
   system/render/Texture.cpp
   system/render/VertexBufferDescription.cpp
   system/render/Uniform.cpp

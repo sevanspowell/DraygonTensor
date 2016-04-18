@@ -136,7 +136,8 @@ void Script::RegisterScriptBindings(const char *systemName, ISystem *systemPtr)
         std::pair<const char *, ISystem *>(systemName, systemPtr));
 }
 
-void Script::SpawnPrefab(std::string prefabFile)
+void Script::SpawnPrefab(std::string prefabFile,
+                         const ds_math::Vector3 &position)
 {
     std::cout << "Prefab spawned: " << prefabFile << std::endl;
 
@@ -152,6 +153,7 @@ void Script::SpawnPrefab(std::string prefabFile)
         // Get components
         std::vector<std::string> components =
             prefab.GetObjectKeys("components");
+        // For each component
         for (auto component : components)
         {
             // Build config access key
@@ -162,6 +164,7 @@ void Script::SpawnPrefab(std::string prefabFile)
             std::string componentData =
                 prefab.StringifyObject(fullComponentKey.str());
 
+            // Send a component created message
             ds_msg::CreateComponent createComponentMsg;
             createComponentMsg.entity = entity;
             createComponentMsg.componentType =
@@ -173,6 +176,16 @@ void Script::SpawnPrefab(std::string prefabFile)
                 &m_messagesGenerated, ds_msg::MessageType::CreateComponent,
                 sizeof(ds_msg::CreateComponent), &createComponentMsg);
         }
+
+        // Finally, send a create transform component message
+        ds_msg::CreateComponent transformComponentMsg =
+            BuildTransformComponentCreateMessage(
+                entity, position, ds_math::Quaternion(),
+                ds_math::Vector3(1.0f, 1.0f, 1.0f));
+        transformComponentMsg.entity = entity;
+        ds_msg::AppendMessage(
+            &m_messagesGenerated, ds_msg::MessageType::CreateComponent,
+            sizeof(ds_msg::CreateComponent), &transformComponentMsg);
     }
     else
     {
@@ -289,5 +302,48 @@ void Script::RegisterScriptBindingSet(const char *systemName,
         delete[] methods;
         delete[] functions;
     }
+}
+
+ds_msg::CreateComponent Script::BuildTransformComponentCreateMessage(
+    Entity entity,
+    const ds_math::Vector3 &position,
+    const ds_math::Quaternion &orientation,
+    const ds_math::Vector3 &scale)
+{
+    ds_msg::CreateComponent transformComponent;
+
+    // Create float arrays
+    std::vector<float> positionArray;
+    positionArray.push_back(position.x);
+    positionArray.push_back(position.y);
+    positionArray.push_back(position.z);
+
+    std::vector<float> orientationArray;
+    orientationArray.push_back(orientation.x);
+    orientationArray.push_back(orientation.y);
+    orientationArray.push_back(orientation.z);
+    orientationArray.push_back(orientation.w);
+
+    std::vector<float> scaleArray;
+    scaleArray.push_back(scale.x);
+    scaleArray.push_back(scale.y);
+    scaleArray.push_back(scale.z);
+
+    // Create description of component
+    Config configDescription;
+    configDescription.AddFloatArray("renderComponent.position", positionArray);
+    configDescription.AddFloatArray("renderComponent.orientation",
+                                    orientationArray);
+    configDescription.AddFloatArray("renderComponent.scale", scaleArray);
+
+    // Transform description into message
+    transformComponent.entity = entity;
+    transformComponent.componentType =
+        StringIntern::Instance().Intern("renderComponent");
+    transformComponent.componentData = StringIntern::Instance().Intern(
+        configDescription.StringifyObject("renderComponent"));
+
+    // Return message
+    return transformComponent;
 }
 }

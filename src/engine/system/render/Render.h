@@ -7,6 +7,7 @@
 #include "engine/system/render/IRenderer.h"
 #include "engine/system/render/Material.h"
 #include "engine/system/render/Mesh.h"
+#include "engine/system/render/RenderComponentManager.h"
 #include "engine/system/render/Texture.h"
 
 #include "math/Vector3.h"
@@ -114,31 +115,16 @@ private:
     /** Renderer */
     std::unique_ptr<ds_render::IRenderer> m_renderer;
 
+    /** Render component manager */
+    ds_render::RenderComponentManager m_renderComponentManager;
+
     ds_render::Mesh m_mesh;
-    ds_render::Texture m_texture;
     ds_render::Material m_material;
     ds_render::ProgramHandle m_program;
 
-    // const char *m_vertexShader =
-    //     "#version 330\n"
-    //     "layout(location = 0) in vec3 vp;"
-    //     "layout(location = 1) in vec2 vt;"
-    //     "uniform Scene { mat4 modelMatrix; mat4 viewMatrix; mat4 "
-    //     "projectionMatrix; } scene;\n"
-    //     "out vec2 texCoord;"
-    //     "void main() {"
-    //     "  gl_Position = scene.projectionMatrix * scene.viewMatrix * "
-    //     "scene.modelMatrix * vec4(vp, 1.0);"
-    //     "  texCoord = vt;"
-    //     "}";
-    // const char *m_fragmentShader = "#version 330\n"
-    //                                "in vec2 texCoord;"
-    //                                "out vec4 frag_colour;"
-    //                                "uniform sampler2D tex;"
-    //                                "void main() {"
-    //                                // "  frag_colour = vec4(1.0, 0.0, 0.0,
-    //                                1.0);"
-    //                                "frag_colour = texture(tex, texCoord);"
-    //                                "}";
+    ds_render::ConstantBufferHandle m_sceneMatrices;
+    ds_render::ConstantBufferHandle m_objectMatrices;
+    ds_render::ConstantBufferDescription m_sceneBufferDescrip;
+    ds_render::ConstantBufferDescription m_objectBufferDescrip;
 };
 }

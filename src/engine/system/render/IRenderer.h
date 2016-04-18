@@ -2,7 +2,7 @@
 
 #include "engine/system/render/RenderCommon.h"
 #include "engine/system/render/VertexBufferDescription.h"
-#include "engine/system/render/ConstantBuffer.h"
+#include "engine/system/render/ConstantBufferDescription.h"
 
 namespace ds_render
 {
@@ -135,22 +135,6 @@ public:
     virtual void SetProgram(ProgramHandle programHandle) = 0;
 
     /**
-     * Update the given constant buffer name in the given program with the given
-     * data.
-     *
-     * @param  programHandle  ProgramHandle, handle to program to update
-     * constant buffer of.
-     * @param  constanBufferName  const std::string &, name of the constant
-     * buffer in the shader to update.
-     * @param  constantBufferData  const ConstantBuffer &, constant buffer data
-     * to update with.
-     */
-    virtual void
-    UpdateConstantBuffer(ProgramHandle programHandle,
-                         const std::string &constantBufferName,
-                         const ConstantBuffer &constantBufferData) = 0;
-
-    /**
      * Create a two-dimensional texture.
      *
      * @param  format           ImageFormat, composition of each element in
@@ -186,9 +170,70 @@ public:
     /**
      * Unbind texture from sampler.
      *
-     * @param  textureHandle  TextureHandle, texture to unbind. 
+     * @param  textureHandle  TextureHandle, texture to unbind.
      */
     virtual void UnbindTextureFromSampler(TextureHandle textureHandle) = 0;
+
+    /**
+     * Memory layout of constant buffer in renderer may not match that of C/C++.
+     * Use this method to get a description of the memory layout. Fill the
+     * description with data.
+     *
+     * @param   programHandle              ProgramHandle, handle to program
+     * containing constant buffer.
+     * @param   constantBufferName         const std::string &, name of constant
+     * buffer to get description of.
+     * @param   constantBufferDescription  ConstantBufferDescription *,
+     * description of constant buffer. Caller should fill in names of members.
+     * Renderer will fill out member name offsets.
+     */
+    virtual void GetConstantBufferDescription(
+        ProgramHandle programHandle,
+        const std::string &constantBufferName,
+        ConstantBufferDescription *constantBufferDescription) = 0;
+
+    /**
+     * Create a constant buffer with the given constant buffer description.
+     *
+     * @param   constantBufferDescription  const ConstantBufferDescription &,
+     * constant buffer description to create constant buffer with.
+     * @return                             ConstantBufferHandle, handle to
+     * created constant buffer object.
+     */
+    virtual ConstantBufferHandle CreateConstantBuffer(
+        const ConstantBufferDescription &constantBufferDescription) = 0;
+
+    /**
+     * Bind data associated with the given constant buffer object to the named
+     * constant buffer in the given program.
+     *
+     * Does not need to be called every frame, can be called once at
+     * initialization.
+     *
+     * @param  programHandle             ProgramHandle, handle to program
+     * containing constant buffer.
+     * @param  constantBufferName        const std::string &, name of the
+     * constant buffer in the given shader program.
+     * @param  constantBufferHandle      ConstantBufferHandle, handle to
+     * constant buffer to use to fill constant buffer data in given shader
+     * program.
+     */
+    virtual void
+    BindConstantBuffer(ProgramHandle programHandle,
+                       const std::string &constantBufferName,
+                       ConstantBufferHandle constantBufferHandle) = 0;
+
+    /**
+     * Update the data associated with the given constant buffer.
+     *
+     * @param  constantBufferHandle  ConstantBufferHandle, handle to constant
+     * buffer to update data of.
+     * @param  constantBufferDescription  const ConstantBufferDescription &, new
+     * constant buffer data.
+     */
+    virtual void UpdateConstantBufferData(
+        ConstantBufferHandle constantBufferHandle,
+        const ConstantBufferDescription &constantBufferDescription) = 0;
 
     /**
      * Draw a number of vertices in a vertex buffer.

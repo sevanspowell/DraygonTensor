@@ -13,9 +13,9 @@ static int l_SpawnPrefab(lua_State *L)
 {
     // Get number of arguments provided
     int n = lua_gettop(L);
-    if (n != 1)
+    if (n != 2)
     {
-        return luaL_error(L, "Got %d arguments, expected 1.", n);
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
     }
 
     const char *prefabFile = luaL_checklstring(L, 1, NULL);
@@ -31,16 +31,24 @@ static int l_SpawnPrefab(lua_State *L)
     }
     else
     {
-        ds::Script *p = (ds::Script *)lua_touserdata(L, -1);
+        // Get vector position from argument
+        ds_math::Vector3 *v = NULL;
 
-        assert(p != NULL &&
-               "spawnPrefab: Tried to deference userdata pointer which was null");
+        v = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
 
-        p->SpawnPrefab(prefabFile);
+        if (v != NULL)
+        {
+            ds::Script *p = (ds::Script *)lua_touserdata(L, -1);
+
+            assert(p != NULL &&
+                   "spawnPrefab: Tried to deference userdata pointer which was null");
+
+            p->SpawnPrefab(prefabFile, *v);
+        }
     }
 
     // Pop arguments
-    lua_pop(L, 1);
+    lua_pop(L, 2);
     // Pop script system pointer
     lua_pop(L, 1);
 

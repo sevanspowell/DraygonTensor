@@ -3,6 +3,8 @@
 #include "engine/entity/EntityManager.h"
 #include "engine/system/ISystem.h"
 #include "engine/system/script/LuaEnvironment.h"
+#include "math/Quaternion.h"
+#include "math/Vector3.h"
 
 namespace ds
 {
@@ -93,8 +95,10 @@ public:
      *
      * @param  prefabFile  std::string, path to prefab, relative to the assets
      * directory.
+     * @param  position    const ds_math::Vector3, spawn prefab at this position
+     * with default orientation and scale.
      */
-    void SpawnPrefab(std::string prefabFile);
+    void SpawnPrefab(std::string prefabFile, const ds_math::Vector3 &position);
 
     /**
      * Is a new message available for the external script?
@@ -129,6 +133,24 @@ private:
      * bindings of.
      */
     void RegisterScriptBindingSet(const char *systemName, ISystem *systemPtr);
+
+    /**
+     * Build a create transfrom component message.
+     *
+     * @param   entity       Entity, entity to create transform component for.
+     * @param   position     const ds_math::Vector3, position of transform
+     * component.
+     * @param   orientation  const ds_math::Quaternion &, orientation of
+     * transform component.
+     * @param   scale        const ds_math::Vector3, scale of transform
+     * component.
+     * @returen              ds_msg::CreateComponent, create component message;
+     */
+    ds_msg::CreateComponent BuildTransformComponentCreateMessage(
+        Entity entity,
+        const ds_math::Vector3 &position,
+        const ds_math::Quaternion &orientation,
+        const ds_math::Vector3 &scale);
 
     // Messaging
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;

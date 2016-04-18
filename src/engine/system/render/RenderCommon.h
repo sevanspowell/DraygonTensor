@@ -80,4 +80,6 @@ typedef ds::Handle ShaderHandle;
 typedef ds::Handle ProgramHandle;
 /** Handle to a texture */
 typedef ds::Handle TextureHandle;
+/** Handle to constant buffer */
+typedef ds::Handle ConstantBufferHandle;
 }

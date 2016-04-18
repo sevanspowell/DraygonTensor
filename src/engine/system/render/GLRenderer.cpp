@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "engine/system/render/GLRenderer.h"
+#include "math/Matrix4.h"
 
 namespace ds_render
 {
@@ -235,103 +236,6 @@ void GLRenderer::SetProgram(ProgramHandle programHandle)
     }
 }
 
-void GLRenderer::UpdateConstantBuffer(ProgramHandle programHandle,
-                                      const std::string &constantBufferName,
-                                      const ConstantBuffer &constantBufferData)
-{
-    GLuint program;
-    if (GetOpenGLObject(programHandle, GLObjectType::ProgramObject, &program))
-    {
-        // From
-        // https://www.packtpub.com/books/content/opengl-40-using-uniform-blocks-and-uniform-buffer-objects
-        // Get index of uniform block
-        GLuint blockIndex =
-            glGetUniformBlockIndex(program, constantBufferName.c_str());
-
-        // Get size of uniform block (GL size may differ from C++ size)
-        GLint blockSize;
-        glGetActiveUniformBlockiv(program, blockIndex,
-                                  GL_UNIFORM_BLOCK_DATA_SIZE, &blockSize);
-
-        // Create our own temporary data store that matches the size and
-        // alignment of data that OpenGL expects
-        GLubyte *blockBuffer = (GLubyte *)malloc(blockSize);
-
-        // Number of members in constant buffer
-        const size_t numMembers = constantBufferData.GetNumMembers();
-
-        // Get names for each uniform block member
-        GLchar **names = (GLchar **)malloc(numMembers * sizeof(GLchar *));
-        for (unsigned int i = 0; i < numMembers; ++i)
-        {
-            names[i] = (GLchar *)constantBufferData.GetMemberName(i).c_str();
-        }
-
-        // Get index of each uniform block member
-        GLuint *indices = (GLuint *)malloc(numMembers * sizeof(GLuint));
-        glGetUniformIndices(program, numMembers, names, indices);
-
-        // Check that indices are found
-        bool shouldContinue = true;
-        for (unsigned int i = 0; i < numMembers; ++i)
-        {
-            if (indices[i] == GL_INVALID_INDEX)
-            {
-                std::cerr
-                    << "GLRenderer::UpdateConstantBuffer: Found no "
-                       "uniform block member with name: "
-                    << names[i] << ". "
-                    << "Note: If this uniform block member exists in your "
-                       "shader but you aren't using it, "
-                       "OpenGL might be optimizing it away."
-                    << std::endl;
-                shouldContinue = false;
-            }
-        }
-
-        if (shouldContinue)
-        {
-            // Get offset of each member in GL buffer
-            GLint *offset = (GLint *)malloc(numMembers * sizeof(GLint));
-            glGetActiveUniformsiv(program, numMembers, indices,
-                                  GL_UNIFORM_OFFSET, offset);
-
-            // Get offset of each member in C++ buffer and copy to correct place
-            // in GL buffer
-            const void *data = constantBufferData.GetData();
-            for (unsigned int i = 0; i < numMembers; ++i)
-            {
-                memcpy(blockBuffer + offset[i],
-                       (uint8_t *)data + constantBufferData.GetMemberOffset(i),
-                       constantBufferData.GetMemberSize(i));
-            }
-
-            // Create OpenGL buffer object, copy data to it
-            GLuint ubo;
-            glGenBuffers(1, &ubo);
-            glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-            glBufferData(GL_UNIFORM_BUFFER, blockSize, blockBuffer,
-                         GL_DYNAMIC_DRAW);
-
-            // Bind ubo to uniform block in shader
-            glBindBufferBase(GL_UNIFORM_BUFFER, blockIndex, ubo);
-
-            // Free temporary memory
-            free(offset);
-        }
-
-        // Free temporary memory
-        free(indices);
-        free(names);
-        free(blockBuffer);
-    }
-    else
-    {
-        std::cerr << "GLRenderer::UpdateConstantBuffer: invalid program handle"
-                  << std::endl;
-    }
-}
-
 TextureHandle GLRenderer::Create2DTexture(ImageFormat format,
                                           RenderDataType imageDataType,
                                           InternalImageFormat internalFormat,
@@ -458,6 +362,338 @@ void GLRenderer::UnbindTextureFromSampler(TextureHandle textureHandle)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void GLRenderer::GetConstantBufferDescription(
+    ProgramHandle programHandle,
+    const std::string &constantBufferName,
+    ConstantBufferDescription *constantBufferDescription)
+{
+    if (constantBufferDescription != nullptr)
+    {
+        GLuint program;
+        if (GetOpenGLObject(programHandle, GLObjectType::ProgramObject,
+                            &program))
+        {
+            // From
+            // https://www.packtpub.com/books/content/opengl-40-using-uniform-blocks-and-uniform-buffer-objects
+            // Get index of uniform block
+            GLuint blockIndex =
+                glGetUniformBlockIndex(program, constantBufferName.c_str());
+
+            // Get size of uniform block (GL size may differ from C++ size)
+            GLint blockSize;
+            glGetActiveUniformBlockiv(program, blockIndex,
+                                      GL_UNIFORM_BLOCK_DATA_SIZE, &blockSize);
+
+            const size_t numMembers =
+                constantBufferDescription->GetNumberOfMembers();
+
+            // Get names for each uniform block member
+            GLchar **names = (GLchar **)malloc(numMembers + sizeof(GLchar *));
+            // Create our own data store that matches the size and alignment of
+            // data that OpenGL expects
+            ConstantBufferDescription constantBufferDescriptionTemp(blockSize);
+            // Copy names from provided description
+            std::vector<std::string> memberNames =
+                constantBufferDescription->GetMemberNames();
+            for (unsigned int i = 0; i < memberNames.size(); ++i)
+            {
+                // Add name to constant buffer description
+                constantBufferDescriptionTemp.AddMember(memberNames[i]);
+                // Add name to GL array
+                names[i] = (GLchar *)memberNames[i].c_str();
+            }
+
+            // Get index of each uniform block member
+            GLuint *indices = (GLuint *)malloc(numMembers * sizeof(GLuint));
+            glGetUniformIndices(program, numMembers, names, indices);
+
+            // Check that indices are found
+            bool shouldContinue = true;
+            for (unsigned int i = 0; i < numMembers; ++i)
+            {
+                if (indices[i] == GL_INVALID_INDEX)
+                {
+                    std::cerr
+                        << "GLRenderer::UpdateConstantBuffer: Found no "
+                           "uniform block member with name: "
+                        << names[i] << ". "
+                        << "Note: If this uniform block member exists in your "
+                           "shader but you aren't using it, "
+                           "OpenGL might be optimizing it away."
+                        << std::endl;
+                    shouldContinue = false;
+                }
+            }
+
+            if (shouldContinue)
+            {
+                // Get offset of each member in GL buffer
+                GLint *offset = (GLint *)malloc(numMembers * sizeof(GLint));
+                glGetActiveUniformsiv(program, numMembers, indices,
+                                      GL_UNIFORM_OFFSET, offset);
+
+                // Set member offsets
+                for (unsigned int i = 0; i < numMembers; ++i)
+                {
+                    constantBufferDescriptionTemp.SetMemberOffset(names[i],
+                                                                  offset[i]);
+                }
+
+                // Update constant buffer description
+                *constantBufferDescription = constantBufferDescriptionTemp;
+
+                free(offset);
+            }
+
+            free(indices);
+            free(names);
+        }
+    }
+}
+
+ConstantBufferHandle GLRenderer::CreateConstantBuffer(
+    const ConstantBufferDescription &constantBufferDescription)
+{
+    // Create OpenGL buffer object and copy data to it
+    GLuint ubo;
+    glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, constantBufferDescription.GetBufferSize(),
+                 constantBufferDescription.GetDataPtr(), GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    // Create handle to ubo object
+    ConstantBufferHandle constantBufferHandle =
+        (ConstantBufferHandle)StoreOpenGLObject(
+            ubo, GLObjectType::ConstantBufferObject);
+
+    // Find an empty binding point
+    std::vector<ConstantBufferHandle>::iterator it =
+        std::find(m_constantBufferBindingPoints.begin(),
+                  m_constantBufferBindingPoints.end(), ConstantBufferHandle());
+
+    // Binding point found, insert into binding point
+    if (it != m_constantBufferBindingPoints.end())
+    {
+        *it = constantBufferHandle;
+    }
+    // Or add it to end if no empty constant buffer binding point found
+    else
+    {
+        // Update iterator
+        it = m_constantBufferBindingPoints.insert(
+            m_constantBufferBindingPoints.end(), constantBufferHandle);
+    }
+
+    // Calculate binding point index
+    unsigned int bindingPointIndex = it - m_constantBufferBindingPoints.begin();
+
+    // Bind ubo to binding point
+    glBindBufferBase(GL_UNIFORM_BUFFER, bindingPointIndex, ubo);
+
+    return constantBufferHandle;
+}
+
+// ConstantBufferHandle
+// GLRenderer::CreateConstantBuffer(ProgramHandle programHandle,
+//                                  const std::string &constantBufferName,
+//                                  const ConstantBuffer &constantBufferData)
+// {
+//     ConstantBufferHandle constantBufferHandle = ConstantBufferHandle();
+
+//     GLuint program;
+//     if (GetOpenGLObject(programHandle, GLObjectType::ProgramObject,
+//     &program))
+//     {
+//         // From
+//         //
+//         https://www.packtpub.com/books/content/opengl-40-using-uniform-blocks-and-uniform-buffer-objects
+//         // Get index of uniform block
+//         GLuint blockIndex =
+//             glGetUniformBlockIndex(program, constantBufferName.c_str());
+
+//         // Get size of uniform block (GL size may differ from C++ size)
+//         GLint blockSize;
+//         glGetActiveUniformBlockiv(program, blockIndex,
+//                                   GL_UNIFORM_BLOCK_DATA_SIZE, &blockSize);
+
+//         // Create our own temporary data store that matches the size and
+//         // alignment of data that OpenGL expects
+//         GLubyte *blockBuffer = (GLubyte *)malloc(blockSize);
+
+//         // Number of members in constant buffer
+//         const size_t numMembers = constantBufferData.GetNumMembers();
+
+//         // Get names for each uniform block member
+//         GLchar **names = (GLchar **)malloc(numMembers * sizeof(GLchar *));
+//         for (unsigned int i = 0; i < numMembers; ++i)
+//         {
+//             names[i] = (GLchar *)constantBufferData.GetMemberName(i).c_str();
+//         }
+
+//         // Get index of each uniform block member
+//         GLuint *indices = (GLuint *)malloc(numMembers * sizeof(GLuint));
+//         glGetUniformIndices(program, numMembers, names, indices);
+
+//         // Check that indices are found
+//         bool shouldContinue = true;
+//         for (unsigned int i = 0; i < numMembers; ++i)
+//         {
+//             if (indices[i] == GL_INVALID_INDEX)
+//             {
+//                 std::cerr
+//                     << "GLRenderer::UpdateConstantBuffer: Found no "
+//                        "uniform block member with name: "
+//                     << names[i] << ". "
+//                     << "Note: If this uniform block member exists in your "
+//                        "shader but you aren't using it, "
+//                        "OpenGL might be optimizing it away."
+//                     << std::endl;
+//                 shouldContinue = false;
+//             }
+//         }
+
+//         if (shouldContinue)
+//         {
+//             // Get offset of each member in GL buffer
+//             GLint *offset = (GLint *)malloc(numMembers * sizeof(GLint));
+//             glGetActiveUniformsiv(program, numMembers, indices,
+//                                   GL_UNIFORM_OFFSET, offset);
+
+//             // Get offset of each member in C++ buffer and copy to correct
+//             // place
+//             // in GL buffer
+//             const void *data = constantBufferData.GetData();
+//             for (unsigned int i = 0; i < numMembers; ++i)
+//             {
+//                 memcpy(blockBuffer + offset[i],
+//                        (uint8_t *)data +
+//                        constantBufferData.GetMemberOffset(i),
+//                        constantBufferData.GetMemberSize(i));
+//             }
+
+//             // Create OpenGL buffer object, copy data to it
+//             GLuint ubo;
+//             glGenBuffers(1, &ubo);
+//             glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+//             glBufferData(GL_UNIFORM_BUFFER, blockSize, blockBuffer,
+//                          GL_DYNAMIC_DRAW);
+
+//             // Create handle to ubo object
+//             constantBufferHandle = (ConstantBufferHandle)StoreOpenGLObject(
+//                 ubo, GLObjectType::ConstantBufferObject);
+
+//             // Find an empty binding point
+//             std::vector<ConstantBufferHandle>::iterator it = std::find(
+//                 m_constantBufferBindingPoints.begin(),
+//                 m_constantBufferBindingPoints.end(), ConstantBufferHandle());
+
+//             // Binding point found, insert into binding point
+//             if (it != m_constantBufferBindingPoints.end())
+//             {
+//                 *it = constantBufferHandle;
+//             }
+//             // Or add it to end if no empty constant buffer binding point
+//             // found
+//             else
+//             {
+//                 // Update iterator
+//                 it = m_constantBufferBindingPoints.insert(
+//                     m_constantBufferBindingPoints.end(),
+//                     constantBufferHandle);
+//             }
+
+//             // Calculate binding point index
+//             unsigned int bindingPointIndex =
+//                 it - m_constantBufferBindingPoints.begin();
+
+//             // Bind ubo to binding point
+//             glBindBufferBase(GL_UNIFORM_BUFFER, bindingPointIndex, ubo);
+
+//             free(offset);
+//         }
+
+//         // Free temporary memory
+//         free(indices);
+//         free(names);
+//         free(blockBuffer);
+//     }
+//     else
+//     {
+//         std::cerr << "GLRenderer::CreateConstantBuffer: invalid program
+//         handle"
+//                   << std::endl;
+//     }
+
+//     return constantBufferHandle;
+// }
+
+void GLRenderer::BindConstantBuffer(ProgramHandle programHandle,
+                                    const std::string &constantBufferName,
+                                    ConstantBufferHandle constantBufferHandle)
+{
+    // Find constant buffer object's binding point
+    std::vector<ConstantBufferHandle>::iterator it =
+        std::find(m_constantBufferBindingPoints.begin(),
+                  m_constantBufferBindingPoints.end(), constantBufferHandle);
+
+    // Binding point found
+    if (it != m_constantBufferBindingPoints.end())
+    {
+        // Calculate binding point index
+        unsigned int bindingPointIndex =
+            it - m_constantBufferBindingPoints.begin();
+
+        // Get program object
+        GLuint program = 0;
+        if (GetOpenGLObject(programHandle, GLObjectType::ProgramObject,
+                            &program))
+        {
+            // Get constant buffer block index
+            GLuint blockIndex =
+                glGetUniformBlockIndex(program, constantBufferName.c_str());
+            // Bind block index to binding point index, which ubo (constant
+            // buffer) is also bound to
+            glUniformBlockBinding(program, blockIndex, bindingPointIndex);
+        }
+        else
+        {
+            std::cerr << "GLRenderer::BindConstantBuffer: Failed to get "
+                         "program associated with program handle provided."
+                      << std::endl;
+        }
+    }
+    else
+    {
+        std::cerr << "GLRenderer::BindConstantBuffer: Constant buffer hasn't "
+                     "been bound to a binding point!"
+                  << std::endl;
+    }
+}
+
+void GLRenderer::UpdateConstantBufferData(
+    ConstantBufferHandle constantBufferHandle,
+    const ConstantBufferDescription &constantBufferDescription)
+{
+    GLuint ubo = 0;
+    if (GetOpenGLObject(constantBufferHandle,
+                        GLObjectType::ConstantBufferObject, &ubo))
+    {
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+        glBufferData(GL_UNIFORM_BUFFER,
+                     constantBufferDescription.GetBufferSize(),
+                     constantBufferDescription.GetDataPtr(), GL_STATIC_DRAW);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    }
+    else
+    {
+        std::cerr << "GLRenderer::UpdateConstantBufferData: Failed to get "
+                     "constant buffer associated with constant buffer handle "
+                     "provided."
+                  << std::endl;
+    }
+}
+
 void GLRenderer::DrawVertices(VertexBufferHandle buffer,
                               PrimitiveType primitiveType,
                               size_t startingVertex,
@@ -488,7 +724,8 @@ ds::Handle GLRenderer::StoreOpenGLObject(GLuint glObject, GLObjectType type)
     GLObject obj;
     obj.object = glObject;
 
-    // Insert object into vector so we can get it's address and pass it to the
+    // Insert object into vector so we can get it's address and pass it to
+    // the
     // handle.
     m_openGLObjects.push_back(obj);
     // Location in vector of GLObject we just added
@@ -499,7 +736,8 @@ ds::Handle GLRenderer::StoreOpenGLObject(GLuint glObject, GLObjectType type)
     // Store handle with GLObject
     m_openGLObjects[loc].handle = handle;
 
-    // Because pushing an element back on the vector might cause the vector to
+    // Because pushing an element back on the vector might cause the vector
+    // to
     // realloc, and hence the address of all GLObjects in the vector change,
     // update the address of all handles.
     for (unsigned int i = 0; i < m_openGLObjects.size(); ++i)
@@ -520,7 +758,8 @@ bool GLRenderer::GetOpenGLObject(ds::Handle handle,
 
     if (openGLObject != nullptr)
     {
-        // If provided handle is of a different type than the one required, fail
+        // If provided handle is of a different type than the one required,
+        // fail
         if (handle.type != (int)type)
         {
             std::cerr << "GLRenderer::GetOpenGLObject: Type of handle provided "
@@ -538,9 +777,9 @@ bool GLRenderer::GetOpenGLObject(ds::Handle handle,
             }
             else
             {
-                std::cerr
-                    << "GLRenderer::GetOpenGLObject: Failed to retrieve handle."
-                    << std::endl;
+                std::cerr << "GLRenderer::GetOpenGLObject: Failed to "
+                             "retrieve handle."
+                          << std::endl;
             }
         }
     }

@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 #include "rapidjson/document.h"
@@ -101,124 +102,6 @@ bool Config::LoadMemory(const std::string &string)
 bool Config::IsLoaded() const
 {
     return m_isLoaded;
-}
-
-rapidjson::Value::ConstMemberIterator
-Config::GetDocumentMember(const std::string &key) const
-{
-    rapidjson::Value::ConstMemberIterator result = m_document.MemberEnd();
-
-    // Get tokens
-    std::vector<std::string> tokens = ds_com::TokenizeString('.', key);
-
-    // Searching a document is different to searching a value, so do first
-    // step manually.
-    std::vector<std::string>::const_iterator tokenIt = tokens.begin();
-    rapidjson::Value::ConstMemberIterator docIt =
-        m_document.FindMember(tokenIt->c_str());
-
-    // If we found a value
-    if (docIt != m_document.MemberEnd())
-    {
-        // Analyze next token
-        ++tokenIt;
-
-        // If we have no more tokens to process
-        if (tokenIt == tokens.end())
-        {
-            // We're done
-            result = docIt;
-        }
-        // If we have more tokens to process
-        else
-        {
-            // Does the document iterator currently point to an indexable
-            // object?
-            if (docIt->value.IsObject())
-            {
-                // Attempt to find next member
-                rapidjson::Value::ConstMemberIterator valIt =
-                    docIt->value.FindMember(tokenIt->c_str());
-                // Iterator end for value just searched
-                rapidjson::Value::ConstMemberIterator endIt =
-                    docIt->value.MemberEnd();
-
-                // For the rest of the tokens to process
-                while (tokenIt != tokens.end())
-                {
-                    // Did we find the token?
-                    if (valIt != endIt)
-                    {
-                        // If no more tokens to process, success
-                        if (tokenIt + 1 == tokens.end())
-                        {
-                            tokenIt = tokens.end();
-                            result = valIt;
-                        }
-                        // If more tokens to process
-                        else
-                        {
-                            // Is the current value itr pointing to an object?
-                            if (valIt->value.IsObject())
-                            {
-                                // Continue processing
-                                ++tokenIt;
-                                endIt = valIt->value.MemberEnd();
-                                valIt =
-                                    valIt->value.FindMember(tokenIt->c_str());
-                            }
-                            else
-                            {
-                                std::cerr << "Config::GetDocumentMember: "
-                                             "Warning: value '";
-                                for (std::vector<std::string>::const_iterator
-                                         tokenPrint = tokens.begin();
-                                     tokenPrint != tokenIt + 1; ++tokenPrint)
-                                {
-                                    std::cerr << *tokenPrint << ". ";
-                                }
-                                std::cerr << "' is not an object, it's members "
-                                             "can't be accessed."
-                                          << std::endl;
-                                break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        std::cerr << "Config::GetDocumentMember: Warning: "
-                                     "Could not find '";
-                        std::vector<std::string>::const_iterator tokenPrint =
-                            tokens.begin();
-                        std::cerr << *tokenPrint;
-                        ++tokenPrint;
-                        for (; tokenPrint != tokenIt + 1; ++tokenPrint)
-                        {
-                            std::cerr << "." << *tokenPrint << "a";
-                        }
-                        std::cerr << "' in config file." << std::endl;
-                        break;
-                    }
-                }
-            }
-            // If not, error
-            else
-            {
-                std::cerr
-                    << "Config::GetDocumentMember: Warning: '" << *(tokenIt - 1)
-                    << "' is not an object, it's members can't be accessed."
-                    << std::endl;
-            }
-        }
-    }
-    else
-    {
-        std::cerr
-            << "Config::GetDocumentMember: Warning: could not find member: '"
-            << *(tokenIt) << "'" << std::endl;
-    }
-
-    return result;
 }
 
 bool Config::GetUnsignedInt(const std::string &key, unsigned int *uint) const
@@ -428,5 +311,383 @@ std::string Config::StringifyObject(const std::string &key) const
     }
 
     return stringifiedObject;
+}
+
+void Config::AddFloatArray(const std::string &key,
+                           const std::vector<float> &array)
+{
+    // By default, document and value types are null, so set type to object if
+    // not already
+    if (!m_document.IsObject())
+    {
+        m_document.SetObject();
+        m_isLoaded = true;
+    }
+
+    // Get document allocator
+    rapidjson::Document::AllocatorType &allocator = m_document.GetAllocator();
+
+    // Tokenize key
+    std::vector<std::string> tokens = ds_com::TokenizeString('.', key);
+    unsigned int iToken = 0;
+
+    // Current member to search for
+    std::stringstream searchKey;
+    searchKey << tokens[iToken];
+
+    // Search for existing token
+    rapidjson::Value::ConstMemberIterator it =
+        GetDocumentMember(searchKey.str());
+    // If it exists
+    if (it != m_document.MemberEnd())
+    {
+        // For each token see if either get member or create new member
+        for (unsigned int i = 1; i < tokens.size(); ++i)
+        {
+            // Search for next token
+            searchKey << "." << tokens[i];
+            rapidjson::Value::ConstMemberIterator it =
+                GetDocumentMember(searchKey.str());
+            ++iToken;
+            // If not found, stop
+            if (it == m_document.MemberEnd())
+            {
+                break;
+            }
+            // If found, continue
+            else
+            {
+            }
+        }
+    }
+
+    // If atleast one unfound object
+    if (iToken < tokens.size())
+    {
+        // Key to construct objects with. Get all but last failed token
+        std::stringstream constructKey;
+        for (unsigned int i = 0; i < iToken + 1; ++i)
+        {
+            if (iToken == 0)
+            {
+                constructKey << tokens[i];
+            }
+            else
+            {
+                constructKey << "." << tokens[i];
+            }
+        }
+        // For remaining tokens other than last, create objects and add them to
+        // document
+        for (; iToken < tokens.size() - 1; ++iToken)
+        {
+            // Get value to add member to
+            // If root add object to document
+            if (iToken == 0)
+            {
+                // Create member name
+                rapidjson::Value name;
+                name.SetString(tokens[iToken].c_str(), tokens[iToken].size(),
+                               allocator);
+                // Create member value
+                rapidjson::Value object(rapidjson::kObjectType);
+
+                // Add member
+                m_document.AddMember(name, object, allocator);
+            }
+            // Else add object to member
+            else
+            {
+                rapidjson::Value::MemberIterator it =
+                    GetDocumentMember(constructKey.str());
+
+                constructKey << "." << tokens[iToken];
+
+                // Create member name
+                rapidjson::Value name;
+                name.SetString(tokens[iToken].c_str(), tokens[iToken].size(),
+                               allocator);
+                // Create member value
+                rapidjson::Value object(rapidjson::kObjectType);
+
+                // Add member
+                it->value.AddMember(name, object, allocator);
+            }
+        }
+    }
+
+    // For last token, create array
+    rapidjson::Value myArray(rapidjson::kArrayType);
+
+    for (const float &number : array)
+    {
+        rapidjson::Value numberValue;
+        numberValue.SetFloat(number);
+        myArray.PushBack(numberValue, allocator);
+    }
+
+    rapidjson::Value name;
+    name.SetString(tokens[tokens.size() - 1].c_str(),
+                   tokens[tokens.size() - 1].size(), allocator);
+
+    // If root, add to document
+    if (tokens.size() - 1 == 0)
+    {
+        m_document.AddMember(name, myArray, allocator);
+    }
+    // Else add to member
+    else
+    {
+        // Original key minus final token
+        std::stringstream memberKey;
+        memberKey << tokens[0];
+        for (unsigned int i = 1; i < tokens.size() - 1; ++i)
+        {
+            memberKey << "." << tokens[i];
+        }
+
+        // Get member to insert into
+        rapidjson::Value::MemberIterator it =
+            GetDocumentMember(memberKey.str());
+
+        // Add member
+        it->value.AddMember(name, myArray, allocator);
+    }
+}
+
+rapidjson::Value::ConstMemberIterator
+Config::GetDocumentMember(const std::string &key) const
+{
+    rapidjson::Value::ConstMemberIterator result = m_document.MemberEnd();
+
+    // Get tokens
+    std::vector<std::string> tokens = ds_com::TokenizeString('.', key);
+
+    // Searching a document is different to searching a value, so do first
+    // step manually.
+    std::vector<std::string>::const_iterator tokenIt = tokens.begin();
+    rapidjson::Value::ConstMemberIterator docIt =
+        m_document.FindMember(tokenIt->c_str());
+
+    // If we found a value
+    if (docIt != m_document.MemberEnd())
+    {
+        // Analyze next token
+        ++tokenIt;
+
+        // If we have no more tokens to process
+        if (tokenIt == tokens.end())
+        {
+            // We're done
+            result = docIt;
+        }
+        // If we have more tokens to process
+        else
+        {
+            // Does the document iterator currently point to an indexable
+            // object?
+            if (docIt->value.IsObject())
+            {
+                // Attempt to find next member
+                rapidjson::Value::ConstMemberIterator valIt =
+                    docIt->value.FindMember(tokenIt->c_str());
+                // Iterator end for value just searched
+                rapidjson::Value::ConstMemberIterator endIt =
+                    docIt->value.MemberEnd();
+
+                // For the rest of the tokens to process
+                while (tokenIt != tokens.end())
+                {
+                    // Did we find the token?
+                    if (valIt != endIt)
+                    {
+                        // If no more tokens to process, success
+                        if (tokenIt + 1 == tokens.end())
+                        {
+                            tokenIt = tokens.end();
+                            result = valIt;
+                        }
+                        // If more tokens to process
+                        else
+                        {
+                            // Is the current value itr pointing to an object?
+                            if (valIt->value.IsObject())
+                            {
+                                // Continue processing
+                                ++tokenIt;
+                                endIt = valIt->value.MemberEnd();
+                                valIt =
+                                    valIt->value.FindMember(tokenIt->c_str());
+                            }
+                            else
+                            {
+                                std::cerr << "Config::GetDocumentMember: "
+                                             "Warning: value '";
+                                for (std::vector<std::string>::const_iterator
+                                         tokenPrint = tokens.begin();
+                                     tokenPrint != tokenIt + 1; ++tokenPrint)
+                                {
+                                    std::cerr << *tokenPrint << ". ";
+                                }
+                                std::cerr << "' is not an object, it's members "
+                                             "can't be accessed."
+                                          << std::endl;
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        std::cerr << "Config::GetDocumentMember: Warning: "
+                                     "Could not find '";
+                        std::vector<std::string>::const_iterator tokenPrint =
+                            tokens.begin();
+                        std::cerr << *tokenPrint;
+                        ++tokenPrint;
+                        for (; tokenPrint != tokenIt + 1; ++tokenPrint)
+                        {
+                            std::cerr << "." << *tokenPrint << "a";
+                        }
+                        std::cerr << "' in config file." << std::endl;
+                        break;
+                    }
+                }
+            }
+            // If not, error
+            else
+            {
+                std::cerr
+                    << "Config::GetDocumentMember: Warning: '" << *(tokenIt - 1)
+                    << "' is not an object, it's members can't be accessed."
+                    << std::endl;
+            }
+        }
+    }
+    else
+    {
+        std::cerr
+            << "Config::GetDocumentMember: Warning: could not find member: '"
+            << *(tokenIt) << "'" << std::endl;
+    }
+
+    return result;
+}
+
+rapidjson::Value::MemberIterator
+Config::GetDocumentMember(const std::string &key)
+{
+    rapidjson::Value::MemberIterator result = m_document.MemberEnd();
+
+    // Get tokens
+    std::vector<std::string> tokens = ds_com::TokenizeString('.', key);
+
+    // Searching a document is different to searching a value, so do first
+    // step manually.
+    std::vector<std::string>::const_iterator tokenIt = tokens.begin();
+    rapidjson::Value::MemberIterator docIt =
+        m_document.FindMember(tokenIt->c_str());
+
+    // If we found a value
+    if (docIt != m_document.MemberEnd())
+    {
+        // Analyze next token
+        ++tokenIt;
+
+        // If we have no more tokens to process
+        if (tokenIt == tokens.end())
+        {
+            // We're done
+            result = docIt;
+        }
+        // If we have more tokens to process
+        else
+        {
+            // Does the document iterator currently point to an indexable
+            // object?
+            if (docIt->value.IsObject())
+            {
+                // Attempt to find next member
+                rapidjson::Value::MemberIterator valIt =
+                    docIt->value.FindMember(tokenIt->c_str());
+                // Iterator end for value just searched
+                rapidjson::Value::MemberIterator endIt =
+                    docIt->value.MemberEnd();
+
+                // For the rest of the tokens to process
+                while (tokenIt != tokens.end())
+                {
+                    // Did we find the token?
+                    if (valIt != endIt)
+                    {
+                        // If no more tokens to process, success
+                        if (tokenIt + 1 == tokens.end())
+                        {
+                            tokenIt = tokens.end();
+                            result = valIt;
+                        }
+                        // If more tokens to process
+                        else
+                        {
+                            // Is the current value itr pointing to an object?
+                            if (valIt->value.IsObject())
+                            {
+                                // Continue processing
+                                ++tokenIt;
+                                endIt = valIt->value.MemberEnd();
+                                valIt =
+                                    valIt->value.FindMember(tokenIt->c_str());
+                            }
+                            else
+                            {
+                                std::cerr << "Config::GetDocumentMember: "
+                                             "Warning: value '";
+                                for (std::vector<std::string>::const_iterator
+                                         tokenPrint = tokens.begin();
+                                     tokenPrint != tokenIt + 1; ++tokenPrint)
+                                {
+                                    std::cerr << *tokenPrint << ". ";
+                                }
+                                std::cerr << "' is not an object, it's members "
+                                             "can't be accessed."
+                                          << std::endl;
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        std::cerr << "Config::GetDocumentMember: Warning: "
+                                     "Could not find '";
+                        std::vector<std::string>::const_iterator tokenPrint =
+                            tokens.begin();
+                        std::cerr << *tokenPrint;
+                        ++tokenPrint;
+                        for (; tokenPrint != tokenIt + 1; ++tokenPrint)
+                        {
+                            std::cerr << "." << *tokenPrint;
+                        }
+                        std::cerr << "' in config file." << std::endl;
+                        break;
+                    }
+                }
+            }
+            // If not, error
+            else
+            {
+                std::cerr
+                    << "Config::GetDocumentMember: Warning: '" << *(tokenIt - 1)
+                    << "' is not an object, it's members can't be accessed."
+                    << std::endl;
+            }
+        }
+    }
+    else
+    {
+        std::cerr
+            << "Config::GetDocumentMember: Warning: Could not find member: '"
+            << *(tokenIt) << "'" << std::endl;
+    }
+
+    return result;
 }
 }
