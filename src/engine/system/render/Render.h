@@ -70,11 +70,30 @@ private:
     void ProcessEvents(ds_msg::MessageStream *messages);
 
     /**
-     * Create a renderer texture and return a handle to it.
+     * Create a Texture object from a path to a texture resource.
      *
-     * @param   filePath  const std::string &, path to texture file.
-     * @return            Texture, handle to renderer texture created. 
+     * @param   filePath  const std::string &, path to texture resource.
+     * @return            ds_render::Texture, texture created.
      */
+    ds_render::Texture
+    CreateTextureFromTextureResource(const std::string &filePath);
+
+    /**
+     * Create a Mesh object from a path to a mesh resource.
+     *
+     * @param   filePath  const std::string &, path to mesh resource.
+     * @return            ds_render::Mesh, mesh created.
+     */
+    ds_render::Mesh CreateMeshFromMeshResource(const std::string &filePath);
+
+    /**
+     * Create a Material object from a path to a material resource.
+     *
+     * @param   filePath  const std::string &, path to material resource.
+     * @return            ds_render::Material, material created.
+     */
+    ds_render::Material
+    CreateMaterialFromMaterialResource(const std::string &filePath);
 
     /**
      * Create a render component for the given entity using the given component
@@ -117,7 +136,8 @@ private:
     //                                "out vec4 frag_colour;"
     //                                "uniform sampler2D tex;"
     //                                "void main() {"
-    //                                // "  frag_colour = vec4(1.0, 0.0, 0.0, 1.0);"
+    //                                // "  frag_colour = vec4(1.0, 0.0, 0.0,
+    //                                1.0);"
     //                                "frag_colour = texture(tex, texCoord);"
     //                                "}";
 };

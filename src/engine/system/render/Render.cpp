@@ -35,188 +35,11 @@ bool Render::Initialize(const Config &config)
 
     m_renderer->Init(viewportWidth, viewportHeight);
 
-    std::unique_ptr<MeshResource> meshResource =
-        m_factory.CreateResource<MeshResource>("../assets/cube.obj");
-
-    // Create vertex buffer data store
-    ds_com::StreamBuffer vertexBufferStore;
-
-    const std::vector<ds_math::Vector3> positions = meshResource->GetVerts();
-    for (const ds_math::Vector3 &position : positions)
-    {
-        vertexBufferStore << position;
-    }
-
-    // Describe position data
-    ds_render::VertexBufferDescription::AttributeDescription
-        positionAttributeDescriptor;
-    positionAttributeDescriptor.attributeType =
-        ds_render::AttributeType::Position;
-    positionAttributeDescriptor.attributeDataType =
-        ds_render::RenderDataType::Float;
-    positionAttributeDescriptor.numElementsPerAttribute = 3;
-    positionAttributeDescriptor.stride = 0;
-    positionAttributeDescriptor.offset = 0;
-    positionAttributeDescriptor.normalized = false;
-
-    // Create texCoord data
-    // Get texture coordinate data
-    const std::vector<ds_math::Vector3> textureCoordinates =
-        meshResource->GetTexCoords();
-    for (const ds_math::Vector3 &texCoord : textureCoordinates)
-    {
-        vertexBufferStore << texCoord.x;
-        // Flip y texcoord
-        vertexBufferStore << 1.0f - texCoord.y;
-    }
-
-    // Describe texCoord data
-    ds_render::VertexBufferDescription::AttributeDescription
-        texCoordAttributeDescriptor;
-    texCoordAttributeDescriptor.attributeType =
-        ds_render::AttributeType::TextureCoordinate;
-    texCoordAttributeDescriptor.attributeDataType =
-        ds_render::RenderDataType::Float;
-    texCoordAttributeDescriptor.numElementsPerAttribute = 2;
-    texCoordAttributeDescriptor.stride = 0;
-    texCoordAttributeDescriptor.offset =
-        meshResource->GetVertCount() * sizeof(ds_math::Vector3);
-    texCoordAttributeDescriptor.normalized = false;
-
-    // Add position and texcoord attribute descriptions to vertex buffer
-    // descriptor
-    ds_render::VertexBufferDescription vertexBufferDescriptor;
-    vertexBufferDescriptor.AddAttributeDescription(positionAttributeDescriptor);
-    vertexBufferDescriptor.AddAttributeDescription(texCoordAttributeDescriptor);
-
-    // Create vertex buffer
-    ds_render::VertexBufferHandle vb = m_renderer->CreateVertexBuffer(
-        ds_render::BufferUsageType::Static, vertexBufferDescriptor,
-        vertexBufferStore.AvailableBytes(), vertexBufferStore.GetDataPtr());
-
-    // Create index buffer
-    std::vector<unsigned int> indices = meshResource->GetIndices();
-
-    // Create index buffer
-    ds_render::IndexBufferHandle ib = m_renderer->CreateIndexBuffer(
-        ds_render::BufferUsageType::Static,
-        sizeof(unsigned int) * indices.size(), &indices[0]);
-
     // Create Mesh
-    m_mesh = ds_render::Mesh(vb, ib, 0, meshResource->GetIndicesCount());
+    m_mesh = CreateMeshFromMeshResource("../assets/cube.obj");
 
-    // Generate material
-    std::unique_ptr<MaterialResource> materialResource =
-        m_factory.CreateResource<MaterialResource>("../assets/test.material");
-
-    // Create shader program
-    std::unique_ptr<ShaderResource> shaderResource =
-        m_factory.CreateResource<ShaderResource>(
-            materialResource->GetShaderResourceFilePath());
-
-    std::vector<ds_render::ShaderHandle> shaders;
-    std::vector<ds_render::ShaderType> shaderTypes =
-        shaderResource->GetShaderTypes();
-    for (auto shaderType : shaderTypes)
-    {
-        const std::string &shaderSource =
-            shaderResource->GetShaderSource(shaderType);
-        shaders.push_back(m_renderer->CreateShaderObject(
-            shaderType, shaderSource.size(), shaderSource.c_str()));
-    }
-    ds_render::ProgramHandle shaderProgram = m_renderer->CreateProgram(shaders);
-    m_material.SetProgram(shaderProgram);
-
-    // Create each texture and add to material
-    std::vector<std::string> textureSamplerNames =
-        materialResource->GetTextureSamplerNames();
-    for (auto samplerName : textureSamplerNames)
-    {
-        const std::string &textureResourceFilePath =
-            materialResource->GetTextureResourceFilePath(samplerName);
-
-        // Texture from texture resource
-        std::unique_ptr<TextureResource> textureResource =
-            m_factory.CreateResource<TextureResource>(textureResourceFilePath);
-
-        ds_render::ImageFormat format;
-        switch (textureResource->GetComponentFlag())
-        {
-        case TextureResource::ComponentFlag::GREY:
-            format = ds_render::ImageFormat::R;
-            break;
-        case TextureResource::ComponentFlag::GREYALPHA:
-            format = ds_render::ImageFormat::RG;
-            break;
-        case TextureResource::ComponentFlag::RGB:
-            format = ds_render::ImageFormat::RGB;
-            break;
-        case TextureResource::ComponentFlag::RGBA:
-            format = ds_render::ImageFormat::RGBA;
-            break;
-        default:
-            assert("Unsupported image component flag.");
-            format = ds_render::ImageFormat::RGBA;
-            break;
-        }
-
-        // Create texture
-        m_material.AddTexture(
-            samplerName, ds_render::Texture(m_renderer->Create2DTexture(
-                             format, ds_render::RenderDataType::UnsignedByte,
-                             ds_render::InternalImageFormat::RGBA8, true,
-                             textureResource->GetWidthInPixels(),
-                             textureResource->GetHeightInPixels(),
-                             textureResource->GetTextureContents())));
-    }
-
-    // Create shader program
-    // ds_render::ShaderHandle vs =
-    //     m_renderer->CreateShaderObject(ds_render::ShaderType::VertexShader,
-    //                                    strlen(m_vertexShader),
-    //                                    m_vertexShader);
-    // ds_render::ShaderHandle fs = m_renderer->CreateShaderObject(
-    //     ds_render::ShaderType::FragmentShader, strlen(m_fragmentShader),
-    //     m_fragmentShader);
-
-    // std::vector<ds_render::ShaderHandle> shaders;
-    // shaders.push_back(vs);
-    // shaders.push_back(fs);
-    // m_program = m_renderer->CreateProgram(shaders);
-
-
-    // Texture from texture resource
-    // std::unique_ptr<TextureResource> textureResource =
-    //     m_factory.CreateResource<TextureResource>("../assets/ColorGrid.png");
-
-    // ds_render::ImageFormat format;
-    // switch (textureResource->GetComponentFlag())
-    // {
-    // case TextureResource::ComponentFlag::GREY:
-    //     format = ds_render::ImageFormat::R;
-    //     break;
-    // case TextureResource::ComponentFlag::GREYALPHA:
-    //     format = ds_render::ImageFormat::RG;
-    //     break;
-    // case TextureResource::ComponentFlag::RGB:
-    //     format = ds_render::ImageFormat::RGB;
-    //     break;
-    // case TextureResource::ComponentFlag::RGBA:
-    //     format = ds_render::ImageFormat::RGBA;
-    //     break;
-    // default:
-    //     assert("Unsupported image component flag.");
-    //     format = ds_render::ImageFormat::RGBA;
-    //     break;
-    // }
-
-    // // Create texture
-    // m_texture = ds_render::Texture(m_renderer->Create2DTexture(
-    //     format, ds_render::RenderDataType::UnsignedByte,
-    //     ds_render::InternalImageFormat::RGBA8, true,
-    //     textureResource->GetWidthInPixels(),
-    //     textureResource->GetHeightInPixels(),
-    //     textureResource->GetTextureContents()));
+    // Create material
+    m_material = CreateMaterialFromMaterialResource("../assets/test.material");
 
     return result;
 }
@@ -471,5 +294,166 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
             break;
         }
     }
+}
+
+ds_render::Texture
+Render::CreateTextureFromTextureResource(const std::string &filePath)
+{
+    // Texture from texture resource
+    std::unique_ptr<TextureResource> textureResource =
+        m_factory.CreateResource<TextureResource>(filePath);
+
+    ds_render::ImageFormat format;
+    switch (textureResource->GetComponentFlag())
+    {
+    case TextureResource::ComponentFlag::GREY:
+        format = ds_render::ImageFormat::R;
+        break;
+    case TextureResource::ComponentFlag::GREYALPHA:
+        format = ds_render::ImageFormat::RG;
+        break;
+    case TextureResource::ComponentFlag::RGB:
+        format = ds_render::ImageFormat::RGB;
+        break;
+    case TextureResource::ComponentFlag::RGBA:
+        format = ds_render::ImageFormat::RGBA;
+        break;
+    default:
+        assert("Unsupported image component flag.");
+        format = ds_render::ImageFormat::RGBA;
+        break;
+    }
+
+    // Create texture
+    ds_render::Texture texture = ds_render::Texture(m_renderer->Create2DTexture(
+        format, ds_render::RenderDataType::UnsignedByte,
+        ds_render::InternalImageFormat::RGBA8, true,
+        textureResource->GetWidthInPixels(),
+        textureResource->GetHeightInPixels(),
+        textureResource->GetTextureContents()));
+
+    return texture;
+}
+
+ds_render::Mesh Render::CreateMeshFromMeshResource(const std::string &filePath)
+{
+    std::unique_ptr<MeshResource> meshResource =
+        m_factory.CreateResource<MeshResource>(filePath);
+
+    // Create vertex buffer data store
+    ds_com::StreamBuffer vertexBufferStore;
+
+    const std::vector<ds_math::Vector3> positions = meshResource->GetVerts();
+    for (const ds_math::Vector3 &position : positions)
+    {
+        vertexBufferStore << position;
+    }
+
+    // Describe position data
+    ds_render::VertexBufferDescription::AttributeDescription
+        positionAttributeDescriptor;
+    positionAttributeDescriptor.attributeType =
+        ds_render::AttributeType::Position;
+    positionAttributeDescriptor.attributeDataType =
+        ds_render::RenderDataType::Float;
+    positionAttributeDescriptor.numElementsPerAttribute = 3;
+    positionAttributeDescriptor.stride = 0;
+    positionAttributeDescriptor.offset = 0;
+    positionAttributeDescriptor.normalized = false;
+
+    // Create texCoord data
+    // Get texture coordinate data
+    const std::vector<ds_math::Vector3> textureCoordinates =
+        meshResource->GetTexCoords();
+    for (const ds_math::Vector3 &texCoord : textureCoordinates)
+    {
+        vertexBufferStore << texCoord.x;
+        // Flip y texcoord
+        vertexBufferStore << 1.0f - texCoord.y;
+    }
+
+    // Describe texCoord data
+    ds_render::VertexBufferDescription::AttributeDescription
+        texCoordAttributeDescriptor;
+    texCoordAttributeDescriptor.attributeType =
+        ds_render::AttributeType::TextureCoordinate;
+    texCoordAttributeDescriptor.attributeDataType =
+        ds_render::RenderDataType::Float;
+    texCoordAttributeDescriptor.numElementsPerAttribute = 2;
+    texCoordAttributeDescriptor.stride = 0;
+    texCoordAttributeDescriptor.offset =
+        meshResource->GetVertCount() * sizeof(ds_math::Vector3);
+    texCoordAttributeDescriptor.normalized = false;
+
+    // Add position and texcoord attribute descriptions to vertex buffer
+    // descriptor
+    ds_render::VertexBufferDescription vertexBufferDescriptor;
+    vertexBufferDescriptor.AddAttributeDescription(positionAttributeDescriptor);
+    vertexBufferDescriptor.AddAttributeDescription(texCoordAttributeDescriptor);
+
+    // Create vertex buffer
+    ds_render::VertexBufferHandle vb = m_renderer->CreateVertexBuffer(
+        ds_render::BufferUsageType::Static, vertexBufferDescriptor,
+        vertexBufferStore.AvailableBytes(), vertexBufferStore.GetDataPtr());
+
+    // Create index buffer
+    std::vector<unsigned int> indices = meshResource->GetIndices();
+
+    // Create index buffer
+    ds_render::IndexBufferHandle ib = m_renderer->CreateIndexBuffer(
+        ds_render::BufferUsageType::Static,
+        sizeof(unsigned int) * indices.size(), &indices[0]);
+
+    // Create Mesh
+    return ds_render::Mesh(vb, ib, 0, meshResource->GetIndicesCount());
+}
+
+ds_render::Material
+Render::CreateMaterialFromMaterialResource(const std::string &filePath)
+{
+    ds_render::Material material;
+
+    // Generate material resource
+    std::unique_ptr<MaterialResource> materialResource =
+        m_factory.CreateResource<MaterialResource>(filePath);
+
+    // Create shader program
+    std::unique_ptr<ShaderResource> shaderResource =
+        m_factory.CreateResource<ShaderResource>(
+            materialResource->GetShaderResourceFilePath());
+
+    // Load each shader
+    std::vector<ds_render::ShaderHandle> shaders;
+    std::vector<ds_render::ShaderType> shaderTypes =
+        shaderResource->GetShaderTypes();
+    for (auto shaderType : shaderTypes)
+    {
+        const std::string &shaderSource =
+            shaderResource->GetShaderSource(shaderType);
+
+        // Append shader to list
+        shaders.push_back(m_renderer->CreateShaderObject(
+            shaderType, shaderSource.size(), shaderSource.c_str()));
+    }
+    // Compile shaders into shader program
+    ds_render::ProgramHandle shaderProgram = m_renderer->CreateProgram(shaders);
+
+    // Set shader program of material
+    material.SetProgram(shaderProgram);
+
+    // Create each texture and add to material
+    std::vector<std::string> textureSamplerNames =
+        materialResource->GetTextureSamplerNames();
+    for (auto samplerName : textureSamplerNames)
+    {
+        // Create texture from texture resource
+        const std::string &textureResourceFilePath =
+            materialResource->GetTextureResourceFilePath(samplerName);
+
+        material.AddTexture(samplerName, CreateTextureFromTextureResource(
+                                             textureResourceFilePath));
+    }
+
+    return material;
 }
 }
