@@ -9,6 +9,7 @@
 #include "engine/resource/TextureResource.h"
 #include "engine/system/render/GLRenderer.h"
 #include "engine/system/render/Render.h"
+#include "math/MathHelper.h"
 #include "math/Matrix4.h"
 #include "math/Vector4.h"
 
@@ -34,13 +35,28 @@ bool Render::Initialize(const Config &config)
 
     m_renderer->Init(viewportWidth, viewportHeight);
 
+    std::unique_ptr<MeshResource> meshResource =
+        m_factory.CreateResource<MeshResource>("../assets/cube.obj");
+
     // Create vertex buffer data store
     ds_com::StreamBuffer vertexBufferStore;
 
+    const std::vector<ds_math::Vector3> positions = meshResource->GetVerts();
+    for (const ds_math::Vector3 &position : positions)
+    {
+        vertexBufferStore << position;
+    }
     // Create position data
-    vertexBufferStore << ds_math::Vector3(0.0f, 0.5f, 0.0f);
-    vertexBufferStore << ds_math::Vector3(0.5f, -0.5f, 0.0f);
-    vertexBufferStore << ds_math::Vector3(-0.5f, -0.5f, 0.0f);
+    // vertexBufferStore << ds_math::Vector3(0.0f, 0.5f, 0.0f);
+    // vertexBufferStore << ds_math::Vector3(0.5f, -0.5f, 0.0f);
+    // vertexBufferStore << ds_math::Vector3(-0.5f, -0.5f, 0.0f);
+
+    // vertexBufferStore << ds_math::Vector3(1.0f, -1.0f, 0.0f);
+    // vertexBufferStore << ds_math::Vector3(1.0f, 1.0f, 0.0f);
+    // vertexBufferStore << ds_math::Vector3(-1.0f, 1.0f, 0.0f);
+    // vertexBufferStore << ds_math::Vector3(-1.0f, -1.0f, 0.0f);
+    // vertexBufferStore << ds_math::Vector3(1.0f, -1.0f, 0.0f);
+    // vertexBufferStore << ds_math::Vector3(-1.0f, 1.0f, 0.0f);
 
     // Describe position data
     ds_render::VertexBufferDescription::AttributeDescription
@@ -55,12 +71,30 @@ bool Render::Initialize(const Config &config)
     positionAttributeDescriptor.normalized = false;
 
     // Create texCoord data
-    vertexBufferStore << 0.5f;
-    vertexBufferStore << 0.0f;
-    vertexBufferStore << 1.0f;
-    vertexBufferStore << 1.0f;
-    vertexBufferStore << 0.0f;
-    vertexBufferStore << 1.0f;
+    // Get texture coordinate data
+    const std::vector<ds_math::Vector3> textureCoordinates =
+        meshResource->GetTexCoords();
+    std::cout << "tex coord size: " << meshResource->GetTexCoordCount();
+    for (const ds_math::Vector3 &texCoord : textureCoordinates)
+    {
+        std::cout << texCoord << std::endl;
+        vertexBufferStore << texCoord.x;
+        vertexBufferStore << 1.0f - texCoord.y;
+    }
+    // vertexBufferStore << 0.5f;
+    // vertexBufferStore << 0.0f;
+    // vertexBufferStore << 1.0f;
+    // vertexBufferStore << 1.0f;
+    // vertexBufferStore << 0.0f;
+    // vertexBufferStore << 1.0f;
+    // vertexBufferStore << 1.0f;
+    // vertexBufferStore << 0.0f;
+    // vertexBufferStore << 1.0f;
+    // vertexBufferStore << 1.0f;
+    // vertexBufferStore << 0.0f;
+    // vertexBufferStore << 1.0f;
+    // vertexBufferStore << 0.0f;
+    // vertexBufferStore << 0.0f;
 
     // Describe texCoord data
     ds_render::VertexBufferDescription::AttributeDescription
@@ -71,7 +105,8 @@ bool Render::Initialize(const Config &config)
         ds_render::RenderDataType::Float;
     texCoordAttributeDescriptor.numElementsPerAttribute = 2;
     texCoordAttributeDescriptor.stride = 0;
-    texCoordAttributeDescriptor.offset = 3 * sizeof(ds_math::Vector3);
+    texCoordAttributeDescriptor.offset =
+        meshResource->GetVertCount() * sizeof(ds_math::Vector3);
     texCoordAttributeDescriptor.normalized = false;
 
     // Add position and texcoord attribute descriptions to vertex buffer
@@ -84,16 +119,28 @@ bool Render::Initialize(const Config &config)
     m_vb = m_renderer->CreateVertexBuffer(
         ds_render::BufferUsageType::Static, vertexBufferDescriptor,
         vertexBufferStore.AvailableBytes(), vertexBufferStore.GetDataPtr());
-
-    // Create index data
-    std::vector<unsigned int> indices;
-    indices.push_back(0);
-    indices.push_back(1);
-    indices.push_back(2);
+    std::cout << "Good: " << std::endl;
+    while (vertexBufferStore.AvailableBytes() > 0)
+    {
+        ds_math::Vector3 v;
+        vertexBufferStore >> v;
+        std::cout << v << std::endl;
+    }
 
     // Create index buffer
+    std::vector<unsigned int> indices = meshResource->GetIndices();
+    // std::vector<unsigned int> indices;
+    // indices.push_back(0);
+    // indices.push_back(1);
+    // indices.push_back(2);
+    // indices.push_back(3);
+    // indices.push_back(4);
+    // indices.push_back(5);
+
+    // // Create index buffer
     m_ib = m_renderer->CreateIndexBuffer(ds_render::BufferUsageType::Static,
-                                         sizeof(unsigned int) * 3, &indices[0]);
+                                         sizeof(unsigned int) * indices.size(),
+                                         &indices[0]);
 
     // Create shader program
     ds_render::ShaderHandle vs =
@@ -117,8 +164,11 @@ bool Render::Initialize(const Config &config)
     };
     Scene sceneConstants;
     sceneConstants.modelMatrix = ds_math::Matrix4(1.0f);
-    sceneConstants.viewMatrix = ds_math::Matrix4(1.0f);
-    sceneConstants.projectionMatrix = ds_math::Matrix4(1.0f);
+    sceneConstants.viewMatrix =
+        ds_math::Matrix4::CreateTranslationMatrix(-4.0f, -3.0f, -10.0f);
+    sceneConstants.projectionMatrix =
+        ds_math::Matrix4::CreatePerspectiveFieldOfView(
+            ds_math::MathHelper::PI / 3.0f, 800.0f / 600.0f, 0.1f, 100.0f);
 
     // Describe shader data
     ds_render::ConstantBuffer cBuffer;
@@ -139,12 +189,12 @@ bool Render::Initialize(const Config &config)
     int height = 0;
     int components = 0;
     unsigned char *imageContents =
-        stbi_load("../assets/test.png", &width, &height, &components, 0);
+        stbi_load("../assets/ColorGrid.png", &width, &height, &components, 0);
 
     // Create texture
     m_texture = m_renderer->Create2DTexture(
-        ds_render::ImageFormat::RGB, ds_render::RenderDataType::UnsignedByte,
-        ds_render::InternalImageFormat::SRGB8, true, width, height,
+        ds_render::ImageFormat::RGBA, ds_render::RenderDataType::UnsignedByte,
+        ds_render::InternalImageFormat::RGBA8, true, width, height,
         imageContents);
 
     return result;
@@ -163,7 +213,7 @@ void Render::Update(float deltaTime)
     // m_renderer->DrawVertices(m_vb, ds_render::PrimitiveType::Triangles, 0,
     // 3);
     m_renderer->DrawVerticesIndexed(m_vb, m_ib,
-                                    ds_render::PrimitiveType::Triangles, 0, 3);
+                                    ds_render::PrimitiveType::Triangles, 0, 36);
 }
 
 void Render::Shutdown()
@@ -230,12 +280,104 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                         std::stringstream meshResourcePath;
                         meshResourcePath << "../assets/" << meshName;
 
+                        std::cout << meshResourcePath.str() << std::endl;
+
                         // Get mesh resource
                         std::unique_ptr<MeshResource> meshResource =
                             m_factory.CreateResource<MeshResource>(
                                 meshResourcePath.str());
 
-                        // TODO: Renderer create mesh
+                        // std::cout << "Index count: "
+                        //           << meshResource->GetIndicesCount()
+                        //           << std::endl;
+                        // // TODO: Renderer create mesh
+                        // // Create vertex buffer data store
+                        // ds_com::StreamBuffer vertexBufferDataStore;
+
+                        // // Get position data
+                        // const std::vector<ds_math::Vector3> positions =
+                        //     meshResource->GetVerts();
+                        // for (const ds_math::Vector3 &position : positions)
+                        // {
+                        //     std::cout << position << std::endl;
+                        //     vertexBufferDataStore << position;
+                        // }
+
+                        // // Describe position data
+                        // ds_render::VertexBufferDescription::AttributeDescription
+                        //     positionAttributeDescriptor;
+                        // positionAttributeDescriptor.attributeType =
+                        //     ds_render::AttributeType::Position;
+                        // positionAttributeDescriptor.attributeDataType =
+                        //     ds_render::RenderDataType::Float;
+                        // positionAttributeDescriptor.numElementsPerAttribute =
+                        // 3;
+                        // positionAttributeDescriptor.stride = 0;
+                        // positionAttributeDescriptor.offset = 0;
+                        // positionAttributeDescriptor.normalized = false;
+
+                        // // // Get texture coordinate data
+                        // // const std::vector<ds_math::Vector3>
+                        // // textureCoordinates =
+                        // //     meshResource->GetTexCoords();
+                        // // for (const ds_math::Vector3 &texCoord :
+                        // //      textureCoordinates)
+                        // // {
+                        // //     vertexBufferDataStore << texCoord.x;
+                        // //     vertexBufferDataStore << texCoord.y;
+                        // // }
+
+                        // // // Describe texCoord data
+                        // //
+                        // ds_render::VertexBufferDescription::AttributeDescription
+                        // //     texCoordAttributeDescriptor;
+                        // // texCoordAttributeDescriptor.attributeType =
+                        // //     ds_render::AttributeType::TextureCoordinate;
+                        // // texCoordAttributeDescriptor.attributeDataType =
+                        // //     ds_render::RenderDataType::Float;
+                        // //
+                        // texCoordAttributeDescriptor.numElementsPerAttribute =
+                        // // 2;
+                        // // texCoordAttributeDescriptor.stride = 0;
+                        // // texCoordAttributeDescriptor.offset =
+                        // //     meshResource->GetVertCount() *
+                        // //     sizeof(ds_math::Vector3);
+                        // // texCoordAttributeDescriptor.normalized = false;
+
+                        // // Create vertex buffer descriptor
+                        // ds_render::VertexBufferDescription
+                        //     vertexBufferDescriptor;
+                        // vertexBufferDescriptor.AddAttributeDescription(
+                        //     positionAttributeDescriptor);
+                        // // vertexBufferDescriptor.AddAttributeDescription(
+                        // //     texCoordAttributeDescriptor);
+
+                        // // Create vertex buffer
+                        // // m_vb = m_renderer->CreateVertexBuffer(
+                        // //     ds_render::BufferUsageType::Static,
+                        // //     vertexBufferDescriptor,
+                        // //     vertexBufferDataStore.AvailableBytes(),
+                        // //     vertexBufferDataStore.GetDataPtr());
+
+                        // std::cout << "Bad: " << std::endl;
+                        // while (vertexBufferDataStore.AvailableBytes() > 0)
+                        // {
+                        //     ds_math::Vector3 v;
+                        //     vertexBufferDataStore >> v;
+                        //     std::cout << v << std::endl;
+                        // }
+
+                        // // Create index buffer
+                        // std::vector<unsigned int> indices =
+                        //     meshResource->GetIndices();
+                        // for (auto index : indices)
+                        // {
+                        //     std::cout << index << std::endl;
+                        // }
+                        // m_ib = m_renderer->CreateIndexBuffer(
+                        //     ds_render::BufferUsageType::Static,
+                        //     sizeof(unsigned int) * indices.size(),
+                        //     &indices[0]);
 
                         // Get material resource path
                         std::stringstream materialResourcePath;
