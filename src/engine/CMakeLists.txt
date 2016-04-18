@@ -33,6 +33,7 @@ set(ENGINE_INCLUDE_FILES
   system/render/ConstantBuffer.h
   system/render/GLRenderer.h
   system/render/IRenderer.h
+  system/render/Mesh.h
   system/render/Render.h
   system/render/Uniform.h
   system/render/VertexBufferDescription.h
@@ -67,6 +68,7 @@ set(ENGINE_SRC_FILES
   system/platform/Window.cpp
   system/render/ConstantBuffer.cpp
   system/render/GLRenderer.cpp
+  system/render/Mesh.cpp
   system/render/Render.cpp
   system/render/VertexBufferDescription.cpp
   system/render/Uniform.cpp

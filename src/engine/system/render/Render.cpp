@@ -46,17 +46,6 @@ bool Render::Initialize(const Config &config)
     {
         vertexBufferStore << position;
     }
-    // Create position data
-    // vertexBufferStore << ds_math::Vector3(0.0f, 0.5f, 0.0f);
-    // vertexBufferStore << ds_math::Vector3(0.5f, -0.5f, 0.0f);
-    // vertexBufferStore << ds_math::Vector3(-0.5f, -0.5f, 0.0f);
-
-    // vertexBufferStore << ds_math::Vector3(1.0f, -1.0f, 0.0f);
-    // vertexBufferStore << ds_math::Vector3(1.0f, 1.0f, 0.0f);
-    // vertexBufferStore << ds_math::Vector3(-1.0f, 1.0f, 0.0f);
-    // vertexBufferStore << ds_math::Vector3(-1.0f, -1.0f, 0.0f);
-    // vertexBufferStore << ds_math::Vector3(1.0f, -1.0f, 0.0f);
-    // vertexBufferStore << ds_math::Vector3(-1.0f, 1.0f, 0.0f);
 
     // Describe position data
     ds_render::VertexBufferDescription::AttributeDescription
@@ -74,27 +63,12 @@ bool Render::Initialize(const Config &config)
     // Get texture coordinate data
     const std::vector<ds_math::Vector3> textureCoordinates =
         meshResource->GetTexCoords();
-    std::cout << "tex coord size: " << meshResource->GetTexCoordCount();
     for (const ds_math::Vector3 &texCoord : textureCoordinates)
     {
-        std::cout << texCoord << std::endl;
         vertexBufferStore << texCoord.x;
+        // Flip y texcoord
         vertexBufferStore << 1.0f - texCoord.y;
     }
-    // vertexBufferStore << 0.5f;
-    // vertexBufferStore << 0.0f;
-    // vertexBufferStore << 1.0f;
-    // vertexBufferStore << 1.0f;
-    // vertexBufferStore << 0.0f;
-    // vertexBufferStore << 1.0f;
-    // vertexBufferStore << 1.0f;
-    // vertexBufferStore << 0.0f;
-    // vertexBufferStore << 1.0f;
-    // vertexBufferStore << 1.0f;
-    // vertexBufferStore << 0.0f;
-    // vertexBufferStore << 1.0f;
-    // vertexBufferStore << 0.0f;
-    // vertexBufferStore << 0.0f;
 
     // Describe texCoord data
     ds_render::VertexBufferDescription::AttributeDescription
@@ -116,31 +90,25 @@ bool Render::Initialize(const Config &config)
     vertexBufferDescriptor.AddAttributeDescription(texCoordAttributeDescriptor);
 
     // Create vertex buffer
-    m_vb = m_renderer->CreateVertexBuffer(
+    ds_render::VertexBufferHandle vb = m_renderer->CreateVertexBuffer(
         ds_render::BufferUsageType::Static, vertexBufferDescriptor,
         vertexBufferStore.AvailableBytes(), vertexBufferStore.GetDataPtr());
-    std::cout << "Good: " << std::endl;
-    while (vertexBufferStore.AvailableBytes() > 0)
-    {
-        ds_math::Vector3 v;
-        vertexBufferStore >> v;
-        std::cout << v << std::endl;
-    }
 
     // Create index buffer
     std::vector<unsigned int> indices = meshResource->GetIndices();
-    // std::vector<unsigned int> indices;
-    // indices.push_back(0);
-    // indices.push_back(1);
-    // indices.push_back(2);
-    // indices.push_back(3);
-    // indices.push_back(4);
-    // indices.push_back(5);
 
-    // // Create index buffer
-    m_ib = m_renderer->CreateIndexBuffer(ds_render::BufferUsageType::Static,
-                                         sizeof(unsigned int) * indices.size(),
-                                         &indices[0]);
+    // Create index buffer
+    ds_render::IndexBufferHandle ib = m_renderer->CreateIndexBuffer(
+        ds_render::BufferUsageType::Static,
+        sizeof(unsigned int) * indices.size(), &indices[0]);
+
+    // Create Mesh
+    m_mesh = ds_render::Mesh(vb, ib, 0, meshResource->GetIndicesCount());
+
+    // Material:
+    // std::unique_ptr<MaterialResource> materialResource =
+    //     m_factory.CreateResource<MaterialResource>(
+    //         materialResourcePath.str());
 
     // Create shader program
     ds_render::ShaderHandle vs =
@@ -212,8 +180,10 @@ void Render::Update(float deltaTime)
 
     // m_renderer->DrawVertices(m_vb, ds_render::PrimitiveType::Triangles, 0,
     // 3);
-    m_renderer->DrawVerticesIndexed(m_vb, m_ib,
-                                    ds_render::PrimitiveType::Triangles, 0, 36);
+    m_renderer->DrawVerticesIndexed(
+        m_mesh.GetVertexBuffer(), m_mesh.GetIndexBuffer(),
+        ds_render::PrimitiveType::Triangles, m_mesh.GetStartingIndex(),
+        m_mesh.GetNumIndices());
 }
 
 void Render::Shutdown()

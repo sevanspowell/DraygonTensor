@@ -5,6 +5,7 @@
 #include "engine/resource/ResourceFactory.h"
 #include "engine/system/ISystem.h"
 #include "engine/system/render/IRenderer.h"
+#include "engine/system/render/Mesh.h"
 
 #include "math/Vector3.h"
 
@@ -85,8 +86,7 @@ private:
     /** Renderer */
     std::unique_ptr<ds_render::IRenderer> m_renderer;
 
-    ds_render::VertexBufferHandle m_vb;
-    ds_render::IndexBufferHandle m_ib;
+    ds_render::Mesh m_mesh;
     ds_render::ProgramHandle m_program;
     ds_render::TextureHandle m_texture;
 
