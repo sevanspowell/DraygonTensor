@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "engine/resource/IResource.h"
-#include "engine/system/render/Uniform.h"
+#include "engine/system/render/UniformBlock.h"
 
 namespace ds
 {
@@ -53,28 +53,28 @@ public:
     void SetShaderResourceFilePath(const std::string &shaderFilePath);
 
     /**
-     * Get a list of texture uniform names this material resource contains.
+     * Get a list of texture sampler names this material resource contains.
      *
      * Corresponds to the name used in the shader for the texture.
      *
-     * @return  std::vector<std::string>, list of texture uniform names.
+     * @return  std::vector<std::string>, list of texture sampler names.
      */
-    std::vector<std::string> GetTextureUniformNames() const;
+    std::vector<std::string> GetTextureSamplerNames() const;
 
     /**
      * Get the texture resource file path for the texture with the given texture
-     * uniform name (corresponding to the name of the texture used in the
+     * sampler name (corresponding to the name of the texture used in the
      * shader).
      *
-     * @pre  textureUniformName must exist, use GetTextureUniformNames to check.
+     * @pre  textureSamplerName must exist, use GetTextureSamplerNames to check.
      *
-     * @param   textureUniformName  const std::string &, uniform name of the
+     * @param   textureSamplerName  const std::string &, sampler name of the
      * texture.
      * @return                      const std::string &, texture resource file
-     * path for the given texture uniform name.
+     * path for the given texture sampler name.
      */
     const std::string &
-    GetTextureResourceFilePath(const std::string &textureUniformName) const;
+    GetTextureResourceFilePath(const std::string &textureSamplerName) const;
 
     /**
      * Set the texture resource file path of a given texture uniform name.
@@ -91,28 +91,26 @@ public:
                                     const std::string &textureResourceFilePath);
 
     /**
-     * Add a uniform to the material. If a uniform with the same name already
-     * exists in the material it will overwrite that uniform.
+     * Add a uniform block to the material.
      *
-     * @param  uniform  const ds_render::Uniform &, uniform to add to material.
+     * @param  uniformBlock  const ds_render::UniformBlock &, uniform block.
      */
-    void AddUniform(const ds_render::Uniform &uniform);
+    void AddUniformBlock(const ds_render::UniformBlock &uniformBlock);
 
     /**
-     * Get all uniforms associated with a material.
+     * Get all uniform blocks associated with this material.
      *
-     * @return  const std::vector<ds_render::Uniform> &, uniforms associated
-     * with this material.
+     * @return const std::vector<ds_render::UniformBlock>
      */
-    const std::vector<ds_render::Uniform> &GetUniforms() const;
+    const std::vector<ds_render::UniformBlock> &GetUniformBlocks() const;
 
 private:
     /** Path to material shader file */
     std::string m_shaderPath;
-    /** Map texture uniform name to path of texture */
+    /** Map texture sampler name to path of texture */
     std::map<std::string, std::string> m_textures;
-    /** Material uniforms */
-    std::vector<ds_render::Uniform> m_uniforms;
+    /** Uniform blocks */
+    std::vector<ds_render::UniformBlock> m_uniformBlocks;
     /** This resource's file path */
     std::string m_filePath;
 };

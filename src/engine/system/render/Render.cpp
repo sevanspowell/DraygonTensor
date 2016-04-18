@@ -105,23 +105,141 @@ bool Render::Initialize(const Config &config)
     // Create Mesh
     m_mesh = ds_render::Mesh(vb, ib, 0, meshResource->GetIndicesCount());
 
-    // Material:
-    // std::unique_ptr<MaterialResource> materialResource =
-    //     m_factory.CreateResource<MaterialResource>(
-    //         materialResourcePath.str());
+    // Generate material
+    std::unique_ptr<MaterialResource> materialResource =
+        m_factory.CreateResource<MaterialResource>("../assets/test.material");
 
     // Create shader program
-    ds_render::ShaderHandle vs =
-        m_renderer->CreateShaderObject(ds_render::ShaderType::VertexShader,
-                                       strlen(m_vertexShader), m_vertexShader);
-    ds_render::ShaderHandle fs = m_renderer->CreateShaderObject(
-        ds_render::ShaderType::FragmentShader, strlen(m_fragmentShader),
-        m_fragmentShader);
+    std::unique_ptr<ShaderResource> shaderResource =
+        m_factory.CreateResource<ShaderResource>(
+            materialResource->GetShaderResourceFilePath());
 
     std::vector<ds_render::ShaderHandle> shaders;
-    shaders.push_back(vs);
-    shaders.push_back(fs);
-    m_program = m_renderer->CreateProgram(shaders);
+    std::vector<ds_render::ShaderType> shaderTypes =
+        shaderResource->GetShaderTypes();
+    for (auto shaderType : shaderTypes)
+    {
+        const std::string &shaderSource =
+            shaderResource->GetShaderSource(shaderType);
+        shaders.push_back(m_renderer->CreateShaderObject(
+            shaderType, shaderSource.size(), shaderSource.c_str()));
+    }
+    ds_render::ProgramHandle shaderProgram = m_renderer->CreateProgram(shaders);
+    m_material.SetProgram(shaderProgram);
+
+    // Create each texture and add to material
+    std::vector<std::string> textureSamplerNames =
+        materialResource->GetTextureSamplerNames();
+    for (auto samplerName : textureSamplerNames)
+    {
+        const std::string &textureResourceFilePath =
+            materialResource->GetTextureResourceFilePath(samplerName);
+
+        // Texture from texture resource
+        std::unique_ptr<TextureResource> textureResource =
+            m_factory.CreateResource<TextureResource>(textureResourceFilePath);
+
+        ds_render::ImageFormat format;
+        switch (textureResource->GetComponentFlag())
+        {
+        case TextureResource::ComponentFlag::GREY:
+            format = ds_render::ImageFormat::R;
+            break;
+        case TextureResource::ComponentFlag::GREYALPHA:
+            format = ds_render::ImageFormat::RG;
+            break;
+        case TextureResource::ComponentFlag::RGB:
+            format = ds_render::ImageFormat::RGB;
+            break;
+        case TextureResource::ComponentFlag::RGBA:
+            format = ds_render::ImageFormat::RGBA;
+            break;
+        default:
+            assert("Unsupported image component flag.");
+            format = ds_render::ImageFormat::RGBA;
+            break;
+        }
+
+        // Create texture
+        m_material.AddTexture(
+            samplerName, ds_render::Texture(m_renderer->Create2DTexture(
+                             format, ds_render::RenderDataType::UnsignedByte,
+                             ds_render::InternalImageFormat::RGBA8, true,
+                             textureResource->GetWidthInPixels(),
+                             textureResource->GetHeightInPixels(),
+                             textureResource->GetTextureContents())));
+    }
+
+    // Create shader program
+    // ds_render::ShaderHandle vs =
+    //     m_renderer->CreateShaderObject(ds_render::ShaderType::VertexShader,
+    //                                    strlen(m_vertexShader),
+    //                                    m_vertexShader);
+    // ds_render::ShaderHandle fs = m_renderer->CreateShaderObject(
+    //     ds_render::ShaderType::FragmentShader, strlen(m_fragmentShader),
+    //     m_fragmentShader);
+
+    // std::vector<ds_render::ShaderHandle> shaders;
+    // shaders.push_back(vs);
+    // shaders.push_back(fs);
+    // m_program = m_renderer->CreateProgram(shaders);
+
+
+    // Texture from texture resource
+    // std::unique_ptr<TextureResource> textureResource =
+    //     m_factory.CreateResource<TextureResource>("../assets/ColorGrid.png");
+
+    // ds_render::ImageFormat format;
+    // switch (textureResource->GetComponentFlag())
+    // {
+    // case TextureResource::ComponentFlag::GREY:
+    //     format = ds_render::ImageFormat::R;
+    //     break;
+    // case TextureResource::ComponentFlag::GREYALPHA:
+    //     format = ds_render::ImageFormat::RG;
+    //     break;
+    // case TextureResource::ComponentFlag::RGB:
+    //     format = ds_render::ImageFormat::RGB;
+    //     break;
+    // case TextureResource::ComponentFlag::RGBA:
+    //     format = ds_render::ImageFormat::RGBA;
+    //     break;
+    // default:
+    //     assert("Unsupported image component flag.");
+    //     format = ds_render::ImageFormat::RGBA;
+    //     break;
+    // }
+
+    // // Create texture
+    // m_texture = ds_render::Texture(m_renderer->Create2DTexture(
+    //     format, ds_render::RenderDataType::UnsignedByte,
+    //     ds_render::InternalImageFormat::RGBA8, true,
+    //     textureResource->GetWidthInPixels(),
+    //     textureResource->GetHeightInPixels(),
+    //     textureResource->GetTextureContents()));
+
+    return result;
+}
+
+void Render::Update(float deltaTime)
+{
+    ProcessEvents(&m_messagesReceived);
+
+    m_renderer->ClearBuffers();
+
+    // m_renderer->SetProgram(m_program);
+
+    // m_renderer->BindTextureToSampler(m_program, "tex",
+    //                                  m_texture.GetTextureHandle());
+    m_renderer->SetProgram(m_material.GetProgram());
+
+    // For each texture in material, bind it to shader
+    for (auto samplerTexture : m_material.GetTextures())
+    {
+        m_renderer->BindTextureToSampler(
+            m_material.GetProgram(), samplerTexture.first,
+            samplerTexture.second.GetTextureHandle());
+    }
 
     // Create shader data
     struct Scene
@@ -150,33 +268,8 @@ bool Render::Initialize(const Config &config)
                                  sizeof(ds_math::Matrix4));
 
     // Update shader data
-    m_renderer->UpdateConstantBuffer(m_program, "Scene", cBuffer);
-
-    // Load texture data
-    int width = 0;
-    int height = 0;
-    int components = 0;
-    unsigned char *imageContents =
-        stbi_load("../assets/ColorGrid.png", &width, &height, &components, 0);
-
-    // Create texture
-    m_texture = m_renderer->Create2DTexture(
-        ds_render::ImageFormat::RGBA, ds_render::RenderDataType::UnsignedByte,
-        ds_render::InternalImageFormat::RGBA8, true, width, height,
-        imageContents);
-
-    return result;
-}
-
-void Render::Update(float deltaTime)
-{
-    ProcessEvents(&m_messagesReceived);
-
-    m_renderer->ClearBuffers();
-
-    m_renderer->SetProgram(m_program);
-
-    m_renderer->BindTextureToSampler(m_program, "tex", m_texture);
+    // m_renderer->UpdateConstantBuffer(m_program, "Scene", cBuffer);
+    m_renderer->UpdateConstantBuffer(m_material.GetProgram(), "Scene", cBuffer);
 
     // m_renderer->DrawVertices(m_vb, ds_render::PrimitiveType::Triangles, 0,
     // 3);
@@ -184,6 +277,13 @@ void Render::Update(float deltaTime)
         m_mesh.GetVertexBuffer(), m_mesh.GetIndexBuffer(),
         ds_render::PrimitiveType::Triangles, m_mesh.GetStartingIndex(),
         m_mesh.GetNumIndices());
+
+    // For each texture in material, unbind
+    for (auto samplerTexture : m_material.GetTextures())
+    {
+        m_renderer->UnbindTextureFromSampler(
+            samplerTexture.second.GetTextureHandle());
+    }
 }
 
 void Render::Shutdown()

@@ -55,6 +55,8 @@ enum class PrimitiveType
 /** Colour components of an image */
 enum class ImageFormat
 {
+    R,
+    RG,
     RGB,
     RGBA
 };

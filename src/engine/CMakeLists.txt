@@ -33,9 +33,12 @@ set(ENGINE_INCLUDE_FILES
   system/render/ConstantBuffer.h
   system/render/GLRenderer.h
   system/render/IRenderer.h
+  system/render/Material.h
   system/render/Mesh.h
   system/render/Render.h
+  system/render/Texture.h
   system/render/Uniform.h
+  system/render/UniformBlock.h
   system/render/VertexBufferDescription.h
   system/script/LuaEnvironment.h
   system/script/LuaHelper.h
@@ -68,10 +71,13 @@ set(ENGINE_SRC_FILES
   system/platform/Window.cpp
   system/render/ConstantBuffer.cpp
   system/render/GLRenderer.cpp
+  system/render/Material.cpp
   system/render/Mesh.cpp
   system/render/Render.cpp
+  system/render/Texture.cpp
   system/render/VertexBufferDescription.cpp
   system/render/Uniform.cpp
+  system/render/UniformBlock.cpp
   system/script/LuaEnvironment.cpp
   system/script/LuaHelper.cpp
   system/script/LuaMathAPI.cpp
