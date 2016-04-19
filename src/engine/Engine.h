@@ -5,6 +5,7 @@
 #include "engine/message/Message.h"
 #include "engine/message/MessageBus.h"
 #include "engine/system/ISystem.h"
+#include "engine/system/platform/Platform.h"
 
 namespace ds
 {
@@ -16,6 +17,11 @@ namespace ds
 class Engine
 {
 public:
+    /**
+     * Default constructor for engine
+     */
+    Engine();
+
     /**
      * Start the main loop of the engine.
      *
@@ -107,5 +113,7 @@ private:
     ds_msg::MessageStream m_messagesInternal;
     // Systems managed by the engine
     std::vector<std::shared_ptr<ISystem>> m_systems;
+    // Platform system always exists
+    ISystem *m_platform;
 };
 }

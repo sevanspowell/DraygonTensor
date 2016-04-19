@@ -278,18 +278,21 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                 m_transformComponentManager.GetInstanceForEntity(
                     entityMoveMsg.entity);
 
-            // Get current transform
-            const ds_math::Matrix4 &currentTransform =
-                m_transformComponentManager.GetLocalTransform(transform);
-            // Translate it
-            ds_math::Matrix4 newTransform =
-                currentTransform * ds_math::Matrix4::CreateTranslationMatrix(
-                                       entityMoveMsg.deltaPosition);
+            if (transform.IsValid())
+            {
+                // Get current transform
+                const ds_math::Matrix4 &currentTransform =
+                    m_transformComponentManager.GetLocalTransform(transform);
+                // Translate it
+                ds_math::Matrix4 newTransform =
+                    currentTransform *
+                    ds_math::Matrix4::CreateTranslationMatrix(
+                        entityMoveMsg.deltaPosition);
 
-            // Set transform of entity
-            m_transformComponentManager.SetLocalTransform(transform,
-                                                          newTransform);
-
+                // Set transform of entity
+                m_transformComponentManager.SetLocalTransform(transform,
+                                                              newTransform);
+            }
             break;
         }
         default:

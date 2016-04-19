@@ -3,40 +3,11 @@
 #include "engine/message/MessageFactory.h"
 #include "engine/system/input/Input.h"
 
+#include <SDL2/SDL.h>
+
 namespace ds_lua
 {
-static int l_HelloWorld(lua_State *L)
-{
-    // Get number of arguments provided
-    int n = lua_gettop(L);
-    int expected = 0;
-    if (n != expected)
-    {
-        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
-    }
-
-    // Push input system pointer onto stack
-    lua_getglobal(L, "__Input");
-
-    // If first item on stack isn't user data (our input system)
-    if (!lua_isuserdata(L, -1))
-    {
-        // Error
-        luaL_argerror(L, 1, "lightuserdata");
-    }
-    else
-    {
-        ds::Input *inputPtr = (ds::Input *)lua_touserdata(L, -1);
-        assert(inputPtr != NULL);
-
-        // inputPtr->HelloWorld();
-    }
-
-    // Return input system pointer
-    assert(lua_gettop(L) == 1);
-
-    return 1;
-}
+extern ds::ScriptBindingSet LoadInputScriptBindings();
 }
 
 namespace ds
@@ -124,10 +95,27 @@ ds_msg::MessageStream Input::CollectMessages()
 
 ScriptBindingSet Input::GetScriptBindings() const
 {
-    ScriptBindingSet scriptBindings;
-    scriptBindings.AddFunction("hello_world", ds_lua::l_HelloWorld);
+    return ds_lua::LoadInputScriptBindings();
+}
 
-    return scriptBindings;
+bool Input::IsKeyPressed(const std::string &keyName) const
+{
+    bool isPressed = false;
+
+    ds_platform::Keyboard::Key key;
+    // Get key code for name
+    if (GetKeyCodeForKeyName(keyName, &key))
+    {
+        // Get scan code for key code
+        SDL_Scancode scanCode = SDL_GetScancodeFromKey((SDL_Keycode)key);
+
+        // Lookup in array
+        const unsigned char *keys = SDL_GetKeyboardState(NULL);
+
+        isPressed = keys[scanCode];
+    }
+
+    return isPressed;
 }
 
 bool Input::GetKeyCodeForKeyName(std::string keyName,

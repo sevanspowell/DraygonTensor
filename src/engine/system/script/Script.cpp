@@ -257,6 +257,42 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
             m_lua.ExecuteString(
                 StringIntern::Instance().GetString(scriptMsg.stringId).c_str());
             break;
+        case ds_msg::MessageType::MoveForward:
+            ds_msg::MoveForward moveForwardMsg;
+            (*messages) >> moveForwardMsg;
+
+            // Insert header into messages to be sent to script
+            m_toScriptMessages << header;
+            // Insert payload into messages to be sent script
+            m_toScriptMessages << moveForwardMsg;
+            break;
+        case ds_msg::MessageType::MoveBackward:
+            ds_msg::MoveBackward moveBackwardMsg;
+            (*messages) >> moveBackwardMsg;
+
+            // Insert header into messages to be sent to script
+            m_toScriptMessages << header;
+            // Insert payload into messages to be sent script
+            m_toScriptMessages << moveBackwardMsg;
+            break;
+        case ds_msg::MessageType::StrafeLeft:
+            ds_msg::StrafeLeft strafeLeftMsg;
+            (*messages) >> strafeLeftMsg;
+
+            // Insert header into messages to be sent to script
+            m_toScriptMessages << header;
+            // Insert payload into messages to be sent script
+            m_toScriptMessages << strafeLeftMsg;
+            break;
+        case ds_msg::MessageType::StrafeRight:
+            ds_msg::StrafeRight strafeRightMsg;
+            (*messages) >> strafeRightMsg;
+
+            // Insert header into messages to be sent to script
+            m_toScriptMessages << header;
+            // Insert payload into messages to be sent script
+            m_toScriptMessages << strafeRightMsg;
+            break;
         default:
             messages->Extract(header.size);
             break;
@@ -267,6 +303,7 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
 void Script::RegisterScriptBindingSet(const char *systemName,
                                       ISystem *systemPtr)
 {
+    std::cout << "HERE " << systemName << " " << (void *)systemPtr << std::endl;
     if (systemPtr != nullptr)
     {
         ScriptBindingSet scriptBindings = systemPtr->GetScriptBindings();
@@ -285,6 +322,7 @@ void Script::RegisterScriptBindingSet(const char *systemName,
             const std::pair<const char *, SCRIPT_FN> &methodPair =
                 scriptBindings.GetMethodPair(i);
 
+            std::cout << methodPair.first << std::endl;
             methods[i].name = methodPair.first;
             methods[i].func = methodPair.second;
         }
@@ -298,6 +336,7 @@ void Script::RegisterScriptBindingSet(const char *systemName,
             const std::pair<const char *, SCRIPT_FN> &functionPair =
                 scriptBindings.GetFunctionPair(i);
 
+            std::cout << functionPair.first << std::endl;
             functions[i].name = functionPair.first;
             functions[i].func = functionPair.second;
         }

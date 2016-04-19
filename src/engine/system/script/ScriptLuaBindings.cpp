@@ -147,6 +147,42 @@ static int l_GetNextMessage(lua_State *L)
                 lua_setfield(L, -2, "script"); // table.script = script message
 
                 break;
+            case ds_msg::MessageType::MoveForward:
+                ds_msg::MoveForward moveForwardMsg;
+                msg >> moveForwardMsg;
+
+                // Create payload table
+                lua_pushliteral(L, "move_forward");
+                lua_setfield(L, -2, "type"); // table.type = move_forward
+
+                break;
+            case ds_msg::MessageType::MoveBackward:
+                ds_msg::MoveBackward moveBackwardMsg;
+                msg >> moveBackwardMsg;
+
+                // Create payload table
+                lua_pushliteral(L, "move_backward");
+                lua_setfield(L, -2, "type"); // table.type = move_backward
+
+                break;
+            case ds_msg::MessageType::StrafeLeft:
+                ds_msg::StrafeLeft strafeLeftMsg;
+                msg >> strafeLeftMsg;
+
+                // Create payload table
+                lua_pushliteral(L, "strafe_left");
+                lua_setfield(L, -2, "type"); // table.type = strafe_left
+
+                break;
+            case ds_msg::MessageType::StrafeRight:
+                ds_msg::StrafeRight strafeRightMsg;
+                msg >> strafeRightMsg;
+
+                // Create payload table
+                lua_pushliteral(L, "strafe_right");
+                lua_setfield(L, -2, "type"); // table.type = strafe_right
+
+                break;
             default:
                 assert(false && "l_GetNextMessage should handle all received "
                                 "message types!");

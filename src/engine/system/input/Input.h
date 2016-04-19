@@ -83,6 +83,14 @@ public:
      */
     virtual ScriptBindingSet GetScriptBindings() const;
 
+    /**
+     * Return true if the given key name is pressed.
+     *
+     * @param   keyName  const std::string &, name of key.
+     * @return           bool, TRUE if key is pressed, FALSE otherwise.
+     */
+    bool IsKeyPressed(const std::string &keyName) const;
+
 private:
     /**
      * Pre-populates the key name to key code map, mapping key name to a key

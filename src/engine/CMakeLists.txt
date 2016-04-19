@@ -81,6 +81,7 @@ set(ENGINE_SRC_FILES
   system/physics/MotionStateExample.cpp
   system/input/Input.cpp
   system/input/InputContext.cpp
+  system/input/InputLuaBindings.cpp
   system/platform/Keyboard.cpp
   system/platform/Platform.cpp
   system/platform/Video.cpp

@@ -17,15 +17,13 @@ int main(int argc, char **argv)
     // Create other systems
     ds::ISystem *inputSystem = new ds::Input(); 
     ds::ISystem *consoleSystem = new ds::Console(); 
-    ds::ISystem *platformSystem = new ds::Platform(); 
     ds::ISystem *renderSystem = new ds::Render();
     // Register script bindings of other systems
-    scriptSystem->RegisterScriptBindings("Platform", platformSystem);
+    scriptSystem->RegisterScriptBindings("Input", inputSystem);
 
     // Add all systems to engine
     engine.AddSystem(std::unique_ptr<ds::ISystem>(inputSystem));
     engine.AddSystem(std::unique_ptr<ds::ISystem>(consoleSystem));
-    engine.AddSystem(std::unique_ptr<ds::ISystem>(platformSystem));
     engine.AddSystem(std::unique_ptr<ds::ISystem>(renderSystem));
     engine.AddSystem(std::unique_ptr<ds::ISystem>(scriptSystem));
 

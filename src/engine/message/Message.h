@@ -46,6 +46,14 @@ enum class MessageType
     CreateComponent,
     // Move an entity
     MoveEntity,
+    // Move forward
+    MoveForward,
+    // Move backward
+    MoveBackward,
+    // Strafe left
+    StrafeLeft,
+    // Strafe Right
+    StrafeRight
 };
 
 /**
@@ -116,7 +124,23 @@ struct CreateComponent
 
 struct MoveEntity
 {
-    ds::Entity entity; // Entity to move
+    ds::Entity entity;              // Entity to move
     ds_math::Vector3 deltaPosition; // Amount and direction to move
+};
+
+struct MoveForward
+{
+};
+
+struct MoveBackward
+{
+};
+
+struct StrafeLeft
+{
+};
+
+struct StrafeRight
+{
 };
 }

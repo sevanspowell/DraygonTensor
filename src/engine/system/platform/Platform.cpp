@@ -80,6 +80,11 @@ ds_msg::MessageStream Platform::CollectMessages()
     return tmp;
 }
 
+uint32_t Platform::GetTicks() const
+{
+    return SDL_GetTicks();
+}
+
 void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
 {
     ds_msg::MessageHeader header;
