@@ -1,5 +1,3 @@
-#pragma once
-
 #include "engine/system/physics/PhysicsHandler.h"
 #include "engine/resource/MeshResource.h"
 

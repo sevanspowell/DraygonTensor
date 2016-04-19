@@ -1,9 +1,5 @@
-#pragma once
-
 #include <fstream>
 #include <sstream>
-
-#include <stb_image.h>
 
 #include "engine/resource/MaterialResource.h"
 #include "engine/resource/MeshResource.h"
