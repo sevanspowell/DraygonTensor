@@ -23,4 +23,9 @@ std::vector<std::string> TokenizeString(char separator,
 
     return tokens;
 }
+
+std::string GetParentDirectory(const std::string &filePath)
+{
+    return (filePath.substr(0, filePath.find_last_of("/\\") + 1)); 
+}
 }

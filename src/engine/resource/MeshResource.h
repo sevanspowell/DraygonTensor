@@ -1,7 +1,8 @@
 #include <memory>
+                
 #include <vector>
-#include <assimp/Importer.hpp>     
-#include <assimp/scene.h>   
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
 #include "math/Vector3.h"
@@ -16,7 +17,6 @@ namespace ds
 class MeshResource : public IResource
 {
 public:
-
     /**
      * Create a mesh resource from file.
      *
@@ -27,237 +27,252 @@ public:
      */
     static std::unique_ptr<IResource> CreateFromFile(std::string filePath);
 
-	/**
-	 * Constructor.
-	 *
-	 * @param	numMeshes	Number of meshes in the imported model.
-	 */
+    /**
+     * Constructor.
+     *
+     * @param	numMeshes	Number of meshes in the imported model.
+     */
 
-	MeshResource(unsigned int numMeshes);
+    MeshResource(unsigned int numMeshes);
 
-	/**
-	 * Destructor.
-	 */
+    /**
+     * Destructor.
+     */
 
-	~MeshResource();
+    ~MeshResource();
 
-	/**
-	 * Gets number of verts in the first mesh.
-	 *
-	 * @return	The vertical count.
-	 */
+    /**
+     * Get the file path to the resource.
+     *
+     * @return  const std::string &, resource file path.
+     */
+    virtual const std::string &GetResourceFilePath() const;
 
-	unsigned int GetVertCount() const;
+    /**
+     * Set the file path to the resource.
+     *
+     * @param  filePath  const std::string &, file path of this resource.
+     */
+    virtual void SetResourceFilePath(const std::string &filePath);
 
-	/**
-	 * Gets count of tex coordinates for the first mesh.
-	 *
-	 * @return	The tex coordinate count.
-	 */
+    /**
+     * Gets number of verts in the first mesh.
+     *
+     * @return	The vertical count.
+     */
 
-	unsigned int GetTexCoordCount() const;
+    unsigned int GetVertCount() const;
 
-	/**
-	 * Gets normals count for the first mesh.
-	 *
-	 * @return	The normals count.
-	 */
+    /**
+     * Gets count of tex coordinates for the first mesh.
+     *
+     * @return	The tex coordinate count.
+     */
 
-	unsigned int GetNormalsCount() const;
+    unsigned int GetTexCoordCount() const;
 
-	/**
-	 * Gets indices count for first mesh.
-	 *
-	 * @return	The indices count.
-	 */
+    /**
+     * Gets normals count for the first mesh.
+     *
+     * @return	The normals count.
+     */
 
-	unsigned int GetIndicesCount() const;
+    unsigned int GetNormalsCount() const;
 
-	/**
-	 * Gets the vertice count for the specified
-	 * mesh.
-	 *
-	 * @param	meshNumber	The mesh number.
-	 * @return	The verts count for specified mesh.
-	 */
+    /**
+     * Gets indices count for first mesh.
+     *
+     * @return	The indices count.
+     */
 
-	unsigned int GetVertCount(unsigned int meshNumber) const;
+    unsigned int GetIndicesCount() const;
 
-	/**
-	 * Gets tex coordinate count for the specified
-	 * mesh.
-	 *
-	 * @param	meshNumber	The mesh number.
-	 * @return	The tex coordinate count for specified mesh.
-	 */
+    /**
+     * Gets the vertice count for the specified
+     * mesh.
+     *
+     * @param	meshNumber	The mesh number.
+     * @return	The verts count for specified mesh.
+     */
 
-	unsigned int GetTexCoordCount(unsigned int meshNumber) const;
+    unsigned int GetVertCount(unsigned int meshNumber) const;
 
-	/**
-	 * Gets normals count for the specified mesh.
-	 *
-	 * @param	meshNumber	The mesh number.
-	 * @return	The normals count for specified mesh.
-	 */
+    /**
+     * Gets tex coordinate count for the specified
+     * mesh.
+     *
+     * @param	meshNumber	The mesh number.
+     * @return	The tex coordinate count for specified mesh.
+     */
 
-	unsigned int GetNormalsCount(unsigned int meshNumber) const;
+    unsigned int GetTexCoordCount(unsigned int meshNumber) const;
 
-	/**
-	 * Gets indices count for the specified mesh.
-	 *
-	 * @param	meshNumber	The mesh number.
-	 * @return	The indices count for the mesh number.
-	 */
+    /**
+     * Gets normals count for the specified mesh.
+     *
+     * @param	meshNumber	The mesh number.
+     * @return	The normals count for specified mesh.
+     */
 
-	unsigned int GetIndicesCount(unsigned int meshNumber) const;
+    unsigned int GetNormalsCount(unsigned int meshNumber) const;
 
-	/**
-	 * Gets mesh count.
-	 *
-	 * @return	The mesh count.
-	 */
+    /**
+     * Gets indices count for the specified mesh.
+     *
+     * @param	meshNumber	The mesh number.
+     * @return	The indices count for the mesh number.
+     */
 
-	unsigned int GetMeshCount() const;
+    unsigned int GetIndicesCount(unsigned int meshNumber) const;
 
-	/**
-	 * Query if this object has single mesh.
-	 *
-	 * @return	true if single mesh, false if not.
-	 */
+    /**
+     * Gets mesh count.
+     *
+     * @return	The mesh count.
+     */
 
-	bool HasSingleMesh() const;
+    unsigned int GetMeshCount() const;
 
-	/**
-	 * Query if this object has multi mesh.
-	 *
-	 * @return	true if multi mesh, false if not.
-	 */
+    /**
+     * Query if this object has single mesh.
+     *
+     * @return	true if single mesh, false if not.
+     */
 
-	bool HasMultiMesh() const;
+    bool HasSingleMesh() const;
 
-	/**
-	 * Gets the vertices for first mesh.
-	 *
-	 * @return	The vertices for the first mesh.
-	 */
+    /**
+     * Query if this object has multi mesh.
+     *
+     * @return	true if multi mesh, false if not.
+     */
 
-	std::vector<ds_math::Vector3> GetVerts() const;
+    bool HasMultiMesh() const;
 
-	/**
-	 * Gets tex coordinates for the first mesh.
-	 *
-	 * @return	The tex coordinates for first mesh.
-	 */
+    /**
+     * Gets the vertices for first mesh.
+     *
+     * @return	The vertices for the first mesh.
+     */
 
-	std::vector<ds_math::Vector3> GetTexCoords() const;
+    std::vector<ds_math::Vector3> GetVerts() const;
 
-	/**
-	 * Gets the normals for the first mesh.
-	 *
-	 * @return	The normals for the first mesh.
-	 */
+    /**
+     * Gets tex coordinates for the first mesh.
+     *
+     * @return	The tex coordinates for first mesh.
+     */
 
-	std::vector<ds_math::Vector3> GetNormals() const;
+    std::vector<ds_math::Vector3> GetTexCoords() const;
 
-	/**
-	 * Gets the indices for the first mesh.
-	 *
-	 * @return	The indices.
-	 */
+    /**
+     * Gets the normals for the first mesh.
+     *
+     * @return	The normals for the first mesh.
+     */
 
-	std::vector<unsigned int> GetIndices() const;
+    std::vector<ds_math::Vector3> GetNormals() const;
 
-	/**
-	 * Gets the vertices for specified mesh.
-	 *
-	 * @param	meshNumber	The mesh number.
-	 * @return	The vertices.
-	 */
+    /**
+     * Gets the indices for the first mesh.
+     *
+     * @return	The indices.
+     */
 
-	std::vector<ds_math::Vector3> GetVerts(unsigned int meshNumber) const;
+    std::vector<unsigned int> GetIndices() const;
 
-	/**
-	 * Gets tex coordinates for specified mesh.
-	 * 
-	 * @param	meshNumber	The mesh number.
-	 * @return	The tex coordinates.
-	 */
+    /**
+     * Gets the vertices for specified mesh.
+     *
+     * @param	meshNumber	The mesh number.
+     * @return	The vertices.
+     */
 
-	std::vector<ds_math::Vector3> GetTexCoords(unsigned int meshNumber) const;
+    std::vector<ds_math::Vector3> GetVerts(unsigned int meshNumber) const;
 
-	/**
-	 * Gets the normals for specified mesh.
-	 * 
-	 * @param	meshNumber	The mesh number.
-	 * @return	The normals.
-	 */
+    /**
+     * Gets tex coordinates for specified mesh.
+     *
+     * @param	meshNumber	The mesh number.
+     * @return	The tex coordinates.
+     */
 
-	std::vector<ds_math::Vector3> GetNormals(unsigned int meshNumber) const;
+    std::vector<ds_math::Vector3> GetTexCoords(unsigned int meshNumber) const;
 
-	/**
-	 * Gets the indices for specified mesh.
-	 * 
-	 * @param	meshNumber	The mesh number.
-	 * @return	The indices.
-	 */
+    /**
+     * Gets the normals for specified mesh.
+     *
+     * @param	meshNumber	The mesh number.
+     * @return	The normals.
+     */
 
-	std::vector<unsigned int> GetIndices(unsigned int meshNumber) const;
+    std::vector<ds_math::Vector3> GetNormals(unsigned int meshNumber) const;
 
-	/**
-	 * Represents a single mesh.
-	 */
+    /**
+     * Gets the indices for specified mesh.
+     *
+     * @param	meshNumber	The mesh number.
+     * @return	The indices.
+     */
 
-	struct SingularMesh
-	{
-		/** The vertices. */
-		std::vector<ds_math::Vector3> m_vertices;
-		/** The tex coordinates. */
-		std::vector<ds_math::Vector3> m_texCoords;
-		/** The normals. */
-		std::vector<ds_math::Vector3> m_normals;
-		/** The indices. */
-		std::vector<unsigned int> m_indices;
-	};
+    std::vector<unsigned int> GetIndices(unsigned int meshNumber) const;
+
+    /**
+     * Represents a single mesh.
+     */
+
+    struct SingularMesh
+    {
+        /** The vertices. */
+        std::vector<ds_math::Vector3> m_vertices;
+        /** The tex coordinates. */
+        std::vector<ds_math::Vector3> m_texCoords;
+        /** The normals. */
+        std::vector<ds_math::Vector3> m_normals;
+        /** The indices. */
+        std::vector<unsigned int> m_indices;
+    };
 
 private:
+    /** Collection of meshes. */
+    std::vector<struct SingularMesh> m_meshCollection;
+    /** The path to this resource */
+    std::string m_filePath;
 
-	/** Collection of meshes. */
-	std::vector<struct SingularMesh> m_meshCollection;
+    /**
+     * Stores mesh positions.
+     *
+     * @param	meshNumber		  	The mesh number.
+     * @param [in,out]	singleMesh	If non-null, the single mesh.
+     */
 
-	/**
-	 * Stores mesh positions.
-	 *
-	 * @param	meshNumber		  	The mesh number.
-	 * @param [in,out]	singleMesh	If non-null, the single mesh.
-	 */
+    void StoreMeshPositions(unsigned int meshNumber, aiMesh *singleMesh);
 
-	void StoreMeshPositions(unsigned int meshNumber, aiMesh * singleMesh);
+    /**
+     * Stores texture coordinates.
+     *
+     * @param	meshNumber		  	The mesh number.
+     * @param [in,out]	singleMesh	If non-null, the single mesh.
+     */
 
-	/**
-	 * Stores texture coordinates.
-	 *
-	 * @param	meshNumber		  	The mesh number.
-	 * @param [in,out]	singleMesh	If non-null, the single mesh.
-	 */
+    void StoreTextureCoords(unsigned int meshNumber, aiMesh *singleMesh);
 
-	void StoreTextureCoords(unsigned int meshNumber, aiMesh * singleMesh);
+    /**
+     * Stores normal coordinates.
+     *
+     * @param	meshNumber		  	The mesh number.
+     * @param [in,out]	singleMesh	If non-null, the single mesh.
+     */
 
-	/**
-	 * Stores normal coordinates.
-	 *
-	 * @param	meshNumber		  	The mesh number.
-	 * @param [in,out]	singleMesh	If non-null, the single mesh.
-	 */
+    void StoreNormalCoords(unsigned int meshNumber, aiMesh *singleMesh);
 
-	void StoreNormalCoords(unsigned int meshNumber, aiMesh * singleMesh);
+    /**
+     * Stores the faces.
+     *
+     * @param	meshNumber		  	The mesh number.
+     * @param [in,out]	singleMesh	If non-null, the single mesh.
+     */
 
-	/**
-	 * Stores the faces.
-	 *
-	 * @param	meshNumber		  	The mesh number.
-	 * @param [in,out]	singleMesh	If non-null, the single mesh.
-	 */
-
-	void StoreFaces(unsigned int meshNumber, aiMesh * singleMesh);
+    void StoreFaces(unsigned int meshNumber, aiMesh *singleMesh);
 };
 }

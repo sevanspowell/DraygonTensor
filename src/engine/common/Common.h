@@ -18,4 +18,13 @@ namespace ds_com
  */
 std::vector<std::string> TokenizeString(char separator,
                                         const std::string &string);
+
+/**
+ * Get the parent directory of a given file.
+ *
+ * @param   filePath  const std::string &, path to file to get parent directory
+ * of.
+ * @return            std::string, parent directory of file path.
+ */
+std::string GetParentDirectory(const std::string &filePath);
 }

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <memory>
 #include <algorithm>
 #include <string>
@@ -31,11 +33,25 @@ public:
 
     TextureResource();
 
-	/**
-	 * Destructor.
-	 */
+    /**
+     * Destructor.
+     */
 
-	~TextureResource();
+    ~TextureResource();
+
+    /**
+     * Get the file path to the resource.
+     *
+     * @return  const std::string &, resource file path.
+     */
+    virtual const std::string &GetResourceFilePath() const;
+
+    /**
+     * Set the file path to the resource.
+     *
+     * @param  filePath  const std::string &, file path of this resource.
+     */
+    virtual void SetResourceFilePath(const std::string &filePath);
 
     /**
      * Gets width in pixels.
@@ -107,10 +123,9 @@ public:
      * @return	null if it fails, else the texture contents.
      */
 
-    unsigned char * GetTextureContents();
+    unsigned char *GetTextureContents();
 
-    
-    
+
     /** Values that represent image formats. */
     enum ImageFormat
     {
@@ -119,7 +134,7 @@ public:
         PNG = 3,
         JPEG = 4
     };
-    
+
     /** Values that represent component flags. */
     enum ComponentFlag
     {
@@ -128,20 +143,21 @@ public:
         RGB = 3,
         RGBA = 4
     };
-    
+
 
 private:
-
-	/** Information describing the texture. */
-	unsigned char * m_textureData = nullptr;
+    /** Information describing the texture. */
+    unsigned char *m_textureData = nullptr;
     /** The width pixels. */
     unsigned int m_widthPixels = 0;
     /** The height pixels. */
     unsigned int m_heightPixels = 0;
-	/** Information describing the channel. */
-	ComponentFlag m_channelInfo;
-	/** The image format. */
-	ImageFormat m_imgFormat;
+    /** Information describing the channel. */
+    ComponentFlag m_channelInfo;
+    /** The image format. */
+    ImageFormat m_imgFormat;
+    /** The path to this resource */
+    std::string m_filePath;
 
     /**
      * Extracts the extension described by path.
@@ -187,7 +203,7 @@ private:
 
     /**
      * Sets height in pixels.
-     * 
+     *
      * @param	height	The height in pixels.
      */
 
@@ -195,11 +211,10 @@ private:
 
     /**
      * Sets texture contents.
-     * 
+     *
      * @param [in,out]	textCont	If non-null, the text container.
      */
 
-    void SetTextureContents(unsigned char * textCont);
-    
-    };
+    void SetTextureContents(unsigned char *textCont);
+};
 }
