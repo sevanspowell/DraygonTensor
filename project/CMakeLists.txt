@@ -1,4 +1,5 @@
 subdirs(
+    physics
     render_system
     script
     script_console
