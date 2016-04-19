@@ -3,6 +3,55 @@
 
 namespace ds_lua
 {
+int l_SpawnPrefab(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    const char *prefabFile = luaL_checklstring(L, 1, NULL);
+
+    // Push script system pointer to stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our script system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        // Get vector position from argument
+        ds_math::Vector3 *v = NULL;
+
+        v = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
+
+        if (v != NULL)
+        {
+            ds::Script *p = (ds::Script *)lua_touserdata(L, -1);
+
+            assert(p != NULL &&
+                   "spawnPrefab: Tried to deference userdata pointer which was null");
+
+            p->SpawnPrefab(prefabFile, *v);
+        }
+    }
+
+    // Pop arguments
+    lua_pop(L, 2);
+    // Pop script system pointer
+    lua_pop(L, 1);
+
+    // Ensure stack is clean
+    assert(lua_gettop(L) == 0);
+
+    return 0;
+}
+
 int l_IsNextMessage(lua_State *L)
 {
     // Get number of arguments provided
@@ -107,5 +156,15 @@ int l_GetNextMessage(lua_State *L)
     assert(lua_gettop(L) == 1);
 
     return 1;
+}
+
+ds::ScriptBindingSet LoadScriptBindings()
+{
+    ds::ScriptBindingSet scriptBindings;
+    scriptBindings.AddFunction("is_next_message", l_IsNextMessage);
+    scriptBindings.AddFunction("get_next_message", l_GetNextMessage);
+    scriptBindings.AddFunction("spawn_prefab", l_SpawnPrefab);
+
+    return scriptBindings;
 }
 }

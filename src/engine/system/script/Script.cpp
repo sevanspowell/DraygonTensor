@@ -9,8 +9,7 @@ namespace ds_lua
 {
 extern void LoadMathAPI(LuaEnvironment &luaEnv);
 
-extern int l_IsNextMessage(lua_State *L);
-extern int l_GetNextMessage(lua_State *L);
+extern ds::ScriptBindingSet LoadScriptBindings();
 }
 
 namespace ds
@@ -123,11 +122,7 @@ ds_msg::MessageStream Script::CollectMessages()
 
 ScriptBindingSet Script::GetScriptBindings() const
 {
-    ScriptBindingSet scriptBindings;
-    scriptBindings.AddFunction("is_next_message", ds_lua::l_IsNextMessage);
-    scriptBindings.AddFunction("get_next_message", ds_lua::l_GetNextMessage);
-
-    return scriptBindings;
+    return ds_lua::LoadScriptBindings();
 }
 
 void Script::RegisterScriptBindings(const char *systemName, ISystem *systemPtr)
