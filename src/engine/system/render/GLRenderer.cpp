@@ -388,7 +388,7 @@ void GLRenderer::GetConstantBufferDescription(
                 constantBufferDescription->GetNumberOfMembers();
 
             // Get names for each uniform block member
-            GLchar **names = (GLchar **)malloc(numMembers + sizeof(GLchar *));
+            GLchar **names = (GLchar **)malloc(numMembers * sizeof(GLchar *));
             // Create our own data store that matches the size and alignment of
             // data that OpenGL expects
             ConstantBufferDescription constantBufferDescriptionTemp(blockSize);

@@ -113,18 +113,19 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                         shaders.push_back(m_renderer->CreateShaderObject(
                             shaderType, shaderSource.size(),
                             shaderSource.c_str()));
-                        std::cout << shaderSource << std::endl;
                     }
                     // Compile shaders into shader program
                     ds_render::ProgramHandle fakeShader =
                         m_renderer->CreateProgram(shaders);
 
-                    // Get shader data descriptions
+                    // Set shader data descriptions
+                    m_sceneBufferDescrip = ds_render::ConstantBufferDescription(2 * sizeof(ds_math::Matrix4));
                     m_sceneBufferDescrip.AddMember("Scene.viewMatrix");
                     m_sceneBufferDescrip.AddMember("Scene.projectionMatrix");
                     m_renderer->GetConstantBufferDescription(
                         fakeShader, "Scene", &m_sceneBufferDescrip);
 
+                    m_objectBufferDescrip = ds_render::ConstantBufferDescription(1 * sizeof(ds_math::Matrix4));
                     m_objectBufferDescrip.AddMember("Object.modelMatrix");
                     m_renderer->GetConstantBufferDescription(
                         fakeShader, "Object", &m_objectBufferDescrip);
@@ -173,9 +174,6 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
             {
                 std::string componentType = StringIntern::Instance().GetString(
                     createComponentMsg.componentType);
-                std::cout << componentType << std::endl;
-                std::cout << StringIntern::Instance().GetString(
-                    createComponentMsg.componentData);
                 if (componentType == "renderComponent")
                 {
                     std::string meshName;
