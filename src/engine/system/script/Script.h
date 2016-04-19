@@ -93,12 +93,22 @@ public:
     /**
      * Spawn a prefab in the world.
      *
-     * @param  prefabFile  std::string, path to prefab, relative to the assets
+     * @param   prefabFile  std::string, path to prefab, relative to the assets
      * directory.
-     * @param  position    const ds_math::Vector3, spawn prefab at this position
-     * with default orientation and scale.
+     * @param   position    const ds_math::Vector3, spawn prefab at this
+     * position with default orientation and scale.
+     * @return              Entity, entity id of prefab spawned.
      */
-    void SpawnPrefab(std::string prefabFile, const ds_math::Vector3 &position);
+    Entity SpawnPrefab(std::string prefabFile,
+                       const ds_math::Vector3 &position);
+
+    /**
+     * Send a move entity message to all systems.
+     *
+     * @param  entity         Entity, entity to move.
+     * @param  deltaPosition  const ds_math::Vector3 &, amount and direction to move entity.
+     */
+    void MoveEntity(Entity entity, const ds_math::Vector3 &deltaPosition);
 
     /**
      * Is a new message available for the external script?
@@ -146,11 +156,11 @@ private:
      * component.
      * @returen              ds_msg::CreateComponent, create component message;
      */
-    ds_msg::CreateComponent BuildTransformComponentCreateMessage(
-        Entity entity,
-        const ds_math::Vector3 &position,
-        const ds_math::Quaternion &orientation,
-        const ds_math::Vector3 &scale);
+    ds_msg::CreateComponent
+    BuildTransformComponentCreateMessage(Entity entity,
+                                         const ds_math::Vector3 &position,
+                                         const ds_math::Quaternion &orientation,
+                                         const ds_math::Vector3 &scale);
 
     // Messaging
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;

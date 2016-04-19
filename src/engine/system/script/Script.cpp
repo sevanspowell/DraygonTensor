@@ -131,8 +131,8 @@ void Script::RegisterScriptBindings(const char *systemName, ISystem *systemPtr)
         std::pair<const char *, ISystem *>(systemName, systemPtr));
 }
 
-void Script::SpawnPrefab(std::string prefabFile,
-                         const ds_math::Vector3 &position)
+Entity Script::SpawnPrefab(std::string prefabFile,
+                           const ds_math::Vector3 &position)
 {
     std::cout << "Prefab spawned: " << prefabFile << std::endl;
 
@@ -185,7 +185,22 @@ void Script::SpawnPrefab(std::string prefabFile,
     {
         std::cerr << "Script::SpawnPrefab: Failed to open prefab file: "
                   << fullPrefabFilePath.str() << std::endl;
+        // Invalid entity handle
+        m_entityManager.Destroy(entity);
     }
+
+    return entity;
+}
+
+void Script::MoveEntity(Entity entity, const ds_math::Vector3 &deltaPosition)
+{
+    // Send an entity move message
+    ds_msg::MoveEntity entityMoveMsg;
+    entityMoveMsg.entity = entity;
+    entityMoveMsg.deltaPosition = deltaPosition;
+
+    ds_msg::AppendMessage(&m_messagesGenerated, ds_msg::MessageType::MoveEntity,
+                          sizeof(ds_msg::MoveEntity), &entityMoveMsg);
 }
 
 bool Script::IsNextScriptMessage() const

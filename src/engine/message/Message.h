@@ -5,6 +5,7 @@
 #include "engine/common/StringIntern.h"
 #include "engine/system/platform/GraphicsContext.h"
 #include "engine/system/platform/Keyboard.h"
+#include "math/Vector3.h"
 
 namespace ds_msg
 {
@@ -42,7 +43,9 @@ enum class MessageType
     // On graphics context creation
     GraphicsContextCreated,
     // On component creation
-    CreateComponent
+    CreateComponent,
+    // Move an entity
+    MoveEntity,
 };
 
 /**
@@ -109,5 +112,11 @@ struct CreateComponent
     ds::StringIntern::StringId
         componentType; // Type of component to create  as a string
     ds::StringIntern::StringId componentData; // Component config string.
+};
+
+struct MoveEntity
+{
+    ds::Entity entity; // Entity to move
+    ds_math::Vector3 deltaPosition; // Amount and direction to move
 };
 }

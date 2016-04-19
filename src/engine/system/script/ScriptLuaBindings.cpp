@@ -1,9 +1,10 @@
+#include "engine/entity/Entity.h"
 #include "engine/common/StringIntern.h"
 #include "engine/system/script/Script.h"
 
 namespace ds_lua
 {
-int l_SpawnPrefab(lua_State *L)
+static int l_SpawnPrefab(lua_State *L)
 {
     // Get number of arguments provided
     int n = lua_gettop(L);
@@ -34,25 +35,27 @@ int l_SpawnPrefab(lua_State *L)
         {
             ds::Script *p = (ds::Script *)lua_touserdata(L, -1);
 
-            assert(p != NULL &&
-                   "spawnPrefab: Tried to deference userdata pointer which was null");
+            assert(p != NULL && "spawnPrefab: Tried to deference userdata "
+                                "pointer which was null");
 
-            p->SpawnPrefab(prefabFile, *v);
+            // Pop script system pointer
+            lua_pop(L, 1);
+
+            // Allocate space for entity handle
+            ds::Entity *entity =
+                (ds::Entity *)lua_newuserdata(L, sizeof(ds::Entity));
+
+            *entity = p->SpawnPrefab(prefabFile, *v);
         }
     }
 
-    // Pop arguments
-    lua_pop(L, 2);
-    // Pop script system pointer
-    lua_pop(L, 1);
-
     // Ensure stack is clean
-    assert(lua_gettop(L) == 0);
+    assert(lua_gettop(L) == 3);
 
-    return 0;
+    return 1;
 }
 
-int l_IsNextMessage(lua_State *L)
+static int l_IsNextMessage(lua_State *L)
 {
     // Get number of arguments provided
     int n = lua_gettop(L);
@@ -88,7 +91,7 @@ int l_IsNextMessage(lua_State *L)
     return 1;
 }
 
-int l_GetNextMessage(lua_State *L)
+static int l_GetNextMessage(lua_State *L)
 {
     // Get number of arguments provided
     int n = lua_gettop(L);
@@ -158,12 +161,58 @@ int l_GetNextMessage(lua_State *L)
     return 1;
 }
 
+static int l_MoveEntity(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expected = 2;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push script system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our input system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+        ds_math::Vector3 *delta = NULL;
+
+        entity = (ds::Entity *)lua_touserdata(L, 1);
+        delta = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
+
+        if (entity != NULL && delta != NULL)
+        {
+            scriptPtr->MoveEntity(*entity, *delta);
+        }
+    }
+
+    // Entity and Vector3 arguments
+    assert(lua_gettop(L) == 2);
+
+    return 0;
+}
+
 ds::ScriptBindingSet LoadScriptBindings()
 {
     ds::ScriptBindingSet scriptBindings;
     scriptBindings.AddFunction("is_next_message", l_IsNextMessage);
     scriptBindings.AddFunction("get_next_message", l_GetNextMessage);
     scriptBindings.AddFunction("spawn_prefab", l_SpawnPrefab);
+    scriptBindings.AddFunction("move_entity", l_MoveEntity);
 
     return scriptBindings;
 }

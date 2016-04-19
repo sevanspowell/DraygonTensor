@@ -224,6 +224,18 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
                             createComponentMsg.componentType)
                      << std::endl;
             break;
+        case ds_msg::MessageType::MoveEntity:
+        {
+            ds_msg::MoveEntity entityMoveMsg;
+            (*messages) >> entityMoveMsg;
+
+            // Print console msg
+            m_buffer << "Console out: Entity moved: Entity: "
+                     << entityMoveMsg.entity.id
+                     << " deltaPosition: " << entityMoveMsg.deltaPosition
+                     << std::endl;
+            break;
+        }
         default:
             // Always extract the payload
             messages->Extract(header.size);

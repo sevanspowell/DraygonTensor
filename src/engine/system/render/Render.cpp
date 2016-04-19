@@ -269,6 +269,29 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
             }
             break;
         }
+        case ds_msg::MessageType::MoveEntity:
+        {
+            ds_msg::MoveEntity entityMoveMsg;
+            (*messages) >> entityMoveMsg;
+
+            Instance transform =
+                m_transformComponentManager.GetInstanceForEntity(
+                    entityMoveMsg.entity);
+
+            // Get current transform
+            const ds_math::Matrix4 &currentTransform =
+                m_transformComponentManager.GetLocalTransform(transform);
+            // Translate it
+            ds_math::Matrix4 newTransform =
+                currentTransform * ds_math::Matrix4::CreateTranslationMatrix(
+                                       entityMoveMsg.deltaPosition);
+
+            // Set transform of entity
+            m_transformComponentManager.SetLocalTransform(transform,
+                                                          newTransform);
+
+            break;
+        }
         default:
             messages->Extract(header.size);
             break;
