@@ -8,6 +8,7 @@
 #include "engine/system/render/Material.h"
 #include "engine/system/render/Mesh.h"
 #include "engine/system/render/RenderComponentManager.h"
+#include "engine/system/render/CameraComponentManager.h"
 #include "engine/system/render/Texture.h"
 #include "engine/system/scene/TransformComponentManager.h"
 
@@ -135,6 +136,8 @@ private:
     ds_render::RenderComponentManager m_renderComponentManager;
     /** Transform component manager */
     TransformComponentManager m_transformComponentManager;
+    /** Camera component manager */
+    ds_render::CameraComponentManager m_cameraComponentManager;
 
     ds_render::Mesh m_mesh;
     ds_render::Material m_material;
@@ -147,98 +150,8 @@ private:
 
     ds_math::Matrix4 m_viewMatrix;
     ds_math::Matrix4 m_projectionMatrix;
+
+    bool m_cameraActive;
+    Entity m_activeCameraEntity;
 };
-// bool result = true;
-
-// // Register creators
-// m_factory.RegisterCreator<MaterialResource>(
-//     MaterialResource::CreateFromFile);
-// m_factory.RegisterCreator<MeshResource>(MeshResource::CreateFromFile);
-// m_factory.RegisterCreator<ShaderResource>(ShaderResource::CreateFromFile);
-// m_factory.RegisterCreator<TextureResource>(TextureResource::CreateFromFile);
-
-// m_renderer =
-//     std::unique_ptr<ds_render::IRenderer>(new ds_render::GLRenderer());
-
-// // TODO: Handle resize messages to change this
-// unsigned int viewportWidth = 800;
-// unsigned int viewportHeight = 600;
-
-// m_renderer->Init(viewportWidth, viewportHeight);
-
-// // Need a program to get information about Scene and Object constant
-// // buffers, so create a "fake" one.
-// // Create shader program
-// std::unique_ptr<ShaderResource> shaderResource =
-//     m_factory.CreateResource<ShaderResource>(
-//         "../assets/constantBuffer.shader");
-
-// // Load each shader
-// std::vector<ds_render::ShaderHandle> shaders;
-// std::vector<ds_render::ShaderType> shaderTypes =
-//     shaderResource->GetShaderTypes();
-// for (auto shaderType : shaderTypes)
-// {
-//     const std::string &shaderSource =
-//         shaderResource->GetShaderSource(shaderType);
-
-//     // Append shader to list
-//     shaders.push_back(m_renderer->CreateShaderObject(
-//         shaderType, shaderSource.size(), shaderSource.c_str()));
-//     std::cout << shaderSource << std::endl;
-// }
-// // Compile shaders into shader program
-// ds_render::ProgramHandle shaderProgram = m_renderer->CreateProgram(shaders);
-// m_program = shaderProgram;
-
-// // Get shader data descriptions
-// m_sceneBufferDescrip.AddMember("Scene.viewMatrix");
-// m_sceneBufferDescrip.AddMember("Scene.projectionMatrix");
-// m_renderer->GetConstantBufferDescription(shaderProgram, "Scene",
-//                                          &m_sceneBufferDescrip);
-
-// m_objectBufferDescrip.AddMember("Object.modelMatrix");
-// m_renderer->GetConstantBufferDescription(shaderProgram, "Object",
-//                                          &m_objectBufferDescrip);
-
-
-// // Create shader data
-// m_viewMatrix = ds_math::Matrix4(1.0f);
-//     // ds_math::Matrix4::CreateTranslationMatrix(-0.0f, -0.0f, -4.0f);
-// m_projectionMatrix = ds_math::Matrix4::CreatePerspectiveFieldOfView(
-//     ds_math::MathHelper::PI / 3.0f, 800.0f / 600.0f, 0.1f, 100.0f);
-// m_sceneBufferDescrip.InsertMemberData(
-//     "Scene.viewMatrix", sizeof(ds_math::Matrix4), &m_viewMatrix);
-// m_sceneBufferDescrip.InsertMemberData("Scene.projectionMatrix",
-//                                       sizeof(ds_math::Matrix4),
-//                                       &m_projectionMatrix);
-
-// ds_math::Matrix4 modelMatrix = // ds_math::Matrix4(1.0f);
-//     ds_math::Matrix4::CreateTranslationMatrix(-4.0f, -3.0f, -10.0f);
-// m_objectBufferDescrip.InsertMemberData(
-//     "Object.modelMatrix", sizeof(ds_math::Matrix4), &modelMatrix);
-
-// m_sceneMatrices = m_renderer->CreateConstantBuffer(m_sceneBufferDescrip);
-// m_objectMatrices = m_renderer->CreateConstantBuffer(m_objectBufferDescrip);
-
-// // Create Mesh
-// m_mesh = CreateMeshFromMeshResource("../assets/cube.obj");
-
-// // Create material
-// m_material = CreateMaterialFromMaterialResource("../assets/test.material");
-
-// Entity testEntity;
-// testEntity.id = 0;
-// Instance i = m_renderComponentManager.CreateComponentForEntity(testEntity);
-// m_renderComponentManager.SetMaterial(i, m_material);
-// m_renderComponentManager.SetMesh(i, m_mesh);
-
-// // Bind scene and object
-// m_renderer->BindConstantBuffer(m_material.GetProgram(), "Scene",
-// m_sceneMatrices);
-// m_renderer->BindConstantBuffer(m_material.GetProgram(), "Object",
-// m_objectMatrices);
-
-
-// return result;
 }
