@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/Config.h"
 #include "engine/entity/ComponentManager.h"
 #include "engine/system/scene/TransformComponent.h"
 
@@ -16,6 +17,25 @@ namespace ds
 class TransformComponentManager : public ComponentManager<TransformComponent>
 {
 public:
+    /**
+     * Create a component for the given entity using a config file as a
+     * description and return a component instance which can be used to refer to
+     * that component.
+     *
+     * @param   transformComponentManager  TransformComponentManager *,
+     * component manager to add component to.
+     * @param   entity            Entity, entity to create component for. The
+     * component will be associated with this entity.
+     * @param   config            const Config &, config file containing
+     * component description used to create component from.
+     * @return                    Instance, the new component instance created
+     * or an invalid instance in case of error.
+     */
+    static Instance CreateComponentForEntityFromConfig(
+        TransformComponentManager *transformComponentManager,
+        Entity entity,
+        const Config &config);
+
     /**
      *  Get the transform (position, orientation, scale) matrix
      *  of an object relative to it's parent.
@@ -109,7 +129,7 @@ private:
      *  @param  newAddress  const Instance &, new instance address.
      */
     virtual void OnAddressChange(const Instance &oldAddress,
-                                  const Instance &newAddress);
+                                 const Instance &newAddress);
 
     /**
      *  Update the world transform of a given component instance with the

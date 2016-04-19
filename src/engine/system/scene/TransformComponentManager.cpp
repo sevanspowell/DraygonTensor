@@ -4,6 +4,53 @@
 
 namespace ds
 {
+Instance TransformComponentManager::CreateComponentForEntityFromConfig(
+    TransformComponentManager *transformComponentManager,
+    Entity entity,
+    const Config &config)
+{
+    Instance instance = Instance::MakeInvalidInstance();
+
+    if (transformComponentManager != nullptr)
+    {
+        std::vector<float> position;
+        std::vector<float> orientation;
+        std::vector<float> scale;
+
+        if (config.GetFloatArray("position", &position) &&
+            config.GetFloatArray("orientation", &orientation) &&
+            config.GetFloatArray("scale", &scale))
+        {
+            // Does entity already have transform component?
+            instance = transformComponentManager->GetInstanceForEntity(entity);
+
+            // Only continue if it doesn't
+            if (!instance.IsValid())
+            {
+                // Create component for entity
+                instance =
+                    transformComponentManager->CreateComponentForEntity(
+                        entity);
+
+                // Transform position, rotation and scale into a single
+                // matrix
+                ds_math::Matrix4 mat =
+                    ds_math::Matrix4::CreateTranslationMatrix(
+                        position[0], position[1], position[2]) *
+                    ds_math::Matrix4::CreateFromQuaternion(
+                        ds_math::Quaternion(orientation[0], orientation[1],
+                                            orientation[2], orientation[3])) *
+                    ds_math::Matrix4::CreateScaleMatrix(scale[0], scale[1],
+                                                        scale[2]);
+
+                transformComponentManager->SetLocalTransform(instance, mat);
+            }
+        }
+    }
+
+    return instance;
+}
+
 const ds_math::Matrix4 &
 TransformComponentManager::GetLocalTransform(Instance i) const
 {

@@ -210,39 +210,10 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                 }
                 else if (componentType == "transformComponent")
                 {
-                    std::vector<float> position;
-                    std::vector<float> orientation;
-                    std::vector<float> scale;
-
-                    if (componentData.GetFloatArray("position", &position) &&
-                        componentData.GetFloatArray("orientation",
-                                                    &orientation) &&
-                        componentData.GetFloatArray("scale", &scale))
-                    {
-                        // Get entity
-                        Entity entity = createComponentMsg.entity;
-
-                        // Create component for entity
-                        Instance instance =
-                            m_transformComponentManager
-                                .CreateComponentForEntity(entity);
-
-                        // Transform position, rotation and scale into a single
-                        // matrix
-                        ds_math::Matrix4 mat =
-                            ds_math::Matrix4::CreateTranslationMatrix(
-                                position[0], position[1], position[2]) *
-                            ds_math::Matrix4::CreateFromQuaternion(
-                                ds_math::Quaternion(
-                                    orientation[0], orientation[1],
-                                    orientation[2], orientation[3])) *
-                            ds_math::Matrix4::CreateScaleMatrix(
-                                scale[0], scale[1], scale[2]);
-
-
-                        m_transformComponentManager.SetLocalTransform(instance,
-                                                                      mat);
-                    }
+                    TransformComponentManager::
+                        CreateComponentForEntityFromConfig(
+                            &m_transformComponentManager,
+                            createComponentMsg.entity, componentData);
                 }
             }
             break;
