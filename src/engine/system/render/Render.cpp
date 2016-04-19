@@ -35,51 +35,58 @@ bool Render::Initialize(const Config &config)
 
     m_renderer->Init(viewportWidth, viewportHeight);
 
-    // Create Mesh
-    m_mesh = CreateMeshFromMeshResource("../assets/cube.obj");
+    // Need a program to get information about Scene and Object constant
+    // buffers, so create a "fake" one.
+    // Create shader program
+    std::unique_ptr<ShaderResource> shaderResource =
+        m_factory.CreateResource<ShaderResource>(
+            "../assets/constantBuffer.shader");
 
-    // Create material
-    m_material = CreateMaterialFromMaterialResource("../assets/test.material");
+    // Load each shader
+    std::vector<ds_render::ShaderHandle> shaders;
+    std::vector<ds_render::ShaderType> shaderTypes =
+        shaderResource->GetShaderTypes();
+    for (auto shaderType : shaderTypes)
+    {
+        const std::string &shaderSource =
+            shaderResource->GetShaderSource(shaderType);
 
-    Entity testEntity;
-    testEntity.id = 0;
-    Instance i = m_renderComponentManager.CreateComponentForEntity(testEntity);
-    m_renderComponentManager.SetMaterial(i, m_material);
-    m_renderComponentManager.SetMesh(i, m_mesh);
+        // Append shader to list
+        shaders.push_back(m_renderer->CreateShaderObject(
+            shaderType, shaderSource.size(), shaderSource.c_str()));
+        std::cout << shaderSource << std::endl;
+    }
+    // Compile shaders into shader program
+    ds_render::ProgramHandle fakeShader = m_renderer->CreateProgram(shaders);
 
     // Get shader data descriptions
     m_sceneBufferDescrip.AddMember("Scene.viewMatrix");
     m_sceneBufferDescrip.AddMember("Scene.projectionMatrix");
-    m_renderer->GetConstantBufferDescription(m_material.GetProgram(), "Scene",
+    m_renderer->GetConstantBufferDescription(fakeShader, "Scene",
                                              &m_sceneBufferDescrip);
 
     m_objectBufferDescrip.AddMember("Object.modelMatrix");
-    m_renderer->GetConstantBufferDescription(m_material.GetProgram(), "Object",
+    m_renderer->GetConstantBufferDescription(fakeShader, "Object",
                                              &m_objectBufferDescrip);
 
-    // Create shader data
-    ds_math::Matrix4 viewMatrix = ds_math::Matrix4(1.0f);
-    ds_math::Matrix4 projectionMatrix =
-        ds_math::Matrix4::CreatePerspectiveFieldOfView(
-            ds_math::MathHelper::PI / 3.0f, 800.0f / 600.0f, 0.1f, 100.0f);
-    m_sceneBufferDescrip.InsertMemberData(
-        "Scene.viewMatrix", sizeof(ds_math::Matrix4), &viewMatrix);
-    m_sceneBufferDescrip.InsertMemberData(
-        "Scene.projectionMatrix", sizeof(ds_math::Matrix4), &projectionMatrix);
 
-    ds_math::Matrix4 modelMatrix =
+    // Create shader data
+    m_viewMatrix = // ds_math::Matrix4(1.0f);
         ds_math::Matrix4::CreateTranslationMatrix(-4.0f, -3.0f, -10.0f);
+    m_projectionMatrix = ds_math::Matrix4::CreatePerspectiveFieldOfView(
+        ds_math::MathHelper::PI / 3.0f, 800.0f / 600.0f, 0.1f, 100.0f);
+    m_sceneBufferDescrip.InsertMemberData(
+        "Scene.viewMatrix", sizeof(ds_math::Matrix4), &m_viewMatrix);
+    m_sceneBufferDescrip.InsertMemberData("Scene.projectionMatrix",
+                                          sizeof(ds_math::Matrix4),
+                                          &m_projectionMatrix);
+
+    ds_math::Matrix4 modelMatrix = ds_math::Matrix4(1.0f);
     m_objectBufferDescrip.InsertMemberData(
         "Object.modelMatrix", sizeof(ds_math::Matrix4), &modelMatrix);
 
-
     m_sceneMatrices = m_renderer->CreateConstantBuffer(m_sceneBufferDescrip);
-    m_renderer->BindConstantBuffer(m_material.GetProgram(), "Scene",
-                                   m_sceneMatrices);
-
     m_objectMatrices = m_renderer->CreateConstantBuffer(m_objectBufferDescrip);
-    m_renderer->BindConstantBuffer(m_material.GetProgram(), "Object",
-                                   m_objectMatrices);
 
     return result;
 }
@@ -88,37 +95,51 @@ void Render::Update(float deltaTime)
 {
     ProcessEvents(&m_messagesReceived);
 
-    m_renderer->ClearBuffers();
-
-    // For each render component instance
-    for (unsigned int i = 0; i < m_renderComponentManager.GetNumInstances();
-         ++i)
+    // Make sure renderer has been created
+    if (m_renderer != nullptr)
     {
-        Instance instance = Instance::MakeInstance(i);
+        m_renderer->ClearBuffers();
 
-        // Set shader program
-        m_renderer->SetProgram(
-            m_renderComponentManager.GetMaterial(instance).GetProgram());
-
-        // For each texture in material, bind it to shader
-        for (auto samplerTexture : m_material.GetTextures())
+        // For each render component instance
+        for (unsigned int i = 0; i < m_renderComponentManager.GetNumInstances();
+             ++i)
         {
-            m_renderer->BindTextureToSampler(
-                m_material.GetProgram(), samplerTexture.first,
-                samplerTexture.second.GetTextureHandle());
-        }
+            Instance renderInstance = Instance::MakeInstance(i);
+            // Entity entity =
+            //     m_renderComponentManager.GetEntityForInstance(renderInstance);
+            // Instance transformInstance =
+            //     m_transformComponentManager.GetInstanceForEntity(entity);
 
-        // Draw mesh
-        m_renderer->DrawVerticesIndexed(
-            m_mesh.GetVertexBuffer(), m_mesh.GetIndexBuffer(),
-            ds_render::PrimitiveType::Triangles, m_mesh.GetStartingIndex(),
-            m_mesh.GetNumIndices());
+            // Get mesh
+            ds_render::Mesh mesh =
+                m_renderComponentManager.GetMesh(renderInstance);
+            // Get material
+            ds_render::Material material =
+                m_renderComponentManager.GetMaterial(renderInstance);
 
-        // For each texture in material, unbind
-        for (auto samplerTexture : m_material.GetTextures())
-        {
-            m_renderer->UnbindTextureFromSampler(
-                samplerTexture.second.GetTextureHandle());
+            // Set shader program
+            m_renderer->SetProgram(material.GetProgram());
+
+            // For each texture in material, bind it to shader
+            for (auto samplerTexture : material.GetTextures())
+            {
+                m_renderer->BindTextureToSampler(
+                    material.GetProgram(), samplerTexture.first,
+                    samplerTexture.second.GetTextureHandle());
+            }
+
+            // Draw mesh
+            m_renderer->DrawVerticesIndexed(
+                mesh.GetVertexBuffer(), mesh.GetIndexBuffer(),
+                ds_render::PrimitiveType::Triangles, mesh.GetStartingIndex(),
+                mesh.GetNumIndices());
+
+            // For each texture in material, unbind
+            for (auto samplerTexture : material.GetTextures())
+            {
+                m_renderer->UnbindTextureFromSampler(
+                    samplerTexture.second.GetTextureHandle());
+            }
         }
     }
 }
@@ -151,20 +172,33 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
         switch (header.type)
         {
         // case ds_msg::MessageType::GraphicsContextCreated:
+        // {
         //     ds_msg::GraphicsContextCreated gfxContext;
         //     (*messages) >> gfxContext;
 
         //     // If we haven't already created a renderer
-        //     if (m_renderer->== nullptr)
+        //     if (m_renderer == nullptr)
         //     {
         //         // Create a renderer to match graphics context type
         //         // GL renderer for GL context, etc...
-        //         if (gfxContext.contextInfo.type =
-        //                 GraphicsContext::ContextType::OpenGL)
+        //         switch (gfxContext.contextInfo.type)
         //         {
+        //         case ds_platform::GraphicsContext::ContextType::OpenGL:
+        //             m_renderer = std::unique_ptr<ds_render::IRenderer>(
+        //                 new ds_render::GLRenderer());
+
+        //             // TODO: Handle resize messages to change this
+        //             unsigned int viewportWidth = 800;
+        //             unsigned int viewportHeight = 600;
+
+        //             m_renderer->Init(viewportWidth, viewportHeight);
+        //             break;
+        //         default:
+        //             break;
         //         }
         //     }
         //     break;
+        // }
         case ds_msg::MessageType::CreateComponent:
         {
             ds_msg::CreateComponent createComponentMsg;
@@ -175,8 +209,12 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
             if (componentData.LoadMemory(StringIntern::Instance().GetString(
                     createComponentMsg.componentData)))
             {
-                if (StringIntern::Instance().GetString(
-                        createComponentMsg.componentType) == "renderComponent")
+                std::string componentType = StringIntern::Instance().GetString(
+                    createComponentMsg.componentType);
+                std::cout << componentType << std::endl;
+                std::cout << StringIntern::Instance().GetString(
+                    createComponentMsg.componentData);
+                if (componentType == "renderComponent")
                 {
                     std::string meshName;
                     std::string materialName;
@@ -187,117 +225,61 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                         std::stringstream meshResourcePath;
                         meshResourcePath << "../assets/" << meshName;
 
-                        std::cout << meshResourcePath.str() << std::endl;
-
-                        // Get mesh resource
-                        std::unique_ptr<MeshResource> meshResource =
-                            m_factory.CreateResource<MeshResource>(
-                                meshResourcePath.str());
-
-                        // std::cout << "Index count: "
-                        //           << meshResource->GetIndicesCount()
-                        //           << std::endl;
-                        // // TODO: Renderer create mesh
-                        // // Create vertex buffer data store
-                        // ds_com::StreamBuffer vertexBufferDataStore;
-
-                        // // Get position data
-                        // const std::vector<ds_math::Vector3> positions =
-                        //     meshResource->GetVerts();
-                        // for (const ds_math::Vector3 &position : positions)
-                        // {
-                        //     std::cout << position << std::endl;
-                        //     vertexBufferDataStore << position;
-                        // }
-
-                        // // Describe position data
-                        // ds_render::VertexBufferDescription::AttributeDescription
-                        //     positionAttributeDescriptor;
-                        // positionAttributeDescriptor.attributeType =
-                        //     ds_render::AttributeType::Position;
-                        // positionAttributeDescriptor.attributeDataType =
-                        //     ds_render::RenderDataType::Float;
-                        // positionAttributeDescriptor.numElementsPerAttribute =
-                        // 3;
-                        // positionAttributeDescriptor.stride = 0;
-                        // positionAttributeDescriptor.offset = 0;
-                        // positionAttributeDescriptor.normalized = false;
-
-                        // // // Get texture coordinate data
-                        // // const std::vector<ds_math::Vector3>
-                        // // textureCoordinates =
-                        // //     meshResource->GetTexCoords();
-                        // // for (const ds_math::Vector3 &texCoord :
-                        // //      textureCoordinates)
-                        // // {
-                        // //     vertexBufferDataStore << texCoord.x;
-                        // //     vertexBufferDataStore << texCoord.y;
-                        // // }
-
-                        // // // Describe texCoord data
-                        // //
-                        // ds_render::VertexBufferDescription::AttributeDescription
-                        // //     texCoordAttributeDescriptor;
-                        // // texCoordAttributeDescriptor.attributeType =
-                        // //     ds_render::AttributeType::TextureCoordinate;
-                        // // texCoordAttributeDescriptor.attributeDataType =
-                        // //     ds_render::RenderDataType::Float;
-                        // //
-                        // texCoordAttributeDescriptor.numElementsPerAttribute =
-                        // // 2;
-                        // // texCoordAttributeDescriptor.stride = 0;
-                        // // texCoordAttributeDescriptor.offset =
-                        // //     meshResource->GetVertCount() *
-                        // //     sizeof(ds_math::Vector3);
-                        // // texCoordAttributeDescriptor.normalized = false;
-
-                        // // Create vertex buffer descriptor
-                        // ds_render::VertexBufferDescription
-                        //     vertexBufferDescriptor;
-                        // vertexBufferDescriptor.AddAttributeDescription(
-                        //     positionAttributeDescriptor);
-                        // // vertexBufferDescriptor.AddAttributeDescription(
-                        // //     texCoordAttributeDescriptor);
-
-                        // // Create vertex buffer
-                        // // m_vb = m_renderer->CreateVertexBuffer(
-                        // //     ds_render::BufferUsageType::Static,
-                        // //     vertexBufferDescriptor,
-                        // //     vertexBufferDataStore.AvailableBytes(),
-                        // //     vertexBufferDataStore.GetDataPtr());
-
-                        // std::cout << "Bad: " << std::endl;
-                        // while (vertexBufferDataStore.AvailableBytes() > 0)
-                        // {
-                        //     ds_math::Vector3 v;
-                        //     vertexBufferDataStore >> v;
-                        //     std::cout << v << std::endl;
-                        // }
-
-                        // // Create index buffer
-                        // std::vector<unsigned int> indices =
-                        //     meshResource->GetIndices();
-                        // for (auto index : indices)
-                        // {
-                        //     std::cout << index << std::endl;
-                        // }
-                        // m_ib = m_renderer->CreateIndexBuffer(
-                        //     ds_render::BufferUsageType::Static,
-                        //     sizeof(unsigned int) * indices.size(),
-                        //     &indices[0]);
-
                         // Get material resource path
                         std::stringstream materialResourcePath;
                         materialResourcePath << "../assets/" << materialName;
 
-                        // Get material resource
-                        std::unique_ptr<MaterialResource> materialResource =
-                            m_factory.CreateResource<MaterialResource>(
-                                materialResourcePath.str());
+                        // Create Mesh
+                        ds_render::Mesh mesh =
+                            CreateMeshFromMeshResource(meshResourcePath.str());
 
-                        // TODO: Renderer create material
+                        // Create material
+                        ds_render::Material material =
+                            CreateMaterialFromMaterialResource(
+                                materialResourcePath.str(), m_sceneMatrices,
+                                m_objectMatrices);
 
-                        // Create render Component for entity
+                        Instance i =
+                            m_renderComponentManager.CreateComponentForEntity(
+                                createComponentMsg.entity);
+                        m_renderComponentManager.SetMaterial(i, material);
+                        m_renderComponentManager.SetMesh(i, mesh);
+                    }
+                }
+                else if (componentType == "transformComponent")
+                {
+                    std::vector<float> position;
+                    std::vector<float> orientation;
+                    std::vector<float> scale;
+
+                    if (componentData.GetFloatArray("position", &position) &&
+                        componentData.GetFloatArray("orientation",
+                                                    &orientation) &&
+                        componentData.GetFloatArray("scale", &scale))
+                    {
+                        // Get entity
+                        Entity entity = createComponentMsg.entity;
+
+                        // Create component for entity
+                        Instance instance =
+                            m_transformComponentManager
+                                .CreateComponentForEntity(entity);
+
+                        // Transform position, rotation and scale into a single
+                        // matrix
+                        ds_math::Matrix4 mat =
+                            ds_math::Matrix4::CreateTranslationMatrix(
+                                position[0], position[1], position[2]) *
+                            ds_math::Matrix4::CreateFromQuaternion(
+                                ds_math::Quaternion(
+                                    orientation[0], orientation[1],
+                                    orientation[2], orientation[3])) *
+                            ds_math::Matrix4::CreateScaleMatrix(
+                                scale[0], scale[1], scale[2]);
+
+
+                        m_transformComponentManager.SetLocalTransform(instance,
+                                                                      mat);
                     }
                 }
             }
@@ -422,8 +404,10 @@ ds_render::Mesh Render::CreateMeshFromMeshResource(const std::string &filePath)
     return ds_render::Mesh(vb, ib, 0, meshResource->GetIndicesCount());
 }
 
-ds_render::Material
-Render::CreateMaterialFromMaterialResource(const std::string &filePath)
+ds_render::Material Render::CreateMaterialFromMaterialResource(
+    const std::string &filePath,
+    ds_render::ConstantBufferHandle sceneMatrices,
+    ds_render::ConstantBufferHandle objectMatrices)
 {
     ds_render::Material material;
 
@@ -468,6 +452,27 @@ Render::CreateMaterialFromMaterialResource(const std::string &filePath)
                                              textureResourceFilePath));
     }
 
+    // Bind constant buffers to program
+    m_renderer->BindConstantBuffer(material.GetProgram(), "Scene",
+                                   sceneMatrices);
+    m_renderer->BindConstantBuffer(material.GetProgram(), "Object",
+                                   objectMatrices);
+
     return material;
+}
+
+void Render::RenderScene()
+{
+    // Update scene constant buffer
+    m_sceneBufferDescrip.InsertMemberData(
+        "Scene.viewMatrix", sizeof(ds_math::Matrix4), &m_viewMatrix);
+    m_sceneBufferDescrip.InsertMemberData("Scene.projectionMatrix",
+                                          sizeof(ds_math::Matrix4),
+                                          &m_projectionMatrix);
+    m_renderer->UpdateConstantBufferData(m_sceneMatrices, m_sceneBufferDescrip);
+
+    // For each render component
+    // Update object constant buffer
+    // Render
 }
 }

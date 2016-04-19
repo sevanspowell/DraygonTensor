@@ -182,7 +182,6 @@ void Script::SpawnPrefab(std::string prefabFile,
             BuildTransformComponentCreateMessage(
                 entity, position, ds_math::Quaternion(),
                 ds_math::Vector3(1.0f, 1.0f, 1.0f));
-        transformComponentMsg.entity = entity;
         ds_msg::AppendMessage(
             &m_messagesGenerated, ds_msg::MessageType::CreateComponent,
             sizeof(ds_msg::CreateComponent), &transformComponentMsg);
@@ -331,17 +330,18 @@ ds_msg::CreateComponent Script::BuildTransformComponentCreateMessage(
 
     // Create description of component
     Config configDescription;
-    configDescription.AddFloatArray("renderComponent.position", positionArray);
-    configDescription.AddFloatArray("renderComponent.orientation",
+    configDescription.AddFloatArray("transformComponent.position",
+                                    positionArray);
+    configDescription.AddFloatArray("transformComponent.orientation",
                                     orientationArray);
-    configDescription.AddFloatArray("renderComponent.scale", scaleArray);
+    configDescription.AddFloatArray("transformComponent.scale", scaleArray);
 
     // Transform description into message
     transformComponent.entity = entity;
     transformComponent.componentType =
-        StringIntern::Instance().Intern("renderComponent");
+        StringIntern::Instance().Intern("transformComponent");
     transformComponent.componentData = StringIntern::Instance().Intern(
-        configDescription.StringifyObject("renderComponent"));
+        configDescription.StringifyObject("transformComponent"));
 
     // Return message
     return transformComponent;

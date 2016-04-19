@@ -46,6 +46,8 @@ set(ENGINE_INCLUDE_FILES
   system/render/Uniform.h
   system/render/UniformBlock.h
   system/render/VertexBufferDescription.h
+  system/scene/TransformComponent.h
+  system/scene/TransformComponentManager.h
   system/script/LuaEnvironment.h
   system/script/LuaHelper.h
   system/script/Script.h
@@ -86,6 +88,7 @@ set(ENGINE_SRC_FILES
   system/render/VertexBufferDescription.cpp
   system/render/Uniform.cpp
   system/render/UniformBlock.cpp
+  system/scene/TransformComponentManager.cpp
   system/script/LuaEnvironment.cpp
   system/script/LuaHelper.cpp
   system/script/LuaMathAPI.cpp

@@ -112,7 +112,7 @@ GLRenderer::CreateVertexBuffer(BufferUsageType usage,
 
     // Return handle to VAO
     return ((VertexBufferHandle)StoreOpenGLObject(
-        vbo, GLObjectType::VertexArrayObject));
+        vao, GLObjectType::VertexArrayObject));
 }
 
 IndexBufferHandle GLRenderer::CreateIndexBuffer(BufferUsageType usage,

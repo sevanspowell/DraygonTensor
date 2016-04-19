@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Vector4.h"
+#include "Quaternion.h"
 
 namespace ds_math
 {
@@ -254,6 +255,14 @@ public:
      * @return     Matrix4, scale matrix.
      */
     static Matrix4 CreateScaleMatrix(float x, float y, float z);
+    /**
+     * Create a Matrix4 from a Quaternion.
+     *
+     * @param   quaternion  const ds_math::Quaternion &, quaternion to create
+     * Matrix4 from.
+     * @return              Matrix4, matrix representing quaternion's rotation.
+     */
+    static Matrix4 CreateFromQuaternion(const ds_math::Quaternion &quaternion);
 
     Vector4 data[4];
 };
