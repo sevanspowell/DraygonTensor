@@ -156,6 +156,32 @@ bool Config::GetInt(const std::string &key, int *integer) const
     return result;
 }
 
+bool Config::GetFloat(const std::string &key, float *f) const
+{
+    bool result = false;
+
+    rapidjson::Value::ConstMemberIterator valueIt = GetDocumentMember(key);
+
+    if (IsLoaded())
+    {
+        if (valueIt != m_document.MemberEnd())
+        {
+            if (valueIt->value.IsFloat())
+            {
+                *f = valueIt->value.GetFloat();
+                result = true;
+            }
+            else
+            {
+                std::cerr << "Config::GetFloat: Warning: '" << key
+                          << "' is not a float." << std::endl;
+            }
+        }
+    }
+
+    return result;
+}
+
 bool Config::GetFloatArray(const std::string &key,
                            std::vector<float> *array) const
 {
