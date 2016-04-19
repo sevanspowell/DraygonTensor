@@ -6,201 +6,207 @@
 
 namespace ds
 {
+TextureResource::TextureResource()
+{
+    m_textureData = nullptr;
+    m_widthPixels = 0;
+    m_heightPixels = 0;
+}
 
-	TextureResource::TextureResource()
-	{
-		m_textureData = nullptr;
-		m_widthPixels = 0;
-		m_heightPixels = 0;
-	}
+const std::string &TextureResource::GetResourceFilePath() const
+{
+    return m_filePath;
+}
 
+void TextureResource::SetResourceFilePath(const std::string &filePath)
+{
+    m_filePath = filePath;
+}
 
-	std::unique_ptr<IResource> TextureResource::CreateFromFile(std::string filePath)
-	{
+std::unique_ptr<IResource> TextureResource::CreateFromFile(std::string filePath)
+{
 
-		std::string fileExtension = ExtractExtension(filePath);
-		ImageFormat typeFlag = DetermineTypeFlag(fileExtension);
+    std::string fileExtension = ExtractExtension(filePath);
+    ImageFormat typeFlag = DetermineTypeFlag(fileExtension);
 
-		int widthInPixels = 0;
-		int heightInPixels = 0;
-		int components = 0;
-		ComponentFlag channels;
-		
-		
-
-
-		unsigned char *imageContents =
-			stbi_load(filePath.c_str(), &widthInPixels, &heightInPixels, &components, 0);
-
-		channels = static_cast<ComponentFlag>(components);
-
-		std::unique_ptr<TextureResource> createdTexResource(new TextureResource());
-
-		createdTexResource->SetWidthInPixels(widthInPixels);
-		createdTexResource->SetHeightInPixels(heightInPixels);
-		createdTexResource->SetComponentFlag(channels);
-		createdTexResource->SetImageFormat(typeFlag);
-		createdTexResource->SetTextureContents(imageContents);
-
-		std::unique_ptr<IResource> convertedTexPointer = std::move(createdTexResource);
+    int widthInPixels = 0;
+    int heightInPixels = 0;
+    int components = 0;
+    ComponentFlag channels;
 
 
-		return convertedTexPointer;
-	}
-	
-	
-	std::string TextureResource::ExtractExtension(std::string path)
-	{
-		std::string ext = "";
+    unsigned char *imageContents = stbi_load(filePath.c_str(), &widthInPixels,
+                                             &heightInPixels, &components, 0);
 
-		size_t foundPos = path.find_last_of(".");
+    channels = static_cast<ComponentFlag>(components);
 
-		if (foundPos == std::string::npos)
-		{
-			std::string errorMessage =
-				"Cannot load texture:";
+    std::unique_ptr<TextureResource> createdTexResource(new TextureResource());
 
-			std::cout << errorMessage << std::endl;
-			std::cout << path << std::endl;
+    createdTexResource->SetWidthInPixels(widthInPixels);
+    createdTexResource->SetHeightInPixels(heightInPixels);
+    createdTexResource->SetComponentFlag(channels);
+    createdTexResource->SetImageFormat(typeFlag);
+    createdTexResource->SetTextureContents(imageContents);
 
-			return NULL;
-		}
-		else
-		{
-			ext = path.substr(foundPos + 1);
-			return ext;
-		}
-	}
+    std::unique_ptr<IResource> convertedTexPointer =
+        std::move(createdTexResource);
 
-	TextureResource::ImageFormat TextureResource::DetermineTypeFlag(std::string ext)
-	{
-		ImageFormat type = ImageFormat::BMP;
-		std::string fileExtension = ext;
 
-		std::transform(fileExtension.begin(), fileExtension.end(),
-			fileExtension.begin(), ::tolower);
-		std::cout << fileExtension << std::endl;
+    return convertedTexPointer;
+}
 
-		if (ext == "tga") {
-			type = ImageFormat::TGA;
-		}
-		else if (ext == "bmp")
-		{
-			type = ImageFormat::BMP;
-		}
-		else if (ext == "png")
-		{
-			type = ImageFormat::PNG;
-		}
-		else if (ext == "jpeg" || ext == "jpg")
-		{
-			type = ImageFormat::JPEG;
-		}
 
-		return type;
-	}
+std::string TextureResource::ExtractExtension(std::string path)
+{
+    std::string ext = "";
 
-	void TextureResource::SetImageFormat(ImageFormat format)
-	{
-		m_imgFormat = format;
-	}
+    size_t foundPos = path.find_last_of(".");
 
-	void TextureResource::SetComponentFlag(ComponentFlag comp)
-	{
-		m_channelInfo = comp;
-	}
+    if (foundPos == std::string::npos)
+    {
+        std::string errorMessage = "Cannot load texture:";
 
-	void TextureResource::SetWidthInPixels(int width)
-	{
-		m_widthPixels = width;
-	}
+        std::cout << errorMessage << std::endl;
+        std::cout << path << std::endl;
 
-	void TextureResource::SetHeightInPixels(int height)
-	{
-		m_heightPixels = height;
-	}
+        return NULL;
+    }
+    else
+    {
+        ext = path.substr(foundPos + 1);
+        return ext;
+    }
+}
 
-	void TextureResource::SetTextureContents(unsigned char * textCont)
-	{
-		m_textureData = textCont;
-	}
+TextureResource::ImageFormat TextureResource::DetermineTypeFlag(std::string ext)
+{
+    ImageFormat type = ImageFormat::BMP;
+    std::string fileExtension = ext;
 
-	unsigned char * TextureResource::GetTextureContents()
-	{
-		return m_textureData;
-	}
+    std::transform(fileExtension.begin(), fileExtension.end(),
+                   fileExtension.begin(), ::tolower);
+    std::cout << fileExtension << std::endl;
 
-	unsigned int TextureResource::GetWidthInPixels() const
-	{
-		return m_widthPixels;
-	}
+    if (ext == "tga")
+    {
+        type = ImageFormat::TGA;
+    }
+    else if (ext == "bmp")
+    {
+        type = ImageFormat::BMP;
+    }
+    else if (ext == "png")
+    {
+        type = ImageFormat::PNG;
+    }
+    else if (ext == "jpeg" || ext == "jpg")
+    {
+        type = ImageFormat::JPEG;
+    }
 
-	unsigned int TextureResource::GetHeightInPixels() const
-	{
-		return m_heightPixels;
-	}
+    return type;
+}
 
-	int TextureResource::GetImageFormat() const
-	{
-		return m_imgFormat;
-	}
+void TextureResource::SetImageFormat(ImageFormat format)
+{
+    m_imgFormat = format;
+}
 
-	int TextureResource::GetComponentFlag() const
-	{
-		return m_channelInfo;
-	}
+void TextureResource::SetComponentFlag(ComponentFlag comp)
+{
+    m_channelInfo = comp;
+}
 
-	bool TextureResource::IsRGB() const
-	{
-		bool rgbFlag = false;
+void TextureResource::SetWidthInPixels(int width)
+{
+    m_widthPixels = width;
+}
 
-		if (m_channelInfo == RGB)
-		{
-			rgbFlag = true;
-		}
+void TextureResource::SetHeightInPixels(int height)
+{
+    m_heightPixels = height;
+}
 
-		return rgbFlag;
-	}
+void TextureResource::SetTextureContents(unsigned char *textCont)
+{
+    m_textureData = textCont;
+}
 
-	bool TextureResource::IsRGBA() const
-	{
-		bool rgbaFlag = false;
+unsigned char *TextureResource::GetTextureContents()
+{
+    return m_textureData;
+}
 
-		if (m_channelInfo == RGBA)
-		{
-			rgbaFlag = true;
-		}
+unsigned int TextureResource::GetWidthInPixels() const
+{
+    return m_widthPixels;
+}
 
-		return rgbaFlag;
-	}
+unsigned int TextureResource::GetHeightInPixels() const
+{
+    return m_heightPixels;
+}
 
-	bool TextureResource::IsGreyAlpha() const
-	{
-		bool greyAlphaFlag = false;
+int TextureResource::GetImageFormat() const
+{
+    return m_imgFormat;
+}
 
-		if (m_channelInfo == GREYALPHA)
-		{
-			greyAlphaFlag = true;
-		}
+int TextureResource::GetComponentFlag() const
+{
+    return m_channelInfo;
+}
 
-		return greyAlphaFlag;
-	}
+bool TextureResource::IsRGB() const
+{
+    bool rgbFlag = false;
 
-	bool TextureResource::IsGrey() const
-	{
-		bool greyFlag = false;
+    if (m_channelInfo == RGB)
+    {
+        rgbFlag = true;
+    }
 
-		if (m_channelInfo == GREY)
-		{
-			greyFlag = true;
-		}
+    return rgbFlag;
+}
 
-		return greyFlag;
-	}
+bool TextureResource::IsRGBA() const
+{
+    bool rgbaFlag = false;
 
-	TextureResource::~TextureResource()
-	{
-		stbi_image_free(m_textureData);
-	}
+    if (m_channelInfo == RGBA)
+    {
+        rgbaFlag = true;
+    }
 
+    return rgbaFlag;
+}
+
+bool TextureResource::IsGreyAlpha() const
+{
+    bool greyAlphaFlag = false;
+
+    if (m_channelInfo == GREYALPHA)
+    {
+        greyAlphaFlag = true;
+    }
+
+    return greyAlphaFlag;
+}
+
+bool TextureResource::IsGrey() const
+{
+    bool greyFlag = false;
+
+    if (m_channelInfo == GREY)
+    {
+        greyFlag = true;
+    }
+
+    return greyFlag;
+}
+
+TextureResource::~TextureResource()
+{
+    stbi_image_free(m_textureData);
+}
 }

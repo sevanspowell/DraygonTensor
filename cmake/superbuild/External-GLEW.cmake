@@ -8,9 +8,9 @@ if (WIN32)
     BUILD_COMMAND ""
     INSTALL_DIR "${GLEW_DIR}"
     INSTALL_COMMAND 
-        ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/lib/Release/x64 <INSTALL_DIR>/lib 
+        ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/lib/Release/Win32 <INSTALL_DIR>/lib 
         COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/include <INSTALL_DIR>/include
-        COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/bin/Release/x64 <INSTALL_DIR>/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/bin/Release/Win32 <INSTALL_DIR>/bin
     CMAKE_ARGS
     -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
     )

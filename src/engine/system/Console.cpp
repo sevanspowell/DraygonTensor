@@ -213,6 +213,17 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
                 }
             }
             break;
+        case ds_msg::MessageType::CreateComponent:
+            ds_msg::CreateComponent createComponentMsg;
+            (*messages) >> createComponentMsg;
+
+            // Print console msg
+            m_buffer << "Console out: Component created: Entity: "
+                     << createComponentMsg.entity.id << " ComponentType: "
+                     << StringIntern::Instance().GetString(
+                            createComponentMsg.componentType)
+                     << std::endl;
+            break;
         default:
             // Always extract the payload
             messages->Extract(header.size);

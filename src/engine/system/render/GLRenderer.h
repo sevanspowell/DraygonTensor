@@ -1,17 +1,18 @@
 #pragma once
 
-#include "engine/system/render/RenderCommon.h"
-#include "engine/system/render/VertexBufferDescription.h"
-#include "engine/system/render/ConstantBufferDescription.h"
+#include <vector>
+
+#include <GL/glew.h>
+
+#include "engine/common/HandleManager.h"
+#include "engine/system/render/IRenderer.h"
 
 namespace ds_render
 {
 /**
- * Abstract render class.
- *
- * Abstracts away implementation details of any specific graphics API.
+ * Modern OpenGL renderer.
  */
-class IRenderer
+class GLRenderer : public IRenderer
 {
 public:
     /**
@@ -24,8 +25,7 @@ public:
      * @return                  bool, TRUE if renderer initialized successfully,
      * FALSE otherwise.
      */
-    virtual bool Init(unsigned int viewportWidth,
-                      unsigned int viewportHeight) = 0;
+    virtual bool Init(unsigned int viewportWidth, unsigned int viewportHeight);
 
     /**
      * Set the clear colour of the colour buffer.
@@ -35,7 +35,7 @@ public:
      * @param b float, blue value (0 - 1).
      * @param a float, alpha value (0 - 1).
      */
-    virtual void SetClearColour(float r, float g, float b, float a) = 0;
+    virtual void SetClearColour(float r, float g, float b, float a);
 
     /**
      * Clear the colour, depth and/or stencil buffers of the renderer.
@@ -47,9 +47,8 @@ public:
      * @param depth bool, TRUE to clear depth buffer, FALSE otherwise.
      * @param stencil bool, TRUE to clear stencil buffer, FALSE otherwise.
      */
-    virtual void ClearBuffers(bool colour = true,
-                              bool depth = true,
-                              bool stencil = true) = 0;
+    virtual void
+    ClearBuffers(bool colour = true, bool depth = true, bool stencil = true);
 
     /**
      * Resize the viewport the renderer renders to.
@@ -58,7 +57,7 @@ public:
      * @param  newViewportHeight  unsigned int, new viewport height in pixels.
      */
     virtual void ResizeViewport(unsigned int newViewportWidth,
-                                unsigned int newViewportHeight) = 0;
+                                unsigned int newViewportHeight);
 
     /**
      * Create a vertex buffer.
@@ -80,7 +79,7 @@ public:
     CreateVertexBuffer(BufferUsageType usage,
                        const VertexBufferDescription &description,
                        size_t numBytes,
-                       const void *data) = 0;
+                       const void *data);
 
     /**
      * Create an index buffer.
@@ -96,9 +95,8 @@ public:
      * @param   data      const void *, index buffer data.
      * @return            IndexBufferHandle, handle to index buffer created.
      */
-    virtual IndexBufferHandle CreateIndexBuffer(BufferUsageType usage,
-                                                size_t numBytes,
-                                                const void *data) = 0;
+    virtual IndexBufferHandle
+    CreateIndexBuffer(BufferUsageType usage, size_t numBytes, const void *data);
 
     /**
      * Compile the given shader source int a shader object of the given type.
@@ -113,7 +111,7 @@ public:
      */
     virtual ShaderHandle CreateShaderObject(ShaderType shaderType,
                                             size_t shaderSourceSize,
-                                            const char *shaderSource) = 0;
+                                            const char *shaderSource);
 
     /**
      * Create a shader program from a list of shaders.
@@ -123,7 +121,7 @@ public:
      * @return          ProgramHandle, handle to created program.
      */
     virtual ProgramHandle
-    CreateProgram(const std::vector<ShaderHandle> &shaders) = 0;
+    CreateProgram(const std::vector<ShaderHandle> &shaders);
 
     /**
      * Set a shader program as the current shader program
@@ -132,7 +130,7 @@ public:
      * current shader.
      * TODO: Unset program
      */
-    virtual void SetProgram(ProgramHandle programHandle) = 0;
+    virtual void SetProgram(ProgramHandle programHandle);
 
     /**
      * Create a two-dimensional texture.
@@ -153,7 +151,7 @@ public:
                                           bool generateMipMaps,
                                           unsigned int width,
                                           unsigned int height,
-                                          const void *data) = 0;
+                                          const void *data);
 
     /**
      * Bind a texture to a sampler in the shader.
@@ -165,14 +163,14 @@ public:
      */
     virtual void BindTextureToSampler(ProgramHandle programHandle,
                                       const std::string &samplerName,
-                                      TextureHandle textureHandle) = 0;
+                                      TextureHandle textureHandle);
 
     /**
      * Unbind texture from sampler.
      *
      * @param  textureHandle  TextureHandle, texture to unbind.
      */
-    virtual void UnbindTextureFromSampler(TextureHandle textureHandle) = 0;
+    virtual void UnbindTextureFromSampler(TextureHandle textureHandle);
 
     /**
      * Memory layout of constant buffer in renderer may not match that of C/C++.
@@ -190,7 +188,7 @@ public:
     virtual void GetConstantBufferDescription(
         ProgramHandle programHandle,
         const std::string &constantBufferName,
-        ConstantBufferDescription *constantBufferDescription) = 0;
+        ConstantBufferDescription *constantBufferDescription);
 
     /**
      * Create a constant buffer with the given constant buffer description.
@@ -201,7 +199,7 @@ public:
      * created constant buffer object.
      */
     virtual ConstantBufferHandle CreateConstantBuffer(
-        const ConstantBufferDescription &constantBufferDescription) = 0;
+        const ConstantBufferDescription &constantBufferDescription);
 
     /**
      * Bind data associated with the given constant buffer object to the named
@@ -221,7 +219,7 @@ public:
     virtual void
     BindConstantBuffer(ProgramHandle programHandle,
                        const std::string &constantBufferName,
-                       ConstantBufferHandle constantBufferHandle) = 0;
+                       ConstantBufferHandle constantBufferHandle);
 
     /**
      * Update the data associated with the given constant buffer.
@@ -233,28 +231,24 @@ public:
      */
     virtual void UpdateConstantBufferData(
         ConstantBufferHandle constantBufferHandle,
-        const ConstantBufferDescription &constantBufferDescription) = 0;
+        const ConstantBufferDescription &constantBufferDescription);
 
     /**
      * Draw a number of vertices in a vertex buffer.
      *
      * The vertices are drawn one-by-one from the given starting vertex.
      *
-     * @param  buffer          VertexBufferHandle, vertex buffer to draw
-     * from.
-     * @param  primitiveType   PrimitiveType, primitives to draw with
-     * vertices.
-     * @param  startingVertex  size_t, index of vertex in vertex buffer to
-     * begin
+     * @param  buffer          VertexBufferHandle, vertex buffer to draw from.
+     * @param  primitiveType   PrimitiveType, primitives to draw with vertices.
+     * @param  startingVertex  size_t, index of vertex in vertex buffer to begin
      * drawing from.
-     * @param  numVertices     size_t, number of vertices to draw from
-     * vertex
+     * @param  numVertices     size_t, number of vertices to draw from vertex
      * buffer.
      */
     virtual void DrawVertices(VertexBufferHandle buffer,
                               PrimitiveType primitiveType,
                               size_t startingVertex,
-                              size_t numVertices) = 0;
+                              size_t numVertices);
 
     /**
      * Draw a number of vertices in a vertex buffer using the index buffer to
@@ -271,8 +265,161 @@ public:
                                      IndexBufferHandle indexBuffer,
                                      PrimitiveType primitiveType,
                                      size_t startingIndex,
-                                     size_t numIndices) = 0;
+                                     size_t numIndices);
 
 private:
+    /**
+     * A GLuint can represent one of many different OpenGL objects,
+     * therefore,
+     * use this enum to represent which OpenGL object it is.
+     */
+    enum class GLObjectType
+    {
+        ShaderObject,
+        ProgramObject,
+        VertexArrayObject,
+        IndexBufferObject,
+        TextureObject,
+        ConstantBufferObject
+    };
+
+    /** Each OpenGL object is stored with it's handle so that the handles can be
+     * updated easily. */
+    struct GLObject
+    {
+        ds::Handle handle;
+        GLuint object;
+    };
+
+    /**
+     * Store an OpenGL object and return a handle to it, allowing us to access
+     * that OpenGL object later.
+     *
+     * An OpenGL object may be a OpenGL handle to a shader, a program, a vertex
+     * buffer, etc.
+     *
+     * @param   glObject  GLuint, OpenGL handle to a OpenGL object.
+     * @param   type      GLObjectType, type of the OpenGL object to be stored.
+     * @return            ds::Handle, handle to OpenGL object stored.
+     */
+    ds::Handle StoreOpenGLObject(GLuint glObject, GLObjectType type);
+
+    /**
+     * Get the OpenGL object of the given type using the given handle.
+     *
+     * Method will fail if type of the handle does not match type of
+     * OpenGL object given.
+     *
+     * @param  handle           ds::Handle, handle to OpenGLObject.
+     * @param  type             GLObjectType, type of the OpenGLObject
+     *                          (VertexBuffer, Shader, etc.).
+     * @param  openGLObjectOut  GLuint *, where to store openGLObject if method
+     * is successful. If method is unsuccessful, openGLObject is not modified.
+     * @return                  bool, TRUE if the method retrieved OpenGLObject
+     * successfully, FALSE otherwise.
+     */
+    bool GetOpenGLObject(ds::Handle handle,
+                         GLObjectType type,
+                         GLuint *openGLObject) const;
+
+    /**
+     * Bind a vertex buffer for drawing.
+     *
+     * @param  vertexBufferHandle  VertexBufferHandle, handle to vertex buffer
+     * to draw.
+     */
+    void BindVertexBuffer(VertexBufferHandle vertexBufferHandle);
+
+    /**
+     * Unbind current vertex buffers.
+     */
+    void UnbindVertexBuffer();
+
+    /**
+     * Bind an index buffer for drawing.
+     *
+     * @param  indexBufferHandle  IndexBufferHandle, handle to index buffer to
+     * draw.
+     */
+    void BindIndexBuffer(IndexBufferHandle indexBufferHandle);
+
+    /**
+     * Unbind current index buffer.
+     */
+    void UnbindIndexBuffer();
+
+    /**
+     * Convert a BufferUsageType to an OpenGL-specific equivalent.
+     *
+     * @param   usage  BufferUsageType, buffer usage type.
+     * @return         GLenum, OpenGL buffer usage type.
+     */
+    GLenum ToGLBufferUsageType(BufferUsageType usage) const;
+
+    /**
+     * Convert a RenderDataType to an OpenGL-specific equivalent.
+     *
+     * @param   datatype  RenderDataType, data type to convert.
+     * @return            GLenum, OpenGL data type.
+     */
+    GLenum ToGLDataType(RenderDataType dataType) const;
+
+    /**
+     * Convert a boolean value to an OpenGL bool.
+     *
+     * @param   boolean  bool, boolean to convert.
+     * @return           GLenum, OpenGL bool.
+     */
+    GLenum ToGLBool(bool boolean) const;
+
+    /**
+     * Convert a ShaderType to an OpenGL-specific equivalent.
+     *
+     * @param   shaderType  ShaderType, shader type to convert.
+     * @return              GLenum, OpenGL shader type.
+     */
+    GLenum ToGLShaderType(ShaderType shaderType) const;
+
+    /**
+     * Convert a PrimitiveType to an OpenGL-specific equivalent.
+     *
+     * @param   primitiveType  PrimitiveType, primitive type to convert.
+     * @return                 GLenum, OpenGL primitive type.
+     */
+    GLenum ToGLPrimitiveType(PrimitiveType primitiveType) const;
+
+    /**
+     * Convert an image format to an OpenGL-specific equivalent.
+     *
+     * @param   imageFormat  ImageFormat, image format to convert.
+     * @return               GLenum, OpenGL image format.
+     */
+    GLenum ToGLImageFormat(ImageFormat imageFormat) const;
+
+    /**
+     * Convert an internal image storage format to an OpenGL-specific
+     * equivalent.
+     *
+     * @param   internalImageFormat  InternalImageFormat, internal image format
+     * to convert.
+     * @return                       GLenum, OpenGL internal image format.
+     */
+    GLenum
+    ToGLInternalImageFormat(InternalImageFormat internalImageFormat) const;
+
+    /** Handle manager used to manage the handles of all OpenGL objects we
+     * create */
+    ds::HandleManager m_handleManager;
+    /**
+     * All OpenGL objects that have been created by this renderer and their
+     * handles.
+     */
+    std::vector<GLObject> m_openGLObjects;
+
+    /** Texture slots used/available */
+    std::vector<TextureHandle> m_textureSlots;
+
+    /** Uniform binding points used/available */
+    std::vector<ConstantBufferHandle> m_constantBufferBindingPoints;
 };
 }

@@ -307,6 +307,29 @@ Matrix4 Matrix4::CreateScaleMatrix(float x, float y, float z)
     return (Matrix4::CreateScaleMatrix(Vector3(x, y, z)));
 }
 
+Matrix4 Matrix4::CreateFromQuaternion(const ds_math::Quaternion &quaternion)
+{
+    // Mat4 columns
+    Vector4 v0 = Vector4(
+        1 - 2 * quaternion.y * quaternion.y - 2 * quaternion.z * quaternion.z,
+        2 * quaternion.x * quaternion.y + 2 * quaternion.w * quaternion.z,
+        2 * quaternion.x * quaternion.z - 2 * quaternion.w * quaternion.y,
+        0.0f);
+    Vector4 v1 = Vector4(
+        2 * quaternion.x * quaternion.y - 2 * quaternion.w * quaternion.z,
+        1 - 2 * quaternion.x * quaternion.x - 2 * quaternion.z * quaternion.z,
+        2 * quaternion.y * quaternion.z + 2 * quaternion.w * quaternion.x,
+        0.0f);
+    Vector4 v2 = Vector4(
+        2 * quaternion.x * quaternion.z + 2 * quaternion.w * quaternion.y,
+        2 * quaternion.y * quaternion.z - 2 * quaternion.w * quaternion.x,
+        1 - 2 * quaternion.x * quaternion.x - 2 * quaternion.y * quaternion.y,
+        0.0f);
+    Vector4 v3 = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+
+    return (Matrix4(v0, v1, v2, v3));
+}
+
 Matrix4 operator+(const Matrix4 &m1, const Matrix4 &m2)
 {
     return (Matrix4(m1.data[0] + m2.data[0], m1.data[1] + m2.data[1],
