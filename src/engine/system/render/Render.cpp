@@ -26,68 +26,6 @@ bool Render::Initialize(const Config &config)
     m_factory.RegisterCreator<ShaderResource>(ShaderResource::CreateFromFile);
     m_factory.RegisterCreator<TextureResource>(TextureResource::CreateFromFile);
 
-    m_renderer =
-        std::unique_ptr<ds_render::IRenderer>(new ds_render::GLRenderer());
-
-    // TODO: Handle resize messages to change this
-    unsigned int viewportWidth = 800;
-    unsigned int viewportHeight = 600;
-
-    m_renderer->Init(viewportWidth, viewportHeight);
-
-    // Need a program to get information about Scene and Object constant
-    // buffers, so create a "fake" one.
-    // Create shader program
-    std::unique_ptr<ShaderResource> shaderResource =
-        m_factory.CreateResource<ShaderResource>(
-            "../assets/constantBuffer.shader");
-
-    // Load each shader
-    std::vector<ds_render::ShaderHandle> shaders;
-    std::vector<ds_render::ShaderType> shaderTypes =
-        shaderResource->GetShaderTypes();
-    for (auto shaderType : shaderTypes)
-    {
-        const std::string &shaderSource =
-            shaderResource->GetShaderSource(shaderType);
-
-        // Append shader to list
-        shaders.push_back(m_renderer->CreateShaderObject(
-            shaderType, shaderSource.size(), shaderSource.c_str()));
-        std::cout << shaderSource << std::endl;
-    }
-    // Compile shaders into shader program
-    ds_render::ProgramHandle fakeShader = m_renderer->CreateProgram(shaders);
-
-    // Get shader data descriptions
-    m_sceneBufferDescrip.AddMember("Scene.viewMatrix");
-    m_sceneBufferDescrip.AddMember("Scene.projectionMatrix");
-    m_renderer->GetConstantBufferDescription(fakeShader, "Scene",
-                                             &m_sceneBufferDescrip);
-
-    m_objectBufferDescrip.AddMember("Object.modelMatrix");
-    m_renderer->GetConstantBufferDescription(fakeShader, "Object",
-                                             &m_objectBufferDescrip);
-
-
-    // Create shader data
-    m_viewMatrix = // ds_math::Matrix4(1.0f);
-        ds_math::Matrix4::CreateTranslationMatrix(-4.0f, -3.0f, -10.0f);
-    m_projectionMatrix = ds_math::Matrix4::CreatePerspectiveFieldOfView(
-        ds_math::MathHelper::PI / 3.0f, 800.0f / 600.0f, 0.1f, 100.0f);
-    m_sceneBufferDescrip.InsertMemberData(
-        "Scene.viewMatrix", sizeof(ds_math::Matrix4), &m_viewMatrix);
-    m_sceneBufferDescrip.InsertMemberData("Scene.projectionMatrix",
-                                          sizeof(ds_math::Matrix4),
-                                          &m_projectionMatrix);
-
-    ds_math::Matrix4 modelMatrix = ds_math::Matrix4(1.0f);
-    m_objectBufferDescrip.InsertMemberData(
-        "Object.modelMatrix", sizeof(ds_math::Matrix4), &modelMatrix);
-
-    m_sceneMatrices = m_renderer->CreateConstantBuffer(m_sceneBufferDescrip);
-    m_objectMatrices = m_renderer->CreateConstantBuffer(m_objectBufferDescrip);
-
     return result;
 }
 
@@ -100,47 +38,7 @@ void Render::Update(float deltaTime)
     {
         m_renderer->ClearBuffers();
 
-        // For each render component instance
-        for (unsigned int i = 0; i < m_renderComponentManager.GetNumInstances();
-             ++i)
-        {
-            Instance renderInstance = Instance::MakeInstance(i);
-            // Entity entity =
-            //     m_renderComponentManager.GetEntityForInstance(renderInstance);
-            // Instance transformInstance =
-            //     m_transformComponentManager.GetInstanceForEntity(entity);
-
-            // Get mesh
-            ds_render::Mesh mesh =
-                m_renderComponentManager.GetMesh(renderInstance);
-            // Get material
-            ds_render::Material material =
-                m_renderComponentManager.GetMaterial(renderInstance);
-
-            // Set shader program
-            m_renderer->SetProgram(material.GetProgram());
-
-            // For each texture in material, bind it to shader
-            for (auto samplerTexture : material.GetTextures())
-            {
-                m_renderer->BindTextureToSampler(
-                    material.GetProgram(), samplerTexture.first,
-                    samplerTexture.second.GetTextureHandle());
-            }
-
-            // Draw mesh
-            m_renderer->DrawVerticesIndexed(
-                mesh.GetVertexBuffer(), mesh.GetIndexBuffer(),
-                ds_render::PrimitiveType::Triangles, mesh.GetStartingIndex(),
-                mesh.GetNumIndices());
-
-            // For each texture in material, unbind
-            for (auto samplerTexture : material.GetTextures())
-            {
-                m_renderer->UnbindTextureFromSampler(
-                    samplerTexture.second.GetTextureHandle());
-            }
-        }
+        RenderScene();
     }
 }
 
@@ -171,34 +69,98 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 
         switch (header.type)
         {
-        // case ds_msg::MessageType::GraphicsContextCreated:
-        // {
-        //     ds_msg::GraphicsContextCreated gfxContext;
-        //     (*messages) >> gfxContext;
+        case ds_msg::MessageType::GraphicsContextCreated:
+        {
+            ds_msg::GraphicsContextCreated gfxContext;
+            (*messages) >> gfxContext;
 
-        //     // If we haven't already created a renderer
-        //     if (m_renderer == nullptr)
-        //     {
-        //         // Create a renderer to match graphics context type
-        //         // GL renderer for GL context, etc...
-        //         switch (gfxContext.contextInfo.type)
-        //         {
-        //         case ds_platform::GraphicsContext::ContextType::OpenGL:
-        //             m_renderer = std::unique_ptr<ds_render::IRenderer>(
-        //                 new ds_render::GLRenderer());
+            // If we haven't already created a renderer
+            if (m_renderer == nullptr)
+            {
+                // Create a renderer to match graphics context type
+                // GL renderer for GL context, etc...
+                switch (gfxContext.contextInfo.type)
+                {
+                case ds_platform::GraphicsContext::ContextType::OpenGL:
+                {
+                    m_renderer = std::unique_ptr<ds_render::IRenderer>(
+                        new ds_render::GLRenderer());
 
-        //             // TODO: Handle resize messages to change this
-        //             unsigned int viewportWidth = 800;
-        //             unsigned int viewportHeight = 600;
+                    // TODO: Handle resize messages to change this
+                    unsigned int viewportWidth = 800;
+                    unsigned int viewportHeight = 600;
 
-        //             m_renderer->Init(viewportWidth, viewportHeight);
-        //             break;
-        //         default:
-        //             break;
-        //         }
-        //     }
-        //     break;
-        // }
+                    m_renderer->Init(viewportWidth, viewportHeight);
+
+                    // Need a program to get information about Scene and Object
+                    // constant
+                    // buffers, so create a "fake" one.
+                    // Create shader program
+                    std::unique_ptr<ShaderResource> shaderResource =
+                        m_factory.CreateResource<ShaderResource>(
+                            "../assets/constantBuffer.shader");
+
+                    // Load each shader
+                    std::vector<ds_render::ShaderHandle> shaders;
+                    std::vector<ds_render::ShaderType> shaderTypes =
+                        shaderResource->GetShaderTypes();
+                    for (auto shaderType : shaderTypes)
+                    {
+                        const std::string &shaderSource =
+                            shaderResource->GetShaderSource(shaderType);
+
+                        // Append shader to list
+                        shaders.push_back(m_renderer->CreateShaderObject(
+                            shaderType, shaderSource.size(),
+                            shaderSource.c_str()));
+                        std::cout << shaderSource << std::endl;
+                    }
+                    // Compile shaders into shader program
+                    ds_render::ProgramHandle fakeShader =
+                        m_renderer->CreateProgram(shaders);
+
+                    // Get shader data descriptions
+                    m_sceneBufferDescrip.AddMember("Scene.viewMatrix");
+                    m_sceneBufferDescrip.AddMember("Scene.projectionMatrix");
+                    m_renderer->GetConstantBufferDescription(
+                        fakeShader, "Scene", &m_sceneBufferDescrip);
+
+                    m_objectBufferDescrip.AddMember("Object.modelMatrix");
+                    m_renderer->GetConstantBufferDescription(
+                        fakeShader, "Object", &m_objectBufferDescrip);
+
+
+                    // Create shader data
+                    m_viewMatrix = ds_math::Matrix4(1.0f);
+                    m_projectionMatrix =
+                        ds_math::Matrix4::CreatePerspectiveFieldOfView(
+                            ds_math::MathHelper::PI / 3.0f, 800.0f / 600.0f,
+                            0.1f, 100.0f);
+                    m_sceneBufferDescrip.InsertMemberData(
+                        "Scene.viewMatrix", sizeof(ds_math::Matrix4),
+                        &m_viewMatrix);
+                    m_sceneBufferDescrip.InsertMemberData(
+                        "Scene.projectionMatrix", sizeof(ds_math::Matrix4),
+                        &m_projectionMatrix);
+
+                    ds_math::Matrix4 modelMatrix = ds_math::Matrix4(1.0f);
+                    m_objectBufferDescrip.InsertMemberData(
+                        "Object.modelMatrix", sizeof(ds_math::Matrix4),
+                        &modelMatrix);
+
+                    m_sceneMatrices =
+                        m_renderer->CreateConstantBuffer(m_sceneBufferDescrip);
+                    m_objectMatrices =
+                        m_renderer->CreateConstantBuffer(m_objectBufferDescrip);
+
+                    break;
+                }
+                default:
+                    break;
+                }
+            }
+            break;
+        }
         case ds_msg::MessageType::CreateComponent:
         {
             ds_msg::CreateComponent createComponentMsg;
@@ -472,7 +434,58 @@ void Render::RenderScene()
     m_renderer->UpdateConstantBufferData(m_sceneMatrices, m_sceneBufferDescrip);
 
     // For each render component
-    // Update object constant buffer
-    // Render
+    for (unsigned int i = 0; i < m_renderComponentManager.GetNumInstances();
+         ++i)
+    {
+        Instance renderInstance = Instance::MakeInstance(i);
+        // Get transform component
+        Entity entity =
+            m_renderComponentManager.GetEntityForInstance(renderInstance);
+        Instance transformInstance =
+            m_transformComponentManager.GetInstanceForEntity(entity);
+
+        // If has transform instance
+        if (transformInstance.IsValid())
+        {
+            // Update object constant buffer with world transform of this
+            // transform instance
+            m_objectBufferDescrip.InsertMemberData(
+                "Object.modelMatrix", sizeof(ds_math::Matrix4),
+                &m_transformComponentManager.GetWorldTransform(
+                    transformInstance));
+            m_renderer->UpdateConstantBufferData(m_objectMatrices,
+                                                 m_objectBufferDescrip);
+        }
+
+        // Get mesh
+        ds_render::Mesh mesh = m_renderComponentManager.GetMesh(renderInstance);
+        // Get material
+        ds_render::Material material =
+            m_renderComponentManager.GetMaterial(renderInstance);
+
+        // Set shader program
+        m_renderer->SetProgram(material.GetProgram());
+
+        // For each texture in material, bind it to shader
+        for (auto samplerTexture : material.GetTextures())
+        {
+            m_renderer->BindTextureToSampler(
+                material.GetProgram(), samplerTexture.first,
+                samplerTexture.second.GetTextureHandle());
+        }
+
+        // Draw mesh
+        m_renderer->DrawVerticesIndexed(
+            mesh.GetVertexBuffer(), mesh.GetIndexBuffer(),
+            ds_render::PrimitiveType::Triangles, mesh.GetStartingIndex(),
+            mesh.GetNumIndices());
+
+        // For each texture in material, unbind
+        for (auto samplerTexture : material.GetTextures())
+        {
+            m_renderer->UnbindTextureFromSampler(
+                samplerTexture.second.GetTextureHandle());
+        }
+    }
 }
 }
