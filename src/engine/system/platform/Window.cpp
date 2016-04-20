@@ -66,16 +66,17 @@ bool Window::CreateSDL2Window(unsigned int redBits,
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
+    uint32_t flags = 0x0;
+
     if (lockMouse)
     {
-        if (SDL_SetRelativeMouseMode(SDL_TRUE) < 0)
-        {
-            std::cout << "Failed to lock mouse: " << SDL_GetError()
-                      << std::endl;
-        }
+        flags |= SDL_WINDOW_INPUT_GRABBED;
+        // if (SDL_SetRelativeMouseMode(SDL_TRUE) < 0)
+        // {
+        //     std::cout << "Failed to lock mouse: " << SDL_GetError()
+        //               << std::endl;
+        // }
     }
-
-    uint32_t flags = 0x0;
 
     if (fullscreen)
     {

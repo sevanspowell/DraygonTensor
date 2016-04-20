@@ -118,6 +118,11 @@ bool Input::IsKeyPressed(const std::string &keyName) const
     return isPressed;
 }
 
+void Input::GetMouseDeltaXY(int *xDelta, int *yDelta) const
+{
+    SDL_GetRelativeMouseState(xDelta, yDelta);
+}
+
 bool Input::GetKeyCodeForKeyName(std::string keyName,
                                  ds_platform::Keyboard::Key *key) const
 {
