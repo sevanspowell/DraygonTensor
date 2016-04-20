@@ -94,6 +94,34 @@ namespace ds
 		std::vector<std::vector<float>> GetPixelHeightsVector();
 
 		/**
+		* get the size of the vertices vector
+		*
+		*@return a int containing the size of the vector
+		*/
+		int GetVerticesCount();
+
+		/**
+		* get the size of the indices vector
+		*
+		*@return a int containing the size of the vector
+		*/
+		int GetIndicesCount();
+
+		/**
+		* get the size of the normals vector
+		*
+		*@return a int containing the size of the vector
+		*/
+		int GetNormalsCount();
+
+		/**
+		* get the size of the normals vector
+		*
+		*@return a int containing the size of the vector
+		*/
+		int GetTextureCoordinatesCount();
+
+		/**
 		* sets width and depth in the terrain struct
 		*
 		*/

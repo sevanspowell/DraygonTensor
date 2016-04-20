@@ -293,6 +293,34 @@ namespace ds
 			return m_terrain.m_pixelHeights;
 		}
 		
+		int TerrainResource::GetVerticesCount()
+		{
+			
+			return m_terrain.m_vertices.size();
+			
+		}
+		
+		int TerrainResource::GetIndicesCount()
+		{
+			
+			return m_terrain.m_indices.size();
+			
+		}
+		
+		int TerrainResource::GetNormalsCount()
+		{
+			
+			return m_terrain.m_normals.size();
+			
+		}
+		
+		int TerrainResource::GetTextureCoordinatesCount()
+		{
+			
+			return m_terrain.m_textureCoordinates.size();
+			
+		}
+		
 		void TerrainResource::SetWidthDepth(unsigned int w, unsigned int d)
 		{
 			m_terrain.m_terrainWidth = w;

@@ -272,27 +272,20 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                         // // Get texture coordinate data
 
                         // const std::vector<ds_math::Vector3>
-
                         // textureCoordinates =
-
                         //     meshResource->GetTexCoords();
 
                         // for (const ds_math::Vector3 &texCoord :
-
                         //      textureCoordinates)
-
                         // {
-
                         //     vertexBufferStore << texCoord.x;
 
                         //     // Flip y texcoord
-
                         //     vertexBufferStore << 1.0f - texCoord.y;
 
                         // }
 
                         // // Describe texCoord data
-
                         // ds_render::VertexBufferDescription::AttributeDescription
                         //     texCoordAttributeDescriptor;
 
