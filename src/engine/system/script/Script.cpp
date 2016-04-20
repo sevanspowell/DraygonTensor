@@ -85,6 +85,8 @@ bool Script::Initialize(const Config &config)
 
 void Script::Update(float deltaTime)
 {
+    ProcessEvents(&m_messagesReceived);
+
     if (m_bootScriptLoaded)
     {
         m_lua.CallLuaFunction(
@@ -92,8 +94,6 @@ void Script::Update(float deltaTime)
             deltaTime);
         m_lua.CallLuaFunction("render", 0);
     }
-
-    ProcessEvents(&m_messagesReceived);
 }
 
 void Script::Shutdown()
@@ -203,6 +203,45 @@ void Script::MoveEntity(Entity entity, const ds_math::Vector3 &deltaPosition)
                           sizeof(ds_msg::MoveEntity), &entityMoveMsg);
 }
 
+ds_math::Matrix4 Script::GetWorldTransform(Entity entity) const
+{
+    ds_math::Matrix4 worldTransform;
+
+    Instance i = m_transformManager.GetInstanceForEntity(entity);
+
+    if (i.IsValid())
+    {
+        worldTransform = m_transformManager.GetWorldTransform(i);
+    }
+
+    return worldTransform;
+}
+
+ds_math::Matrix4 Script::GetLocalTransform(Entity entity) const
+{
+    ds_math::Matrix4 localTransform;
+
+    Instance i = m_transformManager.GetInstanceForEntity(entity);
+
+    if (i.IsValid())
+    {
+        localTransform = m_transformManager.GetLocalTransform(i);
+    }
+
+    return localTransform;
+}
+
+void Script::SetLocalTransform(Entity entity, const ds_math::Matrix4 &transform)
+{
+    ds_msg::SetLocalTransform setLocalMsg;
+    setLocalMsg.entity = entity;
+    setLocalMsg.localTransform = transform;
+
+    ds_msg::AppendMessage(&m_messagesGenerated,
+                          ds_msg::MessageType::SetLocalTransform,
+                          sizeof(ds_msg::SetLocalTransform), &setLocalMsg);
+}
+
 bool Script::IsNextScriptMessage() const
 {
     return (m_toScriptMessages.AvailableBytes() > 0);
@@ -293,6 +332,71 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
             // Insert payload into messages to be sent script
             m_toScriptMessages << strafeRightMsg;
             break;
+        case ds_msg::MessageType::CreateComponent:
+        {
+            ds_msg::CreateComponent createComponentMsg;
+            (*messages) >> createComponentMsg;
+
+            // Lod up component data for component
+            Config componentData;
+            if (componentData.LoadMemory(StringIntern::Instance().GetString(
+                    createComponentMsg.componentData)))
+            {
+                // Get component type
+                std::string componentType = StringIntern::Instance().GetString(
+                    createComponentMsg.componentType);
+                std::cout << "Create transform component" << std::endl;
+                // Create transform component
+                if (componentType == "transformComponent")
+                {
+                    TransformComponentManager::
+                        CreateComponentForEntityFromConfig(
+                            &m_transformManager, createComponentMsg.entity,
+                            componentData);
+                }
+            }
+            break;
+        }
+        case ds_msg::MessageType::MoveEntity:
+        {
+            ds_msg::MoveEntity entityMoveMsg;
+            (*messages) >> entityMoveMsg;
+
+            // Instance transform =
+            //     m_transformManager.GetInstanceForEntity(entityMoveMsg.entity);
+
+            // if (transform.IsValid())
+            // {
+            //     // Get current transform
+            //     const ds_math::Matrix4 &currentTransform =
+            //         m_transformManager.GetLocalTransform(transform);
+            //     // Translate it
+            //     ds_math::Matrix4 newTransform =
+            //         currentTransform *
+            //         ds_math::Matrix4::CreateTranslationMatrix(
+            //             entityMoveMsg.deltaPosition);
+
+            //     // Set transform of entity
+            //     m_transformManager.SetLocalTransform(transform, newTransform);
+            // }
+            break;
+        }
+        case ds_msg::MessageType::SetLocalTransform:
+        {
+            ds_msg::SetLocalTransform setLocalMsg;
+            (*messages) >> setLocalMsg;
+
+            Instance transform =
+                m_transformManager.GetInstanceForEntity(setLocalMsg.entity);
+
+            if (transform.IsValid())
+            {
+                // Set transform of entity
+                m_transformManager.SetLocalTransform(
+                    transform, setLocalMsg.localTransform);
+            }
+            break;
+        }
         default:
             messages->Extract(header.size);
             break;
@@ -303,7 +407,6 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
 void Script::RegisterScriptBindingSet(const char *systemName,
                                       ISystem *systemPtr)
 {
-    std::cout << "HERE " << systemName << " " << (void *)systemPtr << std::endl;
     if (systemPtr != nullptr)
     {
         ScriptBindingSet scriptBindings = systemPtr->GetScriptBindings();
@@ -322,7 +425,6 @@ void Script::RegisterScriptBindingSet(const char *systemName,
             const std::pair<const char *, SCRIPT_FN> &methodPair =
                 scriptBindings.GetMethodPair(i);
 
-            std::cout << methodPair.first << std::endl;
             methods[i].name = methodPair.first;
             methods[i].func = methodPair.second;
         }
@@ -336,7 +438,6 @@ void Script::RegisterScriptBindingSet(const char *systemName,
             const std::pair<const char *, SCRIPT_FN> &functionPair =
                 scriptBindings.GetFunctionPair(i);
 
-            std::cout << functionPair.first << std::endl;
             functions[i].name = functionPair.first;
             functions[i].func = functionPair.second;
         }

@@ -295,6 +295,23 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
             }
             break;
         }
+        case ds_msg::MessageType::SetLocalTransform:
+        {
+            ds_msg::SetLocalTransform setLocalMsg;
+            (*messages) >> setLocalMsg;
+
+            Instance transform =
+                m_transformComponentManager.GetInstanceForEntity(
+                    setLocalMsg.entity);
+
+            if (transform.IsValid())
+            {
+                // Set transform of entity
+                m_transformComponentManager.SetLocalTransform(
+                    transform, setLocalMsg.localTransform);
+            }
+            break;
+        }
         default:
             messages->Extract(header.size);
             break;

@@ -333,6 +333,41 @@ static int l_Vector3Invert(lua_State *L)
     return 1;
 }
 
+static int l_Vector3UnaryInvert(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Vector3 *v = NULL;
+
+    v = (ds_math::Vector3 *)luaL_checkudata(L, 1, "Vector3");
+
+    if (v != NULL)
+    {
+        // Allocate memory for Vector3
+        ds_math::Vector3 *invertedV =
+            (ds_math::Vector3 *)lua_newuserdata(L, sizeof(ds_math::Vector3));
+
+        *invertedV = ds_math::Vector3::Invert(*v);
+
+        // Get Vector3 metatable and put on top of stack
+        luaL_getmetatable(L, "Vector3");
+        // Set it as metatable of new user data (the Vector3 - second from top
+        // on stack)
+        lua_setmetatable(L, -2);
+    }
+
+    // userdata that called this method * 2, inverted Vector3
+    // See: http://lua-users.org/lists/lua-l/2010-10/msg00783.html
+    assert(lua_gettop(L) == 3);
+
+    return 1;
+}
+
 static int l_Vector3Dot(lua_State *L)
 {
     // Get number of arguments provided
@@ -474,6 +509,43 @@ static int l_Vector3UnitZ(lua_State *L)
 
     // Unit vector result
     assert(lua_gettop(L) == 1);
+
+    return 1;
+}
+
+static int l_Vector3MatrixTransform(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2", n);
+    }
+
+    // Get vector and matrix arguments
+    ds_math::Vector3 *v = NULL;
+    ds_math::Matrix4 *m = NULL;
+
+    v = (ds_math::Vector3 *)luaL_checkudata(L, 1, "Vector3");
+    m = (ds_math::Matrix4 *)luaL_checkudata(L, 2, "Matrix4");
+
+    if (v != NULL && m != NULL)
+    {
+        // Allocate memory for transformed Vector3
+        ds_math::Vector3 *transformedV =
+            (ds_math::Vector3 *)lua_newuserdata(L, sizeof(ds_math::Vector3));
+
+        *transformedV = ds_math::Vector3::Transform(*v, *m);
+
+        // Get Vector3 metatable and put on top of stack
+        luaL_getmetatable(L, "Vector3");
+        // Set it as metatable of new user data (the Vector3 - second from top
+        // on stack)
+        lua_setmetatable(L, -2);
+    }
+
+    // Vector3 and Matrix4 arguments and transformed vector result
+    assert(lua_gettop(L) == 3);
 
     return 1;
 }
@@ -721,6 +793,43 @@ static int l_QuaternionMul(lua_State *L)
     }
 
     // Two Quaternion arguments, quaternion multiplication result
+    assert(lua_gettop(L) == 3);
+
+    return 1;
+}
+
+static int l_QuaternionFromAxisAngle(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Vector3 *axis = NULL;
+
+    axis = (ds_math::Vector3 *)luaL_checkudata(L, 1, "Vector3");
+
+    if (axis != NULL)
+    {
+        ds_math::scalar angle = (ds_math::scalar)luaL_checknumber(L, 2);
+
+        // Allocate memory for Quaternion
+        ds_math::Quaternion *q = (ds_math::Quaternion *)lua_newuserdata(
+            L, sizeof(ds_math::Quaternion));
+
+        *q = ds_math::Quaternion::CreateFromAxisAngle(*axis, angle);
+
+        // Get Quaternion metatable and put on top of stack
+        luaL_getmetatable(L, "Quaternion");
+        // Set it as metatable of new user data (the Quaternion - second from
+        // top
+        // on stack)
+        lua_setmetatable(L, -2);
+    }
+
+    // Axis and angle arguments and quaternion created
     assert(lua_gettop(L) == 3);
 
     return 1;
@@ -994,11 +1103,601 @@ static int l_Matrix4Mul(lua_State *L)
     return 1;
 }
 
-static const luaL_Reg vector3Methods[] = {
-    {"__tostring", l_Vector3ToString}, {"get_x", l_Vector3GetX},
-    {"set_x", l_Vector3SetX},          {"get_y", l_Vector3GetY},
-    {"set_y", l_Vector3SetY},          {"get_z", l_Vector3GetZ},
-    {"set_z", l_Vector3SetZ},          {NULL, NULL}};
+static int l_Vector4Ctor(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 5)
+    {
+        return luaL_error(L, "Got %d arguments, expected 5.", n);
+    }
+
+    // Allocate memory for Vector3
+    ds_math::Vector4 *v =
+        (ds_math::Vector4 *)lua_newuserdata(L, sizeof(ds_math::Vector4));
+
+    // Get arguments
+    ds_math::scalar x = (ds_math::scalar)luaL_checknumber(L, 2);
+    ds_math::scalar y = (ds_math::scalar)luaL_checknumber(L, 3);
+    ds_math::scalar z = (ds_math::scalar)luaL_checknumber(L, 4);
+    ds_math::scalar w = (ds_math::scalar)luaL_checknumber(L, 5);
+
+    *v = ds_math::Vector4(x, y, z, w);
+
+    // Get Vector3 metatable
+    luaL_getmetatable(L, "Vector4");
+    // Set it as metatable of new user data (the Vector3)
+    lua_setmetatable(L, -2);
+
+    // userdata that called this method, x, y, z, w values and Vector4
+    // constructed
+    assert(lua_gettop(L) == 6);
+
+    return 1;
+}
+
+static int l_Vector4New(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 4)
+    {
+        return luaL_error(L, "Got %d arguments, expected 5.", n);
+    }
+
+    // Allocate memory for Vector3
+    ds_math::Vector4 *v =
+        (ds_math::Vector4 *)lua_newuserdata(L, sizeof(ds_math::Vector4));
+
+    // Get arguments
+    ds_math::scalar x = (ds_math::scalar)luaL_checknumber(L, 1);
+    ds_math::scalar y = (ds_math::scalar)luaL_checknumber(L, 2);
+    ds_math::scalar z = (ds_math::scalar)luaL_checknumber(L, 3);
+    ds_math::scalar w = (ds_math::scalar)luaL_checknumber(L, 4);
+
+    *v = ds_math::Vector4(x, y, z, w);
+
+    // Get Vector3 metatable
+    luaL_getmetatable(L, "Vector4");
+    // Set it as metatable of new user data (the Vector3)
+    lua_setmetatable(L, -2);
+
+    //  x, y, z, w values and Vector4 constructed
+    assert(lua_gettop(L) == 5);
+
+    return 1;
+}
+
+static int l_Vector4ToString(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 1)
+    {
+        return luaL_error(L, "Got %d arguments, expected 1.", n);
+    }
+
+    ds_math::Vector4 *v = NULL;
+
+    v = (ds_math::Vector4 *)luaL_checkudata(L, 1, "Vector4");
+
+    if (v != NULL)
+    {
+        std::stringstream ss;
+        ss << *v;
+        lua_pushstring(L, ss.str().c_str());
+    }
+
+    // user data that called this method, string representation
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_Vector4Magnitude(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 1)
+    {
+        return luaL_error(L, "Got %d arguments, expected 1.", n);
+    }
+
+    ds_math::Vector4 *v = NULL;
+
+    v = (ds_math::Vector4 *)luaL_checkudata(L, 1, "Vector4");
+
+    if (v != NULL)
+    {
+        lua_pushnumber(L, ds_math::Vector4::Magnitude(*v));
+    }
+
+    // user data that called this method, magnitude
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_Vector4Normalize(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 1)
+    {
+        return luaL_error(L, "Got %d arguments, expected 1.", n);
+    }
+
+    ds_math::Vector4 *v = NULL;
+
+    v = (ds_math::Vector4 *)luaL_checkudata(L, 1, "Vector4");
+
+    if (v != NULL)
+    {
+        // Allocate memory for Vector4
+        ds_math::Vector4 *normalizedV =
+            (ds_math::Vector4 *)lua_newuserdata(L, sizeof(ds_math::Vector4));
+
+        *normalizedV = ds_math::Vector4::Normalize(*v);
+
+        // Get Vector4 metatable and put on top of stack
+        luaL_getmetatable(L, "Vector4");
+        // Set it as metatable of new user data (the Vector4 - second from top
+        // on stack)
+        lua_setmetatable(L, -2);
+    }
+
+    // userdata that called this method, normalized Vector3
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_Vector4Invert(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 1)
+    {
+        return luaL_error(L, "Got %d arguments, expected 1.", n);
+    }
+
+    ds_math::Vector4 *v = NULL;
+
+    v = (ds_math::Vector4 *)luaL_checkudata(L, 1, "Vector4");
+
+    if (v != NULL)
+    {
+        // Allocate memory for Vector4
+        ds_math::Vector4 *invertedV =
+            (ds_math::Vector4 *)lua_newuserdata(L, sizeof(ds_math::Vector4));
+
+        *invertedV = ds_math::Vector4::Invert(*v);
+
+        // Get Vector4 metatable and put on top of stack
+        luaL_getmetatable(L, "Vector4");
+        // Set it as metatable of new user data (the Vector4 - second from top
+        // on stack)
+        lua_setmetatable(L, -2);
+    }
+
+    // userdata that called this method, inverted Vector3
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_Vector4UnaryInvert(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Vector4 *v = NULL;
+
+    v = (ds_math::Vector4 *)luaL_checkudata(L, 1, "Vector4");
+
+    if (v != NULL)
+    {
+        // Allocate memory for Vector4
+        ds_math::Vector4 *invertedV =
+            (ds_math::Vector4 *)lua_newuserdata(L, sizeof(ds_math::Vector4));
+
+        *invertedV = ds_math::Vector4::Invert(*v);
+
+        // Get Vector4 metatable and put on top of stack
+        luaL_getmetatable(L, "Vector4");
+        // Set it as metatable of new user data (the Vector4 - second from top
+        // on stack)
+        lua_setmetatable(L, -2);
+    }
+
+    // userdata that called this method * 2, inverted Vector4
+    // See: http://lua-users.org/lists/lua-l/2010-10/msg00783.html
+    assert(lua_gettop(L) == 3);
+
+    return 1;
+}
+
+static int l_Vector4Dot(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Vector4 *v1 = NULL;
+    ds_math::Vector4 *v2 = NULL;
+
+    v1 = (ds_math::Vector4 *)luaL_checkudata(L, 1, "Vector4");
+    v2 = (ds_math::Vector4 *)luaL_checkudata(L, 2, "Vector4");
+
+    if (v1 != NULL && v2 != NULL)
+    {
+        lua_pushnumber(L, ds_math::Vector4::Dot(*v1, *v2));
+    }
+
+    // Two Vector4 arguments, dot product result
+    assert(lua_gettop(L) == 3);
+
+    return 1;
+}
+
+static int l_Vector4UnitX(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 0)
+    {
+        return luaL_error(L, "Got %d arguments, expected 0.", n);
+    }
+
+    // Allocate memory for Vector3
+    ds_math::Vector4 *unitX =
+        (ds_math::Vector4 *)lua_newuserdata(L, sizeof(ds_math::Vector4));
+
+    *unitX = ds_math::Vector4::UnitX;
+
+    // Get Vector4 metatable and put on top of stack
+    luaL_getmetatable(L, "Vector4");
+    // Set it as metatable of new user data (the Vector4 - second from top
+    // on stack)
+    lua_setmetatable(L, -2);
+
+    // Unit vector result
+    assert(lua_gettop(L) == 1);
+
+    return 1;
+}
+
+static int l_Vector4UnitY(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 0)
+    {
+        return luaL_error(L, "Got %d arguments, expected 0.", n);
+    }
+
+    // Allocate memory for Vector3
+    ds_math::Vector4 *unitY =
+        (ds_math::Vector4 *)lua_newuserdata(L, sizeof(ds_math::Vector4));
+
+    *unitY = ds_math::Vector4::UnitY;
+
+    // Get Vector4 metatable and put on top of stack
+    luaL_getmetatable(L, "Vector4");
+    // Set it as metatable of new user data (the Vector4 - second from top
+    // on stack)
+    lua_setmetatable(L, -2);
+
+    // Unit vector result
+    assert(lua_gettop(L) == 1);
+
+    return 1;
+}
+
+static int l_Vector4UnitZ(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 0)
+    {
+        return luaL_error(L, "Got %d arguments, expected 0.", n);
+    }
+
+    // Allocate memory for Vector3
+    ds_math::Vector4 *unitZ =
+        (ds_math::Vector4 *)lua_newuserdata(L, sizeof(ds_math::Vector4));
+
+    *unitZ = ds_math::Vector4::UnitZ;
+
+    // Get Vector4 metatable and put on top of stack
+    luaL_getmetatable(L, "Vector4");
+    // Set it as metatable of new user data (the Vector4 - second from top
+    // on stack)
+    lua_setmetatable(L, -2);
+
+    // Unit vector result
+    assert(lua_gettop(L) == 1);
+
+    return 1;
+}
+
+static int l_Vector4UnitW(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 0)
+    {
+        return luaL_error(L, "Got %d arguments, expected 0.", n);
+    }
+
+    // Allocate memory for Vector3
+    ds_math::Vector4 *unitW =
+        (ds_math::Vector4 *)lua_newuserdata(L, sizeof(ds_math::Vector4));
+
+    *unitW = ds_math::Vector4::UnitW;
+
+    // Get Vector4 metatable and put on top of stack
+    luaL_getmetatable(L, "Vector4");
+    // Set it as metatable of new user data (the Vector4 - second from top
+    // on stack)
+    lua_setmetatable(L, -2);
+
+    // Unit vector result
+    assert(lua_gettop(L) == 1);
+
+    return 1;
+}
+
+static int l_Vector4MatrixTransform(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2", n);
+    }
+
+    // Get vector and matrix arguments
+    ds_math::Vector4 *v = NULL;
+    ds_math::Matrix4 *m = NULL;
+
+    v = (ds_math::Vector4 *)luaL_checkudata(L, 1, "Vector4");
+    m = (ds_math::Matrix4 *)luaL_checkudata(L, 2, "Matrix4");
+
+    if (v != NULL && m != NULL)
+    {
+        // Allocate memory for transformed Vector4
+        ds_math::Vector4 *transformedV =
+            (ds_math::Vector4 *)lua_newuserdata(L, sizeof(ds_math::Vector4));
+
+        *transformedV = ds_math::Vector4::Transform(*v, *m);
+
+        // Get Vector4 metatable and put on top of stack
+        luaL_getmetatable(L, "Vector4");
+        // Set it as metatable of new user data (the Vector4 - second from top
+        // on stack)
+        lua_setmetatable(L, -2);
+    }
+
+    // Vector4 and Matrix4 arguments and transformed vector result
+    assert(lua_gettop(L) == 3);
+
+    return 1;
+}
+
+static int l_Vector4GetX(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 1)
+    {
+        return luaL_error(L, "Got %d arguments, expected 1.", n);
+    }
+
+    ds_math::Vector4 *v = NULL;
+
+    v = (ds_math::Vector4 *)luaL_checkudata(L, 1, "Vector4");
+
+    if (v != NULL)
+    {
+        lua_pushnumber(L, v->x);
+    }
+
+    // user data that called this method, x member value
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_Vector4SetX(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Vector4 *v = NULL;
+
+    v = (ds_math::Vector4 *)luaL_checkudata(L, 1, "Vector4");
+
+    if (v != NULL)
+    {
+        v->x = (ds_math::scalar)luaL_checknumber(L, 2);
+    }
+
+    // user data that called this method, x member value given
+    assert(lua_gettop(L) == 2);
+
+    return 0;
+}
+
+static int l_Vector4GetY(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 1)
+    {
+        return luaL_error(L, "Got %d arguments, expected 1.", n);
+    }
+
+    ds_math::Vector4 *v = NULL;
+
+    v = (ds_math::Vector4 *)luaL_checkudata(L, 1, "Vector4");
+
+    if (v != NULL)
+    {
+        lua_pushnumber(L, v->y);
+    }
+
+    // user data that called this method, x member value
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_Vector4SetY(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Vector4 *v = NULL;
+
+    v = (ds_math::Vector4 *)luaL_checkudata(L, 1, "Vector4");
+
+    if (v != NULL)
+    {
+        v->y = (ds_math::scalar)luaL_checknumber(L, 2);
+    }
+
+    // user data that called this method, x member value given
+    assert(lua_gettop(L) == 2);
+
+    return 0;
+}
+
+static int l_Vector4GetZ(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 1)
+    {
+        return luaL_error(L, "Got %d arguments, expected 1.", n);
+    }
+
+    ds_math::Vector4 *v = NULL;
+
+    v = (ds_math::Vector4 *)luaL_checkudata(L, 1, "Vector4");
+
+    if (v != NULL)
+    {
+        lua_pushnumber(L, v->z);
+    }
+
+    // user data that called this method, x member value
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_Vector4SetZ(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Vector4 *v = NULL;
+
+    v = (ds_math::Vector4 *)luaL_checkudata(L, 1, "Vector4");
+
+    if (v != NULL)
+    {
+        v->z = (ds_math::scalar)luaL_checknumber(L, 2);
+    }
+
+    // user data that called this method, x member value given
+    assert(lua_gettop(L) == 2);
+
+    return 0;
+}
+
+static int l_Vector4GetW(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 1)
+    {
+        return luaL_error(L, "Got %d arguments, expected 1.", n);
+    }
+
+    ds_math::Vector4 *v = NULL;
+
+    v = (ds_math::Vector4 *)luaL_checkudata(L, 1, "Vector4");
+
+    if (v != NULL)
+    {
+        lua_pushnumber(L, v->w);
+    }
+
+    // user data that called this method, x member value
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_Vector4SetW(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Vector4 *v = NULL;
+
+    v = (ds_math::Vector4 *)luaL_checkudata(L, 1, "Vector4");
+
+    if (v != NULL)
+    {
+        v->w = (ds_math::scalar)luaL_checknumber(L, 2);
+    }
+
+    // user data that called this method, x member value given
+    assert(lua_gettop(L) == 2);
+
+    return 0;
+}
+
+// static int l_Vector3Scale(lua_State *L)
+// {
+    
+// }
+
+static const luaL_Reg vector3Methods[] = {{"__tostring", l_Vector3ToString},
+                                          {"__unm", l_Vector3UnaryInvert},
+                                          {"get_x", l_Vector3GetX},
+                                          {"set_x", l_Vector3SetX},
+                                          {"get_y", l_Vector3GetY},
+                                          {"set_y", l_Vector3SetY},
+                                          {"get_z", l_Vector3GetZ},
+                                          {"set_z", l_Vector3SetZ},
+                                          {NULL, NULL}};
 
 static const luaL_Reg vector3Functions[] = {
     {"new", l_Vector3New},
@@ -1010,6 +1709,8 @@ static const luaL_Reg vector3Functions[] = {
     {"unit_x", l_Vector3UnitX},
     {"unit_y", l_Vector3UnitY},
     {"unit_z", l_Vector3UnitZ},
+    {"transform", l_Vector3MatrixTransform},
+    // {"scale", l_Vector3Scale},
     {NULL, NULL},
 };
 
@@ -1017,6 +1718,34 @@ static const luaL_Reg vector3Special[] = {
     {"__call", l_Vector3Ctor}, {NULL, NULL},
 };
 
+static const luaL_Reg vector4Methods[] = {{"__tostring", l_Vector4ToString},
+                                          {"__unm", l_Vector4UnaryInvert},
+                                          {"get_x", l_Vector4GetX},
+                                          {"set_x", l_Vector4SetX},
+                                          {"get_y", l_Vector4GetY},
+                                          {"set_y", l_Vector4SetY},
+                                          {"get_z", l_Vector4GetZ},
+                                          {"set_z", l_Vector4SetZ},
+                                          {"get_w", l_Vector4GetW},
+                                          {"set_w", l_Vector4SetW},
+                                          {NULL, NULL}};
+
+static const luaL_Reg vector4Functions[] = {
+    {"new", l_Vector4New},
+    {"magnitude", l_Vector4Magnitude},
+    {"normalize", l_Vector4Normalize},
+    {"invert", l_Vector4Invert},
+    {"dot", l_Vector4Dot},
+    {"unit_x", l_Vector4UnitX},
+    {"unit_y", l_Vector4UnitY},
+    {"unit_z", l_Vector4UnitZ},
+    {"unit_w", l_Vector4UnitW},
+    {"transform", l_Vector4MatrixTransform},
+    {NULL, NULL}};
+
+static const luaL_Reg vector4Special[] = {
+    {"__call", l_Vector4Ctor}, {NULL, NULL},
+};
 static const luaL_Reg quaternionMethods[] = {
     {"__tostring", l_QuaternionToString},
     {"__mul", l_QuaternionMul},
@@ -1028,6 +1757,7 @@ static const luaL_Reg quaternionFunctions[] = {
     {"normalize", l_QuaternionNormalize},
     {"invert", l_QuaternionInvert},
     {"dot", l_QuaternionDot},
+    {"create_from_axis_angle", l_QuaternionFromAxisAngle},
     {NULL, NULL}};
 
 static const luaL_Reg quaternionSpecial[] = {{"__call", l_QuaternionCtor},
@@ -1051,6 +1781,8 @@ void LoadMathAPI(LuaEnvironment &luaEnv)
 {
     luaEnv.RegisterClass("Vector3", vector3Methods, vector3Functions,
                          vector3Special);
+    luaEnv.RegisterClass("Vector4", vector4Methods, vector4Functions,
+                         vector4Special);
     luaEnv.RegisterClass("Quaternion", quaternionMethods, quaternionFunctions,
                          quaternionSpecial);
     luaEnv.RegisterClass("Matrix4", matrix4Methods, matrix4Functions,

@@ -6,6 +6,7 @@
 
 namespace ds_math
 {
+class Matrix4;
 /**
  *  Vector-3 class.
  */
@@ -175,6 +176,15 @@ public:
      * @return       Vector3, inverted vector.
      */
     static Vector3 Invert(const Vector3 &vec);
+    /**
+     * Transform a Vector3 by a matrix.
+     *
+     * Note: Matrix * vector (pre-multiplied)
+     *
+     * @param  vec     const Vector3 &, vector to transform.
+     * @param  matrix  const Matrix4 &, matrix to use as transform.
+     */
+    static Vector3 Transform(const Vector3 &vec, const Matrix4 &matrix);
 
     /** Unit vector in the X direction. */
     static const Vector3 UnitX;

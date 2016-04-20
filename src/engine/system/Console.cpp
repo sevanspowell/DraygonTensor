@@ -274,6 +274,15 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             m_buffer << "Console out: Strafe right message." << std::endl;
             break;
         }
+        case ds_msg::MessageType::SetLocalTransform:
+        {
+            ds_msg::SetLocalTransform setLocalMsg;
+            (*messages) >> setLocalMsg;
+
+            // m_buffer << "Set local transform of " << setLocalMsg.entity.id
+            //          << " to: " << setLocalMsg.localTransform << std::endl;
+            break;
+        }
         default:
             // Always extract the payload
             messages->Extract(header.size);

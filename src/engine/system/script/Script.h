@@ -2,6 +2,7 @@
 
 #include "engine/entity/EntityManager.h"
 #include "engine/system/ISystem.h"
+#include "engine/system/scene/TransformComponentManager.h"
 #include "engine/system/script/LuaEnvironment.h"
 #include "math/Quaternion.h"
 #include "math/Vector3.h"
@@ -106,9 +107,35 @@ public:
      * Send a move entity message to all systems.
      *
      * @param  entity         Entity, entity to move.
-     * @param  deltaPosition  const ds_math::Vector3 &, amount and direction to move entity.
+     * @param  deltaPosition  const ds_math::Vector3 &, amount and direction to
+     * move entity.
      */
     void MoveEntity(Entity entity, const ds_math::Vector3 &deltaPosition);
+
+    /**
+     * Get the world transform of an entity.
+     *
+     * @param   entity  Entity, entity to get world transform of.
+     * @return          ds_math::Matrix4, world transform of the given
+     * entity.
+     */
+    ds_math::Matrix4 GetWorldTransform(Entity entity) const;
+
+    /**
+     * Get the local transform of an entity.
+     *
+     * @param   entity  Entity, entity to get local transform of.
+     * @return          ds_math::Matrix4, local transform of the given entity.
+     */
+    ds_math::Matrix4 GetLocalTransform(Entity entity) const;
+
+    /**
+     * Send a set local transform message.
+     *
+     * @param  entity     Entity, entity to set local transform of.
+     * @param  transform  const ds_math::Matrix4 &, new local transform.
+     */
+    void SetLocalTransform(Entity entity, const ds_math::Matrix4 &transform);
 
     /**
      * Is a new message available for the external script?
@@ -178,5 +205,8 @@ private:
 
     // Used to co-ordinate the creation of components in the system.
     EntityManager m_entityManager;
+
+    // Keep track of transforms of entities
+    TransformComponentManager m_transformManager;
 };
 }

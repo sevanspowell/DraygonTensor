@@ -5,6 +5,8 @@
 
 namespace ds_math
 {
+class Matrix4;
+
 class Vector4
 {
 public:
@@ -178,6 +180,16 @@ public:
      * @return       Vector4, inverted vector.
      */
     static Vector4 Invert(const Vector4 &vec);
+    /**
+     * Transform the given Vector4 by the given matrix.
+     *
+     * Note: matrix * vec (pre-multiplied).
+     *
+     * @param   vec     const Vector4 &, vector to transform.
+     * @param   matrix  const Matrix4 &, matrix use as transform.
+     * @return          Vector4, transformed vector.
+     */
+    static Vector4 Transform(const Vector4 &vec, const Matrix4 &matrix);
 
     /** Unit vector in the X direction */
     static const Vector4 UnitX;

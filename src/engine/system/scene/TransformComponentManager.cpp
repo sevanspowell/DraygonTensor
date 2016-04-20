@@ -29,8 +29,7 @@ Instance TransformComponentManager::CreateComponentForEntityFromConfig(
             {
                 // Create component for entity
                 instance =
-                    transformComponentManager->CreateComponentForEntity(
-                        entity);
+                    transformComponentManager->CreateComponentForEntity(entity);
 
                 // Transform position, rotation and scale into a single
                 // matrix

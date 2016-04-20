@@ -5,6 +5,7 @@
 #include "engine/common/StringIntern.h"
 #include "engine/system/platform/GraphicsContext.h"
 #include "engine/system/platform/Keyboard.h"
+#include "math/Matrix4.h"
 #include "math/Vector3.h"
 
 namespace ds_msg
@@ -53,7 +54,9 @@ enum class MessageType
     // Strafe left
     StrafeLeft,
     // Strafe Right
-    StrafeRight
+    StrafeRight,
+    // Set an entity's local transform
+    SetLocalTransform
 };
 
 /**
@@ -142,5 +145,11 @@ struct StrafeLeft
 
 struct StrafeRight
 {
+};
+
+struct SetLocalTransform
+{
+    ds::Entity entity;               // Entity to set local transform of
+    ds_math::Matrix4 localTransform; // New local transform
 };
 }

@@ -242,6 +242,161 @@ static int l_MoveEntity(lua_State *L)
     return 0;
 }
 
+static int l_GetWorldTransform(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expected = 1;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push script system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our input system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+
+        entity = (ds::Entity *)lua_touserdata(L, 1);
+
+        if (entity != NULL)
+        {
+            // Allocate memory for Matrix4
+            ds_math::Matrix4 *worldTransform =
+                (ds_math::Matrix4 *)lua_newuserdata(L,
+                                                    sizeof(ds_math::Matrix4));
+
+            // Get world transform
+            *worldTransform = scriptPtr->GetWorldTransform(*entity);
+
+            // Get Matrix4 metatable and put on top of stack
+            luaL_getmetatable(L, "Matrix4");
+            // Set it as metatable of new user data (the Matrix4 result - second
+            // from top of stack)
+            lua_setmetatable(L, -2);
+        }
+    }
+
+    // Entity argument, matrix4 result
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_GetLocalTransform(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expected = 1;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push script system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our input system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+
+        entity = (ds::Entity *)lua_touserdata(L, 1);
+
+        if (entity != NULL)
+        {
+            // Allocate memory for Matrix4
+            ds_math::Matrix4 *localTransform =
+                (ds_math::Matrix4 *)lua_newuserdata(L,
+                                                    sizeof(ds_math::Matrix4));
+
+            // Get world transform
+            *localTransform = scriptPtr->GetLocalTransform(*entity);
+
+            // Get Matrix4 metatable and put on top of stack
+            luaL_getmetatable(L, "Matrix4");
+            // Set it as metatable of new user data (the Matrix4 result - second
+            // from top of stack)
+            lua_setmetatable(L, -2);
+        }
+    }
+
+    // Entity argument, matrix4 result
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_SetLocalTransform(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expected = 2;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push script system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our input system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+        ds_math::Matrix4 *localTransform = NULL;
+
+        entity = (ds::Entity *)lua_touserdata(L, 1);
+        localTransform = (ds_math::Matrix4 *)luaL_checkudata(L, 2, "Matrix4");
+
+        if (entity != NULL && localTransform != NULL)
+        {
+            scriptPtr->SetLocalTransform(*entity, *localTransform);
+        }
+    }
+
+    // Entity and Matrix4 arguments
+    assert(lua_gettop(L) == 2);
+
+    return 0;
+}
+
 ds::ScriptBindingSet LoadScriptBindings()
 {
     ds::ScriptBindingSet scriptBindings;
@@ -249,6 +404,9 @@ ds::ScriptBindingSet LoadScriptBindings()
     scriptBindings.AddFunction("get_next_message", l_GetNextMessage);
     scriptBindings.AddFunction("spawn_prefab", l_SpawnPrefab);
     scriptBindings.AddFunction("move_entity", l_MoveEntity);
+    scriptBindings.AddFunction("get_world_transform", l_GetWorldTransform);
+    scriptBindings.AddFunction("get_local_transform", l_GetLocalTransform);
+    scriptBindings.AddFunction("set_local_transform", l_SetLocalTransform);
 
     return scriptBindings;
 }
