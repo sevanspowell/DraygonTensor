@@ -5,4 +5,5 @@ subdirs(
     script_console
     script_message
     sound
+    terrain
 )

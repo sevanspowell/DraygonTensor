@@ -26,6 +26,7 @@ set(ENGINE_INCLUDE_FILES
   resource/ResourceFactory.hpp
   resource/ShaderResource.h
   resource/TextureResource.h
+  resource/TerrainResource.h
   system/Console.h
   system/physics/Physics.h
   system/physics/PhysicsHandler.h
@@ -75,6 +76,7 @@ set(ENGINE_SRC_FILES
   resource/MeshResource.cpp
   resource/ShaderResource.cpp
   resource/TextureResource.cpp
+  resource/TerrainResource.cpp
   system/Console.cpp
   system/physics/Physics.cpp
   system/physics/PhysicsHandler.cpp
