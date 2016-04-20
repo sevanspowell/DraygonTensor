@@ -7,6 +7,7 @@
 #include "engine/resource/MeshResource.h"
 #include "engine/resource/ShaderResource.h"
 #include "engine/resource/TextureResource.h"
+#include "engine/resource/TerrainResource.h"
 #include "engine/system/render/GLRenderer.h"
 #include "engine/system/render/Render.h"
 #include "math/MathHelper.h"
@@ -25,6 +26,8 @@ bool Render::Initialize(const Config &config)
     m_factory.RegisterCreator<MeshResource>(MeshResource::CreateFromFile);
     m_factory.RegisterCreator<ShaderResource>(ShaderResource::CreateFromFile);
     m_factory.RegisterCreator<TextureResource>(TextureResource::CreateFromFile);
+   
+    
 
     return result;
 }
