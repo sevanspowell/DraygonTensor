@@ -271,52 +271,58 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 
                         // // Get texture coordinate data
 
-                        // const std::vector<ds_math::Vector3>
-                        // textureCoordinates =
-                        //     meshResource->GetTexCoords();
+                        //meshresource change to terrainresource
 
-                        // for (const ds_math::Vector3 &texCoord :
-                        //      textureCoordinates)
-                        // {
-                        //     vertexBufferStore << texCoord.x;
+                        const std::vector<struct TerrainResource::TextureCoordinates>
+                        textureCoordinates =
+                            terrainResource->GetTextureCoordinatesVector();
 
-                        //     // Flip y texcoord
-                        //     vertexBufferStore << 1.0f - texCoord.y;
+                        for (const struct TerrainResource::TextureCoordinates &texCoord :
+                             textureCoordinates)
+                        {
+                            vertexBufferStore << texCoord.u;
 
-                        // }
+                            // Flip y texcoord
+                            vertexBufferStore <<  1.0f - texCoord.v; // removed 1 - texcoord.v
 
-                        // // Describe texCoord data
-                        // ds_render::VertexBufferDescription::AttributeDescription
-                        //     texCoordAttributeDescriptor;
+                        }
 
-                        // texCoordAttributeDescriptor.attributeType =
-                        //     ds_render::AttributeType::TextureCoordinate;
+                        // Describe texCoord data
+                        ds_render::VertexBufferDescription::AttributeDescription
+                            texCoordAttributeDescriptor;
 
-                        // texCoordAttributeDescriptor.attributeDataType =
-                        //     ds_render::RenderDataType::Float;
+                        texCoordAttributeDescriptor.attributeType =
+                            ds_render::AttributeType::TextureCoordinate;
 
-                        // texCoordAttributeDescriptor.numElementsPerAttribute =
-                        // 2;
+                        texCoordAttributeDescriptor.attributeDataType =
+                            ds_render::RenderDataType::Float;
 
-                        // texCoordAttributeDescriptor.stride = 0;
+                        texCoordAttributeDescriptor.numElementsPerAttribute =
+                        2;
 
-                        // texCoordAttributeDescriptor.offset =
-                        //     meshResource->GetVertCount() *
-                        //     sizeof(ds_math::Vector3);
+                        texCoordAttributeDescriptor.stride = 0;
+
+                        texCoordAttributeDescriptor.offset =
+                            terrainResource->GetVerticesCount() *
+                            sizeof(ds_math::Vector3);
                         
-                        // texCoordAttributeDescriptor.normalized = false;
-                        // Add position and texcoord attribute descriptions to
-                        // vertex buffer
-                        // descriptor
+                        texCoordAttributeDescriptor.normalized = false;
+                       
+                       // Add position and texcoord attribute descriptions to
+                        
+                        //vertex buffer
+                       // descriptor
 
                         ds_render::VertexBufferDescription
                             vertexBufferDescriptor;
 
                         vertexBufferDescriptor.AddAttributeDescription(
                             positionAttributeDescriptor);
-
-                        // vertexBufferDescriptor.AddAttributeDescription(
-                        //     texCoordAttributeDescriptor);
+                            
+                            //for texture
+                        vertexBufferDescriptor.AddAttributeDescription(
+                            texCoordAttributeDescriptor);
+                        
                         // Create vertex buffer
 
                         ds_render::VertexBufferHandle vb =

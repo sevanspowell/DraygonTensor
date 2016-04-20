@@ -49,9 +49,9 @@ namespace ds
 				(z * (int)width + x)];
 				
 				//calculate the height of the point using the color of the associated pixel
-				float h = baseheight * (((color / 255.0f) - 0.5f) * 10); //add *10 for scale
+				float h = baseheight * (((color / 255.0f) - 0.5f) * 3); //add *10 for scale
 
-				std::cout << h << std::endl;
+				//std::cout << h << std::endl;
 				//HEIGHTS
 				//put heights in tempPixelHeights 2d vector from BL to TR pixel
 				tempPixelHeights[z][x] = h;
@@ -60,10 +60,11 @@ namespace ds
 				//put each vector3 into the vector m_vertices
 				createdTerrainResource->PushVector3ToVertices(ds_math::Vector3(z,h,x));
 				
+				//swapping some stuff
 				//createdTerrainResource->PushVector3ToVertices(ds_math::Vector3(h,z,x));
 				
 				//push pixel heights to the 2d vector
-				createdTerrainResource->Copy2DVectorOfHeights(tempPixelHeights);
+				//createdTerrainResource->Copy2DVectorOfHeights(tempPixelHeights);
 
 
 			}
