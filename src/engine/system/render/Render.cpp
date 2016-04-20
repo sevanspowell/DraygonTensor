@@ -26,7 +26,7 @@ bool Render::Initialize(const Config &config)
     m_factory.RegisterCreator<MeshResource>(MeshResource::CreateFromFile);
     m_factory.RegisterCreator<ShaderResource>(ShaderResource::CreateFromFile);
     m_factory.RegisterCreator<TextureResource>(TextureResource::CreateFromFile);
-   
+    m_factory.RegisterCreator<TerrainResource>(TerrainResource::CreateFromFile);
     
 
     return result;
@@ -215,6 +215,147 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                         CreateComponentForEntityFromConfig(
                             &m_transformComponentManager,
                             createComponentMsg.entity, componentData);
+                }
+                else if(componentType == "terrainComponent")
+                {
+                    std::string heightMapName;
+                    std::string materialName;
+                    
+                    if(componentData.GetString("heightmap", &heightMapName) && componentData.GetString("material", &materialName))
+                    {
+                        std::stringstream heightMapPath ;
+                        heightMapPath << "../assets/" << heightMapName;
+                        
+                        std::unique_ptr<TerrainResource> terrainResource = 
+                        m_factory.CreateResource<TerrainResource>(heightMapPath.str());
+
+                        std::stringstream materialResourcePath;
+                        materialResourcePath << "../assets/" << materialName;
+                        
+                        ds_render::Material material = 
+                        CreateMaterialFromMaterialResource(materialResourcePath.str(), m_sceneMatrices, m_objectMatrices);
+                        // above function does this
+                        // std::unique_ptr<MaterialResource> materialResource = 
+                        // m_factory.CreateResource<materialResource>(materialResourcePath.str());
+
+                        // Create vertex buffer data store
+
+                        ds_com::StreamBuffer vertexBufferStore;
+
+                        const std::vector<ds_math::Vector3> positions =
+                            terrainResource->GetVerticesVector();
+
+                        for (const ds_math::Vector3 &position : positions)
+                        {
+                            vertexBufferStore << position;
+
+                        }
+
+                        // Describe position data
+
+                        ds_render::VertexBufferDescription::AttributeDescription
+                            positionAttributeDescriptor;
+
+                        positionAttributeDescriptor.attributeType =
+                            ds_render::AttributeType::Position;
+
+                        positionAttributeDescriptor.attributeDataType =
+                            ds_render::RenderDataType::Float;
+
+                        positionAttributeDescriptor.numElementsPerAttribute = 3;
+                        positionAttributeDescriptor.stride = 0;
+                        positionAttributeDescriptor.offset = 0;
+                        positionAttributeDescriptor.normalized = false;
+
+                        // // Create texCoord data
+
+                        // // Get texture coordinate data
+
+                        // const std::vector<ds_math::Vector3>
+
+                        // textureCoordinates =
+
+                        //     meshResource->GetTexCoords();
+
+                        // for (const ds_math::Vector3 &texCoord :
+
+                        //      textureCoordinates)
+
+                        // {
+
+                        //     vertexBufferStore << texCoord.x;
+
+                        //     // Flip y texcoord
+
+                        //     vertexBufferStore << 1.0f - texCoord.y;
+
+                        // }
+
+                        // // Describe texCoord data
+
+                        // ds_render::VertexBufferDescription::AttributeDescription
+                        //     texCoordAttributeDescriptor;
+
+                        // texCoordAttributeDescriptor.attributeType =
+                        //     ds_render::AttributeType::TextureCoordinate;
+
+                        // texCoordAttributeDescriptor.attributeDataType =
+                        //     ds_render::RenderDataType::Float;
+
+                        // texCoordAttributeDescriptor.numElementsPerAttribute =
+                        // 2;
+
+                        // texCoordAttributeDescriptor.stride = 0;
+
+                        // texCoordAttributeDescriptor.offset =
+                        //     meshResource->GetVertCount() *
+                        //     sizeof(ds_math::Vector3);
+                        
+                        // texCoordAttributeDescriptor.normalized = false;
+                        // Add position and texcoord attribute descriptions to
+                        // vertex buffer
+                        // descriptor
+
+                        ds_render::VertexBufferDescription
+                            vertexBufferDescriptor;
+
+                        vertexBufferDescriptor.AddAttributeDescription(
+                            positionAttributeDescriptor);
+
+                        // vertexBufferDescriptor.AddAttributeDescription(
+                        //     texCoordAttributeDescriptor);
+                        // Create vertex buffer
+
+                        ds_render::VertexBufferHandle vb =
+                            m_renderer->CreateVertexBuffer(
+                                ds_render::BufferUsageType::Static,
+                                vertexBufferDescriptor,
+                                vertexBufferStore.AvailableBytes(),
+                                vertexBufferStore.GetDataPtr());
+
+                        // Create index buffer
+
+                        std::vector<int> indices =
+                            terrainResource->GetIndicesVector();
+
+                        // Create index buffer
+
+                        ds_render::IndexBufferHandle ib =
+                            m_renderer->CreateIndexBuffer(
+                                ds_render::BufferUsageType::Static,
+                                sizeof(unsigned int) * indices.size(),
+                                &indices[0]);
+
+                        ds_render::Mesh mesh =
+                            ds_render::Mesh(vb, ib, 0, indices.size());                    
+                    
+                        Instance i =
+                        m_renderComponentManager.CreateComponentForEntity(createComponentMsg.entity);
+                        
+                        m_renderComponentManager.SetMaterial(i, material);
+                        m_renderComponentManager.SetMesh(i, mesh);
+                    }
+                                        
                 }
             }
             break;
@@ -449,7 +590,7 @@ void Render::RenderScene()
         // Draw mesh
         m_renderer->DrawVerticesIndexed(
             mesh.GetVertexBuffer(), mesh.GetIndexBuffer(),
-            ds_render::PrimitiveType::Triangles, mesh.GetStartingIndex(),
+            ds_render::PrimitiveType::TriangleStrip, mesh.GetStartingIndex(),
             mesh.GetNumIndices());
 
         // For each texture in material, unbind

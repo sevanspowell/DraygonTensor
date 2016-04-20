@@ -51,6 +51,7 @@ namespace ds
 				//calculate the height of the point using the color of the associated pixel
 				float h = baseheight * (((color / 255.0f) - 0.5f) * 10); //add *10 for scale
 
+				std::cout << h << std::endl;
 				//HEIGHTS
 				//put heights in tempPixelHeights 2d vector from BL to TR pixel
 				tempPixelHeights[z][x] = h;
@@ -58,6 +59,8 @@ namespace ds
 				//VERTICES
 				//put each vector3 into the vector m_vertices
 				createdTerrainResource->PushVector3ToVertices(ds_math::Vector3(z,h,x));
+				
+				//createdTerrainResource->PushVector3ToVertices(ds_math::Vector3(h,z,x));
 				
 				//push pixel heights to the 2d vector
 				createdTerrainResource->Copy2DVectorOfHeights(tempPixelHeights);
@@ -80,7 +83,7 @@ namespace ds
 			//calcluate indices of each square corner
 			tl = (squareZ * width) + squareX;
 			tr = (squareZ * width) + squareX +1;
-			bl = ((squareZ +1 ) * width ) + squareX;
+			bl = ((squareZ + 1) * width ) + squareX;
 			br = ((squareZ + 1) * width ) + (squareX + 1);
 			
 			//1st triangle
@@ -130,7 +133,7 @@ namespace ds
 
 	void TerrainResource::PrintTest()
 	{
-		//m_terrain.m_vertices.size()
+		// m_terrain.m_vertices.size();
 		// for(int i = 0; i < m_terrain.m_vertices.size(); i++)
 		// {
 		// 	std::cout << "indices for point " << i << " : " << m_terrain.m_indices[i*3] << ", " << m_terrain.m_indices[i*3+1] << ", " << m_terrain.m_indices[i*3+2] << std::endl;
@@ -193,7 +196,7 @@ namespace ds
 
 			vecN.Normalize();
 
-			std::cout << "normalized vecN : " << vecN << std::endl;
+			//std::cout << "normalized vecN : " << vecN << std::endl;
 
 			m_terrain.m_normals.push_back(vecN);
 
@@ -272,6 +275,11 @@ namespace ds
 			return m_terrain.m_normals;
 		}
 
+		std::vector<struct TerrainResource::TextureCoordinates> TerrainResource::GetTextureCoordinatesVector()
+		{
+			
+			return m_terrain.m_textureCoordinates;
+		}
 		
 		std::vector<int> TerrainResource::GetIndicesVector()
 		{
