@@ -56,7 +56,7 @@ std::unique_ptr<IResource> TerrainResource::CreateFromFile(std::string filePath)
             // calculate the height of the point using the color of the
             // associated pixel
             float h = baseheight *
-                      (((color / 255.0f) - 0.5f) * 3); // add *10 for scale
+                      (((color / 255.0f) - 0.5f) * 2); // add *10 for scale
 
             // std::cout << h << std::endl;
             // HEIGHTS
