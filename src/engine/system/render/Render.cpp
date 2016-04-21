@@ -703,10 +703,10 @@ void Render::RenderScene()
                     samplerTexture.second.GetTextureHandle());
             }
 
-            // Draw mesh
+            // Draw the mesh
             m_renderer->DrawVerticesIndexed(
                 mesh.GetVertexBuffer(), mesh.GetIndexBuffer(),
-                ds_render::PrimitiveType::TriangleStrip,
+                ds_render::PrimitiveType::Triangles,
                 mesh.GetStartingIndex(), mesh.GetNumIndices());
 
             // For each texture in material, unbind
