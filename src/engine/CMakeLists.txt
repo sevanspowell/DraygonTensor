@@ -95,6 +95,7 @@ set(ENGINE_SRC_FILES
   system/render/Material.cpp
   system/render/Mesh.cpp
   system/render/Render.cpp
+  system/render/RenderLuaBindings.cpp
   system/render/RenderComponentManager.cpp
   system/render/Texture.cpp
   system/render/VertexBufferDescription.cpp

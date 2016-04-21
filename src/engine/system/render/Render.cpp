@@ -12,6 +12,11 @@
 #include "math/Matrix4.h"
 #include "math/Vector4.h"
 
+namespace ds_lua
+{
+extern ds::ScriptBindingSet LoadRenderScriptBindings();
+}
+
 namespace ds
 {
 bool Render::Initialize(const Config &config)
@@ -61,6 +66,36 @@ ds_msg::MessageStream Render::CollectMessages()
     m_messagesGenerated.Clear();
 
     return tmp;
+}
+
+ScriptBindingSet Render::GetScriptBindings() const
+{
+    return ds_lua::LoadRenderScriptBindings();
+}
+
+ds_math::Quaternion Render::GetCameraOrientation(Entity entity) const
+{
+    ds_math::Quaternion orientation;
+
+    Instance i = m_cameraComponentManager.GetInstanceForEntity(entity);
+
+    if (i.IsValid())
+    {
+        orientation = m_cameraComponentManager.GetOrientation(i);
+    }
+
+    return orientation;
+}
+
+void Render::SetCameraOrientation(Entity entity,
+                                  const ds_math::Quaternion &orientation)
+{
+    Instance i = m_cameraComponentManager.GetInstanceForEntity(entity);
+
+    if (i.IsValid())
+    {
+        m_cameraComponentManager.SetOrientation(i, orientation);
+    }
 }
 
 void Render::ProcessEvents(ds_msg::MessageStream *messages)
@@ -640,15 +675,22 @@ void Render::RenderScene()
     if (m_cameraActive)
     {
         // Get active camera
-        // Get transform matrix of camera, invert it to find view matrix
         Instance cameraTransform =
             m_transformComponentManager.GetInstanceForEntity(
                 m_activeCameraEntity);
-        const ds_math::Matrix4 &viewMatrix = ds_math::Matrix4::Inverse(
-            m_transformComponentManager.GetWorldTransform(cameraTransform));
-        // Get projection matrix of camera
         Instance cameraComponent =
             m_cameraComponentManager.GetInstanceForEntity(m_activeCameraEntity);
+
+        const ds_math::Matrix4 &translation =
+            m_transformComponentManager.GetWorldTransform(cameraTransform);
+        const ds_math::Matrix4 &orientation =
+            ds_math::Matrix4::CreateFromQuaternion(
+                m_cameraComponentManager.GetOrientation(cameraComponent));
+        // Get transform matrix of camera, invert it to find view matrix
+        const ds_math::Matrix4 &viewMatrix =
+            ds_math::Matrix4::Inverse(translation * orientation);
+
+        // Get projection matrix of camera
         const ds_math::Matrix4 &projectionMatrix =
             m_cameraComponentManager.GetProjectionMatrix(cameraComponent);
 

@@ -20,6 +20,7 @@ int main(int argc, char **argv)
     ds::ISystem *renderSystem = new ds::Render();
     // Register script bindings of other systems
     scriptSystem->RegisterScriptBindings("Input", inputSystem);
+    scriptSystem->RegisterScriptBindings("Render", renderSystem);
 
     // Add all systems to engine
     engine.AddSystem(std::unique_ptr<ds::ISystem>(inputSystem));

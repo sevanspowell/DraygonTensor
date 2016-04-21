@@ -64,6 +64,36 @@ public:
      */
     virtual ds_msg::MessageStream CollectMessages();
 
+    /**
+     * Return required script bindings.
+     *
+     * @return  ScriptBindingSet, the script bindings the render system wants to
+     * register with the Script system.
+     */
+    virtual ScriptBindingSet GetScriptBindings() const;
+
+    /**
+     * Get the orientation of the camera component associated with the given
+     * entity (if any).
+     *
+     * Will return Quaternion(0, 0, 0, 1) if entity has no camera component.
+     *
+     * @param   entity  Entity, entity to get camera component orientation of.
+     * @return          ds_math::Quaternion, camera orientation.
+     */
+    ds_math::Quaternion GetCameraOrientation(Entity entity) const;
+
+    /**
+     * Set the orientation of the camera component associated with the given
+     * entity (if any).
+     *
+     * @param  entity      Entity, entity to set camera component orientation
+     * of.
+     * @param  orienation  const ds_math::Quaternion &, new orientation.
+     */
+    void SetCameraOrientation(Entity entity,
+                              const ds_math::Quaternion &orientation);
+
 private:
     /**
      * Process messages in the given message stream.
