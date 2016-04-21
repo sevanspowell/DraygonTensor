@@ -23,4 +23,24 @@ void CameraComponentManager::SetProjectionMatrix(
 
     m_data.component[i.index].projectionMatrix = projectionMatrix;
 }
+
+const ds_math::Quaternion &
+CameraComponentManager::GetOrientation(ds::Instance i) const
+{
+    assert(i.index >= 0 && i.index < GetNumInstances() &&
+           "CameraComponentManager::GetOrientation: tried to get invalid "
+           "instance");
+
+    return m_data.component[i.index].orientation;
+}
+
+void CameraComponentManager::SetOrientation(
+    ds::Instance i, const ds_math::Quaternion &orientation)
+{
+    assert(i.index >= 0 && i.index < GetNumInstances() &&
+           "CameraComponentManager::SetOrientation: tried to set invalid "
+           "instance");
+
+    m_data.component[i.index].orientation = orientation;
+}
 }

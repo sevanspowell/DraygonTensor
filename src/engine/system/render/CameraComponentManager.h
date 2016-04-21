@@ -12,7 +12,7 @@ class CameraComponentManager : public ds::ComponentManager<CameraComponent>
 {
 public:
     /**
-     * Get the projection matrix of the given component instance.
+     * Get the projection matrix of the given camera component instance.
      *
      * @param   i  ds::Instance, component instance to get projection matrix of.
      * @return     const ds_math::Matrix4 &, material of given component
@@ -29,6 +29,22 @@ public:
      */
     void SetProjectionMatrix(ds::Instance i,
                              const ds_math::Matrix4 &projectionMatrix);
+
+    /**
+     * Get the orientation of the given camera component instance.
+     *
+     * @param   i  ds::Instance, component instance to get orientation of.
+     * @return     const ds_math::Quaternion &, orientation.
+     */
+    const ds_math::Quaternion &GetOrientation(ds::Instance i) const;
+
+    /**
+     * Set the orientation of the given camera component instance.
+     *
+     * @param   i  ds::Instance, component instance to get orientation of.
+     * @param      const ds_math::Quaternion &, new orientation.
+     */
+    void SetOrientation(ds::Instance i, const ds_math::Quaternion &orientation);
 
 private:
 };
