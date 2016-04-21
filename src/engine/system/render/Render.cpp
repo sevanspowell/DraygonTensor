@@ -748,7 +748,7 @@ void Render::RenderScene()
             // Draw mesh
             m_renderer->DrawVerticesIndexed(
                 mesh.GetVertexBuffer(), mesh.GetIndexBuffer(),
-                ds_render::PrimitiveType::TriangleStrip,
+                ds_render::PrimitiveType::Triangles,
                 mesh.GetStartingIndex(), mesh.GetNumIndices());
 
             // For each texture in material, unbind
