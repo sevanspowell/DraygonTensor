@@ -1,4 +1,5 @@
 subdirs(
+    bullet
     physics
     render_system
     script_console
