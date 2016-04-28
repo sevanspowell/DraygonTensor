@@ -160,10 +160,12 @@ void Physics::Update(float deltaTime)
                     m_transformComponentManager.GetLocalTransform(transform);
 
                 // New local transform is current local transform multiplied by
-                // (inv(currentWorldTransform) * newWorldTransform * currentLocalTransform)
+                // currentLocalTransform * ((inv(currentWorldTransform) *
+                // newWorldTransform)
                 ds_math::Matrix4 newLocalTransform =
-                    ds_math::Matrix4::Inverse(currentWorldTransform) *
-                    newWorldTransform * currentLocalTransform;
+                    currentLocalTransform *
+                    (ds_math::Matrix4::Inverse(currentWorldTransform) *
+                     newWorldTransform);
 
                 ds_msg::SetLocalTransform setTransformMsg;
                 setTransformMsg.entity = entity;
@@ -173,39 +175,9 @@ void Physics::Update(float deltaTime)
                                       ds_msg::MessageType::SetLocalTransform,
                                       sizeof(ds_msg::SetLocalTransform),
                                       &setTransformMsg);
-
-                std::cout << "Object: " << i << " Pos: "
-                          << (float)bulletNewWorldTransform.getOrigin().getX()
-                          << ", "
-                          << (float)bulletNewWorldTransform.getOrigin().getY()
-                          << ", "
-                          << (float)bulletNewWorldTransform.getOrigin().getZ()
-                          << std::endl;
             }
         }
     }
-
-    // Print positions of all objects
-    // for (int j = m_dynamicsWorld->getNumCollisionObjects() - 1; j >= 0; --j)
-    // {
-    //     btCollisionObject *obj =
-    //     m_dynamicsWorld->getCollisionObjectArray()[j];
-    //     btRigidBody *body = btRigidBody::upcast(obj);
-    //     btTransform trans;
-    //     if (body && body->getMotionState())
-    //     {
-    //         body->getMotionState()->getWorldTransform(trans);
-    //     }
-    //     else
-    //     {
-    //         trans = obj->getWorldTransform();
-    //     }
-
-    //     std::cout << "Object: " << j
-    //               << " Pos: " << (float)trans.getOrigin().getX() << ", "
-    //               << (float)trans.getOrigin().getY() << ", "
-    //               << (float)trans.getOrigin().getZ() << std::endl;
-    // }
 }
 
 void Physics::Shutdown()
