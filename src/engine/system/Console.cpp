@@ -43,7 +43,7 @@ void Console::Shutdown()
 
 void Console::PostMessages(const ds_msg::MessageStream &messages)
 {
-    AppendStreamBuffer(m_messagesReceived, messages);
+    AppendStreamBuffer(&m_messagesReceived, messages);
 }
 
 ds_msg::MessageStream Console::CollectMessages()

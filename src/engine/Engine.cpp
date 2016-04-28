@@ -129,7 +129,7 @@ void Engine::Shutdown()
 
 void Engine::PostMessages(const ds_msg::MessageStream &messages)
 {
-    AppendStreamBuffer(m_messagesInternal, messages);
+    AppendStreamBuffer(&m_messagesInternal, messages);
 }
 
 ds_msg::MessageStream Engine::CollectMessages()

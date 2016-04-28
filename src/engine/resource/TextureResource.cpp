@@ -85,7 +85,7 @@ TextureResource::ImageFormat TextureResource::DetermineTypeFlag(std::string ext)
 
     std::transform(fileExtension.begin(), fileExtension.end(),
                    fileExtension.begin(), ::tolower);
-    std::cout << fileExtension << std::endl;
+    // std::cout << fileExtension << std::endl;
 
     if (ext == "tga")
     {

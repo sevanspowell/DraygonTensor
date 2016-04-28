@@ -108,7 +108,7 @@ void Script::Shutdown()
 
 void Script::PostMessages(const ds_msg::MessageStream &messages)
 {
-    AppendStreamBuffer(m_messagesReceived, messages);
+    AppendStreamBuffer(&m_messagesReceived, messages);
 }
 
 ds_msg::MessageStream Script::CollectMessages()
@@ -164,6 +164,8 @@ Entity Script::SpawnPrefab(std::string prefabFile,
             createComponentMsg.entity = entity;
             createComponentMsg.componentType =
                 StringIntern::Instance().Intern(component);
+            std::cout << "Script: Component type: " << component << ": "
+                      << createComponentMsg.componentType << std::endl;
             createComponentMsg.componentData =
                 StringIntern::Instance().Intern(componentData);
 
@@ -345,7 +347,6 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
                 // Get component type
                 std::string componentType = StringIntern::Instance().GetString(
                     createComponentMsg.componentType);
-                std::cout << "Create transform component" << std::endl;
                 // Create transform component
                 if (componentType == "transformComponent")
                 {
@@ -377,7 +378,8 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
             //             entityMoveMsg.deltaPosition);
 
             //     // Set transform of entity
-            //     m_transformManager.SetLocalTransform(transform, newTransform);
+            //     m_transformManager.SetLocalTransform(transform,
+            //     newTransform);
             // }
             break;
         }

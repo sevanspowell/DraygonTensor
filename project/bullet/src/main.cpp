@@ -6,6 +6,7 @@
 #include "engine/system/platform/Platform.h"
 #include "engine/system/input/Input.h"
 #include "engine/system/render/Render.h"
+#include "engine/system/physics/Physics.h"
 
 int main(int argc, char **argv)
 {
@@ -18,6 +19,7 @@ int main(int argc, char **argv)
     ds::ISystem *inputSystem = new ds::Input(); 
     ds::ISystem *consoleSystem = new ds::Console(); 
     ds::ISystem *renderSystem = new ds::Render();
+    ds::ISystem *physicsSystem = new ds::Physics();
     // Register script bindings of other systems
     scriptSystem->RegisterScriptBindings("Input", inputSystem);
     scriptSystem->RegisterScriptBindings("Render", renderSystem);
@@ -26,6 +28,7 @@ int main(int argc, char **argv)
     engine.AddSystem(std::unique_ptr<ds::ISystem>(inputSystem));
     engine.AddSystem(std::unique_ptr<ds::ISystem>(consoleSystem));
     engine.AddSystem(std::unique_ptr<ds::ISystem>(renderSystem));
+    engine.AddSystem(std::unique_ptr<ds::ISystem>(physicsSystem));
     engine.AddSystem(std::unique_ptr<ds::ISystem>(scriptSystem));
 
     engine.Start();

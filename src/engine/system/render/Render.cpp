@@ -56,7 +56,7 @@ void Render::Shutdown()
 
 void Render::PostMessages(const ds_msg::MessageStream &messages)
 {
-    AppendStreamBuffer(m_messagesReceived, messages);
+    AppendStreamBuffer(&m_messagesReceived, messages);
 }
 
 ds_msg::MessageStream Render::CollectMessages()
@@ -201,8 +201,8 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                     break;
                 }
             }
-            break;
         }
+        break;
         case ds_msg::MessageType::CreateComponent:
         {
             ds_msg::CreateComponent createComponentMsg;
@@ -448,8 +448,8 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                     }
                 }
             }
-            break;
         }
+        break;
         case ds_msg::MessageType::MoveEntity:
         {
             ds_msg::MoveEntity entityMoveMsg;
@@ -474,8 +474,8 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                 m_transformComponentManager.SetLocalTransform(transform,
                                                               newTransform);
             }
-            break;
         }
+        break;
         case ds_msg::MessageType::SetLocalTransform:
         {
             ds_msg::SetLocalTransform setLocalMsg;
@@ -491,8 +491,8 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                 m_transformComponentManager.SetLocalTransform(
                     transform, setLocalMsg.localTransform);
             }
-            break;
         }
+        break;
         default:
             messages->Extract(header.size);
             break;

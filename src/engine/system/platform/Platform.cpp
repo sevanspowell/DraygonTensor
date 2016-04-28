@@ -20,7 +20,7 @@ bool Platform::Initialize(const Config &config)
         result &= m_video.Initialize(config);
 
         // Grab events from video system and add them to messages generated
-        AppendStreamBuffer(m_messagesGenerated, m_video.CollectMessages());
+        AppendStreamBuffer(&m_messagesGenerated, m_video.CollectMessages());
 
         if (result == true)
         {
@@ -51,7 +51,7 @@ void Platform::Update(float deltaTime)
     }
 
     // Grab events from video system and add them to messages generated
-    AppendStreamBuffer(m_messagesGenerated, m_video.CollectMessages());
+    AppendStreamBuffer(&m_messagesGenerated, m_video.CollectMessages());
 
     // Process events
     ProcessEvents(&m_messagesReceived);
@@ -68,7 +68,7 @@ void Platform::Shutdown()
 
 void Platform::PostMessages(const ds_msg::MessageStream &messages)
 {
-    AppendStreamBuffer(m_messagesReceived, messages);
+    AppendStreamBuffer(&m_messagesReceived, messages);
 }
 
 ds_msg::MessageStream Platform::CollectMessages()

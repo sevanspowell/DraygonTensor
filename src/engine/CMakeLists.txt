@@ -28,9 +28,11 @@ set(ENGINE_INCLUDE_FILES
   resource/TextureResource.h
   resource/TerrainResource.h
   system/Console.h
-  system/physics/Physics.h
-  system/physics/PhysicsHandler.h
   system/physics/MotionStateExample.h
+  system/physics/Physics.h
+  system/physics/PhysicsComponent.h
+  system/physics/PhysicsComponentManager.h
+  system/physics/PhysicsHandler.h
   system/input/Input.h
   system/input/InputContext.h
   system/platform/Keyboard.h
@@ -78,9 +80,10 @@ set(ENGINE_SRC_FILES
   resource/TextureResource.cpp
   resource/TerrainResource.cpp
   system/Console.cpp
-  system/physics/Physics.cpp
-  system/physics/PhysicsHandler.cpp
   system/physics/MotionStateExample.cpp
+  system/physics/Physics.cpp
+  system/physics/PhysicsComponentManager.cpp
+  system/physics/PhysicsHandler.cpp
   system/input/Input.cpp
   system/input/InputContext.cpp
   system/input/InputLuaBindings.cpp

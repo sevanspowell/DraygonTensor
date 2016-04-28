@@ -114,10 +114,10 @@ StreamBuffer &operator>>(StreamBuffer &buffer, T &dataOut);
 /**
  * Append all data in the 'from' buffer onto the end of the 'to' buffer.
  *
- * @param to   StreamBuffer &, StreamBuffer to append data to.
+ * @param to   StreamBuffer *, StreamBuffer to append data to.
  * @param from const StreamBuffer &, StreamBuffer to get data from.
  */
-void AppendStreamBuffer(StreamBuffer &to, const StreamBuffer &from);
+void AppendStreamBuffer(StreamBuffer *to, const StreamBuffer &from);
 
 #include "engine/common/StreamBuffer.hpp"
 }
