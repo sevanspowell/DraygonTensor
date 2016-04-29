@@ -58,7 +58,7 @@ std::unique_ptr<IResource> TerrainResource::CreateFromFile(std::string filePath)
             // calculate the height of the point using the color of the
             // associated pixel
             // -0.5f to get each height within range -0.5 to 0.5
-            float h = 20 * ((color / 255.0f) - 0.5f);
+            float h = ((color / 255.0f) - 0.5f);
             heights[z * width + x] = h;
 
             // std::cout << h << std::endl;
@@ -121,6 +121,8 @@ std::unique_ptr<IResource> TerrainResource::CreateFromFile(std::string filePath)
 
     // Set height array
     createdTerrainResource->SetHeightArray(heights);
+
+    createdTerrainResource->CenterVertices(width, height);
 
     std::unique_ptr<IResource> TerrainResource =
         std::move(createdTerrainResource);
@@ -351,5 +353,31 @@ unsigned int TerrainResource::GetHeightmapHeight() const
 void TerrainResource::SetHeightArray(const std::vector<float> &heightArray)
 {
     m_heights = heightArray;
+}
+
+void TerrainResource::CenterVertices(unsigned int width, unsigned int height)
+{
+    // Loop thru each vertex and transform it to be centered around origin
+    for (unsigned int i = 0; i < m_terrain.m_vertices.size(); ++i)
+    {
+        m_terrain.m_vertices[i].x -= (width - 1) / 2.0f;
+        m_terrain.m_vertices[i].z -= (height - 1) / 2.0f;
+    }
+}
+
+void TerrainResource::SetHeightScale(float heightScale)
+{
+    // Scale vertices
+    for (unsigned int i = 0; i < m_terrain.m_vertices.size(); ++i)
+    {
+        m_terrain.m_vertices[i].y *= heightScale;
+    }
+
+    // Scale height array
+    for (unsigned int i = 0; i < GetHeightmapWidth() * GetHeightmapHeight();
+         ++i)
+    {
+        m_heights[i] *= heightScale;
+    }
 }
 }

@@ -308,9 +308,11 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                 {
                     std::string heightMapName;
                     std::string materialName;
+                    float heightScale;
 
                     if (componentData.GetString("heightmap", &heightMapName) &&
-                        componentData.GetString("material", &materialName))
+                        componentData.GetString("material", &materialName) &&
+                        componentData.GetFloat("heightScale", &heightScale))
                     {
                         std::stringstream heightMapPath;
                         heightMapPath << "../assets/" << heightMapName;
@@ -318,6 +320,7 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                         std::unique_ptr<TerrainResource> terrainResource =
                             m_factory.CreateResource<TerrainResource>(
                                 heightMapPath.str());
+                        terrainResource->SetHeightScale(heightScale);
 
                         std::stringstream materialResourcePath;
                         materialResourcePath << "../assets/" << materialName;
