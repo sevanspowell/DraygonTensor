@@ -25,7 +25,6 @@ void TextureResource::SetResourceFilePath(const std::string &filePath)
 
 std::unique_ptr<IResource> TextureResource::CreateFromFile(std::string filePath)
 {
-
     std::string fileExtension = ExtractExtension(filePath);
     ImageFormat typeFlag = DetermineTypeFlag(fileExtension);
 
@@ -33,7 +32,6 @@ std::unique_ptr<IResource> TextureResource::CreateFromFile(std::string filePath)
     int heightInPixels = 0;
     int components = 0;
     ComponentFlag channels;
-
 
     unsigned char *imageContents = stbi_load(filePath.c_str(), &widthInPixels,
                                              &heightInPixels, &components, 0);

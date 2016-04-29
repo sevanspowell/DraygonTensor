@@ -1,11 +1,20 @@
+#include <sstream>
+
+#include "BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h"
+
 #include "engine/common/StringIntern.h"
 #include "engine/message/MessageHelper.h"
 #include "engine/system/physics/Physics.h"
+#include "engine/resource/TextureResource.h"
 
 namespace ds
 {
 bool Physics::Initialize(const Config &config)
 {
+    // Register factory creators
+    m_factory.RegisterCreator<TextureResource>(TextureResource::CreateFromFile);
+    m_factory.RegisterCreator<TerrainResource>(TerrainResource::CreateFromFile);
+
     // Collision configuration contains default setup for memory and collision.
     // Advanced users can create their own configurations.
     m_collisionConfiguration = new btDefaultCollisionConfiguration();
@@ -16,6 +25,9 @@ bool Physics::Initialize(const Config &config)
 
     // btDbvtBroadphase is a good general-purpose broadphase. You can also try
     // out btAxis3Sweep.
+    // btVector3 worldMin = btVector3(-200, -200, -200);
+    // btVector3 worldMax = btVector3(200, 200, 200);
+    // m_overlappingPairCache = new btAxisSweep3(worldMin, worldMax);
     m_overlappingPairCache = new btDbvtBroadphase();
 
     // The default constraint solver. For parallel-processing you can use a
@@ -26,7 +38,7 @@ bool Physics::Initialize(const Config &config)
         new btDiscreteDynamicsWorld(m_dispatcher, m_overlappingPairCache,
                                     m_solver, m_collisionConfiguration);
 
-    m_dynamicsWorld->setGravity(btVector3(0, -10, 0));
+    m_dynamicsWorld->setGravity(btVector3(0, -1, 0));
 
     // // Add a few rigid bodies
     // btCollisionShape *groundShape = new btBoxShape(
@@ -97,6 +109,15 @@ bool Physics::Initialize(const Config &config)
     //         m_dynamicsWorld->addRigidBody(body);
     //     }
     // }
+
+    // Create a terrain rigid body
+    {
+        btRigidBody *rigidBody = CreateHeightMapRigidBody(
+            ds_math::Vector3(0.0f, 0.0f, 0.0f), "hm52.bmp",
+            ds_math::Vector3(1.0f, 1.0f, 1.0f), 0.0f);
+
+        m_dynamicsWorld->addRigidBody(rigidBody);
+    }
 
     ds_msg::SystemInit initMsg;
     initMsg.systemName = "Physics";
@@ -251,13 +272,9 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
             if (componentData.LoadMemory(StringIntern::Instance().GetString(
                     createComponentMsg.componentData)))
             {
-                std::cout << "Reached: " << createComponentMsg.componentType
-                          << std::endl;
                 // Get component type
                 std::string componentType = StringIntern::Instance().GetString(
                     createComponentMsg.componentType);
-                std::cout << "Physics: component created " << componentType
-                          << std::endl;
                 // Get entity
                 Entity entity = createComponentMsg.entity;
                 /*
@@ -278,8 +295,8 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                     // rigidbody for that physics component
                     Instance phys =
                         m_physicsComponentManager.GetInstanceForEntity(entity);
-                    // If physics instance is valid (entit has physics component
-                    // too)
+                    // If physics instance is valid (entity has physics
+                    // component too)
                     if (phys.IsValid())
                     {
                         StringIntern::StringId shape =
@@ -293,8 +310,8 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                         ds_math::Vector3 origin =
                             ds_math::Vector3(temp.x, temp.y, temp.z);
                         // Create rigidbody
-                        btRigidBody *rigidBody =
-                            CreateRigidBody(origin, shape, scale, mass);
+                        btRigidBody *rigidBody = nullptr;
+                        rigidBody = CreateRigidBody(origin, shape, scale, mass);
 
                         // Add to physics component
                         m_physicsComponentManager.SetRigidBody(phys, rigidBody);
@@ -355,8 +372,23 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                                 ds_math::Vector3 origin =
                                     ds_math::Vector3(temp.x, temp.y, temp.z);
                                 // Create rigidbody
-                                btRigidBody *rigidBody =
-                                    CreateRigidBody(origin, shape, scale, mass);
+                                btRigidBody *rigidBody = nullptr;
+                                if (StringIntern::Instance().GetString(shape) ==
+                                    "heightmap")
+                                {
+                                    std::string heightmap;
+                                    if (componentData.GetString("heightmap",
+                                                                &heightmap))
+                                    {
+                                        rigidBody = CreateHeightMapRigidBody(
+                                            origin, heightmap, scale, mass);
+                                    }
+                                }
+                                else
+                                {
+                                    rigidBody = CreateRigidBody(origin, shape,
+                                                                scale, mass);
+                                }
 
                                 if (rigidBody != nullptr)
                                 {
@@ -421,7 +453,6 @@ btRigidBody *Physics::CreateRigidBody(const ds_math::Vector3 &origin,
     // Create collision shape
     btCollisionShape *colShape = nullptr;
     std::string colShapeType = StringIntern::Instance().GetString(shape);
-    std::cout << "Collision shape type: " << colShapeType << std::endl;
     if (colShapeType == "box")
     {
         colShape = new btBoxShape(
@@ -454,7 +485,6 @@ btRigidBody *Physics::CreateRigidBody(const ds_math::Vector3 &origin,
         btRigidBody::btRigidBodyConstructionInfo rbInfo(
             bodyMass, bodyMotionState, colShape, localInertia);
 
-        std::cout << "Rigid body created " << mass << std::endl;
         rigidBody = new btRigidBody(rbInfo);
     }
     else
@@ -462,6 +492,107 @@ btRigidBody *Physics::CreateRigidBody(const ds_math::Vector3 &origin,
         std::cerr
             << "Physics::CreateRigidBody: Unhandled collision shape type: "
             << colShapeType << std::endl;
+    }
+
+    return rigidBody;
+}
+
+btRigidBody *
+Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
+                                  const std::string &heightmapFilePath,
+                                  const ds_math::Vector3 &scale,
+                                  float mass)
+{
+    btRigidBody *rigidBody = nullptr;
+
+    // Create transform
+    btTransform bodyTransform;
+    bodyTransform.setIdentity();
+    bodyTransform.setOrigin(btVector3(origin.x, origin.y, origin.z));
+
+    // Create collision shape
+    btCollisionShape *colShape = nullptr;
+
+    // Construct full height map file path
+    std::stringstream fullPath = std::stringstream();
+    fullPath << "../assets/" << heightmapFilePath;
+
+    // Open heightmap file
+    // std::unique_ptr<TextureResource> textureResource =
+    //     m_factory.CreateResource<TextureResource>(fullPath.str());
+
+    m_terrainResource =
+        m_factory.CreateResource<TerrainResource>(fullPath.str());
+
+    if (m_terrainResource != nullptr)
+    {
+        std::cout << "width: " << m_terrainResource->GetHeightmapWidth()
+                  << std::endl;
+        std::cout << "height: " << m_terrainResource->GetHeightmapHeight()
+                  << std::endl;
+        // ds_com::StreamBuffer vertexBufferStore;
+
+        // const std::vector<ds_math::Vector3> positions =
+        //     m_terrainResource->GetVerticesVector();
+
+        // for (const ds_math::Vector3 &position : positions)
+        // {
+        //     vertexBufferStore << position;
+        //     std::cout << position << std::endl;
+        // }
+
+        // btTriangleIndexVertexArray *triData = new btTriangleIndexVertexArray(
+        //     m_terrainResource->GetIndicesVector().size() / 3,
+        //     &m_terrainResource->GetIndicesVector()[0], 0,
+        //     m_terrainResource->GetVerticesVector().size() * 3,
+        //     (btScalar *)vertexBufferStore.GetDataPtr(), 0);
+
+        // colShape = new btBvhTriangleMeshShape(triData, true, true);
+        colShape = new btHeightfieldTerrainShape(
+            m_terrainResource->GetHeightmapWidth(),
+            m_terrainResource->GetHeightmapHeight(),
+            &m_terrainResource->GetHeightArray()[0], 1, -0.5f * 20.0f,
+            0.5f * 20.0f, 1, PHY_FLOAT, false);
+
+        m_collisionShapes.push_back(colShape);
+
+        btVector3 aabMin;
+        btVector3 aabMax;
+        colShape->getAabb(bodyTransform, aabMin, aabMax);
+        std::cout << "aabMin: " << aabMin.x() << ", " << aabMin.y() << ", "
+                  << aabMin.z() << std::endl;
+        std::cout << "aabMax: " << aabMax.x() << ", " << aabMax.y() << ", "
+                  << aabMax.z() << std::endl;
+
+        if (colShape != nullptr)
+        {
+            // Create rigid body
+            btScalar bodyMass = btScalar(mass);
+
+            // Rigid body is dynamic if and only if mass is non-zero, otherwise
+            // static
+            bool isDynamic = (bodyMass != 0.0f);
+
+            btVector3 localInertia(0, 0, 0);
+            if (isDynamic)
+            {
+                colShape->calculateLocalInertia(mass, localInertia);
+            }
+
+            // btDefaultMotionState *bodyMotionState =
+            //     new btDefaultMotionState(bodyTransform);
+            btRigidBody::btRigidBodyConstructionInfo rbInfo(
+                bodyMass, 0, colShape, localInertia);
+
+            rigidBody = new btRigidBody(rbInfo);
+            std::cout << "Created height map rigid body!" << std::endl;
+        }
+    }
+    else
+    {
+        std::cerr
+            << "Physics::CreateHeightmapRigidBody: failed to load heightmap: "
+            << fullPath.str() << std::endl;
     }
 
     return rigidBody;

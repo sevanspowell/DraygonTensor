@@ -2,6 +2,8 @@
 
 #include "btBulletDynamicsCommon.h"
 
+#include "engine/resource/ResourceFactory.h"
+#include "engine/resource/TerrainResource.h"
 #include "engine/system/ISystem.h"
 #include "engine/system/physics/PhysicsComponentManager.h"
 #include "engine/system/scene/TransformComponentManager.h"
@@ -39,6 +41,24 @@ private:
                                  const ds_math::Vector3 &scale,
                                  float mass);
 
+    /**
+     * Create a bullet rigid body for a height map from the given parameters.
+     *
+     * btRigidBody should be freed by user.
+     *
+     * @param   origin             const ds_math::Vector3 &, origin of rigid
+     *                             body.
+     * @param   heightmapFilePath  const std::string &, path to heightmap file.
+     * @param   scale              const ds_math::Vector3 &, scale of rigid
+     *                             body.
+     * @param   mass               float, mass of the rigid body. 0 for a static
+     *                             rigid body.
+     */
+    btRigidBody *CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
+                                          const std::string &heightmapFilePath,
+                                          const ds_math::Vector3 &scale,
+                                          float mass);
+
     btDiscreteDynamicsWorld *m_dynamicsWorld;
     btSequentialImpulseConstraintSolver *m_solver;
     btBroadphaseInterface *m_overlappingPairCache;
@@ -50,5 +70,10 @@ private:
     TransformComponentManager m_transformComponentManager;
     /** Physics component manager */
     PhysicsComponentManager m_physicsComponentManager;
+
+    /** Resource factory */
+    ResourceFactory m_factory;
+
+    std::unique_ptr<TerrainResource> m_terrainResource;
 };
 }
