@@ -32,10 +32,12 @@ std::unique_ptr<IResource> TerrainResource::CreateFromFile(std::string filePath)
 
     // set base height of the terrain - must be above 0
     // float normalX, normalZ
-    float baseheight = 20;
 
     unsigned int width = changedResourcePointer->GetWidthInPixels();
     unsigned int height = changedResourcePointer->GetHeightInPixels();
+
+    std::vector<float> heights;
+    heights.resize(width * height, 0.0f);
 
     std::vector<std::vector<float>> tempPixelHeights;
     tempPixelHeights.resize(height, std::vector<float>(width, 0.0));
@@ -55,18 +57,19 @@ std::unique_ptr<IResource> TerrainResource::CreateFromFile(std::string filePath)
 
             // calculate the height of the point using the color of the
             // associated pixel
-            float h = baseheight *
-                      (((color / 255.0f) - 0.5f) * 2); // add *10 for scale
+            // -0.5f to get each height within range -0.5 to 0.5
+            float h = 20 * ((color / 255.0f) - 0.5f);
+            heights[z * width + x] = h;
 
             // std::cout << h << std::endl;
             // HEIGHTS
             // put heights in tempPixelHeights 2d vector from BL to TR pixel
-            tempPixelHeights[z][x] = h;
+            // tempPixelHeights[x][z] = h;
 
             // VERTICES
             // put each vector3 into the vector m_vertices
             createdTerrainResource->PushVector3ToVertices(
-                ds_math::Vector3(z, h, x));
+                ds_math::Vector3(x, h, z));
 
             // swapping some stuff
             // createdTerrainResource->PushVector3ToVertices(ds_math::Vector3(h,z,x));
@@ -115,6 +118,9 @@ std::unique_ptr<IResource> TerrainResource::CreateFromFile(std::string filePath)
     // TEX COORDS
     // fill tex coords vector
     createdTerrainResource->CalculateTextureCoordinates();
+
+    // Set height array
+    createdTerrainResource->SetHeightArray(heights);
 
     std::unique_ptr<IResource> TerrainResource =
         std::move(createdTerrainResource);
@@ -188,8 +194,8 @@ void TerrainResource::CalculateNormals()
         vecB = p3 - p1;
 
         vecN = ds_math::Vector3((vecA.y * vecB.z) - (vecA.z * vecB.y),
-                (vecA.z * vecB.x) - (vecA.x * vecB.z),
-                (vecA.x * vecB.y) - (vecA.y * vecB.x));
+                                (vecA.z * vecB.x) - (vecA.x * vecB.z),
+                                (vecA.x * vecB.y) - (vecA.y * vecB.x));
 
         // terrible gross hacky yuck-ness to be able to normalize and test - fix
         // before final submission
@@ -226,8 +232,9 @@ void TerrainResource::CalculateTextureCoordinates()
             tempU = (float)j / m_terrain.m_terrainDepth;
             tempV = (float)i / m_terrain.m_terrainWidth;
 
-            texcoord.u = tempU;
-            texcoord.v = tempV;
+            // Rotate texture co-ordinates 45degrees (pi / 2.0 radians)
+            texcoord.u = tempV;
+            texcoord.v = -tempU;
 
 
             // Increment the tu texture coordinate by the increment value and
@@ -324,5 +331,25 @@ void TerrainResource::SetWidthDepth(unsigned int w, unsigned int d)
 {
     m_terrain.m_terrainWidth = w;
     m_terrain.m_terrainDepth = d;
+}
+
+const std::vector<float> &TerrainResource::GetHeightArray() const
+{
+    return m_heights;
+}
+
+unsigned int TerrainResource::GetHeightmapWidth() const
+{
+    return m_terrain.m_terrainWidth;
+}
+
+unsigned int TerrainResource::GetHeightmapHeight() const
+{
+    return m_terrain.m_terrainDepth;
+}
+
+void TerrainResource::SetHeightArray(const std::vector<float> &heightArray)
+{
+    m_heights = heightArray;
 }
 }
