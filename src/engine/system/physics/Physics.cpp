@@ -25,9 +25,6 @@ bool Physics::Initialize(const Config &config)
 
     // btDbvtBroadphase is a good general-purpose broadphase. You can also try
     // out btAxis3Sweep.
-    // btVector3 worldMin = btVector3(-200, -200, -200);
-    // btVector3 worldMax = btVector3(200, 200, 200);
-    // m_overlappingPairCache = new btAxisSweep3(worldMin, worldMax);
     m_overlappingPairCache = new btDbvtBroadphase();
 
     // The default constraint solver. For parallel-processing you can use a
@@ -39,85 +36,6 @@ bool Physics::Initialize(const Config &config)
                                     m_solver, m_collisionConfiguration);
 
     m_dynamicsWorld->setGravity(btVector3(0, -1, 0));
-
-    // // Add a few rigid bodies
-    // btCollisionShape *groundShape = new btBoxShape(
-    //     btVector3(btScalar(50.0), btScalar(50.0), btScalar(50.0)));
-
-    // m_collisionShapes.push_back(groundShape);
-
-    // btTransform groundTransform;
-    // groundTransform.setIdentity();
-    // groundTransform.setOrigin(btVector3(0, -56, 0));
-
-    // {
-    //     btScalar mass(0.0);
-
-    //     // Rigidbody is dynamic if and only if mass is non-zero, otherwise
-    //     // static
-    //     bool isDynamic = (mass != 0.0f);
-
-    //     btVector3 localInertia(0, 0, 0);
-    //     if (isDynamic)
-    //     {
-    //         groundShape->calculateLocalInertia(mass, localInertia);
-    //     }
-
-    //     // Using motion state is optional (provides interpolation
-    //     capabilities
-    //     // and
-    //     // only synchronizes 'active' objects)
-    //     btDefaultMotionState *myMotionState =
-    //         new btDefaultMotionState(groundTransform);
-    //     btRigidBody::btRigidBodyConstructionInfo rbInfo(
-    //         mass, myMotionState, groundShape, localInertia);
-    //     btRigidBody *body = new btRigidBody(rbInfo);
-
-    //     // Add the body to the dynamics world
-    //     m_dynamicsWorld->addRigidBody(body);
-    // }
-
-    // // Create a dynamic rigidbody
-    // {
-    //     btCollisionShape *colShape = new btSphereShape(btScalar(1.0));
-    //     m_collisionShapes.push_back(colShape);
-
-    //     // Create dynamic objects
-    //     btTransform startTransform;
-    //     startTransform.setIdentity();
-
-    //     btScalar mass(1.0f);
-
-    //     // Rigid body is dynamic if and only if ;mass is non-zero, otherwise
-    //     // static
-    //     bool isDynamic = (mass != 0.0f);
-
-    //     btVector3 localInertia(0, 0, 0);
-    //     if (isDynamic)
-    //     {
-    //         colShape->calculateLocalInertia(mass, localInertia);
-
-    //         startTransform.setOrigin(btVector3(2, 10, 0));
-
-    //         // Using motion state is recommended.
-    //         btDefaultMotionState *myMotionState =
-    //             new btDefaultMotionState(startTransform);
-    //         btRigidBody::btRigidBodyConstructionInfo rbInfo(
-    //             mass, myMotionState, colShape, localInertia);
-    //         btRigidBody *body = new btRigidBody(rbInfo);
-
-    //         m_dynamicsWorld->addRigidBody(body);
-    //     }
-    // }
-
-    // Create a terrain rigid body
-    {
-        btRigidBody *rigidBody = CreateHeightMapRigidBody(
-            ds_math::Vector3(0.0f, 0.0f, 0.0f), "hm52.bmp",
-            ds_math::Vector3(1.0f, 1.0f, 1.0f), 0.0f);
-
-        m_dynamicsWorld->addRigidBody(rigidBody);
-    }
 
     ds_msg::SystemInit initMsg;
     initMsg.systemName = "Physics";
@@ -326,7 +244,7 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                     }
                 }
                 // Create physics component
-                if (componentType == "physicsComponent")
+                else if (componentType == "physicsComponent")
                 {
                     // Get physics component data.
                     std::string dataShape;
@@ -376,12 +294,12 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                             {
                                 ds_math::Vector4 temp =
                                     m_transformComponentManager
-                                        .GetLocalTransform(transform)[3];
+                                        .GetWorldTransform(transform)[3];
                                 origin =
                                     ds_math::Vector3(temp.x, temp.y, temp.z);
                             }
 
-                            // Create rigidbody
+                            // Create rigid body
                             btRigidBody *rigidBody =
                                 CreateRigidBody(origin, shape, scale, mass);
 
@@ -400,6 +318,59 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                             std::cout << "Physics component not created, scale "
                                          "vector size not equal to 3"
                                       << std::endl;
+                        }
+                    }
+                }
+                else if (componentType == "terrainComponent")
+                {
+                    std::string heightmapPath;
+                    float heightScale;
+
+                    if (componentData.GetString("heightmap", &heightmapPath) &&
+                        componentData.GetFloat("heightScale", &heightScale))
+                    {
+                        // Construct full heightmap path
+                        std::stringstream fullPath;
+                        fullPath << "../assets/" << heightmapPath;
+
+                        // Create physics component
+                        Instance phys =
+                            m_physicsComponentManager.CreateComponentForEntity(
+                                entity);
+
+                        // Height map shape
+                        m_physicsComponentManager.SetShape(
+                            phys, StringIntern::Instance().Intern("heightmap"));
+
+                        ds_math::Vector3 origin =
+                            ds_math::Vector3(0.0f, 0.0f, 0.0f);
+
+                        // If this entity also has a transform component, create
+                        // rigid body at that transform. Otherwise create at 0,
+                        // 0, 0
+                        Instance transform =
+                            m_transformComponentManager.GetInstanceForEntity(
+                                entity);
+                        if (transform.IsValid())
+                        {
+                            ds_math::Vector4 temp =
+                                m_transformComponentManager.GetWorldTransform(
+                                    transform)[3];
+                            origin = ds_math::Vector3(temp.x, temp.y, temp.z);
+                        }
+
+                        // Create rigid body
+                        btRigidBody *rigidBody = CreateHeightMapRigidBody(
+                            origin, fullPath.str(), heightScale);
+
+                        if (rigidBody != nullptr)
+                        {
+                            // Add rigid body to physics component
+                            m_physicsComponentManager.SetRigidBody(phys,
+                                                                   rigidBody);
+
+                            // Add rigid body to world
+                            m_dynamicsWorld->addRigidBody(rigidBody);
                         }
                     }
                 }
@@ -494,8 +465,7 @@ btRigidBody *Physics::CreateRigidBody(const ds_math::Vector3 &origin,
 btRigidBody *
 Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
                                   const std::string &heightmapFilePath,
-                                  const ds_math::Vector3 &scale,
-                                  float mass)
+                                  float heightScale)
 {
     btRigidBody *rigidBody = nullptr;
 
@@ -507,14 +477,13 @@ Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
     // Create collision shape
     btCollisionShape *colShape = nullptr;
 
-    // Construct full height map file path
-    std::stringstream fullPath = std::stringstream();
-    fullPath << "../assets/" << heightmapFilePath;
-
+    // Create terrain resource
     std::unique_ptr<TerrainResource> terrainResource =
-        m_factory.CreateResource<TerrainResource>(fullPath.str());
-    terrainResource->SetHeightScale(20.0f);
+        m_factory.CreateResource<TerrainResource>(heightmapFilePath);
+    terrainResource->SetHeightScale(heightScale);
 
+    // Copy terrain data - bullet doesn't copy data we pass to it, we need to
+    // keep the data 'alive' for the lifetime of the physics system.
     m_heightmapData.push_back(terrainResource->GetHeightArray());
 
     if (terrainResource != nullptr)
@@ -537,17 +506,10 @@ Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
         if (colShape != nullptr)
         {
             // Create rigid body
-            btScalar bodyMass = btScalar(mass);
+            btScalar bodyMass = btScalar(0.0f);
 
-            // Rigid body is dynamic if and only if mass is non-zero, otherwise
-            // static
-            bool isDynamic = (bodyMass != 0.0f);
-
+            // Static
             btVector3 localInertia(0, 0, 0);
-            if (isDynamic)
-            {
-                colShape->calculateLocalInertia(mass, localInertia);
-            }
 
             btDefaultMotionState *bodyMotionState =
                 new btDefaultMotionState(bodyTransform);
@@ -562,7 +524,7 @@ Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
     {
         std::cerr
             << "Physics::CreateHeightmapRigidBody: failed to load heightmap: "
-            << fullPath.str() << std::endl;
+            << heightmapFilePath << std::endl;
     }
 
     return rigidBody;

@@ -51,15 +51,11 @@ private:
      * @param   origin             const ds_math::Vector3 &, origin of rigid
      *                             body.
      * @param   heightmapFilePath  const std::string &, path to heightmap file.
-     * @param   scale              const ds_math::Vector3 &, scale of rigid
-     *                             body.
-     * @param   mass               float, mass of the rigid body. 0 for a static
-     *                             rigid body.
+     * @param   heightScale        float, factor to scale terrain height by.
      */
     btRigidBody *CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
                                           const std::string &heightmapFilePath,
-                                          const ds_math::Vector3 &scale,
-                                          float mass);
+                                          float heightScale);
 
     btDiscreteDynamicsWorld *m_dynamicsWorld;
     btSequentialImpulseConstraintSolver *m_solver;
