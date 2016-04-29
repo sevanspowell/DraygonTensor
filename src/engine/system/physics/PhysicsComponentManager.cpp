@@ -4,7 +4,7 @@
 
 namespace ds
 {
-const btRigidBody *PhysicsComponentManager::GetRigidBody(Instance i) const
+btRigidBody *PhysicsComponentManager::GetRigidBody(Instance i) const
 {
     assert(
         i.index >= 0 && i.index < GetNumInstances() &&
@@ -14,7 +14,7 @@ const btRigidBody *PhysicsComponentManager::GetRigidBody(Instance i) const
 }
 
 void PhysicsComponentManager::SetRigidBody(Instance i,
-                                           const btRigidBody *rigidBody)
+                                           btRigidBody *rigidBody)
 {
     assert(
         i.index >= 0 && i.index < GetNumInstances() &&

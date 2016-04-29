@@ -19,17 +19,17 @@ public:
      * Get the rigid body of the given component instance.
      *
      * @param   i  Instance, component instance to get rigid body of.
-     * @return     const btRigidBody *, physics rigid body.
+     * @return     btRigidBody *, physics rigid body.
      */
-    const btRigidBody *GetRigidBody(Instance i) const;
+    btRigidBody *GetRigidBody(Instance i) const;
 
     /**
      * Set the rigid body of the given component instance.
      *
      * @param  i          Instance, component instance to set rigid body of.
-     * @param  rigidBody  const btRigidBody *, rigid body to set.
+     * @param  rigidBody  btRigidBody *, rigid body to set.
      */
-    void SetRigidBody(Instance i, const btRigidBody *rigidBody);
+    void SetRigidBody(Instance i, btRigidBody *rigidBody);
 
     /**
      * Get the collision shape type of the given component instance.

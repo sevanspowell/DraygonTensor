@@ -20,6 +20,6 @@ struct PhysicsComponent
     // Mass of rigid body
     float mass;
     // Bullet rigid body
-    const btRigidBody *rigidBody;
+    btRigidBody *rigidBody;
 };
 }

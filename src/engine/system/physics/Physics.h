@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "btBulletDynamicsCommon.h"
 
 #include "engine/resource/ResourceFactory.h"
@@ -74,6 +76,7 @@ private:
     /** Resource factory */
     ResourceFactory m_factory;
 
-    std::unique_ptr<TerrainResource> m_terrainResource;
+    /** Heightmap data */
+    std::vector<std::vector<float>> m_heightmapData;
 };
 }
