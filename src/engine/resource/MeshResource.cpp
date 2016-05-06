@@ -1,3 +1,22 @@
+/**
+ * Code modified from original produced by Etay Meiri. Copyright is attached
+ * below:
+ *
+ * Copyright 2011 Etay Meiri
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <assimp/Importer.hpp>
 
 #include <string>
@@ -70,11 +89,14 @@ std::unique_ptr<IResource> MeshResource::CreateFromFile(std::string filePath)
             meshResource->LoadMeshData(iMesh, ourScene->mMeshes[iMesh]);
         }
 
+        // Reserve enough memory for the bone data of each vertex
+        // Use resize (not reserve) because it changes the size of the array as
+        // well as allocating memory
+        bones.resize(numVertices);
+
         // TODO: Fix for multiple meshes in scene
-        for (unsigned int iMesh = 0; iMesh < 1; ++iMesh)
+        for (unsigned int iMesh = 0; iMesh < meshCount; ++iMesh)
         {
-            // Reserve enough memory for the bone data of each vertex
-            bones.resize(numVertices);
             meshResource->LoadBones(iMesh, ourScene->mMeshes[iMesh], &bones);
         }
 
@@ -474,6 +496,8 @@ void MeshResource::LoadBones(unsigned int meshIndex,
                              const aiMesh *mesh,
                              std::vector<VertexBoneData> *bones)
 {
+    assert(meshIndex >= 0 && meshIndex < m_meshEntries.size() &&
+           "MeshResource::LoadBones: Tried to access invalid mesh index.");
     if (bones != nullptr)
     {
         for (unsigned int i = 0; i < mesh->mNumBones; ++i)
@@ -502,7 +526,9 @@ void MeshResource::LoadBones(unsigned int meshIndex,
             for (unsigned int j = 0; j < mesh->mBones[i]->mNumWeights; ++j)
             {
                 // TODO: Fix for multiple meshes in scene
-                unsigned int vertexId = mesh->mBones[i]->mWeights[j].mVertexId;
+                unsigned int vertexId = m_meshEntries[meshIndex].baseVertex +
+                                        mesh->mBones[i]->mWeights[j].mVertexId;
+                // unsigned int vertexId = mesh->mBones[i]->mWeights[j].mVertexId;
                 float weight = mesh->mBones[i]->mWeights[j].mWeight;
                 (*bones)[vertexId].AddBoneData(boneIndex, weight);
             }
@@ -737,7 +763,8 @@ unsigned int MeshResource::FindScaling(float animationTime,
     // Ensure at least one scaling key - sanity check
     assert(nodeAnim->mNumScalingKeys > 0);
 
-    // Find the animation key frame index immediately before the animation time
+    // Find the animation key frame index immediately before the animation
+    // time
     // given
     for (unsigned int i = 0; i < nodeAnim->mNumScalingKeys - 1; ++i)
     {
@@ -759,7 +786,8 @@ unsigned int MeshResource::FindRotation(float animationTime,
     // Ensure at least one rotation key - sanity check
     assert(nodeAnim->mNumRotationKeys > 0);
 
-    // Find the animation key frame index immediately before the animation time
+    // Find the animation key frame index immediately before the animation
+    // time
     // given
     for (unsigned int i = 0; i < nodeAnim->mNumRotationKeys - 1; ++i)
     {
@@ -781,7 +809,8 @@ unsigned int MeshResource::FindPosition(float animationTime,
     // Ensure at least one position key - sanity check
     assert(nodeAnim->mNumPositionKeys > 0);
 
-    // Find the animation key frame index immediately before the animation time
+    // Find the animation key frame index immediately before the animation
+    // time
     // given
     for (unsigned int i = 0; i < nodeAnim->mNumPositionKeys - 1; ++i)
     {

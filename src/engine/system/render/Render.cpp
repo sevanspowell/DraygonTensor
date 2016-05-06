@@ -673,7 +673,6 @@ ds_render::Mesh Render::CreateMeshFromMeshResource(const std::string &filePath)
             boneWeightAttributeDescriptor);
     }
 
-
     // Create vertex buffer
     ds_render::VertexBufferHandle vb = m_renderer->CreateVertexBuffer(
         ds_render::BufferUsageType::Static, vertexBufferDescriptor,
@@ -808,13 +807,13 @@ void Render::RenderScene()
                         transformInstance));
                 // std::vector<ds_math::Matrix4> boneTransforms(
                 //     MeshResource::MAX_BONES, ds_math::Matrix4(1.0f));
-                // std::vector<ds_math::Matrix4> boneTransforms;
-                // m_animatedMesh->BoneTransform(m_timeInSeconds,
-                // &boneTransforms);
-                // m_objectBufferDescrip.InsertMemberData(
-                //     "Object.boneTransforms",
-                //     MeshResource::MAX_BONES * sizeof(ds_math::Matrix4),
-                //     &boneTransforms[0]);
+                std::vector<ds_math::Matrix4> boneTransforms;
+                m_animatedMesh->BoneTransform(m_timeInSeconds,
+                &boneTransforms);
+                m_objectBufferDescrip.InsertMemberData(
+                    "Object.boneTransforms",
+                    MeshResource::MAX_BONES * sizeof(ds_math::Matrix4),
+                    &boneTransforms[0]);
                 m_renderer->UpdateConstantBufferData(m_objectMatrices,
                                                      m_objectBufferDescrip);
             }
