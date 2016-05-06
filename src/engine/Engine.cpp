@@ -2,6 +2,13 @@
 
 namespace ds
 {
+Engine::Engine()
+{
+    // Add platform system
+    m_platform = new Platform();
+    AddSystem(std::unique_ptr<ISystem>(m_platform));
+}
+
 void Engine::Start()
 {
     if (Init())
@@ -10,7 +17,14 @@ void Engine::Start()
 
         while (m_running)
         {
-            Update(0.1f);
+            // Calculate deltaTime
+            static double prevSeconds =
+                ((Platform *)m_platform)->GetTicks() / 1000.0f;
+            double currSeconds = ((Platform *)m_platform)->GetTicks() / 1000.0f;
+            float deltaTime = (float)(currSeconds - prevSeconds);
+            prevSeconds = currSeconds;
+
+            Update(deltaTime);
         }
 
         Shutdown();
@@ -115,7 +129,7 @@ void Engine::Shutdown()
 
 void Engine::PostMessages(const ds_msg::MessageStream &messages)
 {
-    AppendStreamBuffer(m_messagesInternal, messages);
+    AppendStreamBuffer(&m_messagesInternal, messages);
 }
 
 ds_msg::MessageStream Engine::CollectMessages()

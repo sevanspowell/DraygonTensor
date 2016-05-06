@@ -9,8 +9,7 @@ namespace ds_lua
 {
 extern void LoadMathAPI(LuaEnvironment &luaEnv);
 
-extern int l_IsNextMessage(lua_State *L);
-extern int l_GetNextMessage(lua_State *L);
+extern ds::ScriptBindingSet LoadScriptBindings();
 }
 
 namespace ds
@@ -86,6 +85,8 @@ bool Script::Initialize(const Config &config)
 
 void Script::Update(float deltaTime)
 {
+    ProcessEvents(&m_messagesReceived);
+
     if (m_bootScriptLoaded)
     {
         m_lua.CallLuaFunction(
@@ -93,8 +94,6 @@ void Script::Update(float deltaTime)
             deltaTime);
         m_lua.CallLuaFunction("render", 0);
     }
-
-    ProcessEvents(&m_messagesReceived);
 }
 
 void Script::Shutdown()
@@ -109,7 +108,7 @@ void Script::Shutdown()
 
 void Script::PostMessages(const ds_msg::MessageStream &messages)
 {
-    AppendStreamBuffer(m_messagesReceived, messages);
+    AppendStreamBuffer(&m_messagesReceived, messages);
 }
 
 ds_msg::MessageStream Script::CollectMessages()
@@ -123,11 +122,7 @@ ds_msg::MessageStream Script::CollectMessages()
 
 ScriptBindingSet Script::GetScriptBindings() const
 {
-    ScriptBindingSet scriptBindings;
-    scriptBindings.AddFunction("is_next_message", ds_lua::l_IsNextMessage);
-    scriptBindings.AddFunction("get_next_message", ds_lua::l_GetNextMessage);
-
-    return scriptBindings;
+    return ds_lua::LoadScriptBindings();
 }
 
 void Script::RegisterScriptBindings(const char *systemName, ISystem *systemPtr)
@@ -136,8 +131,8 @@ void Script::RegisterScriptBindings(const char *systemName, ISystem *systemPtr)
         std::pair<const char *, ISystem *>(systemName, systemPtr));
 }
 
-void Script::SpawnPrefab(std::string prefabFile,
-                         const ds_math::Vector3 &position)
+Entity Script::SpawnPrefab(std::string prefabFile,
+                           const ds_math::Vector3 &position)
 {
     std::cout << "Prefab spawned: " << prefabFile << std::endl;
 
@@ -169,6 +164,8 @@ void Script::SpawnPrefab(std::string prefabFile,
             createComponentMsg.entity = entity;
             createComponentMsg.componentType =
                 StringIntern::Instance().Intern(component);
+            std::cout << "Script: Component type: " << component << ": "
+                      << createComponentMsg.componentType << std::endl;
             createComponentMsg.componentData =
                 StringIntern::Instance().Intern(componentData);
 
@@ -190,7 +187,61 @@ void Script::SpawnPrefab(std::string prefabFile,
     {
         std::cerr << "Script::SpawnPrefab: Failed to open prefab file: "
                   << fullPrefabFilePath.str() << std::endl;
+        // Invalid entity handle
+        m_entityManager.Destroy(entity);
     }
+
+    return entity;
+}
+
+void Script::MoveEntity(Entity entity, const ds_math::Vector3 &deltaPosition)
+{
+    // Send an entity move message
+    ds_msg::MoveEntity entityMoveMsg;
+    entityMoveMsg.entity = entity;
+    entityMoveMsg.deltaPosition = deltaPosition;
+
+    ds_msg::AppendMessage(&m_messagesGenerated, ds_msg::MessageType::MoveEntity,
+                          sizeof(ds_msg::MoveEntity), &entityMoveMsg);
+}
+
+ds_math::Matrix4 Script::GetWorldTransform(Entity entity) const
+{
+    ds_math::Matrix4 worldTransform;
+
+    Instance i = m_transformManager.GetInstanceForEntity(entity);
+
+    if (i.IsValid())
+    {
+        worldTransform = m_transformManager.GetWorldTransform(i);
+    }
+
+    return worldTransform;
+}
+
+ds_math::Matrix4 Script::GetLocalTransform(Entity entity) const
+{
+    ds_math::Matrix4 localTransform;
+
+    Instance i = m_transformManager.GetInstanceForEntity(entity);
+
+    if (i.IsValid())
+    {
+        localTransform = m_transformManager.GetLocalTransform(i);
+    }
+
+    return localTransform;
+}
+
+void Script::SetLocalTransform(Entity entity, const ds_math::Matrix4 &transform)
+{
+    ds_msg::SetLocalTransform setLocalMsg;
+    setLocalMsg.entity = entity;
+    setLocalMsg.localTransform = transform;
+
+    ds_msg::AppendMessage(&m_messagesGenerated,
+                          ds_msg::MessageType::SetLocalTransform,
+                          sizeof(ds_msg::SetLocalTransform), &setLocalMsg);
 }
 
 bool Script::IsNextScriptMessage() const
@@ -247,6 +298,107 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
             m_lua.ExecuteString(
                 StringIntern::Instance().GetString(scriptMsg.stringId).c_str());
             break;
+        case ds_msg::MessageType::MoveForward:
+            ds_msg::MoveForward moveForwardMsg;
+            (*messages) >> moveForwardMsg;
+
+            // Insert header into messages to be sent to script
+            m_toScriptMessages << header;
+            // Insert payload into messages to be sent script
+            m_toScriptMessages << moveForwardMsg;
+            break;
+        case ds_msg::MessageType::MoveBackward:
+            ds_msg::MoveBackward moveBackwardMsg;
+            (*messages) >> moveBackwardMsg;
+
+            // Insert header into messages to be sent to script
+            m_toScriptMessages << header;
+            // Insert payload into messages to be sent script
+            m_toScriptMessages << moveBackwardMsg;
+            break;
+        case ds_msg::MessageType::StrafeLeft:
+            ds_msg::StrafeLeft strafeLeftMsg;
+            (*messages) >> strafeLeftMsg;
+
+            // Insert header into messages to be sent to script
+            m_toScriptMessages << header;
+            // Insert payload into messages to be sent script
+            m_toScriptMessages << strafeLeftMsg;
+            break;
+        case ds_msg::MessageType::StrafeRight:
+            ds_msg::StrafeRight strafeRightMsg;
+            (*messages) >> strafeRightMsg;
+
+            // Insert header into messages to be sent to script
+            m_toScriptMessages << header;
+            // Insert payload into messages to be sent script
+            m_toScriptMessages << strafeRightMsg;
+            break;
+        case ds_msg::MessageType::CreateComponent:
+        {
+            ds_msg::CreateComponent createComponentMsg;
+            (*messages) >> createComponentMsg;
+
+            // Lod up component data for component
+            Config componentData;
+            if (componentData.LoadMemory(StringIntern::Instance().GetString(
+                    createComponentMsg.componentData)))
+            {
+                // Get component type
+                std::string componentType = StringIntern::Instance().GetString(
+                    createComponentMsg.componentType);
+                // Create transform component
+                if (componentType == "transformComponent")
+                {
+                    TransformComponentManager::
+                        CreateComponentForEntityFromConfig(
+                            &m_transformManager, createComponentMsg.entity,
+                            componentData);
+                }
+            }
+            break;
+        }
+        case ds_msg::MessageType::MoveEntity:
+        {
+            ds_msg::MoveEntity entityMoveMsg;
+            (*messages) >> entityMoveMsg;
+
+            // Instance transform =
+            //     m_transformManager.GetInstanceForEntity(entityMoveMsg.entity);
+
+            // if (transform.IsValid())
+            // {
+            //     // Get current transform
+            //     const ds_math::Matrix4 &currentTransform =
+            //         m_transformManager.GetLocalTransform(transform);
+            //     // Translate it
+            //     ds_math::Matrix4 newTransform =
+            //         currentTransform *
+            //         ds_math::Matrix4::CreateTranslationMatrix(
+            //             entityMoveMsg.deltaPosition);
+
+            //     // Set transform of entity
+            //     m_transformManager.SetLocalTransform(transform,
+            //     newTransform);
+            // }
+            break;
+        }
+        case ds_msg::MessageType::SetLocalTransform:
+        {
+            ds_msg::SetLocalTransform setLocalMsg;
+            (*messages) >> setLocalMsg;
+
+            Instance transform =
+                m_transformManager.GetInstanceForEntity(setLocalMsg.entity);
+
+            if (transform.IsValid())
+            {
+                // Set transform of entity
+                m_transformManager.SetLocalTransform(
+                    transform, setLocalMsg.localTransform);
+            }
+            break;
+        }
         default:
             messages->Extract(header.size);
             break;

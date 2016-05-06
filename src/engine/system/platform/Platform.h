@@ -58,6 +58,14 @@ public:
      */
     virtual ds_msg::MessageStream CollectMessages();
 
+    /**
+     * Get the number of milliseconds since the platform has been initialized.
+     *
+     * @return  uint32_t, number of milliseconds since the platform has been
+     * initialized.
+     */
+    uint32_t GetTicks() const;
+
 private:
     /**
      * Translate an SDL2 event into a message and append it to the list of

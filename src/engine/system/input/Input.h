@@ -83,6 +83,27 @@ public:
      */
     virtual ScriptBindingSet GetScriptBindings() const;
 
+    /**
+     * Return true if the given key name is pressed.
+     *
+     * @param   keyName  const std::string &, name of key.
+     * @return           bool, TRUE if key is pressed, FALSE otherwise.
+     */
+    bool IsKeyPressed(const std::string &keyName) const;
+
+    /**
+     * Get the amount the mouse has moved in the x and y directions since the
+     * last frame.
+     *
+     * Only works if Video.lockMouse is set to true in config.
+     *
+     * @param  xDelta  int *, where to store amount mouse has moved in x
+     * direction since last frame (pixels).
+     * @param  yDelta  int *, where to store amount mouse has moved in y
+     * direction since last frame (pixels).
+     */
+    void GetMouseDeltaXY(int *xDelta, int *yDelta) const;
+
 private:
     /**
      * Pre-populates the key name to key code map, mapping key name to a key

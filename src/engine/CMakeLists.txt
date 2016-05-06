@@ -26,13 +26,21 @@ set(ENGINE_INCLUDE_FILES
   resource/ResourceFactory.hpp
   resource/ShaderResource.h
   resource/TextureResource.h
+  resource/TerrainResource.h
   system/Console.h
+  system/physics/MotionStateExample.h
+  system/physics/Physics.h
+  system/physics/PhysicsComponent.h
+  system/physics/PhysicsComponentManager.h
+  system/physics/PhysicsHandler.h
   system/input/Input.h
   system/input/InputContext.h
   system/platform/Keyboard.h
   system/platform/Platform.h
   system/platform/Video.h
   system/platform/Window.h
+  system/render/CameraComponent.h
+  system/render/CameraComponentManager.h
   system/render/ConstantBuffer.h
   system/render/ConstantBufferDescription.h
   system/render/GLRenderer.h
@@ -70,19 +78,27 @@ set(ENGINE_SRC_FILES
   resource/MeshResource.cpp
   resource/ShaderResource.cpp
   resource/TextureResource.cpp
+  resource/TerrainResource.cpp
   system/Console.cpp
+  system/physics/MotionStateExample.cpp
+  system/physics/Physics.cpp
+  system/physics/PhysicsComponentManager.cpp
+  system/physics/PhysicsHandler.cpp
   system/input/Input.cpp
   system/input/InputContext.cpp
+  system/input/InputLuaBindings.cpp
   system/platform/Keyboard.cpp
   system/platform/Platform.cpp
   system/platform/Video.cpp
   system/platform/Window.cpp
+  system/render/CameraComponentManager.cpp
   system/render/ConstantBuffer.cpp
   system/render/ConstantBufferDescription.cpp
   system/render/GLRenderer.cpp
   system/render/Material.cpp
   system/render/Mesh.cpp
   system/render/Render.cpp
+  system/render/RenderLuaBindings.cpp
   system/render/RenderComponentManager.cpp
   system/render/Texture.cpp
   system/render/VertexBufferDescription.cpp

@@ -76,8 +76,8 @@ const void *StreamBuffer::GetDataPtr() const
     return ptr;
 }
 
-void AppendStreamBuffer(StreamBuffer &to, const StreamBuffer &from)
+void AppendStreamBuffer(StreamBuffer *to, const StreamBuffer &from)
 {
-    to.Insert(from.AvailableBytes(), from.GetDataPtr());
+    to->Insert(from.AvailableBytes(), from.GetDataPtr());
 }
 }

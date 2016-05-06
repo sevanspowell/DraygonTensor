@@ -2,6 +2,8 @@
 #include <cmath>
 
 #include "Vector3.h"
+#include "Vector4.h"
+#include "Matrix4.h"
 
 namespace ds_math
 {
@@ -147,6 +149,16 @@ Vector3 Vector3::Normalize(const Vector3 &vec)
 Vector3 Vector3::Invert(const Vector3 &vec)
 {
     return (vec * -1);
+}
+
+Vector3 Vector3::Transform(const Vector3 &vec, const Matrix4 &matrix)
+{
+    Vector4 v = Vector4(vec.x, vec.y, vec.z, 1.0);
+
+    // Transform vector
+    v = matrix * v;
+
+    return (Vector3(v.x, v.y, v.z));
 }
 
 const Vector3 Vector3::UnitX = Vector3(1.0f, 0.0f, 0.0f);

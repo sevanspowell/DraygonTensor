@@ -156,6 +156,32 @@ bool Config::GetInt(const std::string &key, int *integer) const
     return result;
 }
 
+bool Config::GetFloat(const std::string &key, float *f) const
+{
+    bool result = false;
+
+    rapidjson::Value::ConstMemberIterator valueIt = GetDocumentMember(key);
+
+    if (IsLoaded())
+    {
+        if (valueIt != m_document.MemberEnd())
+        {
+            if (valueIt->value.IsFloat())
+            {
+                *f = valueIt->value.GetFloat();
+                result = true;
+            }
+            else
+            {
+                std::cerr << "Config::GetFloat: Warning: '" << key
+                          << "' is not a float." << std::endl;
+            }
+        }
+    }
+
+    return result;
+}
+
 bool Config::GetFloatArray(const std::string &key,
                            std::vector<float> *array) const
 {
@@ -639,34 +665,34 @@ Config::GetDocumentMember(const std::string &key)
                             }
                             else
                             {
-                                std::cerr << "Config::GetDocumentMember: "
-                                             "Warning: value '";
-                                for (std::vector<std::string>::const_iterator
-                                         tokenPrint = tokens.begin();
-                                     tokenPrint != tokenIt + 1; ++tokenPrint)
-                                {
-                                    std::cerr << *tokenPrint << ". ";
-                                }
-                                std::cerr << "' is not an object, it's members "
-                                             "can't be accessed."
-                                          << std::endl;
+                                // std::cerr << "Config::GetDocumentMember: "
+                                //              "Warning: value '";
+                                // for (std::vector<std::string>::const_iterator
+                                //          tokenPrint = tokens.begin();
+                                //      tokenPrint != tokenIt + 1; ++tokenPrint)
+                                // {
+                                //     std::cerr << *tokenPrint << ". ";
+                                // }
+                                // std::cerr << "' is not an object, it's members "
+                                //              "can't be accessed."
+                                //           << std::endl;
                                 break;
                             }
                         }
                     }
                     else
                     {
-                        std::cerr << "Config::GetDocumentMember: Warning: "
-                                     "Could not find '";
-                        std::vector<std::string>::const_iterator tokenPrint =
-                            tokens.begin();
-                        std::cerr << *tokenPrint;
-                        ++tokenPrint;
-                        for (; tokenPrint != tokenIt + 1; ++tokenPrint)
-                        {
-                            std::cerr << "." << *tokenPrint;
-                        }
-                        std::cerr << "' in config file." << std::endl;
+                        // std::cerr << "Config::GetDocumentMember: Warning: "
+                        //              "Could not find '";
+                        // std::vector<std::string>::const_iterator tokenPrint =
+                        //     tokens.begin();
+                        // std::cerr << *tokenPrint;
+                        // ++tokenPrint;
+                        // for (; tokenPrint != tokenIt + 1; ++tokenPrint)
+                        // {
+                        //     std::cerr << "." << *tokenPrint;
+                        // }
+                        // std::cerr << "' in config file." << std::endl;
                         break;
                     }
                 }
@@ -674,18 +700,18 @@ Config::GetDocumentMember(const std::string &key)
             // If not, error
             else
             {
-                std::cerr
-                    << "Config::GetDocumentMember: Warning: '" << *(tokenIt - 1)
-                    << "' is not an object, it's members can't be accessed."
-                    << std::endl;
+                // std::cerr
+                //     << "Config::GetDocumentMember: Warning: '" << *(tokenIt - 1)
+                //     << "' is not an object, it's members can't be accessed."
+                //     << std::endl;
             }
         }
     }
     else
     {
-        std::cerr
-            << "Config::GetDocumentMember: Warning: Could not find member: '"
-            << *(tokenIt) << "'" << std::endl;
+        // std::cerr
+        //     << "Config::GetDocumentMember: Warning: Could not find member: '"
+        //     << *(tokenIt) << "'" << std::endl;
     }
 
     return result;

@@ -43,7 +43,7 @@ void Console::Shutdown()
 
 void Console::PostMessages(const ds_msg::MessageStream &messages)
 {
-    AppendStreamBuffer(m_messagesReceived, messages);
+    AppendStreamBuffer(&m_messagesReceived, messages);
 }
 
 ds_msg::MessageStream Console::CollectMessages()
@@ -224,6 +224,65 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
                             createComponentMsg.componentType)
                      << std::endl;
             break;
+        case ds_msg::MessageType::MoveEntity:
+        {
+            ds_msg::MoveEntity entityMoveMsg;
+            (*messages) >> entityMoveMsg;
+
+            // Print console msg
+            m_buffer << "Console out: Entity moved: Entity: "
+                     << entityMoveMsg.entity.id
+                     << " deltaPosition: " << entityMoveMsg.deltaPosition
+                     << std::endl;
+            break;
+        }
+        case ds_msg::MessageType::MoveForward:
+        {
+            ds_msg::MoveForward moveForwardMsg;
+            (*messages) >> moveForwardMsg;
+
+            // Print move forward msg
+            m_buffer << "Console out: Move forward message." << std::endl;
+
+            break;
+        }
+        case ds_msg::MessageType::MoveBackward:
+        {
+            ds_msg::MoveBackward moveBackwardMsg;
+            (*messages) >> moveBackwardMsg;
+
+            // Print move backward msg
+            m_buffer << "Console out: Move backward message." << std::endl;
+
+            break;
+        }
+        case ds_msg::MessageType::StrafeLeft:
+        {
+            ds_msg::StrafeLeft strafeLeftMsg;
+            (*messages) >> strafeLeftMsg;
+
+            // Print strafe left msg
+            m_buffer << "Console out: Strafe left message." << std::endl;
+            break;
+        }
+        case ds_msg::MessageType::StrafeRight:
+        {
+            ds_msg::StrafeRight strafeRightMsg;
+            (*messages) >> strafeRightMsg;
+
+            // Print strafe right msg
+            m_buffer << "Console out: Strafe right message." << std::endl;
+            break;
+        }
+        case ds_msg::MessageType::SetLocalTransform:
+        {
+            ds_msg::SetLocalTransform setLocalMsg;
+            (*messages) >> setLocalMsg;
+
+            // m_buffer << "Set local transform of " << setLocalMsg.entity.id
+            //          << " to: " << setLocalMsg.localTransform << std::endl;
+            break;
+        }
         default:
             // Always extract the payload
             messages->Extract(header.size);

@@ -35,7 +35,7 @@ void MessageBus::CollectAllMessages()
 
         if (systemPtr)
         {
-            AppendStreamBuffer(m_messageStoreTemp,
+            AppendStreamBuffer(&m_messageStoreTemp,
                                systemPtr->CollectMessages());
         }
     }
@@ -59,7 +59,7 @@ void MessageBus::BroadcastAllMessages()
 
 void MessageBus::PostMessages(const ds_msg::MessageStream &messages)
 {
-    AppendStreamBuffer(m_messageStoreTemp, messages);
+    AppendStreamBuffer(&m_messageStoreTemp, messages);
 }
 
 ds_msg::MessageStream MessageBus::CollectMessages()

@@ -140,6 +140,18 @@ Quaternion Quaternion::Invert(const Quaternion &q)
     return (Quaternion(-q.x, -q.y, -q.z, -q.w));
 }
 
+Quaternion Quaternion::CreateFromAxisAngle(const Vector3 &axis, scalar angleRad)
+{
+    Vector3 axisNormalized = Vector3::Normalize(axis);
+
+    axisNormalized *= sinf(angleRad / 2.0f);
+    float scal = cosf(angleRad / 2.0f);
+
+    Quaternion q = Quaternion(axisNormalized, scal);
+
+    return (Quaternion::Normalize(q));
+}
+
 Quaternion operator*(const Quaternion &q1, const Quaternion &q2)
 {
     return (Quaternion(q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y,

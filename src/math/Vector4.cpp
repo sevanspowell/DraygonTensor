@@ -2,6 +2,7 @@
 #include <cassert>
 
 #include "Vector4.h"
+#include "Matrix4.h"
 
 namespace ds_math
 {
@@ -158,6 +159,11 @@ Vector4 Vector4::Normalize(const Vector4 &vec)
 Vector4 Vector4::Invert(const Vector4 &vec)
 {
     return (vec * -1);
+}
+
+Vector4 Vector4::Transform(const Vector4 &vec, const Matrix4 &matrix)
+{
+    return (matrix * vec);
 }
 
 const Vector4 Vector4::UnitX = Vector4(1.0f, 0.0f, 0.0f, 0.0f);
