@@ -291,6 +291,12 @@ public:
 
     void SetVertexBoneData(const std::vector<VertexBoneData> &vertexBoneData);
 
+    size_t GetBaseVertex(unsigned int meshIndex) const;
+
+    size_t GetBaseIndex(unsigned int meshIndex) const;
+
+    size_t GetNumIndices(unsigned int meshIndex) const;
+
     /** Maximum number of bones */
     static const int MAX_BONES = 100;
 
@@ -489,6 +495,22 @@ private:
     const aiNodeAnim *FindNodeAnim(const aiAnimation *animation,
                                    const std::string &nodeName);
 
+    void SetMeshEntry(size_t meshIndex,
+                      size_t baseVertex,
+                      size_t baseIndex,
+                      size_t numIndices);
+
+    void SetPositionBufferSize(size_t size);
+
+    void SetNormalBufferSize(size_t size);
+
+    void SetTexCoordBufferSize(size_t size);
+
+    void SetIndexBufferSize(size_t size);
+
+    void LoadMeshData(unsigned int meshIndex, const aiMesh *mesh);
+
+
     /** Collection of meshes. */
     std::vector<struct SingularMesh> m_meshCollection;
     /** The path to this resource */
@@ -506,5 +528,28 @@ private:
     ds_math::Matrix4 m_globalInverseTransform;
     /** Vertex bone data */
     std::vector<VertexBoneData> m_vertexBoneData;
+
+    struct MeshEntry
+    {
+        MeshEntry()
+        {
+            baseVertex = 0;
+            baseIndex = 0;
+            numIndices = 0;
+        }
+
+        /** Where in the vertex buffer to set as index 0 */
+        size_t baseVertex;
+        /** Where in index buffer to begin mesh indices */
+        size_t baseIndex;
+        /** Number of indices used to create mesh */
+        size_t numIndices;
+    };
+
+    std::vector<ds_math::Vector3> m_positionBuffer;
+    std::vector<ds_math::Vector3> m_normalBuffer;
+    std::vector<ds_math::Vector3> m_texCoordBuffer;
+    std::vector<unsigned int> m_indexBuffer;
+    std::vector<MeshEntry> m_meshEntries;
 };
 }

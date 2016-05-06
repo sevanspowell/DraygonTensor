@@ -201,8 +201,7 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                         &modelMatrix);
 
                     std::vector<ds_math::Matrix4> identityMatrices(
-                        MeshResource::MAX_BONES,
-                        ds_math::Matrix4(1.0f));
+                        MeshResource::MAX_BONES, ds_math::Matrix4(1.0f));
                     m_objectBufferDescrip.InsertMemberData(
                         "Object.boneTransforms",
                         MeshResource::MAX_BONES * sizeof(ds_math::Matrix4),
@@ -689,7 +688,11 @@ ds_render::Mesh Render::CreateMeshFromMeshResource(const std::string &filePath)
         sizeof(unsigned int) * indices.size(), &indices[0]);
 
     // Create Mesh
-    return ds_render::Mesh(vb, ib, 0, meshResource->GetIndicesCount());
+    // return ds_render::Mesh(vb, ib, 0, meshResource->GetIndicesCount());
+    std::cout << meshResource->GetBaseIndex(0) << " "
+              << meshResource->GetNumIndices(0) << std::endl;
+    return ds_render::Mesh(vb, ib, meshResource->GetBaseIndex(1),
+                           meshResource->GetNumIndices(1));
 }
 
 ds_render::Material Render::CreateMaterialFromMaterialResource(
@@ -805,12 +808,13 @@ void Render::RenderScene()
                         transformInstance));
                 // std::vector<ds_math::Matrix4> boneTransforms(
                 //     MeshResource::MAX_BONES, ds_math::Matrix4(1.0f));
-                std::vector<ds_math::Matrix4> boneTransforms;
-                m_animatedMesh->BoneTransform(m_timeInSeconds, &boneTransforms);
-                m_objectBufferDescrip.InsertMemberData(
-                    "Object.boneTransforms",
-                    MeshResource::MAX_BONES * sizeof(ds_math::Matrix4),
-                    &boneTransforms[0]);
+                // std::vector<ds_math::Matrix4> boneTransforms;
+                // m_animatedMesh->BoneTransform(m_timeInSeconds,
+                // &boneTransforms);
+                // m_objectBufferDescrip.InsertMemberData(
+                //     "Object.boneTransforms",
+                //     MeshResource::MAX_BONES * sizeof(ds_math::Matrix4),
+                //     &boneTransforms[0]);
                 m_renderer->UpdateConstantBufferData(m_objectMatrices,
                                                      m_objectBufferDescrip);
             }

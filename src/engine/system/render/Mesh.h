@@ -3,9 +3,7 @@
 #include <cstddef>
 
 #include "engine/system/render/RenderCommon.h"
-
-// TODO: Create Mesh class: VB handle, IB handle, startingIndex,
-// numIndicesToDraw
+#include "engine/system/render/SubMesh.h"
 
 namespace ds_render
 {
@@ -26,10 +24,6 @@ public:
      *
      * @param  vertexBuffer   VertexBufferHandle, vertex buffer of mesh.
      * @param  indexBuffer    IndexBufferHandle, index buffer of mesh.
-     * @param  startingIndex  size_t, at which index in the index buffer to
-     * begin drawing.
-     * @param  numIndices     size_t, number of indices from starting index to
-     * draw.
      */
     Mesh(VertexBufferHandle vertexBuffer,
          IndexBufferHandle indexBuffer,
@@ -101,10 +95,9 @@ private:
     VertexBufferHandle m_vertexBuffer;
     /** Index buffer of mesh */
     IndexBufferHandle m_indexBuffer;
-    /** At which index in the index buffer to begin drawing */
+    // /** Sub meshes of mesh */
+    // std::vector<SubMesh> m_subMeshes;
     size_t m_startingIndex;
-    /** Number of indices from starting index to draw */
     size_t m_numIndices;
-    // TODO: Primitive Type?
 };
 }

@@ -50,6 +50,7 @@ set(ENGINE_INCLUDE_FILES
   system/render/Render.h
   system/render/RenderComponent.h
   system/render/RenderComponentManager.h
+  system/render/SubMesh.h
   system/render/Texture.h
   system/render/Uniform.h
   system/render/UniformBlock.h

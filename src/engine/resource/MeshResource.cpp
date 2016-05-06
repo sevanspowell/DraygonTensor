@@ -29,14 +29,15 @@ std::unique_ptr<IResource> MeshResource::CreateFromFile(std::string filePath)
         int meshCount = ourScene->mNumMeshes;
         meshResource->SetMeshCount(meshCount);
 
-
         // Bone information
         std::vector<VertexBoneData> bones;
+
         unsigned int numVertices = 0;
+        unsigned int numIndices = 0;
 
         // For each mesh
         // TODO: Fix for multiple meshes in scene
-        for (unsigned int iMesh = 0; iMesh < 1; iMesh++)
+        for (unsigned int iMesh = 0; iMesh < meshCount; iMesh++)
         {
             // Load mesh data
             meshResource->StoreMeshPositions(iMesh, ourScene->mMeshes[iMesh]);
@@ -44,7 +45,29 @@ std::unique_ptr<IResource> MeshResource::CreateFromFile(std::string filePath)
             meshResource->StoreTextureCoords(iMesh, ourScene->mMeshes[iMesh]);
             meshResource->StoreFaces(iMesh, ourScene->mMeshes[iMesh]);
 
+            // Setup mesh entries
+            size_t meshBaseVertex = numVertices;
+            size_t meshBaseIndex = numIndices;
+            size_t meshNumIndices = ourScene->mMeshes[iMesh]->mNumFaces * 3;
+
             numVertices += ourScene->mMeshes[iMesh]->mNumVertices;
+            numIndices += meshNumIndices;
+
+            meshResource->SetMeshEntry(iMesh, meshBaseVertex, meshBaseIndex,
+                                       meshNumIndices);
+            std::cout << iMesh << " " << meshBaseVertex << " " << meshBaseIndex
+                      << " " << meshNumIndices << std::endl;
+        }
+
+        // Reserve space for vertex attributes and indices
+        meshResource->SetPositionBufferSize(numVertices);
+        meshResource->SetNormalBufferSize(numVertices);
+        meshResource->SetTexCoordBufferSize(numVertices);
+        meshResource->SetIndexBufferSize(numVertices);
+
+        for (unsigned int iMesh = 0; iMesh < meshCount; ++iMesh)
+        {
+            meshResource->LoadMeshData(iMesh, ourScene->mMeshes[iMesh]);
         }
 
         // TODO: Fix for multiple meshes in scene
@@ -137,7 +160,6 @@ void MeshResource::StoreMeshPositions(unsigned int meshNumber,
 {
     if (singleMesh->HasPositions())
     {
-
         int numberOfVerts = singleMesh->mNumVertices;
         m_meshCollection[meshNumber].m_vertices.reserve(numberOfVerts);
 
@@ -277,58 +299,110 @@ bool MeshResource::HasMultiMesh() const
 
 unsigned int MeshResource::GetVertCount() const
 {
-    return m_meshCollection[0].m_vertices.size();
+    return m_positionBuffer.size();
 }
-
 
 unsigned int MeshResource::GetTexCoordCount() const
 {
-    return m_meshCollection[0].m_texCoords.size();
+    return m_texCoordBuffer.size();
+    // return m_meshCollection[0].m_texCoords.size();
 }
-
 
 unsigned int MeshResource::GetNormalsCount() const
 {
-    return m_meshCollection[0].m_normals.size();
+    return m_normalBuffer.size();
+    // return m_meshCollection[0].m_normals.size();
 }
-
 
 unsigned int MeshResource::GetIndicesCount() const
 {
-    return m_meshCollection[0].m_indices.size();
+    return m_indexBuffer.size();
+    // return m_meshCollection[0].m_indices.size();
 }
-
 
 unsigned int MeshResource::GetMeshCount() const
 {
     return m_meshCollection.size();
-    ;
 }
 
+size_t MeshResource::GetBaseVertex(unsigned int meshIndex) const
+{
+    assert(meshIndex >= 0 && meshIndex < m_meshEntries.size());
+
+    return m_meshEntries[meshIndex].baseVertex;
+}
+
+size_t MeshResource::GetBaseIndex(unsigned int meshIndex) const
+{
+    assert(meshIndex >= 0 && meshIndex < m_meshEntries.size());
+
+    return m_meshEntries[meshIndex].baseIndex;
+}
+
+size_t MeshResource::GetNumIndices(unsigned int meshIndex) const
+{
+    assert(meshIndex >= 0 && meshIndex < m_meshEntries.size());
+
+    return m_meshEntries[meshIndex].numIndices;
+}
 
 std::vector<ds_math::Vector3> MeshResource::GetVerts() const
 {
-    return m_meshCollection[0].m_vertices;
-}
+    std::vector<ds_math::Vector3> vertices;
+    for (unsigned int iMesh = 0; iMesh < 1; ++iMesh)
+    {
+        for (const auto &position : m_meshCollection[iMesh].m_vertices)
+        {
+            vertices.push_back(position);
+        }
+    }
 
+    // return vertices;
+    return m_positionBuffer;
+}
 
 std::vector<ds_math::Vector3> MeshResource::GetTexCoords() const
 {
-    return m_meshCollection[0].m_texCoords;
-}
+    std::vector<ds_math::Vector3> texCoords;
+    for (unsigned int iMesh = 0; iMesh < 1; ++iMesh)
+    {
+        for (const auto &texCoord : m_meshCollection[iMesh].m_texCoords)
+        {
+            texCoords.push_back(texCoord);
+        }
+    }
 
+    // return texCoords;
+    return m_texCoordBuffer;
+}
 
 std::vector<ds_math::Vector3> MeshResource::GetNormals() const
 {
-    return m_meshCollection[0].m_normals;
-}
+    std::vector<ds_math::Vector3> normals;
+    for (unsigned int iMesh = 0; iMesh < 1; ++iMesh)
+    {
+        for (const auto &normal : m_meshCollection[iMesh].m_normals)
+        {
+            normals.push_back(normal);
+        }
+    }
 
+    return m_normalBuffer;
+}
 
 std::vector<unsigned int> MeshResource::GetIndices() const
 {
-    return m_meshCollection[0].m_indices;
-}
+    std::vector<unsigned int> indices;
+    for (unsigned int iMesh = 0; iMesh < 1; ++iMesh)
+    {
+        for (const auto &index : m_meshCollection[iMesh].m_indices)
+        {
+            indices.push_back(index);
+        }
+    }
 
+    return m_indexBuffer;
+}
 
 std::vector<ds_math::Vector3>
 MeshResource::GetVerts(unsigned int meshNumber) const
@@ -336,13 +410,11 @@ MeshResource::GetVerts(unsigned int meshNumber) const
     return m_meshCollection[meshNumber].m_vertices;
 }
 
-
 std::vector<ds_math::Vector3>
 MeshResource::GetTexCoords(unsigned int meshNumber) const
 {
     return m_meshCollection[meshNumber].m_texCoords;
 }
-
 
 std::vector<ds_math::Vector3>
 MeshResource::GetNormals(unsigned int meshNumber) const
@@ -374,6 +446,7 @@ void MeshResource::SetScene(const aiScene *scene)
 void MeshResource::SetMeshCount(unsigned int meshCount)
 {
     m_meshCollection.resize(meshCount);
+    m_meshEntries.resize(meshCount);
 }
 
 const ds_math::Matrix4 &MeshResource::GetGlobalInverseTransform() const
@@ -756,5 +829,83 @@ void MeshResource::SetVertexBoneData(
     const std::vector<MeshResource::VertexBoneData> &vertexBoneData)
 {
     m_vertexBoneData = vertexBoneData;
+}
+
+void MeshResource::SetMeshEntry(size_t meshIndex,
+                                size_t baseVertex,
+                                size_t baseIndex,
+                                size_t numIndices)
+{
+    assert(meshIndex >= 0 && meshIndex < m_meshEntries.size() &&
+           "MeshResource::SetMeshEntry: Tried to set invalid mesh entry.");
+
+    m_meshEntries[meshIndex].baseVertex = baseVertex;
+    m_meshEntries[meshIndex].baseIndex = baseIndex;
+    m_meshEntries[meshIndex].numIndices = numIndices;
+}
+
+void MeshResource::SetPositionBufferSize(size_t size)
+{
+    m_positionBuffer.reserve(size);
+}
+
+void MeshResource::SetNormalBufferSize(size_t size)
+{
+    m_normalBuffer.reserve(size);
+}
+
+void MeshResource::SetTexCoordBufferSize(size_t size)
+{
+    m_texCoordBuffer.reserve(size);
+}
+
+void MeshResource::SetIndexBufferSize(size_t size)
+{
+    m_indexBuffer.reserve(size);
+}
+
+void MeshResource::LoadMeshData(unsigned int meshIndex, const aiMesh *mesh)
+{
+    assert(meshIndex >= 0 && meshIndex < m_meshEntries.size() &&
+           "MeshResource::LoadMeshData: Tried to access invalid mesh index.");
+
+    const aiVector3D zeroVec(0.0f, 0.0f, 0.0f);
+
+    // Populate vertex attribute buffers
+    for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
+    {
+        // Load each vertex, normal, texcoord
+        const aiVector3D *pos =
+            mesh->HasPositions() ? &(mesh->mVertices[i]) : &zeroVec;
+        const aiVector3D *normal =
+            mesh->HasNormals() ? &(mesh->mNormals[i]) : &zeroVec;
+        // If has texture coordinates, load them, else zero them
+        const aiVector3D *texCoord = mesh->HasTextureCoords(0)
+                                         ? &(mesh->mTextureCoords[0][i])
+                                         : &zeroVec;
+        // Add to appropriate vertex attribute buffer
+        m_positionBuffer.push_back(ds_math::Vector3(pos->x, pos->y, pos->z));
+        m_normalBuffer.push_back(
+            ds_math::Vector3(normal->x, normal->y, normal->z));
+        m_texCoordBuffer.push_back(
+            ds_math::Vector3(texCoord->x, texCoord->y, texCoord->z));
+    }
+
+    std::cout << "Mesh " << meshIndex << ":" << std::endl;
+    // Populate index buffer
+    for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
+    {
+        const aiFace &face = mesh->mFaces[i];
+        assert(face.mNumIndices == 3 && "MeshResource::LoadMeshData: We can "
+                                        "only handle triangulated meshes!");
+
+        // Adjust indices for base vertex
+        m_indexBuffer.push_back(m_meshEntries[meshIndex].baseVertex +
+                                face.mIndices[0]);
+        m_indexBuffer.push_back(m_meshEntries[meshIndex].baseVertex +
+                                face.mIndices[1]);
+        m_indexBuffer.push_back(m_meshEntries[meshIndex].baseVertex +
+                                face.mIndices[2]);
+    }
 }
 }
