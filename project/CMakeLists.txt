@@ -1,4 +1,5 @@
 subdirs(
+    animation
     bullet
     physics
     render_system

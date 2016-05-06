@@ -35,7 +35,7 @@ bool Physics::Initialize(const Config &config)
         new btDiscreteDynamicsWorld(m_dispatcher, m_overlappingPairCache,
                                     m_solver, m_collisionConfiguration);
 
-    m_dynamicsWorld->setGravity(btVector3(0, -1, 0));
+    m_dynamicsWorld->setGravity(btVector3(0, -9.8, 0));
 
     ds_msg::SystemInit initMsg;
     initMsg.systemName = "Physics";

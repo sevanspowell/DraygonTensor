@@ -100,12 +100,24 @@ GLRenderer::CreateVertexBuffer(BufferUsageType usage,
             &attributeDescriptor = attributeDescriptions[i];
 
         glEnableVertexAttribArray(i);
-        glVertexAttribPointer(
-            i, attributeDescriptor.numElementsPerAttribute,
-            ToGLDataType(attributeDescriptor.attributeDataType),
-            ToGLBool(attributeDescriptor.normalized),
-            attributeDescriptor.stride,
-            (char *)NULL + attributeDescriptor.offset);
+        // TODO: If attribute data type is int is glVertexAttrib*I*Pointer
+        if (attributeDescriptor.attributeDataType == RenderDataType::Int)
+        {
+            glVertexAttribIPointer(
+                i, attributeDescriptor.numElementsPerAttribute,
+                ToGLDataType(attributeDescriptor.attributeDataType),
+                attributeDescriptor.stride,
+                (char *)NULL + attributeDescriptor.offset);
+        }
+        else
+        {
+            glVertexAttribPointer(
+                i, attributeDescriptor.numElementsPerAttribute,
+                ToGLDataType(attributeDescriptor.attributeDataType),
+                ToGLBool(attributeDescriptor.normalized),
+                attributeDescriptor.stride,
+                (char *)NULL + attributeDescriptor.offset);
+        }
     }
 
     glBindVertexArray(0);
@@ -414,7 +426,7 @@ void GLRenderer::GetConstantBufferDescription(
                 if (indices[i] == GL_INVALID_INDEX)
                 {
                     std::cerr
-                        << "GLRenderer::UpdateConstantBuffer: Found no "
+                        << "GLRenderer::GetConstantBufferDescription: Found no "
                            "uniform block member with name: "
                         << names[i] << ". "
                         << "Note: If this uniform block member exists in your "

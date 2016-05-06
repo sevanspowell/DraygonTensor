@@ -25,6 +25,9 @@ public:
     /**
      * Add a member to the data store.
      *
+     * Order in which you add members must match order of members in shader
+     * uniform block.
+     *
      * @param  memberName  const std::string &, name of the data store member.
      */
     void AddMember(const std::string &memberName);

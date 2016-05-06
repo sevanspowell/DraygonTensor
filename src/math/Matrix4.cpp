@@ -302,7 +302,7 @@ Matrix4 Matrix4::CreateScaleMatrix(const Vector3 &scale)
     return scaleMatrix;
 }
 
-Matrix4 Matrix4::CreateScaleMatrix(float x, float y, float z)
+Matrix4 Matrix4::CreateScaleMatrix(scalar x, scalar y, scalar z)
 {
     return (Matrix4::CreateScaleMatrix(Vector3(x, y, z)));
 }
