@@ -33,7 +33,9 @@ enum class AttributeType
 {
     Position,
     Normal,
-    TextureCoordinate
+    TextureCoordinate,
+    BoneID,
+    BoneWeight
 };
 
 /** Shader source type */

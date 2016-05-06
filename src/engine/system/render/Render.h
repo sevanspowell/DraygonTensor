@@ -2,13 +2,14 @@
 
 #include <string>
 
+#include "engine/resource/MeshResource.h"
 #include "engine/resource/ResourceFactory.h"
 #include "engine/system/ISystem.h"
+#include "engine/system/render/CameraComponentManager.h"
 #include "engine/system/render/IRenderer.h"
 #include "engine/system/render/Material.h"
 #include "engine/system/render/Mesh.h"
 #include "engine/system/render/RenderComponentManager.h"
-#include "engine/system/render/CameraComponentManager.h"
 #include "engine/system/render/Texture.h"
 #include "engine/system/scene/TransformComponentManager.h"
 
@@ -183,5 +184,8 @@ private:
 
     bool m_cameraActive;
     Entity m_activeCameraEntity;
+
+    std::unique_ptr<MeshResource> m_animatedMesh;
+    float m_timeInSeconds;
 };
 }
