@@ -108,6 +108,30 @@ public:
     bool GetInt(const std::string &key, int *integer) const;
 
     /**
+     * Attempt to get a float value from a string key-value pair in
+     * the config file. If the key isn't found or the value isn't a float, the
+     * function will return FALSE.
+     *
+     * Key may be specified in 'table access form' (i.e.
+     * 'Window.dimensions.x').
+     * In this case, each successive token (seperated by period character)
+     * indexes into the object the previous token refers to.
+     *
+     * @pre  A configuration file has been loaded via this classes 'Load'
+     * method. This method will return FALSE if no config has been loaded.
+     * @post Int pointed to by second parameter will not be
+     * modified if the method returns FALSE.
+     *
+     * @param   key      const std::string &, period seperated list of tokens,
+     * uniquely identifying an unsigned int primitive in the configuration file.
+     * @param   f        float *, where float value should be placed if
+     * successfully retrieved.
+     * @return           bool, TRUE if the value was retrieved successfully,
+     * FALSE otherwise.
+     */
+    bool GetFloat(const std::string &key, float *f) const;
+
+    /**
      * Attempt to get a float array from a string key-value pair in the config
      * file. If the key isn't found or the value isn't an ALL float array, the
      * function will return FALSE.
@@ -247,8 +271,7 @@ public:
      * @param   array  const std::vector<float> &, array data to add to
      * document.
      */
-    void AddFloatArray(const std::string &key,
-                       const std::vector<float> &array);
+    void AddFloatArray(const std::string &key, const std::vector<float> &array);
 
 private:
     // TODO: Documentation
@@ -256,8 +279,7 @@ private:
     GetDocumentMember(const std::string &key) const;
 
     // TODO: Documentation
-    rapidjson::Value::MemberIterator
-    GetDocumentMember(const std::string &key);
+    rapidjson::Value::MemberIterator GetDocumentMember(const std::string &key);
 
     rapidjson::Document m_document;
 

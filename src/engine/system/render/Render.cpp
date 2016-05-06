@@ -24,6 +24,8 @@ bool Render::Initialize(const Config &config)
     m_factory.RegisterCreator<ShaderResource>(ShaderResource::CreateFromFile);
     m_factory.RegisterCreator<TextureResource>(TextureResource::CreateFromFile);
 
+    m_cameraActive = false;
+
     return result;
 }
 
@@ -117,13 +119,16 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                         m_renderer->CreateProgram(shaders);
 
                     // Set shader data descriptions
-                    m_sceneBufferDescrip = ds_render::ConstantBufferDescription(2 * sizeof(ds_math::Matrix4));
+                    m_sceneBufferDescrip = ds_render::ConstantBufferDescription(
+                        2 * sizeof(ds_math::Matrix4));
                     m_sceneBufferDescrip.AddMember("Scene.viewMatrix");
                     m_sceneBufferDescrip.AddMember("Scene.projectionMatrix");
                     m_renderer->GetConstantBufferDescription(
                         fakeShader, "Scene", &m_sceneBufferDescrip);
 
-                    m_objectBufferDescrip = ds_render::ConstantBufferDescription(1 * sizeof(ds_math::Matrix4));
+                    m_objectBufferDescrip =
+                        ds_render::ConstantBufferDescription(
+                            1 * sizeof(ds_math::Matrix4));
                     m_objectBufferDescrip.AddMember("Object.modelMatrix");
                     m_renderer->GetConstantBufferDescription(
                         fakeShader, "Object", &m_objectBufferDescrip);
@@ -170,8 +175,10 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
             if (componentData.LoadMemory(StringIntern::Instance().GetString(
                     createComponentMsg.componentData)))
             {
+                // Get component type
                 std::string componentType = StringIntern::Instance().GetString(
                     createComponentMsg.componentType);
+                // Create render component
                 if (componentType == "renderComponent")
                 {
                     std::string meshName;
@@ -204,12 +211,60 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                         m_renderComponentManager.SetMesh(i, mesh);
                     }
                 }
+                // Create transform component
                 else if (componentType == "transformComponent")
                 {
                     TransformComponentManager::
                         CreateComponentForEntityFromConfig(
                             &m_transformComponentManager,
                             createComponentMsg.entity, componentData);
+                }
+                // Create camera component
+                else if (componentType == "cameraComponent")
+                {
+                    std::string projectionType;
+                    float verticalFov = 0.0f;
+                    float nearClip = 0.0f;
+                    float farClip = 0.0f;
+
+                    if (componentData.GetString("projection",
+                                                &projectionType) &&
+                        componentData.GetFloat("vertical_fov", &verticalFov) &&
+                        componentData.GetFloat("near_clip", &nearClip) &&
+                        componentData.GetFloat("far_clip", &farClip))
+                    {
+                        ds_math::Matrix4 projectionMatrix;
+
+                        if (projectionType == "perspective")
+                        {
+                            projectionMatrix =
+                                ds_math::Matrix4::CreatePerspectiveFieldOfView(
+                                    verticalFov, 800.0f / 600.0f, nearClip,
+                                    farClip);
+                        }
+                        else if (projectionType == "orthographic")
+                        {
+                            projectionMatrix =
+                                ds_math::Matrix4::CreateOrthographic(
+                                    800.0f, 600.0f, nearClip, farClip);
+                        }
+
+                        Entity e = createComponentMsg.entity;
+                        Instance i =
+                            m_cameraComponentManager.CreateComponentForEntity(
+                                e);
+                        m_cameraComponentManager.SetProjectionMatrix(
+                            i, projectionMatrix);
+
+                        // Is any camera currently active?
+                        if (m_cameraActive == false)
+                        {
+                            // If no camera is current, set this camera to be
+                            // current camera
+                            m_activeCameraEntity = e;
+                            m_cameraActive = true;
+                        }
+                    }
                 }
             }
             break;
@@ -392,66 +447,85 @@ ds_render::Material Render::CreateMaterialFromMaterialResource(
 
 void Render::RenderScene()
 {
-    // Update scene constant buffer
-    m_sceneBufferDescrip.InsertMemberData(
-        "Scene.viewMatrix", sizeof(ds_math::Matrix4), &m_viewMatrix);
-    m_sceneBufferDescrip.InsertMemberData("Scene.projectionMatrix",
-                                          sizeof(ds_math::Matrix4),
-                                          &m_projectionMatrix);
-    m_renderer->UpdateConstantBufferData(m_sceneMatrices, m_sceneBufferDescrip);
-
-    // For each render component
-    for (unsigned int i = 0; i < m_renderComponentManager.GetNumInstances();
-         ++i)
+    // If there is a camera in the scene
+    if (m_cameraActive)
     {
-        Instance renderInstance = Instance::MakeInstance(i);
-        // Get transform component
-        Entity entity =
-            m_renderComponentManager.GetEntityForInstance(renderInstance);
-        Instance transformInstance =
-            m_transformComponentManager.GetInstanceForEntity(entity);
+        // Get active camera
+        // Get transform matrix of camera, invert it to find view matrix
+        Instance cameraTransform =
+            m_transformComponentManager.GetInstanceForEntity(
+                m_activeCameraEntity);
+        const ds_math::Matrix4 &viewMatrix = ds_math::Matrix4::Inverse(
+            m_transformComponentManager.GetWorldTransform(cameraTransform));
+        // Get projection matrix of camera
+        Instance cameraComponent =
+            m_cameraComponentManager.GetInstanceForEntity(m_activeCameraEntity);
+        const ds_math::Matrix4 &projectionMatrix =
+            m_cameraComponentManager.GetProjectionMatrix(cameraComponent);
 
-        // If has transform instance
-        if (transformInstance.IsValid())
+        // Update scene constant buffer
+        m_sceneBufferDescrip.InsertMemberData(
+            "Scene.viewMatrix", sizeof(ds_math::Matrix4), &viewMatrix);
+        m_sceneBufferDescrip.InsertMemberData("Scene.projectionMatrix",
+                                              sizeof(ds_math::Matrix4),
+                                              &projectionMatrix);
+        m_renderer->UpdateConstantBufferData(m_sceneMatrices,
+                                             m_sceneBufferDescrip);
+
+        // For each render component
+        for (unsigned int i = 0; i < m_renderComponentManager.GetNumInstances();
+             ++i)
         {
-            // Update object constant buffer with world transform of this
-            // transform instance
-            m_objectBufferDescrip.InsertMemberData(
-                "Object.modelMatrix", sizeof(ds_math::Matrix4),
-                &m_transformComponentManager.GetWorldTransform(
-                    transformInstance));
-            m_renderer->UpdateConstantBufferData(m_objectMatrices,
-                                                 m_objectBufferDescrip);
-        }
+            Instance renderInstance = Instance::MakeInstance(i);
+            // Get transform component
+            Entity entity =
+                m_renderComponentManager.GetEntityForInstance(renderInstance);
+            Instance transformInstance =
+                m_transformComponentManager.GetInstanceForEntity(entity);
 
-        // Get mesh
-        ds_render::Mesh mesh = m_renderComponentManager.GetMesh(renderInstance);
-        // Get material
-        ds_render::Material material =
-            m_renderComponentManager.GetMaterial(renderInstance);
+            // If has transform instance
+            if (transformInstance.IsValid())
+            {
+                // Update object constant buffer with world transform of this
+                // transform instance
+                m_objectBufferDescrip.InsertMemberData(
+                    "Object.modelMatrix", sizeof(ds_math::Matrix4),
+                    &m_transformComponentManager.GetWorldTransform(
+                        transformInstance));
+                m_renderer->UpdateConstantBufferData(m_objectMatrices,
+                                                     m_objectBufferDescrip);
+            }
 
-        // Set shader program
-        m_renderer->SetProgram(material.GetProgram());
+            // Get mesh
+            ds_render::Mesh mesh =
+                m_renderComponentManager.GetMesh(renderInstance);
+            // Get material
+            ds_render::Material material =
+                m_renderComponentManager.GetMaterial(renderInstance);
 
-        // For each texture in material, bind it to shader
-        for (auto samplerTexture : material.GetTextures())
-        {
-            m_renderer->BindTextureToSampler(
-                material.GetProgram(), samplerTexture.first,
-                samplerTexture.second.GetTextureHandle());
-        }
+            // Set shader program
+            m_renderer->SetProgram(material.GetProgram());
 
-        // Draw mesh
-        m_renderer->DrawVerticesIndexed(
-            mesh.GetVertexBuffer(), mesh.GetIndexBuffer(),
-            ds_render::PrimitiveType::Triangles, mesh.GetStartingIndex(),
-            mesh.GetNumIndices());
+            // For each texture in material, bind it to shader
+            for (auto samplerTexture : material.GetTextures())
+            {
+                m_renderer->BindTextureToSampler(
+                    material.GetProgram(), samplerTexture.first,
+                    samplerTexture.second.GetTextureHandle());
+            }
 
-        // For each texture in material, unbind
-        for (auto samplerTexture : material.GetTextures())
-        {
-            m_renderer->UnbindTextureFromSampler(
-                samplerTexture.second.GetTextureHandle());
+            // Draw mesh
+            m_renderer->DrawVerticesIndexed(
+                mesh.GetVertexBuffer(), mesh.GetIndexBuffer(),
+                ds_render::PrimitiveType::Triangles, mesh.GetStartingIndex(),
+                mesh.GetNumIndices());
+
+            // For each texture in material, unbind
+            for (auto samplerTexture : material.GetTextures())
+            {
+                m_renderer->UnbindTextureFromSampler(
+                    samplerTexture.second.GetTextureHandle());
+            }
         }
     }
 }

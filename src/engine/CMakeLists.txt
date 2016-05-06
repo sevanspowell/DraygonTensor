@@ -36,6 +36,8 @@ set(ENGINE_INCLUDE_FILES
   system/platform/Platform.h
   system/platform/Video.h
   system/platform/Window.h
+  system/render/CameraComponent.h
+  system/render/CameraComponentManager.h
   system/render/ConstantBuffer.h
   system/render/ConstantBufferDescription.h
   system/render/GLRenderer.h
@@ -83,6 +85,7 @@ set(ENGINE_SRC_FILES
   system/platform/Platform.cpp
   system/platform/Video.cpp
   system/platform/Window.cpp
+  system/render/CameraComponentManager.cpp
   system/render/ConstantBuffer.cpp
   system/render/ConstantBufferDescription.cpp
   system/render/GLRenderer.cpp
