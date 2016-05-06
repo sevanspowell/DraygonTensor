@@ -254,7 +254,7 @@ public:
      * @param   z  scalar, z scale amount.
      * @return     Matrix4, scale matrix.
      */
-    static Matrix4 CreateScaleMatrix(float x, float y, float z);
+    static Matrix4 CreateScaleMatrix(scalar x, scalar y, scalar z);
     /**
      * Create a Matrix4 from a Quaternion.
      *
