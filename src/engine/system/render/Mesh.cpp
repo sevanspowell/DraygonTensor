@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include "engine/system/render/Mesh.h"
 
 namespace ds_render
@@ -6,19 +8,12 @@ Mesh::Mesh()
 {
     m_vertexBuffer = VertexBufferHandle();
     m_indexBuffer = IndexBufferHandle();
-    m_startingIndex = 0;
-    m_numIndices = 0;
 }
 
-Mesh::Mesh(VertexBufferHandle vertexBuffer,
-     IndexBufferHandle indexBuffer,
-     size_t startingIndex,
-     size_t numIndices)
+Mesh::Mesh(VertexBufferHandle vertexBuffer, IndexBufferHandle indexBuffer)
 {
     m_vertexBuffer = vertexBuffer;
     m_indexBuffer = indexBuffer;
-    m_startingIndex = startingIndex;
-    m_numIndices = numIndices;
 }
 
 VertexBufferHandle Mesh::GetVertexBuffer() const
@@ -41,23 +36,41 @@ void Mesh::SetIndexBuffer(IndexBufferHandle indexBuffer)
     m_indexBuffer = indexBuffer;
 }
 
-size_t Mesh::GetStartingIndex() const
+// size_t Mesh::GetStartingIndex() const
+// {
+//     return m_startingIndex;
+// }
+
+// void Mesh::SetStartingIndex(size_t startingIndex)
+// {
+//     m_startingIndex = startingIndex;
+// }
+
+// size_t Mesh::GetNumIndices() const
+// {
+//     return m_numIndices;
+// }
+
+// void Mesh::SetNumIndices(size_t numIndices)
+// {
+//     m_numIndices = numIndices;
+// }
+
+void Mesh::AddSubMesh(const SubMesh &subMesh)
 {
-    return m_startingIndex;
+    m_subMeshes.push_back(subMesh);
 }
 
-void Mesh::SetStartingIndex(size_t startingIndex)
+size_t Mesh::GetNumSubMeshes() const
 {
-    m_startingIndex = startingIndex;
+    return m_subMeshes.size();
 }
 
-size_t Mesh::GetNumIndices() const
+const SubMesh &Mesh::GetSubMesh(size_t index) const
 {
-    return m_numIndices;
-}
+    assert(index >= 0 && index < m_subMeshes.size() &&
+           "Mesh::GetSubMesh: tried to get submesh out of range.");
 
-void Mesh::SetNumIndices(size_t numIndices)
-{
-    m_numIndices = numIndices;
+    return m_subMeshes[index];
 }
 }

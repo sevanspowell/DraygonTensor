@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <vector>
 
 #include "engine/system/render/RenderCommon.h"
 #include "engine/system/render/SubMesh.h"
@@ -22,13 +23,13 @@ public:
     /**
      * Mesh constructor.
      *
+     * The vertex and index buffers may contain information for multiple
+     * submeshes, specify this using the AddSubMesh method.
+     *
      * @param  vertexBuffer   VertexBufferHandle, vertex buffer of mesh.
      * @param  indexBuffer    IndexBufferHandle, index buffer of mesh.
      */
-    Mesh(VertexBufferHandle vertexBuffer,
-         IndexBufferHandle indexBuffer,
-         size_t startingIndex,
-         size_t numIndices);
+    Mesh(VertexBufferHandle vertexBuffer, IndexBufferHandle indexBuffer);
 
     /**
      * Get handle to the vertex buffer of the mesh.
@@ -60,44 +61,69 @@ public:
      */
     void SetIndexBuffer(IndexBufferHandle indexBuffer);
 
-    /**
-     * Get where (the position) in the mesh index buffer to begin drawing from.
-     *
-     * @return  size_t, index in index buffer to begin drawing from.
-     */
-    size_t GetStartingIndex() const;
+    // /**
+    //  * Get where (the position) in the mesh index buffer to begin drawing from.
+    //  *
+    //  * @return  size_t, index in index buffer to begin drawing from.
+    //  */
+    // size_t GetStartingIndex() const;
+
+    // /**
+    //  * Set where (the position) in the mesh index buffer to begin drawing from.
+    //  *
+    //  * @param  startingIndex  size_t, index in the index buffer to begin drawing
+    //  * from.
+    //  */
+    // void SetStartingIndex(size_t startingIndex);
+
+    // /**
+    //  * Get the number of indices in the mesh index buffer to draw.
+    //  *
+    //  * @return  size_t, number of indices in the mesh index buffer to draw.
+    //  */
+    // size_t GetNumIndices() const;
+
+    // /**
+    //  * Set the number of indices in the mesh index buffer to draw.
+    //  *
+    //  * @param  numIndices  size_t, number of indices in the mesh index buffer to
+    //  * draw.
+    //  */
+    // void SetNumIndices(size_t numIndices);
 
     /**
-     * Set where (the position) in the mesh index buffer to begin drawing from.
+     * Add a submesh to this Mesh.
      *
-     * @param  startingIndex  size_t, index in the index buffer to begin drawing
-     * from.
+     * @param  subMesh  const SubMesh &, add a submesh to this mesh.
      */
-    void SetStartingIndex(size_t startingIndex);
+    void AddSubMesh(const SubMesh &subMesh);
 
     /**
-     * Get the number of indices in the mesh index buffer to draw.
+     * Get the number of submeshes that make up this mesh.
      *
-     * @return  size_t, number of indices in the mesh index buffer to draw.
+     * @return  size_t, number of submeshes that make up this mesh.
      */
-    size_t GetNumIndices() const;
+    size_t GetNumSubMeshes() const;
 
     /**
-     * Set the number of indices in the mesh index buffer to draw.
+     * Get the submesh at the given index.
      *
-     * @param  numIndices  size_t, number of indices in the mesh index buffer to
-     * draw.
+     * @pre  index >= 0 && index < GetNumSubMeshes().
+     *
+     * @param   index  size_t, index of submesh to get.
+     * @return         const SubMesh &, const reference to submesh at the given
+     *                 index.
      */
-    void SetNumIndices(size_t numIndices);
+    const SubMesh &GetSubMesh(size_t index) const;
 
 private:
     /** Vertex buffer of mesh */
     VertexBufferHandle m_vertexBuffer;
     /** Index buffer of mesh */
     IndexBufferHandle m_indexBuffer;
-    // /** Sub meshes of mesh */
-    // std::vector<SubMesh> m_subMeshes;
-    size_t m_startingIndex;
-    size_t m_numIndices;
+    /** Sub meshes of mesh */
+    std::vector<SubMesh> m_subMeshes;
+    // size_t m_startingIndex;
+    // size_t m_numIndices;
 };
 }

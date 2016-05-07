@@ -456,8 +456,8 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                                 sizeof(unsigned int) * indices.size(),
                                 &indices[0]);
 
-                        ds_render::Mesh mesh =
-                            ds_render::Mesh(vb, ib, 0, indices.size());
+                        ds_render::Mesh mesh = ds_render::Mesh(vb, ib);
+                        mesh.AddSubMesh(ds_render::SubMesh(0, indices.size()));
 
                         Instance i =
                             m_renderComponentManager.CreateComponentForEntity(
@@ -686,12 +686,22 @@ ds_render::Mesh Render::CreateMeshFromMeshResource(const std::string &filePath)
         ds_render::BufferUsageType::Static,
         sizeof(unsigned int) * indices.size(), &indices[0]);
 
+    ds_render::Mesh mesh = ds_render::Mesh(vb, ib);
     // Create Mesh
     // return ds_render::Mesh(vb, ib, 0, meshResource->GetIndicesCount());
     std::cout << meshResource->GetBaseIndex(0) << " "
               << meshResource->GetNumIndices(0) << std::endl;
-    return ds_render::Mesh(vb, ib, meshResource->GetBaseIndex(1),
-                           meshResource->GetNumIndices(1));
+    std::cout << meshResource->GetMeshCount() << std::endl;
+    // For 0 to meshCount - 1, add submesh..
+    for (unsigned int iSubMesh = 0; iSubMesh < meshResource->GetMeshCount();
+         ++iSubMesh)
+    {
+        mesh.AddSubMesh(
+            ds_render::SubMesh(meshResource->GetBaseIndex(iSubMesh),
+                               meshResource->GetNumIndices(iSubMesh)));
+    }
+
+    return mesh;
 }
 
 ds_render::Material Render::CreateMaterialFromMaterialResource(
@@ -808,8 +818,7 @@ void Render::RenderScene()
                 // std::vector<ds_math::Matrix4> boneTransforms(
                 //     MeshResource::MAX_BONES, ds_math::Matrix4(1.0f));
                 std::vector<ds_math::Matrix4> boneTransforms;
-                m_animatedMesh->BoneTransform(m_timeInSeconds,
-                &boneTransforms);
+                m_animatedMesh->BoneTransform(m_timeInSeconds, &boneTransforms);
                 m_objectBufferDescrip.InsertMemberData(
                     "Object.boneTransforms",
                     MeshResource::MAX_BONES * sizeof(ds_math::Matrix4),
@@ -836,11 +845,16 @@ void Render::RenderScene()
                     samplerTexture.second.GetTextureHandle());
             }
 
-            // Draw the mesh
-            m_renderer->DrawVerticesIndexed(
-                mesh.GetVertexBuffer(), mesh.GetIndexBuffer(),
-                ds_render::PrimitiveType::Triangles, mesh.GetStartingIndex(),
-                mesh.GetNumIndices());
+            for (unsigned int iSubMesh = 0; iSubMesh < mesh.GetNumSubMeshes();
+                 ++iSubMesh)
+            {
+                // Draw the mesh
+                m_renderer->DrawVerticesIndexed(
+                    mesh.GetVertexBuffer(), mesh.GetIndexBuffer(),
+                    ds_render::PrimitiveType::Triangles,
+                    mesh.GetSubMesh(iSubMesh).startingIndex,
+                    mesh.GetSubMesh(iSubMesh).numIndices);
+            }
 
             // For each texture in material, unbind
             for (auto samplerTexture : material.GetTextures())
