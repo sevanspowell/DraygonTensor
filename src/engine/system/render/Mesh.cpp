@@ -73,4 +73,12 @@ const SubMesh &Mesh::GetSubMesh(size_t index) const
 
     return m_subMeshes[index];
 }
+
+void Mesh::SetSubMesh(size_t index, const SubMesh &subMesh)
+{
+    assert(index >= 0 && index < m_subMeshes.size() &&
+           "Mesh::SetSubMesh: tried to set submesh out of range.");
+
+    m_subMeshes[index] = subMesh;
+}
 }

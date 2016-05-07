@@ -498,7 +498,8 @@ private:
     void SetMeshEntry(size_t meshIndex,
                       size_t baseVertex,
                       size_t baseIndex,
-                      size_t numIndices);
+                      size_t numIndices,
+                      size_t materialIndex);
 
     void SetPositionBufferSize(size_t size);
 
@@ -508,7 +509,11 @@ private:
 
     void SetIndexBufferSize(size_t size);
 
+    void SetNumMaterials(size_t size);
+
     void LoadMeshData(unsigned int meshIndex, const aiMesh *mesh);
+
+    void InitMaterials(const aiScene *scene);
 
 
     /** Collection of meshes. */
@@ -536,6 +541,7 @@ private:
             baseVertex = 0;
             baseIndex = 0;
             numIndices = 0;
+            materialIndex = 0;
         }
 
         /** Where in the vertex buffer to set as index 0 */
@@ -544,6 +550,8 @@ private:
         size_t baseIndex;
         /** Number of indices used to create mesh */
         size_t numIndices;
+        /** Material to use */
+        size_t materialIndex;
     };
 
     std::vector<ds_math::Vector3> m_positionBuffer;
@@ -551,5 +559,8 @@ private:
     std::vector<ds_math::Vector3> m_texCoordBuffer;
     std::vector<unsigned int> m_indexBuffer;
     std::vector<MeshEntry> m_meshEntries;
+
+    // Material information - diffuse texture path.
+    std::vector<std::string> m_diffuseTexturePaths;
 };
 }

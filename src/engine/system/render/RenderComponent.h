@@ -7,7 +7,6 @@ namespace ds_render
 {
 struct RenderComponent
 {
-    Material material;
     Mesh mesh;
 };
 }

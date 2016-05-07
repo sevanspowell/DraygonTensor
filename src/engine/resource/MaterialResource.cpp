@@ -51,6 +51,7 @@ MaterialResource::CreateFromFile(std::string filePath)
 
                 if (config.GetString(configKey.str(), &relTexturePath))
                 {
+                    // Make full texture path from relative one
                     std::stringstream fullTexturePath;
                     fullTexturePath << folder << relTexturePath;
 

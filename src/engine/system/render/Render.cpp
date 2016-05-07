@@ -238,31 +238,48 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                 {
                     std::string meshName;
                     std::string materialName;
-                    if (componentData.GetString("mesh", &meshName) &&
-                        componentData.GetString("material", &materialName))
+                    if (componentData.GetString("mesh", &meshName))
                     {
                         // Get mesh resource path
                         std::stringstream meshResourcePath;
                         meshResourcePath << "../assets/" << meshName;
 
-                        // Get material resource path
-                        std::stringstream materialResourcePath;
-                        materialResourcePath << "../assets/" << materialName;
+                        // Get material file paths
+                        std::vector<std::string> materialKeys =
+                            componentData.GetObjectKeys("materials");
 
                         // Create Mesh
                         ds_render::Mesh mesh =
                             CreateMeshFromMeshResource(meshResourcePath.str());
 
-                        // Create material
-                        ds_render::Material material =
-                            CreateMaterialFromMaterialResource(
-                                materialResourcePath.str(), m_sceneMatrices,
-                                m_objectMatrices);
+                        // For each material file path
+                        for (unsigned int iMaterial = 0;
+                             iMaterial < materialKeys.size(); ++iMaterial)
+                        {
+                            // Load material resource
+                            // Get material resource path
+                            std::stringstream materialResourcePath;
+                            materialResourcePath << "../assets/"
+                                                 << materialKeys[iMaterial];
+
+                            // Create material
+                            ds_render::Material material =
+                                CreateMaterialFromMaterialResource(
+                                    materialResourcePath.str(), m_sceneMatrices,
+                                    m_objectMatrices);
+
+                            // Each material maps to one submesh, get that
+                            // submesh and set material
+                            ds_render::SubMesh subMesh =
+                                mesh.GetSubMesh(iMaterial);
+                            subMesh.material = material;
+
+                            mesh.SetSubMesh(iMaterial, subMesh);
+                        }
 
                         Instance i =
                             m_renderComponentManager.CreateComponentForEntity(
                                 createComponentMsg.entity);
-                        m_renderComponentManager.SetMaterial(i, material);
                         m_renderComponentManager.SetMesh(i, mesh);
                     }
                 }
@@ -363,7 +380,6 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                         }
 
                         // Describe position data
-
                         ds_render::VertexBufferDescription::AttributeDescription
                             positionAttributeDescriptor;
 
@@ -457,13 +473,13 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                                 &indices[0]);
 
                         ds_render::Mesh mesh = ds_render::Mesh(vb, ib);
-                        mesh.AddSubMesh(ds_render::SubMesh(0, indices.size()));
+                        mesh.AddSubMesh(
+                            ds_render::SubMesh(0, indices.size(), material));
 
                         Instance i =
                             m_renderComponentManager.CreateComponentForEntity(
                                 createComponentMsg.entity);
 
-                        m_renderComponentManager.SetMaterial(i, material);
                         m_renderComponentManager.SetMesh(i, mesh);
                     }
                 }
@@ -696,9 +712,9 @@ ds_render::Mesh Render::CreateMeshFromMeshResource(const std::string &filePath)
     for (unsigned int iSubMesh = 0; iSubMesh < meshResource->GetMeshCount();
          ++iSubMesh)
     {
-        mesh.AddSubMesh(
-            ds_render::SubMesh(meshResource->GetBaseIndex(iSubMesh),
-                               meshResource->GetNumIndices(iSubMesh)));
+        mesh.AddSubMesh(ds_render::SubMesh(
+            meshResource->GetBaseIndex(iSubMesh),
+            meshResource->GetNumIndices(iSubMesh), ds_render::Material()));
     }
 
     return mesh;
@@ -748,8 +764,16 @@ ds_render::Material Render::CreateMaterialFromMaterialResource(
         const std::string &textureResourceFilePath =
             materialResource->GetTextureResourceFilePath(samplerName);
 
-        material.AddTexture(samplerName, CreateTextureFromTextureResource(
-                                             textureResourceFilePath));
+        // If special file path, create from material resource
+        if (textureResourceFilePath == "DIFFUSE")
+        {
+        }
+        // Else, create from file path
+        else
+        {
+            material.AddTexture(samplerName, CreateTextureFromTextureResource(
+                                                 textureResourceFilePath));
+        }
     }
 
     // Bind constant buffers to program
@@ -830,37 +854,38 @@ void Render::RenderScene()
             // Get mesh
             ds_render::Mesh mesh =
                 m_renderComponentManager.GetMesh(renderInstance);
-            // Get material
-            ds_render::Material material =
-                m_renderComponentManager.GetMaterial(renderInstance);
-
-            // Set shader program
-            m_renderer->SetProgram(material.GetProgram());
-
-            // For each texture in material, bind it to shader
-            for (auto samplerTexture : material.GetTextures())
-            {
-                m_renderer->BindTextureToSampler(
-                    material.GetProgram(), samplerTexture.first,
-                    samplerTexture.second.GetTextureHandle());
-            }
 
             for (unsigned int iSubMesh = 0; iSubMesh < mesh.GetNumSubMeshes();
                  ++iSubMesh)
             {
+                // Get material
+                ds_render::Material material =
+                    mesh.GetSubMesh(iSubMesh).material;
+
+                // Set shader program
+                m_renderer->SetProgram(material.GetProgram());
+
+                // For each texture in material, bind it to shader
+                for (auto samplerTexture : material.GetTextures())
+                {
+                    m_renderer->BindTextureToSampler(
+                        material.GetProgram(), samplerTexture.first,
+                        samplerTexture.second.GetTextureHandle());
+                }
+
                 // Draw the mesh
                 m_renderer->DrawVerticesIndexed(
                     mesh.GetVertexBuffer(), mesh.GetIndexBuffer(),
                     ds_render::PrimitiveType::Triangles,
                     mesh.GetSubMesh(iSubMesh).startingIndex,
                     mesh.GetSubMesh(iSubMesh).numIndices);
-            }
 
-            // For each texture in material, unbind
-            for (auto samplerTexture : material.GetTextures())
-            {
-                m_renderer->UnbindTextureFromSampler(
-                    samplerTexture.second.GetTextureHandle());
+                // For each texture in material, unbind
+                for (auto samplerTexture : material.GetTextures())
+                {
+                    m_renderer->UnbindTextureFromSampler(
+                        samplerTexture.second.GetTextureHandle());
+                }
             }
         }
     }

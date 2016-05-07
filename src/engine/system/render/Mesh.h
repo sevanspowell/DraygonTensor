@@ -116,6 +116,16 @@ public:
      */
     const SubMesh &GetSubMesh(size_t index) const;
 
+    /**
+     * Set the sub mesh at the given index.
+     *
+     * @pre  index >= 0 && index < GetNumSubMeshes().
+     *
+     * @param  index    size_t, index of submesh to set.
+     * @param  subMesh  const SubMesh &, submesh to set.
+     */
+    void SetSubMesh(size_t index, const SubMesh &subMesh);
+
 private:
     /** Vertex buffer of mesh */
     VertexBufferHandle m_vertexBuffer;
