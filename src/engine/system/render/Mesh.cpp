@@ -8,12 +8,16 @@ Mesh::Mesh()
 {
     m_vertexBuffer = VertexBufferHandle();
     m_indexBuffer = IndexBufferHandle();
+    m_meshResourceHandle = MeshResourceHandle();
 }
 
-Mesh::Mesh(VertexBufferHandle vertexBuffer, IndexBufferHandle indexBuffer)
+Mesh::Mesh(VertexBufferHandle vertexBuffer,
+           IndexBufferHandle indexBuffer,
+           MeshResourceHandle meshResource)
 {
     m_vertexBuffer = vertexBuffer;
     m_indexBuffer = indexBuffer;
+    m_meshResourceHandle = meshResource;
 }
 
 VertexBufferHandle Mesh::GetVertexBuffer() const
@@ -80,5 +84,15 @@ void Mesh::SetSubMesh(size_t index, const SubMesh &subMesh)
            "Mesh::SetSubMesh: tried to set submesh out of range.");
 
     m_subMeshes[index] = subMesh;
+}
+
+MeshResourceHandle Mesh::GetMeshResourceHandle() const
+{
+    return m_meshResourceHandle;
+}
+
+void Mesh::SetMeshResourceHandle(MeshResourceHandle meshResourceHandle)
+{
+    m_meshResourceHandle = meshResourceHandle;
 }
 }

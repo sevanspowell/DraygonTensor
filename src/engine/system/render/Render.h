@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "engine/common/HandleManager.h"
 #include "engine/resource/MeshResource.h"
 #include "engine/resource/ResourceFactory.h"
 #include "engine/system/ISystem.h"
@@ -185,7 +186,9 @@ private:
     bool m_cameraActive;
     Entity m_activeCameraEntity;
 
-    std::unique_ptr<MeshResource> m_animatedMesh;
     float m_timeInSeconds;
+
+    /** Manage storage of mesh resources among other things */
+    ds::HandleManager m_handleManager;
 };
 }

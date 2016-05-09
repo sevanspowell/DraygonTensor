@@ -472,7 +472,8 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                                 sizeof(unsigned int) * indices.size(),
                                 &indices[0]);
 
-                        ds_render::Mesh mesh = ds_render::Mesh(vb, ib);
+                        ds_render::Mesh mesh = ds_render::Mesh(
+                            vb, ib, ds_render::MeshResourceHandle());
                         mesh.AddSubMesh(
                             ds_render::SubMesh(0, indices.size(), material));
 
@@ -577,144 +578,155 @@ Render::CreateTextureFromTextureResource(const std::string &filePath)
 
 ds_render::Mesh Render::CreateMeshFromMeshResource(const std::string &filePath)
 {
-    std::unique_ptr<MeshResource> meshResource =
-        m_factory.CreateResource<MeshResource>(filePath);
+    ds_render::Mesh mesh = ds_render::Mesh();
 
-    m_animatedMesh = m_factory.CreateResource<MeshResource>(filePath);
+    // Store mesh resource
+    ds_render::MeshResourceHandle meshResourceHandle =
+        (ds_render::MeshResourceHandle)m_handleManager.Add(
+            (void *)m_factory.CreateResource<MeshResource>(filePath).release(),
+            0);
 
-    // Create vertex buffer data store
-    ds_com::StreamBuffer vertexBufferStore;
-    // Create vertex buffer descriptor
-    ds_render::VertexBufferDescription vertexBufferDescriptor;
+    // Get mesh resource data
+    MeshResource *meshResource =
+        (MeshResource *)m_handleManager.Get(meshResourceHandle);
 
-    const std::vector<ds_math::Vector3> positions = meshResource->GetVerts();
-    for (const ds_math::Vector3 &position : positions)
+    if (meshResource != nullptr)
     {
-        vertexBufferStore << position;
-    }
+        // Create vertex buffer data store
+        ds_com::StreamBuffer vertexBufferStore;
+        // Create vertex buffer descriptor
+        ds_render::VertexBufferDescription vertexBufferDescriptor;
 
-    // Describe position data
-    ds_render::VertexBufferDescription::AttributeDescription
-        positionAttributeDescriptor;
-    positionAttributeDescriptor.attributeType =
-        ds_render::AttributeType::Position;
-    positionAttributeDescriptor.attributeDataType =
-        ds_render::RenderDataType::Float;
-    positionAttributeDescriptor.numElementsPerAttribute = 3;
-    positionAttributeDescriptor.stride = 0;
-    positionAttributeDescriptor.offset = 0;
-    positionAttributeDescriptor.normalized = false;
-
-    // Add position attribute descriptor to buffer descriptor
-    vertexBufferDescriptor.AddAttributeDescription(positionAttributeDescriptor);
-
-    // Create texCoord data
-    // Get texture coordinate data
-    const std::vector<ds_math::Vector3> textureCoordinates =
-        meshResource->GetTexCoords();
-    for (const ds_math::Vector3 &texCoord : textureCoordinates)
-    {
-        vertexBufferStore << texCoord.x;
-        // Flip y texcoord
-        vertexBufferStore << 1.0f - texCoord.y;
-    }
-
-    // Describe texCoord data
-    ds_render::VertexBufferDescription::AttributeDescription
-        texCoordAttributeDescriptor;
-    texCoordAttributeDescriptor.attributeType =
-        ds_render::AttributeType::TextureCoordinate;
-    texCoordAttributeDescriptor.attributeDataType =
-        ds_render::RenderDataType::Float;
-    texCoordAttributeDescriptor.numElementsPerAttribute = 2;
-    texCoordAttributeDescriptor.stride = 0;
-    texCoordAttributeDescriptor.offset =
-        meshResource->GetVertCount() * sizeof(ds_math::Vector3);
-    texCoordAttributeDescriptor.normalized = false;
-
-    // Add texcoord attribute descriptor to buffer descriptor
-    vertexBufferDescriptor.AddAttributeDescription(texCoordAttributeDescriptor);
-
-    // If we have bone data
-    const std::vector<MeshResource::VertexBoneData> boneData =
-        meshResource->GetVertexBoneData();
-    if (boneData.size() > 0)
-    {
-        // Get bone data
-        for (const MeshResource::VertexBoneData &boneDatum : boneData)
+        const std::vector<ds_math::Vector3> positions =
+            meshResource->GetVerts();
+        for (const ds_math::Vector3 &position : positions)
         {
-            // Interlace ids and weights
-            vertexBufferStore << boneDatum;
+            vertexBufferStore << position;
         }
-        // Describe bone data
-        // Describe bone IDs
-        ds_render::VertexBufferDescription::AttributeDescription
-            boneIDAttributeDescriptor;
-        boneIDAttributeDescriptor.attributeType =
-            ds_render::AttributeType::BoneID;
-        boneIDAttributeDescriptor.attributeDataType =
-            ds_render::RenderDataType::Int;
-        boneIDAttributeDescriptor.numElementsPerAttribute = 4;
-        boneIDAttributeDescriptor.stride = sizeof(MeshResource::VertexBoneData);
-        // Jump over position and texcoord data
-        boneIDAttributeDescriptor.offset =
-            meshResource->GetVertCount() *
-                (sizeof(ds_math::Vector3) + 2 * sizeof(float)) +
-            0;
-        boneIDAttributeDescriptor.normalized = false;
 
-        // Add bone ID attribute descriptor to buffer descriptor
-        vertexBufferDescriptor.AddAttributeDescription(
-            boneIDAttributeDescriptor);
-
-        // Describe bone weights
+        // Describe position data
         ds_render::VertexBufferDescription::AttributeDescription
-            boneWeightAttributeDescriptor;
-        boneWeightAttributeDescriptor.attributeType =
-            ds_render::AttributeType::BoneWeight;
-        boneWeightAttributeDescriptor.attributeDataType =
+            positionAttributeDescriptor;
+        positionAttributeDescriptor.attributeType =
+            ds_render::AttributeType::Position;
+        positionAttributeDescriptor.attributeDataType =
             ds_render::RenderDataType::Float;
-        boneWeightAttributeDescriptor.numElementsPerAttribute = 4;
-        boneWeightAttributeDescriptor.stride =
-            sizeof(MeshResource::VertexBoneData);
-        // Jump over position, texcoord and bone id data
-        boneWeightAttributeDescriptor.offset =
-            meshResource->GetVertCount() *
-                (sizeof(ds_math::Vector3) + 2 * sizeof(float)) +
-            (sizeof(unsigned int) * 4);
-        boneWeightAttributeDescriptor.normalized = false;
+        positionAttributeDescriptor.numElementsPerAttribute = 3;
+        positionAttributeDescriptor.stride = 0;
+        positionAttributeDescriptor.offset = 0;
+        positionAttributeDescriptor.normalized = false;
 
-        // Add bone weight attribute descriptor to buffer descriptor
+        // Add position attribute descriptor to buffer descriptor
         vertexBufferDescriptor.AddAttributeDescription(
-            boneWeightAttributeDescriptor);
-    }
+            positionAttributeDescriptor);
 
-    // Create vertex buffer
-    ds_render::VertexBufferHandle vb = m_renderer->CreateVertexBuffer(
-        ds_render::BufferUsageType::Static, vertexBufferDescriptor,
-        vertexBufferStore.AvailableBytes(), vertexBufferStore.GetDataPtr());
+        // Create texCoord data
+        // Get texture coordinate data
+        const std::vector<ds_math::Vector3> textureCoordinates =
+            meshResource->GetTexCoords();
+        for (const ds_math::Vector3 &texCoord : textureCoordinates)
+        {
+            vertexBufferStore << texCoord.x;
+            // Flip y texcoord
+            vertexBufferStore << 1.0f - texCoord.y;
+        }
 
-    // Create index buffer
-    std::vector<unsigned int> indices = meshResource->GetIndices();
+        // Describe texCoord data
+        ds_render::VertexBufferDescription::AttributeDescription
+            texCoordAttributeDescriptor;
+        texCoordAttributeDescriptor.attributeType =
+            ds_render::AttributeType::TextureCoordinate;
+        texCoordAttributeDescriptor.attributeDataType =
+            ds_render::RenderDataType::Float;
+        texCoordAttributeDescriptor.numElementsPerAttribute = 2;
+        texCoordAttributeDescriptor.stride = 0;
+        texCoordAttributeDescriptor.offset =
+            meshResource->GetVertCount() * sizeof(ds_math::Vector3);
+        texCoordAttributeDescriptor.normalized = false;
 
-    // Create index buffer
-    ds_render::IndexBufferHandle ib = m_renderer->CreateIndexBuffer(
-        ds_render::BufferUsageType::Static,
-        sizeof(unsigned int) * indices.size(), &indices[0]);
+        // Add texcoord attribute descriptor to buffer descriptor
+        vertexBufferDescriptor.AddAttributeDescription(
+            texCoordAttributeDescriptor);
 
-    ds_render::Mesh mesh = ds_render::Mesh(vb, ib);
-    // Create Mesh
-    // return ds_render::Mesh(vb, ib, 0, meshResource->GetIndicesCount());
-    std::cout << meshResource->GetBaseIndex(0) << " "
-              << meshResource->GetNumIndices(0) << std::endl;
-    std::cout << meshResource->GetMeshCount() << std::endl;
-    // For 0 to meshCount - 1, add submesh..
-    for (unsigned int iSubMesh = 0; iSubMesh < meshResource->GetMeshCount();
-         ++iSubMesh)
-    {
-        mesh.AddSubMesh(ds_render::SubMesh(
-            meshResource->GetBaseIndex(iSubMesh),
-            meshResource->GetNumIndices(iSubMesh), ds_render::Material()));
+        // If we have bone data
+        const std::vector<MeshResource::VertexBoneData> boneData =
+            meshResource->GetVertexBoneData();
+        if (boneData.size() > 0)
+        {
+            // Get bone data
+            for (const MeshResource::VertexBoneData &boneDatum : boneData)
+            {
+                // Interlace ids and weights
+                vertexBufferStore << boneDatum;
+            }
+            // Describe bone data
+            // Describe bone IDs
+            ds_render::VertexBufferDescription::AttributeDescription
+                boneIDAttributeDescriptor;
+            boneIDAttributeDescriptor.attributeType =
+                ds_render::AttributeType::BoneID;
+            boneIDAttributeDescriptor.attributeDataType =
+                ds_render::RenderDataType::Int;
+            boneIDAttributeDescriptor.numElementsPerAttribute = 4;
+            boneIDAttributeDescriptor.stride =
+                sizeof(MeshResource::VertexBoneData);
+            // Jump over position and texcoord data
+            boneIDAttributeDescriptor.offset =
+                meshResource->GetVertCount() *
+                    (sizeof(ds_math::Vector3) + 2 * sizeof(float)) +
+                0;
+            boneIDAttributeDescriptor.normalized = false;
+
+            // Add bone ID attribute descriptor to buffer descriptor
+            vertexBufferDescriptor.AddAttributeDescription(
+                boneIDAttributeDescriptor);
+
+            // Describe bone weights
+            ds_render::VertexBufferDescription::AttributeDescription
+                boneWeightAttributeDescriptor;
+            boneWeightAttributeDescriptor.attributeType =
+                ds_render::AttributeType::BoneWeight;
+            boneWeightAttributeDescriptor.attributeDataType =
+                ds_render::RenderDataType::Float;
+            boneWeightAttributeDescriptor.numElementsPerAttribute = 4;
+            boneWeightAttributeDescriptor.stride =
+                sizeof(MeshResource::VertexBoneData);
+            // Jump over position, texcoord and bone id data
+            boneWeightAttributeDescriptor.offset =
+                meshResource->GetVertCount() *
+                    (sizeof(ds_math::Vector3) + 2 * sizeof(float)) +
+                (sizeof(unsigned int) * 4);
+            boneWeightAttributeDescriptor.normalized = false;
+
+            // Add bone weight attribute descriptor to buffer descriptor
+            vertexBufferDescriptor.AddAttributeDescription(
+                boneWeightAttributeDescriptor);
+        }
+
+        // Create vertex buffer
+        ds_render::VertexBufferHandle vb = m_renderer->CreateVertexBuffer(
+            ds_render::BufferUsageType::Static, vertexBufferDescriptor,
+            vertexBufferStore.AvailableBytes(), vertexBufferStore.GetDataPtr());
+
+        // Create index buffer
+        std::vector<unsigned int> indices = meshResource->GetIndices();
+
+        // Create index buffer
+        ds_render::IndexBufferHandle ib = m_renderer->CreateIndexBuffer(
+            ds_render::BufferUsageType::Static,
+            sizeof(unsigned int) * indices.size(), &indices[0]);
+
+        mesh = ds_render::Mesh(vb, ib, meshResourceHandle);
+        // Create Mesh
+
+        // For 0 to meshCount - 1, add submesh..
+        for (unsigned int iSubMesh = 0; iSubMesh < meshResource->GetMeshCount();
+             ++iSubMesh)
+        {
+            mesh.AddSubMesh(ds_render::SubMesh(
+                meshResource->GetBaseIndex(iSubMesh),
+                meshResource->GetNumIndices(iSubMesh), ds_render::Material()));
+        }
     }
 
     return mesh;
@@ -830,6 +842,10 @@ void Render::RenderScene()
             Instance transformInstance =
                 m_transformComponentManager.GetInstanceForEntity(entity);
 
+            // Get mesh
+            ds_render::Mesh mesh =
+                m_renderComponentManager.GetMesh(renderInstance);
+
             // If has transform instance
             if (transformInstance.IsValid())
             {
@@ -839,10 +855,15 @@ void Render::RenderScene()
                     "Object.modelMatrix", sizeof(ds_math::Matrix4),
                     &m_transformComponentManager.GetWorldTransform(
                         transformInstance));
-                // std::vector<ds_math::Matrix4> boneTransforms(
-                //     MeshResource::MAX_BONES, ds_math::Matrix4(1.0f));
+
+                // Get bone transform data to bind to shader
                 std::vector<ds_math::Matrix4> boneTransforms;
-                m_animatedMesh->BoneTransform(m_timeInSeconds, &boneTransforms);
+                // First, get mesh resource that holds skeleton/animation data
+                MeshResource *meshResource =
+                    (MeshResource *)m_handleManager.Get(
+                        mesh.GetMeshResourceHandle());
+                // Then query mesh resource for data
+                meshResource->BoneTransform(m_timeInSeconds, &boneTransforms);
                 m_objectBufferDescrip.InsertMemberData(
                     "Object.boneTransforms",
                     MeshResource::MAX_BONES * sizeof(ds_math::Matrix4),
@@ -850,10 +871,6 @@ void Render::RenderScene()
                 m_renderer->UpdateConstantBufferData(m_objectMatrices,
                                                      m_objectBufferDescrip);
             }
-
-            // Get mesh
-            ds_render::Mesh mesh =
-                m_renderComponentManager.GetMesh(renderInstance);
 
             for (unsigned int iSubMesh = 0; iSubMesh < mesh.GetNumSubMeshes();
                  ++iSubMesh)

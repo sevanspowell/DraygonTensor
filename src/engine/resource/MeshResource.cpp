@@ -67,23 +67,19 @@ std::unique_ptr<IResource> MeshResource::CreateFromFile(std::string filePath)
             size_t meshBaseVertex = numVertices;
             size_t meshBaseIndex = numIndices;
             size_t meshNumIndices = ourScene->mMeshes[iMesh]->mNumFaces * 3;
-            size_t meshMaterialIndex = ourScene->mMeshes[iMesh]->mMaterialIndex;
 
             numVertices += ourScene->mMeshes[iMesh]->mNumVertices;
             numIndices += meshNumIndices;
 
             meshResource->SetMeshEntry(iMesh, meshBaseVertex, meshBaseIndex,
-                                       meshNumIndices, meshMaterialIndex);
+                                       meshNumIndices);
         }
-
-        std::cout << "Num Materials: " << ourScene->mNumMaterials << std::endl;
 
         // Reserve space for vertex attributes and indices
         meshResource->SetPositionBufferSize(numVertices);
         meshResource->SetNormalBufferSize(numVertices);
         meshResource->SetTexCoordBufferSize(numVertices);
         meshResource->SetIndexBufferSize(numVertices);
-        meshResource->SetNumMaterials(ourScene->mNumMaterials);
 
         for (unsigned int iMesh = 0; iMesh < meshCount; ++iMesh)
         {
@@ -115,8 +111,6 @@ std::unique_ptr<IResource> MeshResource::CreateFromFile(std::string filePath)
             transform.d1, transform.d2, transform.d3, transform.d4);
         // Store global inverse transform of root node of the scene
         meshResource->SetGlobalInverseTransform(mat);
-
-        meshResource->InitMaterials(ourScene);
     }
 
     return std::unique_ptr<IResource>(
@@ -867,8 +861,7 @@ void MeshResource::SetVertexBoneData(
 void MeshResource::SetMeshEntry(size_t meshIndex,
                                 size_t baseVertex,
                                 size_t baseIndex,
-                                size_t numIndices,
-                                size_t materialIndex)
+                                size_t numIndices)
 {
     assert(meshIndex >= 0 && meshIndex < m_meshEntries.size() &&
            "MeshResource::SetMeshEntry: Tried to set invalid mesh entry.");
@@ -876,7 +869,6 @@ void MeshResource::SetMeshEntry(size_t meshIndex,
     m_meshEntries[meshIndex].baseVertex = baseVertex;
     m_meshEntries[meshIndex].baseIndex = baseIndex;
     m_meshEntries[meshIndex].numIndices = numIndices;
-    m_meshEntries[meshIndex].materialIndex = materialIndex;
 }
 
 void MeshResource::SetPositionBufferSize(size_t size)
@@ -940,47 +932,6 @@ void MeshResource::LoadMeshData(unsigned int meshIndex, const aiMesh *mesh)
                                 face.mIndices[1]);
         m_indexBuffer.push_back(m_meshEntries[meshIndex].baseVertex +
                                 face.mIndices[2]);
-    }
-}
-
-void MeshResource::SetNumMaterials(size_t size)
-{
-    // Reserve enough memory for all textures
-    m_diffuseTexturePaths.reserve(size);
-}
-
-void MeshResource::InitMaterials(const aiScene *scene)
-{
-    for (unsigned int iMaterial = 0; iMaterial < scene->mNumMaterials;
-         ++iMaterial)
-    {
-        const aiMaterial *material = scene->mMaterials[iMaterial];
-
-        aiString name;
-        if (material->Get(AI_MATKEY_NAME, name) == AI_SUCCESS)
-        {
-            std::string nameStr = std::string(name.data);
-            std::cout << "Material name: " << nameStr << std::endl;
-        }
-        else
-        {
-            std::cout << "No material name." << std::endl;
-        }
-
-        if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0)
-        {
-            // Get path to texture
-            aiString path;
-
-            if (material->GetTexture(aiTextureType_DIFFUSE, 0, &path, NULL,
-                                     NULL, NULL, NULL, NULL) == AI_SUCCESS)
-            {
-                std::string pathStr = std::string(path.data);
-                std::cout << pathStr << std::endl;
-
-                m_diffuseTexturePaths.push_back(pathStr);
-            }
-        }
     }
 }
 }

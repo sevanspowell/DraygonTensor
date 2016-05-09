@@ -28,8 +28,12 @@ public:
      *
      * @param  vertexBuffer   VertexBufferHandle, vertex buffer of mesh.
      * @param  indexBuffer    IndexBufferHandle, index buffer of mesh.
+     * @param  meshResource   MeshResourceHandle, handle mesh resource used to
+     *                        create this mesh.
      */
-    Mesh(VertexBufferHandle vertexBuffer, IndexBufferHandle indexBuffer);
+    Mesh(VertexBufferHandle vertexBuffer,
+         IndexBufferHandle indexBuffer,
+         MeshResourceHandle meshResource);
 
     /**
      * Get handle to the vertex buffer of the mesh.
@@ -62,16 +66,19 @@ public:
     void SetIndexBuffer(IndexBufferHandle indexBuffer);
 
     // /**
-    //  * Get where (the position) in the mesh index buffer to begin drawing from.
+    //  * Get where (the position) in the mesh index buffer to begin drawing
+    //  from.
     //  *
     //  * @return  size_t, index in index buffer to begin drawing from.
     //  */
     // size_t GetStartingIndex() const;
 
     // /**
-    //  * Set where (the position) in the mesh index buffer to begin drawing from.
+    //  * Set where (the position) in the mesh index buffer to begin drawing
+    //  from.
     //  *
-    //  * @param  startingIndex  size_t, index in the index buffer to begin drawing
+    //  * @param  startingIndex  size_t, index in the index buffer to begin
+    //  drawing
     //  * from.
     //  */
     // void SetStartingIndex(size_t startingIndex);
@@ -86,7 +93,8 @@ public:
     // /**
     //  * Set the number of indices in the mesh index buffer to draw.
     //  *
-    //  * @param  numIndices  size_t, number of indices in the mesh index buffer to
+    //  * @param  numIndices  size_t, number of indices in the mesh index buffer
+    //  to
     //  * draw.
     //  */
     // void SetNumIndices(size_t numIndices);
@@ -126,6 +134,22 @@ public:
      */
     void SetSubMesh(size_t index, const SubMesh &subMesh);
 
+    /**
+     * Get the handle to the mesh resource used to create this mesh.
+     *
+     * @return  MeshResourceHandle, handle of mesh resource used to create this
+     *          mesh.
+     */
+    MeshResourceHandle GetMeshResourceHandle() const;
+
+    /**
+     * Set the handle to the mesh resource used to create this mehs.
+     *
+     * @param  meshResourceHandle  MeshResourceHandle, handle to mesh resource
+     *                             used to create this mesh.
+     */
+    void SetMeshResourceHandle(MeshResourceHandle meshResourceHandle);
+
 private:
     /** Vertex buffer of mesh */
     VertexBufferHandle m_vertexBuffer;
@@ -133,6 +157,8 @@ private:
     IndexBufferHandle m_indexBuffer;
     /** Sub meshes of mesh */
     std::vector<SubMesh> m_subMeshes;
+    /** Handle to MeshResource used to create this Mesh */
+    MeshResourceHandle m_meshResourceHandle;
     // size_t m_startingIndex;
     // size_t m_numIndices;
 };

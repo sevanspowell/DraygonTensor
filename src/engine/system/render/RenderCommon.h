@@ -84,4 +84,6 @@ typedef ds::Handle ProgramHandle;
 typedef ds::Handle TextureHandle;
 /** Handle to constant buffer */
 typedef ds::Handle ConstantBufferHandle;
+/** Handle to mesh resource */
+typedef ds::Handle MeshResourceHandle;
 }
