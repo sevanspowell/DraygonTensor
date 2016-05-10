@@ -283,6 +283,16 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             //          << " to: " << setLocalMsg.localTransform << std::endl;
             break;
         }
+        case ds_msg::MessageType::SetAnimationIndex:
+        {
+            ds_msg::SetAnimationIndex setAnimationMsg;
+            (*messages) >> setAnimationMsg;
+
+            m_buffer << "Console out: animation of entity id "
+                     << setAnimationMsg.entity.id << " changed to index "
+                     << setAnimationMsg.animationIndex << std::endl;
+            break;
+        }
         default:
             // Always extract the payload
             messages->Extract(header.size);

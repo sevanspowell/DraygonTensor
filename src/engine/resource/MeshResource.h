@@ -279,13 +279,32 @@ public:
     void SetBoneCount(unsigned int boneCount);
 
     /**
+     * Get a collection of bone transforms.
      *
-     * @param  timeInSeconds  float, time since application begun in seconds.
-     * @param  transforms     std::vector<ds_math::Matrix4> *, array of
-     * transforms out.
+     * @param  deltaTime   float, time since last animation sample in
+     *                     seconds.
+     * @param  transforms  std::vector<ds_math::Matrix4> *, array of
+     *                     transforms out. Vector must have
+     *                     MeshResource::MAX_BONES elements.
      */
-    void BoneTransform(float timeInSeconds,
+    void BoneTransform(float deltaTime,
                        std::vector<ds_math::Matrix4> *transforms);
+
+    /**
+     * Set the index of the animation to be sampled by the BoneTransform
+     * method.
+     *
+     * @param  animationIndex  int, index of animation to be sampled by the
+     * BoneTransform method.
+     */
+    void SetAnimationIndex(int animationIndex);
+
+    /**
+     * Get the number of bones in the scene.
+     *
+     * @return  unsigned int, number of bones in the scene.
+     */
+    unsigned int GetNumBones() const;
 
     const std::vector<VertexBoneData> &GetVertexBoneData() const;
 
@@ -554,5 +573,10 @@ private:
 
     // Material information - diffuse texture path.
     std::vector<std::string> m_diffuseTexturePaths;
+
+    // Time accumulator (for animation)
+    float m_animationTime;
+    // Current animation to use
+    int m_currentAnimationIndex;
 };
 }

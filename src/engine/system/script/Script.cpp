@@ -244,6 +244,17 @@ void Script::SetLocalTransform(Entity entity, const ds_math::Matrix4 &transform)
                           sizeof(ds_msg::SetLocalTransform), &setLocalMsg);
 }
 
+void Script::SetAnimationIndex(Entity entity, int animationIndex)
+{
+    ds_msg::SetAnimationIndex setAnimationMsg;
+    setAnimationMsg.entity = entity;
+    setAnimationMsg.animationIndex = animationIndex;
+
+    ds_msg::AppendMessage(&m_messagesGenerated,
+                          ds_msg::MessageType::SetAnimationIndex,
+                          sizeof(ds_msg::SetAnimationIndex), &setAnimationMsg);
+}
+
 bool Script::IsNextScriptMessage() const
 {
     return (m_toScriptMessages.AvailableBytes() > 0);

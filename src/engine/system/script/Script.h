@@ -138,6 +138,14 @@ public:
     void SetLocalTransform(Entity entity, const ds_math::Matrix4 &transform);
 
     /**
+     * Send a set animation index message.
+     *
+     * @param  entity          Entity, entity to set animation of.
+     * @param  animationIndex  int, animation index to set.
+     */
+    void SetAnimationIndex(Entity entity, int animationIndex);
+
+    /**
      * Is a new message available for the external script?
      *
      * Should be used by external scripts only.

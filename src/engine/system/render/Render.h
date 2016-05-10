@@ -153,8 +153,19 @@ private:
 
     /**
      * Render the scene.
+     *
+     * @param  deltaTime  float, time since last engine tick.
      */
-    void RenderScene();
+    void RenderScene(float deltaTime);
+
+    /**
+     * Set the animation index (which animation to play) of the mesh associated
+     * with the given entity (if any).
+     *
+     * @param  entity          Entity, entity to set animation of.
+     * @param  animationIndex  int, index of animation to set.
+     */
+    void SetAnimationIndex(Entity entity, int animationIndex);
 
     /** Messages generated and received by this system */
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;

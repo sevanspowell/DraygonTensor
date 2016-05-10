@@ -39,6 +39,8 @@ std::unique_ptr<IResource> MeshResource::CreateFromFile(std::string filePath)
     // If mesh failed to load
     if (!meshResource->GetScene())
     {
+        std::cerr << "MeshResource::CreateFromFile: Assimp can't load file: "
+                  << filePath << std::endl;
         // Destroy mesh resource
         meshResource = nullptr;
     }
@@ -48,69 +50,86 @@ std::unique_ptr<IResource> MeshResource::CreateFromFile(std::string filePath)
         int meshCount = ourScene->mNumMeshes;
         meshResource->SetMeshCount(meshCount);
 
-        // Bone information
-        std::vector<VertexBoneData> bones;
+        std::cout << filePath << " " << meshCount << std::endl;
 
-        unsigned int numVertices = 0;
-        unsigned int numIndices = 0;
-
-        // For each mesh
-        for (unsigned int iMesh = 0; iMesh < meshCount; iMesh++)
+        if (meshCount > 0)
         {
-            // Load mesh data
-            meshResource->StoreMeshPositions(iMesh, ourScene->mMeshes[iMesh]);
-            meshResource->StoreNormalCoords(iMesh, ourScene->mMeshes[iMesh]);
-            meshResource->StoreTextureCoords(iMesh, ourScene->mMeshes[iMesh]);
-            meshResource->StoreFaces(iMesh, ourScene->mMeshes[iMesh]);
+            // Bone information
+            std::vector<VertexBoneData> bones;
 
-            // Setup mesh entries
-            size_t meshBaseVertex = numVertices;
-            size_t meshBaseIndex = numIndices;
-            size_t meshNumIndices = ourScene->mMeshes[iMesh]->mNumFaces * 3;
+            unsigned int numVertices = 0;
+            unsigned int numIndices = 0;
 
-            numVertices += ourScene->mMeshes[iMesh]->mNumVertices;
-            numIndices += meshNumIndices;
+            // For each mesh
+            for (unsigned int iMesh = 0; iMesh < meshCount; iMesh++)
+            {
+                // Load mesh data
+                meshResource->StoreMeshPositions(iMesh,
+                                                 ourScene->mMeshes[iMesh]);
+                meshResource->StoreNormalCoords(iMesh,
+                                                ourScene->mMeshes[iMesh]);
+                meshResource->StoreTextureCoords(iMesh,
+                                                 ourScene->mMeshes[iMesh]);
+                meshResource->StoreFaces(iMesh, ourScene->mMeshes[iMesh]);
 
-            meshResource->SetMeshEntry(iMesh, meshBaseVertex, meshBaseIndex,
-                                       meshNumIndices);
+                // Setup mesh entries
+                size_t meshBaseVertex = numVertices;
+                size_t meshBaseIndex = numIndices;
+                size_t meshNumIndices = ourScene->mMeshes[iMesh]->mNumFaces * 3;
+
+                numVertices += ourScene->mMeshes[iMesh]->mNumVertices;
+                numIndices += meshNumIndices;
+
+                meshResource->SetMeshEntry(iMesh, meshBaseVertex, meshBaseIndex,
+                                           meshNumIndices);
+            }
+
+            // Reserve space for vertex attributes and indices
+            meshResource->SetPositionBufferSize(numVertices);
+            meshResource->SetNormalBufferSize(numVertices);
+            meshResource->SetTexCoordBufferSize(numVertices);
+            meshResource->SetIndexBufferSize(numVertices);
+
+            for (unsigned int iMesh = 0; iMesh < meshCount; ++iMesh)
+            {
+                meshResource->LoadMeshData(iMesh, ourScene->mMeshes[iMesh]);
+            }
+
+            // Reserve enough memory for the bone data of each vertex
+            // Use resize (not reserve) because it changes the size of the array
+            // as
+            // well as allocating memory
+            bones.resize(numVertices);
+
+            // TODO: Fix for multiple meshes in scene
+            for (unsigned int iMesh = 0; iMesh < meshCount; ++iMesh)
+            {
+                std::cout << "About to load bone data" << std::endl;
+                meshResource->LoadBones(iMesh, ourScene->mMeshes[iMesh],
+                                        &bones);
+            }
+
+            meshResource->SetVertexBoneData(bones);
+
+            // Get global transform
+            aiMatrix4x4 transform = ourScene->mRootNode->mTransformation;
+            // Invert it
+            transform.Inverse();
+            // Convert it to our matrix 4x4 representation
+            ds_math::Matrix4 mat(
+                transform.a1, transform.a2, transform.a3, transform.a4,
+                transform.b1, transform.b2, transform.b3, transform.b4,
+                transform.c1, transform.c2, transform.c3, transform.c4,
+                transform.d1, transform.d2, transform.d3, transform.d4);
+            // Store global inverse transform of root node of the scene
+            meshResource->SetGlobalInverseTransform(mat);
         }
-
-        // Reserve space for vertex attributes and indices
-        meshResource->SetPositionBufferSize(numVertices);
-        meshResource->SetNormalBufferSize(numVertices);
-        meshResource->SetTexCoordBufferSize(numVertices);
-        meshResource->SetIndexBufferSize(numVertices);
-
-        for (unsigned int iMesh = 0; iMesh < meshCount; ++iMesh)
+        else
         {
-            meshResource->LoadMeshData(iMesh, ourScene->mMeshes[iMesh]);
+            std::cerr << "MeshResource::CreateFromFile: Scene has no meshes."
+                      << std::endl;
+            meshResource = nullptr;
         }
-
-        // Reserve enough memory for the bone data of each vertex
-        // Use resize (not reserve) because it changes the size of the array as
-        // well as allocating memory
-        bones.resize(numVertices);
-
-        // TODO: Fix for multiple meshes in scene
-        for (unsigned int iMesh = 0; iMesh < meshCount; ++iMesh)
-        {
-            meshResource->LoadBones(iMesh, ourScene->mMeshes[iMesh], &bones);
-        }
-
-        meshResource->SetVertexBoneData(bones);
-
-        // Get global transform
-        aiMatrix4x4 transform = ourScene->mRootNode->mTransformation;
-        // Invert it
-        transform.Inverse();
-        // Convert it to our matrix 4x4 representation
-        ds_math::Matrix4 mat(
-            transform.a1, transform.a2, transform.a3, transform.a4,
-            transform.b1, transform.b2, transform.b3, transform.b4,
-            transform.c1, transform.c2, transform.c3, transform.c4,
-            transform.d1, transform.d2, transform.d3, transform.d4);
-        // Store global inverse transform of root node of the scene
-        meshResource->SetGlobalInverseTransform(mat);
     }
 
     return std::unique_ptr<IResource>(
@@ -121,6 +140,8 @@ MeshResource::MeshResource()
 {
     m_scene = nullptr;
     m_numBones = 0;
+    m_animationTime = 0.0f;
+    m_currentAnimationIndex = 1;
 }
 
 MeshResource::~MeshResource()
@@ -497,6 +518,7 @@ void MeshResource::LoadBones(unsigned int meshIndex,
            "MeshResource::LoadBones: Tried to access invalid mesh index.");
     if (bones != nullptr)
     {
+        std::cout << "Num bones: " << mesh->mNumBones << std::endl;
         for (unsigned int i = 0; i < mesh->mNumBones; ++i)
         {
             unsigned int boneIndex = 0;
@@ -534,30 +556,56 @@ void MeshResource::LoadBones(unsigned int meshIndex,
     }
 }
 
-void MeshResource::BoneTransform(float timeInSeconds,
+void MeshResource::BoneTransform(float deltaTime,
                                  std::vector<ds_math::Matrix4> *transforms)
 {
+    m_animationTime += deltaTime;
+
     if (transforms != nullptr)
     {
-        ds_math::Matrix4 identity = ds_math::Matrix4(1.0f);
+        assert(
+            transforms->size() == MeshResource::MAX_BONES &&
+            "MeshResource::BoneTransform: Incorrect size of transforms array.");
 
-        // TODO: Fix for multiple animations
-        float ticksPerSecond = m_scene->mAnimations[0]->mTicksPerSecond != 0
-                                   ? m_scene->mAnimations[0]->mTicksPerSecond
-                                   : 25.0f;
-        float timeInTicks = timeInSeconds * ticksPerSecond;
-        float animationTime =
-            fmod(timeInTicks, m_scene->mAnimations[0]->mDuration);
-
-        ReadNodeHeirarchy(animationTime, m_scene->mRootNode, identity);
-
-        transforms->resize(m_numBones);
-
-        for (unsigned int i = 0; i < m_numBones; ++i)
+        if (m_currentAnimationIndex >= 0 &&
+            m_currentAnimationIndex < m_scene->mNumAnimations)
         {
-            (*transforms)[i] = m_boneInfo[i].finalTransform;
+            ds_math::Matrix4 identity = ds_math::Matrix4(1.0f);
+
+            // TODO: Fix for multiple animations
+            float ticksPerSecond =
+                m_scene->mAnimations[m_currentAnimationIndex]
+                            ->mTicksPerSecond != 0
+                    ? m_scene->mAnimations[m_currentAnimationIndex]
+                          ->mTicksPerSecond
+                    : 25.0f;
+            float timeInTicks = m_animationTime * ticksPerSecond;
+            float animationTime =
+                fmod(timeInTicks,
+                     m_scene->mAnimations[m_currentAnimationIndex]->mDuration);
+
+            ReadNodeHeirarchy(animationTime, m_scene->mRootNode, identity);
+
+            for (unsigned int i = 0; i < m_numBones; ++i)
+            {
+                (*transforms)[i] = m_boneInfo[i].finalTransform;
+            }
         }
     }
+}
+
+void MeshResource::SetAnimationIndex(int animationIndex)
+{
+    // Change animation index
+    m_currentAnimationIndex = animationIndex;
+
+    // Reset animation time
+    m_animationTime = 0.0f;
+}
+
+unsigned int MeshResource::GetNumBones() const
+{
+    return m_numBones;
 }
 
 void MeshResource::ReadNodeHeirarchy(float animationTime,
@@ -567,7 +615,8 @@ void MeshResource::ReadNodeHeirarchy(float animationTime,
     std::string nodeName = std::string(node->mName.data);
 
     // TODO: Fix for multiple animations
-    const aiAnimation *animation = m_scene->mAnimations[0];
+    const aiAnimation *animation =
+        m_scene->mAnimations[m_currentAnimationIndex];
 
     aiMatrix4x4 temp = node->mTransformation;
     ds_math::Matrix4 nodeTransformation = ds_math::Matrix4(

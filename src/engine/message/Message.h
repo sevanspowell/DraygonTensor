@@ -56,7 +56,9 @@ enum class MessageType
     // Strafe Right
     StrafeRight,
     // Set an entity's local transform
-    SetLocalTransform
+    SetLocalTransform,
+    // Set an entity's animation
+    SetAnimationIndex
 };
 
 /**
@@ -151,5 +153,11 @@ struct SetLocalTransform
 {
     ds::Entity entity;               // Entity to set local transform of
     ds_math::Matrix4 localTransform; // New local transform
+};
+
+struct SetAnimationIndex
+{
+    ds::Entity entity;  // Entity to set the animation index of
+    int animationIndex; // New animation index
 };
 }

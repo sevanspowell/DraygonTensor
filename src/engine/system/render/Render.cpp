@@ -48,7 +48,7 @@ void Render::Update(float deltaTime)
     {
         m_renderer->ClearBuffers();
 
-        RenderScene();
+        RenderScene(deltaTime);
     }
 }
 
@@ -97,6 +97,25 @@ void Render::SetCameraOrientation(Entity entity,
     if (i.IsValid())
     {
         m_cameraComponentManager.SetOrientation(i, orientation);
+    }
+}
+
+void Render::SetAnimationIndex(Entity entity, int animationIndex)
+{
+    Instance i = m_renderComponentManager.GetInstanceForEntity(entity);
+
+    if (i.IsValid())
+    {
+        // Get mesh resource handle for mesh
+        ds_render::MeshResourceHandle meshResourceHandle =
+            m_renderComponentManager.GetMesh(i).GetMeshResourceHandle();
+
+        // Get mesh resource for mesh
+        MeshResource *meshResource =
+            (MeshResource *)m_handleManager.Get(meshResourceHandle);
+
+        // Set animation index
+        meshResource->SetAnimationIndex(animationIndex);
     }
 }
 
@@ -218,8 +237,9 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                     break;
                 }
             }
+
+            break;
         }
-        break;
         case ds_msg::MessageType::CreateComponent:
         {
             ds_msg::CreateComponent createComponentMsg;
@@ -252,35 +272,48 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                         ds_render::Mesh mesh =
                             CreateMeshFromMeshResource(meshResourcePath.str());
 
-                        // For each material file path
-                        for (unsigned int iMaterial = 0;
-                             iMaterial < materialKeys.size(); ++iMaterial)
+                        // Only continue if the number of submeshes matches the
+                        // number of materials provided
+                        if (mesh.GetNumSubMeshes() == materialKeys.size())
                         {
-                            // Load material resource
-                            // Get material resource path
-                            std::stringstream materialResourcePath;
-                            materialResourcePath << "../assets/"
-                                                 << materialKeys[iMaterial];
+                            // For each material file path
+                            for (unsigned int iMaterial = 0;
+                                 iMaterial < materialKeys.size(); ++iMaterial)
+                            {
+                                // Load material resource
+                                // Get material resource path
+                                std::stringstream materialResourcePath;
+                                materialResourcePath << "../assets/"
+                                                     << materialKeys[iMaterial];
 
-                            // Create material
-                            ds_render::Material material =
-                                CreateMaterialFromMaterialResource(
-                                    materialResourcePath.str(), m_sceneMatrices,
-                                    m_objectMatrices);
+                                // Create material
+                                ds_render::Material material =
+                                    CreateMaterialFromMaterialResource(
+                                        materialResourcePath.str(),
+                                        m_sceneMatrices, m_objectMatrices);
 
-                            // Each material maps to one submesh, get that
-                            // submesh and set material
-                            ds_render::SubMesh subMesh =
-                                mesh.GetSubMesh(iMaterial);
-                            subMesh.material = material;
+                                // Each material maps to one submesh, get that
+                                // submesh and set material
+                                ds_render::SubMesh subMesh =
+                                    mesh.GetSubMesh(iMaterial);
+                                subMesh.material = material;
 
-                            mesh.SetSubMesh(iMaterial, subMesh);
+                                mesh.SetSubMesh(iMaterial, subMesh);
+                            }
+
+                            Instance i = m_renderComponentManager
+                                             .CreateComponentForEntity(
+                                                 createComponentMsg.entity);
+                            m_renderComponentManager.SetMesh(i, mesh);
                         }
-
-                        Instance i =
-                            m_renderComponentManager.CreateComponentForEntity(
-                                createComponentMsg.entity);
-                        m_renderComponentManager.SetMesh(i, mesh);
+                        else
+                        {
+                            std::cout
+                                << "Number of materials specified in "
+                                << meshResourcePath.str()
+                                << " not equal to number of submeshes in mesh."
+                                << std::endl;
+                        }
                     }
                 }
                 // Create transform component
@@ -485,8 +518,9 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                     }
                 }
             }
+
+            break;
         }
-        break;
         case ds_msg::MessageType::MoveEntity:
         {
             ds_msg::MoveEntity entityMoveMsg;
@@ -511,8 +545,9 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                 m_transformComponentManager.SetLocalTransform(transform,
                                                               newTransform);
             }
+
+            break;
         }
-        break;
         case ds_msg::MessageType::SetLocalTransform:
         {
             ds_msg::SetLocalTransform setLocalMsg;
@@ -528,8 +563,19 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                 m_transformComponentManager.SetLocalTransform(
                     transform, setLocalMsg.localTransform);
             }
+
+            break;
         }
-        break;
+        case ds_msg::MessageType::SetAnimationIndex:
+        {
+            ds_msg::SetAnimationIndex setAnimationMsg;
+            (*messages) >> setAnimationMsg;
+
+            SetAnimationIndex(setAnimationMsg.entity,
+                              setAnimationMsg.animationIndex);
+
+            break;
+        }
         default:
             messages->Extract(header.size);
             break;
@@ -728,6 +774,10 @@ ds_render::Mesh Render::CreateMeshFromMeshResource(const std::string &filePath)
                 meshResource->GetNumIndices(iSubMesh), ds_render::Material()));
         }
     }
+    else
+    {
+        std::cout << filePath << " failed to load." << std::endl;
+    }
 
     return mesh;
 }
@@ -797,7 +847,7 @@ ds_render::Material Render::CreateMaterialFromMaterialResource(
     return material;
 }
 
-void Render::RenderScene()
+void Render::RenderScene(float deltaTime)
 {
     // If there is a camera in the scene
     if (m_cameraActive)
@@ -856,14 +906,20 @@ void Render::RenderScene()
                     &m_transformComponentManager.GetWorldTransform(
                         transformInstance));
 
-                // Get bone transform data to bind to shader
-                std::vector<ds_math::Matrix4> boneTransforms;
                 // First, get mesh resource that holds skeleton/animation data
                 MeshResource *meshResource =
                     (MeshResource *)m_handleManager.Get(
                         mesh.GetMeshResourceHandle());
+                // Get bone transform data to bind to shader
+                std::vector<ds_math::Matrix4> boneTransforms(
+                    MeshResource::MAX_BONES, ds_math::Matrix4());
+
                 // Then query mesh resource for data
-                meshResource->BoneTransform(m_timeInSeconds, &boneTransforms);
+                meshResource->BoneTransform(deltaTime, &boneTransforms);
+                // for (auto mat : boneTransforms)
+                // {
+                //     std::cout << mat << std::endl;
+                // }
                 m_objectBufferDescrip.InsertMemberData(
                     "Object.boneTransforms",
                     MeshResource::MAX_BONES * sizeof(ds_math::Matrix4),
