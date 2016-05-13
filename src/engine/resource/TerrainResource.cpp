@@ -133,6 +133,8 @@ std::unique_ptr<IResource> TerrainResource::CreateFromFile(std::string filePath)
 
 TerrainResource::TerrainResource()
 {
+    m_maxTerrainHeight = 0.5f;
+    m_minTerrainHeight = -0.5f;
 }
 
 
@@ -367,6 +369,10 @@ void TerrainResource::CenterVertices(unsigned int width, unsigned int height)
 
 void TerrainResource::SetHeightScale(float heightScale)
 {
+    // Update max and minimum terrain height
+    m_maxTerrainHeight *= heightScale;
+    m_minTerrainHeight *= heightScale;
+
     // Scale vertices
     for (unsigned int i = 0; i < m_terrain.m_vertices.size(); ++i)
     {
@@ -379,5 +385,15 @@ void TerrainResource::SetHeightScale(float heightScale)
     {
         m_heights[i] *= heightScale;
     }
+}
+
+float TerrainResource::GetMaxTerrainHeight() const
+{
+    return m_maxTerrainHeight;
+}
+
+float TerrainResource::GetMinTerrainHeight() const
+{
+    return m_minTerrainHeight;
 }
 }

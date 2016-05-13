@@ -4,11 +4,13 @@
 
 #include "btBulletDynamicsCommon.h"
 
+#include "engine/common/HandleManager.h"
 #include "engine/resource/ResourceFactory.h"
 #include "engine/resource/TerrainResource.h"
 #include "engine/system/ISystem.h"
 #include "engine/system/physics/PhysicsComponentManager.h"
 #include "engine/system/scene/TransformComponentManager.h"
+#include "engine/system/render/TerrainComponentManager.h"
 
 namespace ds
 {
@@ -21,6 +23,24 @@ public:
     virtual void Shutdown();
     virtual void PostMessages(const ds_msg::MessageStream &messages);
     virtual ds_msg::MessageStream CollectMessages();
+
+    /**
+     * Return required script bindings.
+     *
+     * @return  ScriptBindingSet, the script bindings the physics system wants
+     * to register with the Script system.
+     */
+    virtual ScriptBindingSet GetScriptBindings() const;
+
+    /**
+     * Get the height of the given terrain entity at the given position.
+     *
+     * @param   entity    Entity, the terrain entity to query the height of.
+     * @param   position  const ds_math::Vector3 &, position to get terrain
+     *                    height at.
+     * @return            float, terrain height at the given position.
+     */
+    float GetTerrainHeight(Entity entity, const ds_math::Vector3 &position);
 
 private:
     void ProcessEvents(ds_msg::MessageStream *messages);
@@ -44,17 +64,20 @@ private:
                                  float mass);
 
     /**
-     * Create a bullet rigid body for a height map from the given parameters.
+     * Create a bullet rigid body for a height map from the given
+     * TerrainResource, modify the terrain resource to be scaled by the given
+     * heightscale.
      *
      * btRigidBody should be freed by user.
      *
-     * @param   origin             const ds_math::Vector3 &, origin of rigid
-     *                             body.
-     * @param   heightmapFilePath  const std::string &, path to heightmap file.
-     * @param   heightScale        float, factor to scale terrain height by.
+     * @param   origin           const ds_math::Vector3 &, origin of rigid
+     *                           body.
+     * @param   terrainResource  TerrainResource *, pointer to terrain resource
+     * to construct rigidbody from.
+     * @param   heightScale      float, factor to scale terrain height by.
      */
     btRigidBody *CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
-                                          const std::string &heightmapFilePath,
+                                          TerrainResource *terrainResource,
                                           float heightScale);
 
     btDiscreteDynamicsWorld *m_dynamicsWorld;
@@ -68,11 +91,16 @@ private:
     TransformComponentManager m_transformComponentManager;
     /** Physics component manager */
     PhysicsComponentManager m_physicsComponentManager;
+    /** Terrain component manager */
+    ds_render::TerrainComponentManager m_terrainComponentManager;
 
     /** Resource factory */
     ResourceFactory m_factory;
 
     /** Heightmap data */
     std::vector<std::vector<float>> m_heightmapData;
+
+    /** Manage storage of terrain resources */
+    ds::HandleManager m_handleManager;
 };
 }

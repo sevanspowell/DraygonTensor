@@ -4,8 +4,14 @@
 
 #include "engine/common/StringIntern.h"
 #include "engine/message/MessageHelper.h"
-#include "engine/system/physics/Physics.h"
 #include "engine/resource/TextureResource.h"
+#include "engine/system/physics/Physics.h"
+#include "engine/system/render/RenderCommon.h"
+
+namespace ds_lua
+{
+extern ds::ScriptBindingSet LoadPhysicsScriptBindings();
+}
 
 namespace ds
 {
@@ -169,6 +175,16 @@ ds_msg::MessageStream Physics::CollectMessages()
     m_messagesGenerated.Clear();
 
     return tmp;
+}
+
+ScriptBindingSet Physics::GetScriptBindings() const
+{
+    return ds_lua::LoadPhysicsScriptBindings();
+}
+
+float Physics::GetTerrainHeight(Entity entity, const ds_math::Vector3 &position)
+{
+    return 1.0f;
 }
 
 void Physics::ProcessEvents(ds_msg::MessageStream *messages)
@@ -359,18 +375,49 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                             origin = ds_math::Vector3(temp.x, temp.y, temp.z);
                         }
 
-                        // Create rigid body
-                        btRigidBody *rigidBody = CreateHeightMapRigidBody(
-                            origin, fullPath.str(), heightScale);
+                        // Get the terrain data 
+                        TerrainResource *terrainResource =
+                            m_factory.CreateResource<TerrainResource>(
+                                         fullPath.str())
+                                .release();
 
-                        if (rigidBody != nullptr)
+                        if (terrainResource != nullptr)
                         {
-                            // Add rigid body to physics component
-                            m_physicsComponentManager.SetRigidBody(phys,
-                                                                   rigidBody);
+                            // Create rigid body
+                            btRigidBody *rigidBody = CreateHeightMapRigidBody(
+                                origin, terrainResource, heightScale);
 
-                            // Add rigid body to world
-                            m_dynamicsWorld->addRigidBody(rigidBody);
+                            if (rigidBody != nullptr)
+                            {
+                                // Add rigid body to physics component
+                                m_physicsComponentManager.SetRigidBody(
+                                    phys, rigidBody);
+
+                                // Add rigid body to world
+                                m_dynamicsWorld->addRigidBody(rigidBody);
+
+                                // If successful, store terrain resource, get
+                                // handle to it
+                                ds_render::TerrainResourceHandle
+                                    terrainResourceHandle =
+                                        (ds_render::TerrainResourceHandle)
+                                            m_handleManager.Add(
+                                                (void *)terrainResource, 0);
+
+                                // Associate terrain resource with entity
+                                Instance terrain =
+                                    m_terrainComponentManager
+                                        .CreateComponentForEntity(entity);
+                                m_terrainComponentManager
+                                    .SetTerrainResourceHandle(
+                                        terrain, terrainResourceHandle);
+                            }
+                        }
+                        else
+                        {
+                            std::cerr << "Physics::CreateHeightmapRigidBody: "
+                                         "failed to load heightmap: "
+                                      << fullPath.str() << "." << std::endl;
                         }
                     }
                 }
@@ -462,10 +509,9 @@ btRigidBody *Physics::CreateRigidBody(const ds_math::Vector3 &origin,
     return rigidBody;
 }
 
-btRigidBody *
-Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
-                                  const std::string &heightmapFilePath,
-                                  float heightScale)
+btRigidBody *Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
+                                               TerrainResource *terrainResource,
+                                               float heightScale)
 {
     btRigidBody *rigidBody = nullptr;
 
@@ -477,9 +523,7 @@ Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
     // Create collision shape
     btCollisionShape *colShape = nullptr;
 
-    // Create terrain resource
-    std::unique_ptr<TerrainResource> terrainResource =
-        m_factory.CreateResource<TerrainResource>(heightmapFilePath);
+    // Set height scale of terrain resource
     terrainResource->SetHeightScale(heightScale);
 
     // Copy terrain data - bullet doesn't copy data we pass to it, we need to
@@ -491,17 +535,13 @@ Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
         colShape = new btHeightfieldTerrainShape(
             terrainResource->GetHeightmapWidth(),
             terrainResource->GetHeightmapHeight(), &m_heightmapData.back()[0],
-            1, -0.5f * 20.0f, 0.5f * 20.0f, 1, PHY_FLOAT, false);
+            1, -0.5f * heightScale, 0.5f * heightScale, 1, PHY_FLOAT, false);
 
         m_collisionShapes.push_back(colShape);
 
         btVector3 aabMin;
         btVector3 aabMax;
         colShape->getAabb(bodyTransform, aabMin, aabMax);
-        std::cout << "aabMin: " << aabMin.x() << ", " << aabMin.y() << ", "
-                  << aabMin.z() << std::endl;
-        std::cout << "aabMax: " << aabMax.x() << ", " << aabMax.y() << ", "
-                  << aabMax.z() << std::endl;
 
         if (colShape != nullptr)
         {
@@ -517,14 +557,7 @@ Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
                 bodyMass, bodyMotionState, colShape, localInertia);
 
             rigidBody = new btRigidBody(rbInfo);
-            std::cout << "Created height map rigid body!" << std::endl;
         }
-    }
-    else
-    {
-        std::cerr
-            << "Physics::CreateHeightmapRigidBody: failed to load heightmap: "
-            << heightmapFilePath << std::endl;
     }
 
     return rigidBody;

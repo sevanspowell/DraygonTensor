@@ -86,4 +86,6 @@ typedef ds::Handle TextureHandle;
 typedef ds::Handle ConstantBufferHandle;
 /** Handle to mesh resource */
 typedef ds::Handle MeshResourceHandle;
+/** Handle to terrain resource */
+typedef ds::Handle TerrainResourceHandle;
 }
