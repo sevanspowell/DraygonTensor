@@ -1,6 +1,7 @@
 subdirs(
     animation
     bullet
+    pathfinding
     physics
     render_system
     script_console
