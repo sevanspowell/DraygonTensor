@@ -351,7 +351,7 @@ public:
         void Reset()
         {
             // Zero memory of structure
-            memset(ids, 0, NUM_BONES_PER_VERTEX * sizeof(uint));
+            memset(ids, 0, NUM_BONES_PER_VERTEX * sizeof(unsigned int));
             memset(weights, 0, NUM_BONES_PER_VERTEX * sizeof(float));
         };
 
