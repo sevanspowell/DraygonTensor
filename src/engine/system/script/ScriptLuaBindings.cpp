@@ -68,7 +68,7 @@ static int l_IsNextMessage(lua_State *L)
     // Push script system pointer onto stack
     lua_getglobal(L, "__Script");
 
-    // If first item on stack isn't user data (our input system)
+    // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
     {
         // Error
@@ -104,7 +104,7 @@ static int l_GetNextMessage(lua_State *L)
     // Push script system pointer onto stack
     lua_getglobal(L, "__Script");
 
-    // If first item on stack isn't user data (our input system)
+    // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
     {
         // Error
@@ -210,7 +210,7 @@ static int l_MoveEntity(lua_State *L)
     // Push script system pointer onto stack
     lua_getglobal(L, "__Script");
 
-    // If first item on stack isn't user data (our input system)
+    // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
     {
         // Error
@@ -255,7 +255,7 @@ static int l_GetWorldTransform(lua_State *L)
     // Push script system pointer onto stack
     lua_getglobal(L, "__Script");
 
-    // If first item on stack isn't user data (our input system)
+    // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
     {
         // Error
@@ -310,7 +310,7 @@ static int l_GetLocalTransform(lua_State *L)
     // Push script system pointer onto stack
     lua_getglobal(L, "__Script");
 
-    // If first item on stack isn't user data (our input system)
+    // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
     {
         // Error
@@ -365,7 +365,7 @@ static int l_SetLocalTransform(lua_State *L)
     // Push script system pointer onto stack
     lua_getglobal(L, "__Script");
 
-    // If first item on stack isn't user data (our input system)
+    // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
     {
         // Error
@@ -409,7 +409,7 @@ static int l_SetEntityAnimationIndex(lua_State *L)
     // Push script system pointer onto stack
     lua_getglobal(L, "__Script");
 
-    // If first item on stack isn't user data (our input system)
+    // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
     {
         // Error

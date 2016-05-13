@@ -162,6 +162,14 @@ public:
      */
     ds_msg::MessageStream GetNextScriptMessage();
 
+    /**
+     * Rotate an entity to look at a target.
+     *
+     * @param  entity  Entity, entity to get to look at target.
+     * @param  target  const ds_math::Vector3 &, target to look at.
+     */
+    void LookAt(Entity entity, const ds_math::Vector3 &target);
+
 private:
     /**
      * Process messages in the given message stream.

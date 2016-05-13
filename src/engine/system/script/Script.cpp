@@ -287,6 +287,11 @@ ds_msg::MessageStream Script::GetNextScriptMessage()
     return msg;
 }
 
+void Script::LookAt(Entity entity, const ds_math::Vector3 &target)
+{
+    
+}
+
 void Script::ProcessEvents(ds_msg::MessageStream *messages)
 {
     while (messages->AvailableBytes() != 0)
