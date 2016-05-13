@@ -308,7 +308,7 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                         }
                         else
                         {
-                            std::cout
+                            std::cerr
                                 << "Number of materials specified in "
                                 << meshResourcePath.str()
                                 << " not equal to number of submeshes in mesh."
@@ -776,7 +776,7 @@ ds_render::Mesh Render::CreateMeshFromMeshResource(const std::string &filePath)
     }
     else
     {
-        std::cout << filePath << " failed to load." << std::endl;
+        std::cerr << filePath << " failed to load." << std::endl;
     }
 
     return mesh;
@@ -914,12 +914,12 @@ void Render::RenderScene(float deltaTime)
                 std::vector<ds_math::Matrix4> boneTransforms(
                     MeshResource::MAX_BONES, ds_math::Matrix4());
 
-                // Then query mesh resource for data
-                meshResource->BoneTransform(deltaTime, &boneTransforms);
-                // for (auto mat : boneTransforms)
-                // {
-                //     std::cout << mat << std::endl;
-                // }
+                // If we have mesh resource (terrain components don't)
+                if (meshResource != nullptr)
+                {
+                    // Then query mesh resource for data
+                    meshResource->BoneTransform(deltaTime, &boneTransforms);
+                }
                 m_objectBufferDescrip.InsertMemberData(
                     "Object.boneTransforms",
                     MeshResource::MAX_BONES * sizeof(ds_math::Matrix4),
