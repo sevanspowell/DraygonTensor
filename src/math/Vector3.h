@@ -7,6 +7,7 @@
 namespace ds_math
 {
 class Matrix4;
+class Quaternion;
 /**
  *  Vector-3 class.
  */
@@ -163,8 +164,8 @@ public:
      * @pre Magnitude of vector is not 0.
      *
      * @param  vec  const Vector3 &, vector to normalize.
-     * @return      Vector3, vector in same direction as given vector, but with a
-     *  magnitude of 1.
+     * @return      Vector3, vector in same direction as given vector, but with
+     * a magnitude of 1.
      */
     static Vector3 Normalize(const Vector3 &vec);
     /**
@@ -185,6 +186,17 @@ public:
      * @param  matrix  const Matrix4 &, matrix to use as transform.
      */
     static Vector3 Transform(const Vector3 &vec, const Matrix4 &matrix);
+    /**
+     * Get a quaternion representing the rotation from the first provided vector
+     * to the second.
+     *
+     * @param   vec1  const Vector3 &, rotation from this vector.
+     * @param   vec2  const Vector3 &, rotation to this vector.
+     * @return        Quaternion, quaternion representing rotation from the
+     * first provided vector to the second.
+     */
+    static Quaternion GetRotationFromTo(const Vector3 &vec1,
+                                        const Vector3 &vec2);
 
     /** Unit vector in the X direction. */
     static const Vector3 UnitX;

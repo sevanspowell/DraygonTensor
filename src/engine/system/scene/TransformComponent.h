@@ -7,6 +7,9 @@ namespace ds
 {
 struct TransformComponent
 {
+    ds_math::Vector3 position;
+    ds_math::Vector3 scale;
+    ds_math::Quaternion orientation;
     ds_math::Matrix4 localTransform;
     ds_math::Matrix4 worldTransform;
     Instance parent;

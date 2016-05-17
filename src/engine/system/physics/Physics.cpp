@@ -184,7 +184,57 @@ ScriptBindingSet Physics::GetScriptBindings() const
 
 float Physics::GetTerrainHeight(Entity entity, const ds_math::Vector3 &position)
 {
-    return 1.0f;
+    float result = 0.0f;
+
+    btVector3 start = btVector3(position.x, position.y, position.z);
+    btVector3 end = btVector3(position.x, position.y - 1000.0f, position.z);
+
+    btCollisionWorld::ClosestRayResultCallback rayCallback(start, end);
+
+    // Perform raycast
+    m_dynamicsWorld->rayTest(start, end, rayCallback);
+
+    if (rayCallback.hasHit())
+    {
+        end = rayCallback.m_hitPointWorld;
+        btVector3 normal = rayCallback.m_hitNormalWorld;
+
+        btVector3 startToEnd = start - end;
+        result = ds_math::Vector3::Magnitude(ds_math::Vector3(
+            startToEnd.getX(), startToEnd.getY(), startToEnd.getZ()));
+    }
+
+    return result;
+}
+
+Physics::Raycast Physics::PerformRaycast(const ds_math::Vector3 &rayStart,
+                                         const ds_math::Vector3 &rayEnd)
+{
+    Raycast result = {rayStart, rayEnd, ds_math::Vector3(0.0f, 0.0f, 0.0f),
+                      false};
+
+    btVector3 start = btVector3(rayStart.x, rayStart.y, rayStart.z);
+    btVector3 end = btVector3(rayEnd.x, rayEnd.y, rayEnd.z);
+
+    btCollisionWorld::ClosestRayResultCallback rayCallback(start, end);
+
+    // Perform raycast
+    m_dynamicsWorld->rayTest(start, end, rayCallback);
+
+    if (rayCallback.hasHit())
+    {
+        btVector3 normal = rayCallback.m_hitNormalWorld;
+
+        result.start = rayStart;
+        result.end.x = rayCallback.m_hitPointWorld.getX();
+        result.end.y = rayCallback.m_hitPointWorld.getY();
+        result.end.z = rayCallback.m_hitPointWorld.getZ();
+        result.normal =
+            ds_math::Vector3(normal.getX(), normal.getY(), normal.getZ());
+        result.hasHit = true;
+    }
+
+    return result;
 }
 
 void Physics::ProcessEvents(ds_msg::MessageStream *messages)
@@ -375,7 +425,7 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                             origin = ds_math::Vector3(temp.x, temp.y, temp.z);
                         }
 
-                        // Get the terrain data 
+                        // Get the terrain data
                         TerrainResource *terrainResource =
                             m_factory.CreateResource<TerrainResource>(
                                          fullPath.str())

@@ -18,6 +18,14 @@ class Physics : public ISystem
 {
 
 public:
+    struct Raycast
+    {
+        ds_math::Vector3 start;
+        ds_math::Vector3 end;
+        ds_math::Vector3 normal;
+        bool hasHit;
+    };
+
     virtual bool Initialize(const Config &config);
     virtual void Update(float deltaTime);
     virtual void Shutdown();
@@ -41,6 +49,22 @@ public:
      * @return            float, terrain height at the given position.
      */
     float GetTerrainHeight(Entity entity, const ds_math::Vector3 &position);
+
+    /**
+     * Perform a raycast into the physics world.
+     *
+     * If the raycast hits something (raycast.hasHit == true) then the raycast
+     * end position will be where the ray hit something and the raycast normal
+     * is a world-space normal of the surface hit. If the ray cast doesn't hit
+     * anything (raycast.hasHit == false) then the end position will be the
+     * rayEnd and the normal will be a zero vector.
+     *
+     * @param   rayStart  const ds_math::Vector3 &, start of the ray.
+     * @param   rayEnd    const ds_math::Vector3 &, end of the ray.
+     * @return            Raycast, struct containing raycast hit information.
+     */
+    Raycast PerformRaycast(const ds_math::Vector3 &rayStart,
+                           const ds_math::Vector3 &rayEnd);
 
 private:
     void ProcessEvents(ds_msg::MessageStream *messages);

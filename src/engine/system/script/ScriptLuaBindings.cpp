@@ -344,6 +344,10 @@ static int l_GetLocalTransform(lua_State *L)
             // from top of stack)
             lua_setmetatable(L, -2);
         }
+        else
+        {
+            return luaL_error(L, "Given entity is not valid.");
+        }
     }
 
     // Entity argument, matrix4 result
