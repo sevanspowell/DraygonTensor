@@ -58,7 +58,9 @@ enum class MessageType
     // Set an entity's local transform
     SetLocalTransform,
     // Set an entity's animation
-    SetAnimationIndex
+    SetAnimationIndex,
+    // Set the linear velocity of an entity
+    SetLinearVelocity
 };
 
 /**
@@ -159,5 +161,11 @@ struct SetAnimationIndex
 {
     ds::Entity entity;  // Entity to set the animation index of
     int animationIndex; // New animation index
+};
+
+struct SetLinearVelocity
+{
+    ds::Entity entity; // Entity to set the linear velocity of
+    ds_math::Vector3 velocity; // Velocity to set
 };
 }

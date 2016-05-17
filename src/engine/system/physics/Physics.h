@@ -65,6 +65,24 @@ public:
      */
     Raycast PerformRaycast(const ds_math::Vector3 &rayStart,
                            const ds_math::Vector3 &rayEnd);
+    /**
+     * Set the linear velocity of the rigidbody associated with the given entity
+     * (if any).
+     *
+     * @param  entity    Entity, entity to set the linear velocity of.
+     * @param  velocity  const ds_math::Vector3 &, linear velocity to set.
+     */
+    void SetLinearVelocity(Entity entity, const ds_math::Vector3 &velocity);
+
+    /**
+     * Get the linear velocity of the rigidbody associated with the given entity
+     * (if any).
+     *
+     * @param   entity  Entity, entity to get the linear velocity of.
+     * @return          ds_math::Vector3, the linear velocity of the
+     *                  entity.
+     */
+    ds_math::Vector3 GetLinearVelocity(Entity entity) const;
 
 private:
     void ProcessEvents(ds_msg::MessageStream *messages);
@@ -99,10 +117,27 @@ private:
      * @param   terrainResource  TerrainResource *, pointer to terrain resource
      * to construct rigidbody from.
      * @param   heightScale      float, factor to scale terrain height by.
+     * @return                   btRigidBody *, pointer to rigidbody created.
      */
     btRigidBody *CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
                                           TerrainResource *terrainResource,
                                           float heightScale);
+
+    /**
+     * Create a Bullet dynamic character controller.
+     *
+     * btRigidBody returned should be freed by the caller.
+     *
+     * @param   origin  const ds_math::Vector3 &, origin of rigid body.
+     * @param   radius  float, radius of the character capsule.
+     * @param   height  float, height of the character capsule.
+     * @param   mass    float, mass of the character shape.
+     * @return          btRigidBody *, pointer to rigidbody created.
+     */
+    btRigidBody *CreatePlayerCapsule(const ds_math::Vector3 &origin,
+                                     float radius,
+                                     float height,
+                                     float mass);
 
     btDiscreteDynamicsWorld *m_dynamicsWorld;
     btSequentialImpulseConstraintSolver *m_solver;
