@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "engine/system/render/Skybox.h"
 #include "engine/common/HandleManager.h"
 #include "engine/resource/MeshResource.h"
 #include "engine/resource/ResourceFactory.h"
@@ -105,13 +106,26 @@ private:
     void ProcessEvents(ds_msg::MessageStream *messages);
 
     /**
-     * Create a Texture object from a path to a texture resource.
+     * Create a Texture object from a texture sampler type and a list of file
+     * paths that will be bound to that sampler. In the case of a cubemap
+     * sampler for example, 6 images should be provided.
      *
-     * @param   filePath  const std::string &, path to texture resource.
-     * @return            ds_render::Texture, texture created.
+     * @param   samplerType  const ds_render::SamplerType &, type of the sampler
+     * to use to sample the provided texture resources.
+     * @param   filePaths  const std::vector<std::string> &, path to texture
+     *                     resources.
+     * @return             ds_render::Texture, texture created.
      */
     ds_render::Texture
-    CreateTextureFromTextureResource(const std::string &filePath);
+    CreateTextureFromTextureResource(const ds_render::SamplerType &samplerType,
+                                     const std::vector<std::string> &filePaths);
+
+    /**
+     * Create the mesh for a skybox.
+     *
+     * @return  ds_render::Mesh, skybox mesh.
+     */
+    ds_render::Mesh CreateSkyboxMesh();
 
     /**
      * Create a Mesh object from a path to a mesh resource.
@@ -167,6 +181,13 @@ private:
      */
     void SetAnimationIndex(Entity entity, int animationIndex);
 
+    /**
+     * Set the skybox material.
+     *
+     * @param  skyboxMaterial  const std::string &, path to skybox material.
+     */
+    void SetSkyboxMaterial(const std::string &skyboxMaterial);
+
     /** Messages generated and received by this system */
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
 
@@ -201,5 +222,9 @@ private:
 
     /** Manage storage of mesh resources among other things */
     ds::HandleManager m_handleManager;
+
+    /** Skybox */
+    ds_render::Skybox m_skybox;
+    bool m_hasSkybox;
 };
 }

@@ -293,6 +293,17 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
                      << setAnimationMsg.animationIndex << std::endl;
             break;
         }
+        case ds_msg::MessageType::SetSkyboxMaterial:
+        {
+            ds_msg::SetSkyboxMaterial setSkyboxMaterialMsg;
+            (*messages) >> setSkyboxMaterialMsg;
+
+            m_buffer << "Console out: set skybox material to: "
+                     << StringIntern::Instance().GetString(
+                            setSkyboxMaterialMsg.skyboxMaterialPath)
+                     << std::endl;
+            break;
+        }
         default:
             // Always extract the payload
             messages->Extract(header.size);

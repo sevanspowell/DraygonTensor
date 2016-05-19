@@ -6,6 +6,7 @@ subdirs(
     render_system
     script_console
     script_message
+    skybox
     sound
     terrain
 )

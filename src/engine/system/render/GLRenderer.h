@@ -38,6 +38,14 @@ public:
     virtual void SetClearColour(float r, float g, float b, float a);
 
     /**
+     * Enable or disable writing to the depth buffer.
+     *
+     * @param  enableDisableDepthMask  bool, TRUE to enable depth buffer
+     * writing, FALSE to disable it.
+     */
+    virtual void SetDepthWriting(bool enableDisableDepthWriting);
+
+    /**
      * Clear the colour, depth and/or stencil buffers of the renderer.
      *
      * Buffers passed a value of TRUE are cleared, buffers passed a value OF
@@ -154,23 +162,60 @@ public:
                                           const void *data);
 
     /**
+     * Create a cubemap texture.
+     *
+     * @param  format           ImageFormat, composition of each element in
+     * data. Number of colour components in the textures.
+     * @param  imageDataType    RenderDataType, data type of pixel data for all
+     * images.
+     * @param  internalFormat   InternalImageFormat, request the renderer to
+     * store the image data in a specific format.
+     * @param  width            unsigned int, width of all images in pixels.
+     * @param  height           unsigend int, height of all images in pixels.
+     * @param  dataFrontImage   const void *, pointer to front image data.
+     * @param  dataBackImage    const void *, pointer to back image data.
+     * @param  dataLeftImage    const void *, pointer to left image data.
+     * @param  dataRightImage   const void *, pointer to right image data.
+     * @param  dataTopImage     const void *, pointer to top image data.
+     * @param  dataBottomImage  const void *, pointer to bottom image data.
+     */
+    virtual TextureHandle
+    CreateCubemapTexture(ImageFormat format,
+                         RenderDataType imageDataType,
+                         InternalImageFormat internalFormat,
+                         unsigned int width,
+                         unsigned int height,
+                         const void *dataFrontImage,
+                         const void *dataBackImage,
+                         const void *dataLeftImage,
+                         const void *dataRightImage,
+                         const void *dataTopImage,
+                         const void *dataBottomImage);
+
+    /**
      * Bind a texture to a sampler in the shader.
      *
-     * @param  programHandle  ProgramHandle, shader program containing sampler.
-     * @param  samplerName    const std::string &, name of the sampler in the
+     * @param  programHandle  ProgramHandle, shader program containing
+     * sampler.
+     * @param  samplerName    const std::string &, name of the sampler in
+     * the
      * shader
      * @param  textureHandle  TextureHandle, texture to bind to sampler.
      */
     virtual void BindTextureToSampler(ProgramHandle programHandle,
                                       const std::string &samplerName,
+                                      const SamplerType &samplerType,
                                       TextureHandle textureHandle);
 
     /**
      * Unbind texture from sampler.
      *
+     * @param  samplerType    const SamplerType &, type of sampler to unbind
+     * texture from.
      * @param  textureHandle  TextureHandle, texture to unbind.
      */
-    virtual void UnbindTextureFromSampler(TextureHandle textureHandle);
+    virtual void UnbindTextureFromSampler(const SamplerType &samplerType,
+                                          TextureHandle textureHandle);
 
     /**
      * Memory layout of constant buffer in renderer may not match that of C/C++.
@@ -216,10 +261,9 @@ public:
      * constant buffer to use to fill constant buffer data in given shader
      * program.
      */
-    virtual void
-    BindConstantBuffer(ProgramHandle programHandle,
-                       const std::string &constantBufferName,
-                       ConstantBufferHandle constantBufferHandle);
+    virtual void BindConstantBuffer(ProgramHandle programHandle,
+                                    const std::string &constantBufferName,
+                                    ConstantBufferHandle constantBufferHandle);
 
     /**
      * Update the data associated with the given constant buffer.
@@ -406,6 +450,15 @@ private:
      */
     GLenum
     ToGLInternalImageFormat(InternalImageFormat internalImageFormat) const;
+
+    /**
+     * Convert an internal texture sampler type to an OpenGL-specific
+     * equivalent.
+     *
+     * @param   samplerType  const SamplerType &, internal texture sampler type.
+     * @return  GLenum, OpenGL internal image format.
+     */
+    GLenum ToGLSamplerType(const SamplerType &samplerType) const;
 
     /** Handle manager used to manage the handles of all OpenGL objects we
      * create */

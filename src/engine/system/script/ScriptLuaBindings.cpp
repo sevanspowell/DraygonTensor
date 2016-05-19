@@ -445,6 +445,48 @@ static int l_SetEntityAnimationIndex(lua_State *L)
     return 0;
 }
 
+static int l_SetSkyboxMaterial(lua_State *L)
+{
+    int n = lua_gettop(L);
+    int expected = 1;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push render system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our input system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        const char *skyboxMaterialPath = NULL;
+
+        skyboxMaterialPath = luaL_checkstring(L, 1);
+
+        if (skyboxMaterialPath != NULL)
+        {
+            scriptPtr->SetSkyboxMaterial(skyboxMaterialPath);
+        }
+    }
+
+    // String passed in
+    assert(lua_gettop(L) == 1);
+
+    return 0;
+}
+
 ds::ScriptBindingSet LoadScriptBindings()
 {
     ds::ScriptBindingSet scriptBindings;
@@ -456,6 +498,7 @@ ds::ScriptBindingSet LoadScriptBindings()
     scriptBindings.AddFunction("get_local_transform", l_GetLocalTransform);
     scriptBindings.AddFunction("set_local_transform", l_SetLocalTransform);
     scriptBindings.AddFunction("set_entity_animation_index", l_SetEntityAnimationIndex);
+    scriptBindings.AddFunction("set_skybox_material", l_SetSkyboxMaterial);
 
     return scriptBindings;
 }

@@ -289,7 +289,17 @@ ds_msg::MessageStream Script::GetNextScriptMessage()
 
 void Script::LookAt(Entity entity, const ds_math::Vector3 &target)
 {
-    
+}
+
+void Script::SetSkyboxMaterial(const std::string &skyboxMaterialPath)
+{
+    ds_msg::SetSkyboxMaterial setSkyboxMaterialMsg;
+    setSkyboxMaterialMsg.skyboxMaterialPath =
+        StringIntern::Instance().Intern(skyboxMaterialPath);
+
+    ds_msg::AppendMessage(
+        &m_messagesGenerated, ds_msg::MessageType::SetSkyboxMaterial,
+        sizeof(ds_msg::SetSkyboxMaterial), &setSkyboxMaterialMsg);
 }
 
 void Script::ProcessEvents(ds_msg::MessageStream *messages)

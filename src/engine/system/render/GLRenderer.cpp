@@ -40,6 +40,18 @@ void GLRenderer::SetClearColour(float r, float g, float b, float a)
     glClearColor(r, g, b, a);
 }
 
+void GLRenderer::SetDepthWriting(bool enableDisableDepthWriting)
+{
+    if (enableDisableDepthWriting == true)
+    {
+        glDepthMask(GL_TRUE);
+    }
+    else
+    {
+        glDepthMask(GL_FALSE);
+    }
+}
+
 void GLRenderer::ClearBuffers(bool colour, bool depth, bool stencil)
 {
     GLbitfield clearBuffers = 0;
@@ -296,8 +308,67 @@ TextureHandle GLRenderer::Create2DTexture(ImageFormat format,
     return (TextureHandle)StoreOpenGLObject(tex, GLObjectType::TextureObject);
 }
 
+TextureHandle
+GLRenderer::CreateCubemapTexture(ImageFormat format,
+                                 RenderDataType imageDataType,
+                                 InternalImageFormat internalFormat,
+                                 unsigned int width,
+                                 unsigned int height,
+                                 const void *dataFrontImage,
+                                 const void *dataBackImage,
+                                 const void *dataLeftImage,
+                                 const void *dataRightImage,
+                                 const void *dataTopImage,
+                                 const void *dataBottomImage)
+{
+    GLuint texCube;
+    glGenTextures(1, &texCube);
+
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texCube);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0,
+                 ToGLInternalImageFormat(internalFormat), width, height, 0,
+                 ToGLImageFormat(format), ToGLDataType(imageDataType),
+                 dataFrontImage);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0,
+                 ToGLInternalImageFormat(internalFormat), width, height, 0,
+                 ToGLImageFormat(format), ToGLDataType(imageDataType),
+                 dataBackImage);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0,
+                 ToGLInternalImageFormat(internalFormat), width, height, 0,
+                 ToGLImageFormat(format), ToGLDataType(imageDataType),
+                 dataLeftImage);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0,
+                 ToGLInternalImageFormat(internalFormat), width, height, 0,
+                 ToGLImageFormat(format), ToGLDataType(imageDataType),
+                 dataRightImage);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0,
+                 ToGLInternalImageFormat(internalFormat), width, height, 0,
+                 ToGLImageFormat(format), ToGLDataType(imageDataType),
+                 dataBottomImage);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0,
+                 ToGLInternalImageFormat(internalFormat), width, height, 0,
+                 ToGLImageFormat(format), ToGLDataType(imageDataType),
+                 dataTopImage);
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+    // Create handle to texture object
+    return (TextureHandle)StoreOpenGLObject(texCube,
+                                            GLObjectType::TextureObject);
+}
+
 void GLRenderer::BindTextureToSampler(ProgramHandle programHandle,
                                       const std::string &samplerName,
+                                      const SamplerType &samplerType,
                                       TextureHandle textureHandle)
 {
     // Is texture already bound to a texture slot?
@@ -332,7 +403,7 @@ void GLRenderer::BindTextureToSampler(ProgramHandle programHandle,
     if (GetOpenGLObject(textureHandle, GLObjectType::TextureObject, &tex))
     {
         glActiveTexture(GL_TEXTURE0 + textureSlot);
-        glBindTexture(GL_TEXTURE_2D, tex);
+        glBindTexture(ToGLSamplerType(samplerType), tex);
 
         GLuint program = 0;
         if (GetOpenGLObject(programHandle, GLObjectType::ProgramObject,
@@ -356,7 +427,8 @@ void GLRenderer::BindTextureToSampler(ProgramHandle programHandle,
     }
 }
 
-void GLRenderer::UnbindTextureFromSampler(TextureHandle textureHandle)
+void GLRenderer::UnbindTextureFromSampler(const SamplerType &samplerType,
+                              TextureHandle textureHandle)
 {
     // Find texture slot of texture
     std::vector<TextureHandle>::iterator it =
@@ -371,7 +443,7 @@ void GLRenderer::UnbindTextureFromSampler(TextureHandle textureHandle)
 
     // Unbind OpenGL texture from sampler
     glActiveTexture(GL_TEXTURE0 + textureSlot);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTexture(ToGLSamplerType(samplerType), 0);
 }
 
 void GLRenderer::GetConstantBufferDescription(
@@ -972,5 +1044,24 @@ GLenum GLRenderer::ToGLInternalImageFormat(
     }
 
     return format;
+}
+
+GLenum GLRenderer::ToGLSamplerType(const SamplerType &samplerType) const
+{
+    GLenum type = GL_INVALID_ENUM;
+
+    switch (samplerType)
+    {
+    case SamplerType::TwoDimensional:
+        type = GL_TEXTURE_2D;
+        break;
+    case SamplerType::Cubemap:
+        type = GL_TEXTURE_CUBE_MAP;
+        break;
+    default:
+        break;
+    }
+
+    return type;
 }
 }

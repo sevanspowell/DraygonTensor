@@ -35,6 +35,8 @@ bool Render::Initialize(const Config &config)
 
     m_cameraActive = false;
 
+    m_hasSkybox = false;
+
     return result;
 }
 
@@ -98,6 +100,29 @@ void Render::SetCameraOrientation(Entity entity,
     {
         m_cameraComponentManager.SetOrientation(i, orientation);
     }
+}
+
+void Render::SetSkyboxMaterial(const std::string &skyboxMaterial)
+{
+    std::stringstream skyboxMaterialFullPath;
+    skyboxMaterialFullPath << "../assets/" << skyboxMaterial;
+    // If this is the first time we are setting the skybox, make the mesh
+    if (m_hasSkybox == false)
+    {
+        m_skybox.SetMesh(CreateSkyboxMesh());
+    }
+
+    ds_render::Mesh currentMesh = m_skybox.GetMesh();
+    ds_render::SubMesh currentSubMesh = currentMesh.GetSubMesh(0);
+    // Update material
+    currentSubMesh.material = CreateMaterialFromMaterialResource(
+        skyboxMaterialFullPath.str(), m_sceneMatrices, m_objectMatrices);
+    // Update submesh
+    currentMesh.SetSubMesh(0, currentSubMesh);
+    // Update mesh
+    m_skybox.SetMesh(currentMesh);
+
+    m_hasSkybox = true;
 }
 
 void Render::SetAnimationIndex(Entity entity, int animationIndex)
@@ -576,6 +601,15 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 
             break;
         }
+        case ds_msg::MessageType::SetSkyboxMaterial:
+        {
+            ds_msg::SetSkyboxMaterial setSkyboxMaterialMsg;
+            (*messages) >> setSkyboxMaterialMsg;
+
+            SetSkyboxMaterial(StringIntern::Instance().GetString(
+                setSkyboxMaterialMsg.skyboxMaterialPath));
+            break;
+        }
         default:
             messages->Extract(header.size);
             break;
@@ -583,43 +617,167 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
     }
 }
 
-ds_render::Texture
-Render::CreateTextureFromTextureResource(const std::string &filePath)
+ds_render::Texture Render::CreateTextureFromTextureResource(
+    const ds_render::SamplerType &samplerType,
+    const std::vector<std::string> &filePaths)
 {
-    // Texture from texture resource
-    std::unique_ptr<TextureResource> textureResource =
-        m_factory.CreateResource<TextureResource>(filePath);
+    ds_render::Texture texture;
 
-    ds_render::ImageFormat format;
-    switch (textureResource->GetComponentFlag())
+    switch (samplerType)
     {
-    case TextureResource::ComponentFlag::GREY:
-        format = ds_render::ImageFormat::R;
-        break;
-    case TextureResource::ComponentFlag::GREYALPHA:
-        format = ds_render::ImageFormat::RG;
-        break;
-    case TextureResource::ComponentFlag::RGB:
-        format = ds_render::ImageFormat::RGB;
-        break;
-    case TextureResource::ComponentFlag::RGBA:
-        format = ds_render::ImageFormat::RGBA;
-        break;
-    default:
-        assert("Unsupported image component flag.");
-        format = ds_render::ImageFormat::RGBA;
+    case ds_render::SamplerType::TwoDimensional:
+    {
+        // Texture from texture resource
+        std::unique_ptr<TextureResource> textureResource =
+            m_factory.CreateResource<TextureResource>(filePaths[0]);
+
+        ds_render::ImageFormat format;
+        switch (textureResource->GetComponentFlag())
+        {
+        case TextureResource::ComponentFlag::GREY:
+            format = ds_render::ImageFormat::R;
+            break;
+        case TextureResource::ComponentFlag::GREYALPHA:
+            format = ds_render::ImageFormat::RG;
+            break;
+        case TextureResource::ComponentFlag::RGB:
+            format = ds_render::ImageFormat::RGB;
+            break;
+        case TextureResource::ComponentFlag::RGBA:
+            format = ds_render::ImageFormat::RGBA;
+            break;
+        default:
+            assert(false && "Unsupported image component flag.");
+            format = ds_render::ImageFormat::RGBA;
+            break;
+        }
+
+        // Create texture
+        texture = ds_render::Texture(
+            ds_render::SamplerType::TwoDimensional,
+            m_renderer->Create2DTexture(
+                format, ds_render::RenderDataType::UnsignedByte,
+                ds_render::InternalImageFormat::RGBA8, true,
+                textureResource->GetWidthInPixels(),
+                textureResource->GetHeightInPixels(),
+                textureResource->GetTextureContents()));
+
         break;
     }
+    case ds_render::SamplerType::Cubemap:
+    {
+        assert(filePaths.size() == 6 &&
+               "Incorrect number of cubemap images provided.");
+        // Get texture resources
+        std::vector<std::unique_ptr<TextureResource>> textureResources;
+        for (auto filePath : filePaths)
+        {
+            textureResources.push_back(
+                m_factory.CreateResource<TextureResource>(filePath));
+        }
 
-    // Create texture
-    ds_render::Texture texture = ds_render::Texture(m_renderer->Create2DTexture(
-        format, ds_render::RenderDataType::UnsignedByte,
-        ds_render::InternalImageFormat::RGBA8, true,
-        textureResource->GetWidthInPixels(),
-        textureResource->GetHeightInPixels(),
-        textureResource->GetTextureContents()));
+        // Use format of first image for all images
+        ds_render::ImageFormat format;
+        switch (textureResources[0]->GetComponentFlag())
+        {
+        case TextureResource::ComponentFlag::GREY:
+            format = ds_render::ImageFormat::R;
+            break;
+        case TextureResource::ComponentFlag::GREYALPHA:
+            format = ds_render::ImageFormat::RG;
+            break;
+        case TextureResource::ComponentFlag::RGB:
+            format = ds_render::ImageFormat::RGB;
+            break;
+        case TextureResource::ComponentFlag::RGBA:
+            format = ds_render::ImageFormat::RGBA;
+            break;
+        default:
+            assert(false && "Unsupported image component flag.");
+            format = ds_render::ImageFormat::RGBA;
+            break;
+        }
+
+        // Create texture
+        texture = ds_render::Texture(
+            ds_render::SamplerType::Cubemap,
+            m_renderer->CreateCubemapTexture(
+                format, ds_render::RenderDataType::UnsignedByte,
+                ds_render::InternalImageFormat::RGBA8,
+                textureResources[0]->GetWidthInPixels(), // Use width of first
+                // resource for all resources
+                textureResources[0]->GetHeightInPixels(), // Use height of first
+                // resource for all resources
+                textureResources[0]->GetTextureContents(),
+                textureResources[1]->GetTextureContents(),
+                textureResources[2]->GetTextureContents(),
+                textureResources[3]->GetTextureContents(),
+                textureResources[4]->GetTextureContents(),
+                textureResources[5]->GetTextureContents()));
+
+        break;
+    }
+    default:
+    {
+        assert(false && "Unhandled sampler type for texture.");
+        break;
+    }
+    }
 
     return texture;
+}
+
+ds_render::Mesh Render::CreateSkyboxMesh()
+{
+    ds_render::Mesh mesh = ds_render::Mesh();
+
+    // Create vertex buffer data store
+    ds_com::StreamBuffer vertexBufferStore;
+    // Create vertex buffer descriptor
+    ds_render::VertexBufferDescription vertexBufferDescriptor;
+
+    // Add vertex positions
+    vertexBufferStore << -1.0f;
+    vertexBufferStore << -1.0f;
+    vertexBufferStore << 1.0f;
+    vertexBufferStore << -1.0f;
+    vertexBufferStore << 1.0f;
+    vertexBufferStore << 1.0f;
+    vertexBufferStore << 1.0f;
+    vertexBufferStore << 1.0f;
+    vertexBufferStore << -1.0f;
+    vertexBufferStore << 1.0f;
+    vertexBufferStore << -1.0f;
+    vertexBufferStore << -1.0f;
+
+    // Describe position data
+    ds_render::VertexBufferDescription::AttributeDescription
+        positionAttributeDescriptor;
+    positionAttributeDescriptor.attributeType =
+        ds_render::AttributeType::Position;
+    positionAttributeDescriptor.attributeDataType =
+        ds_render::RenderDataType::Float;
+    positionAttributeDescriptor.numElementsPerAttribute = 2;
+    positionAttributeDescriptor.stride = 0;
+    positionAttributeDescriptor.offset = 0;
+    positionAttributeDescriptor.normalized = false;
+
+    // Add position attribute descriptor to buffer descriptor
+    vertexBufferDescriptor.AddAttributeDescription(positionAttributeDescriptor);
+
+    // Create vertex buffer
+    ds_render::VertexBufferHandle vb = m_renderer->CreateVertexBuffer(
+        ds_render::BufferUsageType::Static, vertexBufferDescriptor,
+        vertexBufferStore.AvailableBytes(), vertexBufferStore.GetDataPtr());
+
+    // Create mesh
+    mesh = ds_render::Mesh(vb, ds_render::IndexBufferHandle(),
+                           ds_render::MeshResourceHandle());
+
+    // Add submesh
+    mesh.AddSubMesh(ds_render::SubMesh(0, 6, ds_render::Material()));
+
+    return mesh;
 }
 
 ds_render::Mesh Render::CreateMeshFromMeshResource(const std::string &filePath)
@@ -823,19 +981,16 @@ ds_render::Material Render::CreateMaterialFromMaterialResource(
     for (auto samplerName : textureSamplerNames)
     {
         // Create texture from texture resource
-        const std::string &textureResourceFilePath =
-            materialResource->GetTextureResourceFilePath(samplerName);
+        // const std::string &textureResourceFilePath =
+        //     materialResource->GetTextureResourceFilePath(samplerName);
+        std::vector<std::string> textureResourceFilePaths =
+            materialResource->GetTextureSamplerFilePaths(samplerName);
 
-        // If special file path, create from material resource
-        if (textureResourceFilePath == "DIFFUSE")
-        {
-        }
-        // Else, create from file path
-        else
-        {
-            material.AddTexture(samplerName, CreateTextureFromTextureResource(
-                                                 textureResourceFilePath));
-        }
+        material.AddTexture(
+            samplerName,
+            CreateTextureFromTextureResource(
+                materialResource->GetTextureSamplerType(samplerName),
+                textureResourceFilePaths));
     }
 
     // Bind constant buffers to program
@@ -880,6 +1035,52 @@ void Render::RenderScene(float deltaTime)
                                               &projectionMatrix);
         m_renderer->UpdateConstantBufferData(m_sceneMatrices,
                                              m_sceneBufferDescrip);
+
+        if (m_hasSkybox)
+        {
+            // Render skybox
+            // Disable writing to the depth buffer so that the depth information
+            // of the skybox mesh isn't written to the depth buffer and hence
+            // everything is rendered on top of the skybox (given that the clear
+            // depth is 1.0f (far away as possible))
+            m_renderer->SetDepthWriting(false);
+            for (unsigned int iSubMesh = 0;
+                 iSubMesh < m_skybox.GetMesh().GetNumSubMeshes(); ++iSubMesh)
+            {
+                // Get material
+                ds_render::Material material =
+                    m_skybox.GetMesh().GetSubMesh(iSubMesh).material;
+
+                // Set shader program
+                m_renderer->SetProgram(material.GetProgram());
+
+                // For each texture in material, bind it to shader
+                for (auto samplerTexture : material.GetTextures())
+                {
+                    m_renderer->BindTextureToSampler(
+                        material.GetProgram(), samplerTexture.first,
+                        samplerTexture.second.GetSamplerType(),
+                        samplerTexture.second.GetTextureHandle());
+                }
+
+                // Draw the mesh
+                m_renderer->DrawVertices(
+                    m_skybox.GetMesh().GetVertexBuffer(),
+                    ds_render::PrimitiveType::Triangles,
+                    m_skybox.GetMesh().GetSubMesh(iSubMesh).startingIndex,
+                    m_skybox.GetMesh().GetSubMesh(iSubMesh).numIndices);
+
+                // For each texture in material, unbind
+                for (auto samplerTexture : material.GetTextures())
+                {
+                    m_renderer->UnbindTextureFromSampler(
+                        samplerTexture.second.GetSamplerType(),
+                        samplerTexture.second.GetTextureHandle());
+                }
+            }
+            // Re-enable depth writing
+            m_renderer->SetDepthWriting(true);
+        }
 
         // For each render component
         for (unsigned int i = 0; i < m_renderComponentManager.GetNumInstances();
@@ -943,6 +1144,7 @@ void Render::RenderScene(float deltaTime)
                 {
                     m_renderer->BindTextureToSampler(
                         material.GetProgram(), samplerTexture.first,
+                        samplerTexture.second.GetSamplerType(),
                         samplerTexture.second.GetTextureHandle());
                 }
 
@@ -957,6 +1159,7 @@ void Render::RenderScene(float deltaTime)
                 for (auto samplerTexture : material.GetTextures())
                 {
                     m_renderer->UnbindTextureFromSampler(
+                        samplerTexture.second.GetSamplerType(),
                         samplerTexture.second.GetTextureHandle());
                 }
             }

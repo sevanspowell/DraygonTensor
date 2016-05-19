@@ -5,6 +5,16 @@
 namespace ds_render
 {
 /**
+ * Possible texture types.
+ */
+enum class SamplerType 
+{
+    None,
+    TwoDimensional,
+    Cubemap
+};
+
+/**
  * Possible render data types.
  */
 enum class RenderDataType

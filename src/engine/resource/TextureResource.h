@@ -9,8 +9,6 @@
 
 namespace ds
 {
-
-
 /**
  * A texture resource.
  */

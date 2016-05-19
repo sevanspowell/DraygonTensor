@@ -7,6 +7,7 @@
 
 #include "engine/resource/IResource.h"
 #include "engine/system/render/UniformBlock.h"
+#include "engine/system/render/RenderCommon.h"
 
 namespace ds
 {
@@ -62,33 +63,56 @@ public:
     std::vector<std::string> GetTextureSamplerNames() const;
 
     /**
-     * Get the texture resource file path for the texture with the given texture
-     * sampler name (corresponding to the name of the texture used in the
-     * shader).
+     * Get the type (2D, Cubemap, etc.) of the texture sampler with the given
+     * name.
      *
-     * @pre  textureSamplerName must exist, use GetTextureSamplerNames to check.
-     *
-     * @param   textureSamplerName  const std::string &, sampler name of the
-     * texture.
-     * @return                      const std::string &, texture resource file
-     * path for the given texture sampler name.
+     * @param   samplerName  const std::string &, name of the texture sampler to
+     *                       get the type of.
+     * @return               ds_render::SamplerType, type of the texture
+     * sampler.
      */
-    const std::string &
-    GetTextureResourceFilePath(const std::string &textureSamplerName) const;
+    ds_render::SamplerType
+    GetTextureSamplerType(const std::string &samplerName) const;
 
     /**
-     * Set the texture resource file path of a given texture uniform name.
+     * Add a new empty texture sampler to the material resource with no texture
+     * file paths. If a texture sampler with that name already exists, it will
+     * be erased and a blank sampler entry created.
      *
-     * If textureUniformName already exists, will overwrite
-     * textureResourceFilePath, otherwise will add new texture entry.
-     *
-     * @param  textureUniformName  const std::string &, uniform name of the
-     * texture.
-     * @param  textureResourceFilePath  const std::string &, path to the texture
-     * resource.
+     * @param  samplerName  const std::string &, new texture sampler name.
+     * @param  type         const ds_render::SamplerType &, type of the texture
+     * sampler.
      */
-    void SetTextureResourceFilePath(const std::string &textureUniformName,
-                                    const std::string &textureResourceFilePath);
+    void AddTextureSampler(const std::string &samplerName,
+                           const ds_render::SamplerType &type);
+
+    /**
+     * Get the texture resource file paths for the sampler with the given
+     * sampler name (corresponding to the name of the texture sampler used in
+     * the shader).
+     *
+     * If no texture sampler with that name, returns empty vector.
+     *
+     * @param   samplerName  const std::string &, sampler name of the texture.
+     * @return               std::vector<std::string>, texture resource file
+     *                       paths for the given texture sampler name.
+     */
+    std::vector<std::string>
+    GetTextureSamplerFilePaths(const std::string &samplerName) const;
+
+    /**
+     * Add a texture resource file path to the texture sampler with the given
+     * name.
+     *
+     * @pre SamplerEntry for samplerName must exist.
+     *
+     * @param  samplerName              const std::string &, sampler name of the
+     *                                  texture.
+     * @param  textureResourceFilePath  const std::string &, path to the texture
+     *                                  resource to add to sampler entry.
+     */
+    void AddTextureSamplerFilePath(const std::string &samplerName,
+                                   const std::string &textureResourceFilePath);
 
     /**
      * Add a uniform block to the material.
@@ -105,10 +129,23 @@ public:
     const std::vector<ds_render::UniformBlock> &GetUniformBlocks() const;
 
 private:
+    /**
+     * A collection of textures that exist for a given texture type. Texture
+     * types might be 2D (1 image, 2D sampler), 3D (1 image, 3D sampler),
+     * Cubemap (6 images, 3D sampler) or HDR (1 image, 3D sampler).
+     */
+    struct SamplerEntry
+    {
+        /** Type of the texture */
+        ds_render::SamplerType type;
+        /** Collection of texture files that form this texture */
+        std::vector<std::string> filePaths;
+    };
+
     /** Path to material shader file */
     std::string m_shaderPath;
-    /** Map texture sampler name to path of texture */
-    std::map<std::string, std::string> m_textures;
+    /** Map texture sampler name to SamplerEntry */
+    std::map<std::string, SamplerEntry> m_textureSamplers;
     /** Uniform blocks */
     std::vector<ds_render::UniformBlock> m_uniformBlocks;
     /** This resource's file path */

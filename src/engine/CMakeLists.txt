@@ -50,6 +50,7 @@ set(ENGINE_INCLUDE_FILES
   system/render/Render.h
   system/render/RenderComponent.h
   system/render/RenderComponentManager.h
+  system/render/Skybox.h
   system/render/SubMesh.h
   system/render/TerrainComponent.h
   system/render/TerrainComponentManager.h
@@ -104,6 +105,7 @@ set(ENGINE_SRC_FILES
   system/render/Render.cpp
   system/render/RenderComponentManager.cpp
   system/render/RenderLuaBindings.cpp
+  system/render/Skybox.cpp
   system/render/TerrainComponentManager.cpp
   system/render/Texture.cpp
   system/render/Uniform.cpp

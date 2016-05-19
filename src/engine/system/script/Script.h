@@ -170,6 +170,14 @@ public:
      */
     void LookAt(Entity entity, const ds_math::Vector3 &target);
 
+    /**
+     * Set the material of the skybox.
+     *
+     * @param  skyboxMaterialPath  const std::string &, path to skybox material
+     * to set.
+     */
+    void SetSkyboxMaterial(const std::string &skyboxMaterialPath);
+
 private:
     /**
      * Process messages in the given message stream.

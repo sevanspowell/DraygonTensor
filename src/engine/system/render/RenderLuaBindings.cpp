@@ -111,6 +111,7 @@ ds::ScriptBindingSet LoadRenderScriptBindings()
                                l_GetCameraOrientation);
     scriptBindings.AddFunction("set_camera_orientation",
                                l_SetCameraOrientation);
+    // scriptBindings.AddFunction("set_skybox_material", l_SetSkyboxMaterial);
 
     return scriptBindings;
 }

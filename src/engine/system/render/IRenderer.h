@@ -52,6 +52,14 @@ public:
                               bool stencil = true) = 0;
 
     /**
+     * Enable or disable writing to the depth buffer.
+     *
+     * @param  enableDisableDepthMask  bool, TRUE to enable depth buffer
+     * writing, FALSE to disable it.
+     */
+    virtual void SetDepthWriting(bool enableDisableDepthWriting) = 0;
+
+    /**
      * Resize the viewport the renderer renders to.
      *
      * @param  newViewportWidth   unsigned int, new viewport width in pixels.
@@ -156,23 +164,60 @@ public:
                                           const void *data) = 0;
 
     /**
+     * Create a cubemap texture.
+     *
+     * @param  format           ImageFormat, composition of each element in
+     * data. Number of colour components in the textures.
+     * @param  imageDataType    RenderDataType, data type of pixel data for all
+     * images.
+     * @param  internalFormat   InternalImageFormat, request the renderer to
+     * store the image data in a specific format.
+     * @param  width            unsigned int, width of all images in pixels.
+     * @param  height           unsigend int, height of all images in pixels.
+     * @param  dataFrontImage   const void *, pointer to front image data.
+     * @param  dataBackImage    const void *, pointer to back image data.
+     * @param  dataLeftImage    const void *, pointer to left image data.
+     * @param  dataRightImage   const void *, pointer to right image data.
+     * @param  dataTopImage     const void *, pointer to top image data.
+     * @param  dataBottomImage  const void *, pointer to bottom image data.
+     */
+    virtual TextureHandle
+    CreateCubemapTexture(ImageFormat format,
+                         RenderDataType imageDataType,
+                         InternalImageFormat internalFormat,
+                         unsigned int width,
+                         unsigned int height,
+                         const void *dataFrontImage,
+                         const void *dataBackImage,
+                         const void *dataLeftImage,
+                         const void *dataRightImage,
+                         const void *dataTopImage,
+                         const void *dataBottomImage) = 0;
+
+    /**
      * Bind a texture to a sampler in the shader.
      *
-     * @param  programHandle  ProgramHandle, shader program containing sampler.
-     * @param  samplerName    const std::string &, name of the sampler in the
+     * @param  programHandle  ProgramHandle, shader program containing
+     * sampler.
+     * @param  samplerName    const std::string &, name of the sampler in
+     * the
      * shader
      * @param  textureHandle  TextureHandle, texture to bind to sampler.
      */
     virtual void BindTextureToSampler(ProgramHandle programHandle,
                                       const std::string &samplerName,
+                                      const SamplerType &samplerType,
                                       TextureHandle textureHandle) = 0;
 
     /**
      * Unbind texture from sampler.
      *
+     * @param  samplerType    const SamplerType &, type of sampler to unbind
+     * texture from.
      * @param  textureHandle  TextureHandle, texture to unbind.
      */
-    virtual void UnbindTextureFromSampler(TextureHandle textureHandle) = 0;
+    virtual void UnbindTextureFromSampler(const SamplerType &samplerType,
+                                          TextureHandle textureHandle) = 0;
 
     /**
      * Memory layout of constant buffer in renderer may not match that of C/C++.

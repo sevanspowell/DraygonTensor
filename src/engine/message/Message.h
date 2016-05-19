@@ -58,7 +58,9 @@ enum class MessageType
     // Set an entity's local transform
     SetLocalTransform,
     // Set an entity's animation
-    SetAnimationIndex
+    SetAnimationIndex,
+    // Set skybox material
+    SetSkyboxMaterial
 };
 
 /**
@@ -159,5 +161,10 @@ struct SetAnimationIndex
 {
     ds::Entity entity;  // Entity to set the animation index of
     int animationIndex; // New animation index
+};
+
+struct SetSkyboxMaterial
+{
+    ds::StringIntern::StringId skyboxMaterialPath; // Path to skybox material
 };
 }
