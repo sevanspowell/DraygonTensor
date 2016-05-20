@@ -9,4 +9,5 @@ subdirs(
     skybox
     sound
     terrain
+    ui
 )
