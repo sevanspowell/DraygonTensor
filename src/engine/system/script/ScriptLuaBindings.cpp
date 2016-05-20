@@ -487,6 +487,56 @@ static int l_SetSkyboxMaterial(lua_State *L)
     return 0;
 }
 
+static int l_CreateGUIPanel(lua_State *L)
+{
+    int n = lua_gettop(L);
+    int expected = 5;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push render system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our input system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        const char *materialPath = NULL;
+
+        float startX = (float)luaL_checknumber(L, 1);
+        float startY = (float)luaL_checknumber(L, 2);
+        float endX = (float)luaL_checknumber(L, 3);
+        float endY = (float)luaL_checknumber(L, 4);
+        materialPath = luaL_checkstring(L, 5);
+
+        if (materialPath != NULL)
+        {
+            ds::Entity *entity =
+                (ds::Entity *)lua_newuserdata(L, sizeof(ds::Entity));
+
+            *entity = scriptPtr->CreateGUIPanel(startX, startY, endX, endY,
+                                                materialPath);
+        }
+    }
+
+    // startX, startY, endX, endY, material path arguments and entity created
+    assert(lua_gettop(L) == 6);
+
+    return 1;
+}
+
 ds::ScriptBindingSet LoadScriptBindings()
 {
     ds::ScriptBindingSet scriptBindings;
@@ -497,8 +547,10 @@ ds::ScriptBindingSet LoadScriptBindings()
     scriptBindings.AddFunction("get_world_transform", l_GetWorldTransform);
     scriptBindings.AddFunction("get_local_transform", l_GetLocalTransform);
     scriptBindings.AddFunction("set_local_transform", l_SetLocalTransform);
-    scriptBindings.AddFunction("set_entity_animation_index", l_SetEntityAnimationIndex);
+    scriptBindings.AddFunction("set_entity_animation_index",
+                               l_SetEntityAnimationIndex);
     scriptBindings.AddFunction("set_skybox_material", l_SetSkyboxMaterial);
+    scriptBindings.AddFunction("create_gui_panel", l_CreateGUIPanel);
 
     return scriptBindings;
 }

@@ -63,7 +63,9 @@ enum class MessageType
     // Set skybox material
     SetSkyboxMaterial,
     // On mouse event
-    MouseMotion
+    MouseMotion,
+    // Create GUI panel message
+    CreatePanel
 };
 
 /**
@@ -173,12 +175,22 @@ struct SetSkyboxMaterial
 
 struct MouseMotion
 {
-    ds_platform::Mouse::ButtonState button; // State of the mouse buttons 
+    ds_platform::Mouse::ButtonState button; // State of the mouse buttons
     int x;              // x-coordinate of cursor, relative to window
     int y;              // y-coordinate of cursor, relative to window
     int xRel;           // relative motion of cursor in the x direction
     int yRel;           // relative motion of cursor in the y direction
     uint32_t timeStamp; // Time stamp of mouse motion event
     uint32_t windowID;  // ID of window with focus (if any)
+};
+
+struct CreatePanel
+{
+    ds::Entity entity;
+    float startX;
+    float startY;
+    float endX;
+    float endY;
+    ds::StringIntern::StringId materialPath;
 };
 }

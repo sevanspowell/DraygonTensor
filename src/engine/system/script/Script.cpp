@@ -302,6 +302,27 @@ void Script::SetSkyboxMaterial(const std::string &skyboxMaterialPath)
         sizeof(ds_msg::SetSkyboxMaterial), &setSkyboxMaterialMsg);
 }
 
+Entity Script::CreateGUIPanel(float startX,
+                            float startY,
+                            float endX,
+                            float endY,
+                            const std::string &materialPath)
+{
+    ds_msg::CreatePanel createPanelMsg;
+    createPanelMsg.entity = m_entityManager.Create();
+    createPanelMsg.startX = startX;
+    createPanelMsg.startY = startY;
+    createPanelMsg.endX = endX;
+    createPanelMsg.endY = endY;
+    createPanelMsg.materialPath = StringIntern::Instance().Intern(materialPath);
+
+    ds_msg::AppendMessage(&m_messagesGenerated,
+                          ds_msg::MessageType::CreatePanel,
+                          sizeof(ds_msg::CreatePanel), &createPanelMsg);
+
+    return createPanelMsg.entity;
+}
+
 void Script::ProcessEvents(ds_msg::MessageStream *messages)
 {
     while (messages->AvailableBytes() != 0)

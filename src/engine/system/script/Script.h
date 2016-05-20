@@ -178,6 +178,23 @@ public:
      */
     void SetSkyboxMaterial(const std::string &skyboxMaterialPath);
 
+    /**
+     * Send a create GUI panel message.
+     *
+     * @param  startX        float, start x co-ordinate of the panel.
+     * @param  startY        float, start y co-ordinate of the panel.
+     * @param  endX          float, end x co-ordinate of the panel.
+     * @param  endY          float, end y co-ordinate of the panel.
+     * @param  materialPath  const std::string &, path to material to use to
+     * render the panel.
+     * @return               Entity, entity id of panel.
+     */
+    Entity CreateGUIPanel(float startX,
+                          float startY,
+                          float endX,
+                          float endY,
+                          const std::string &materialPath);
+
 private:
     /**
      * Process messages in the given message stream.

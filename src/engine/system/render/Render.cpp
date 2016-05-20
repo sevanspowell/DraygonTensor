@@ -125,6 +125,104 @@ void Render::SetSkyboxMaterial(const std::string &skyboxMaterial)
     m_hasSkybox = true;
 }
 
+ds_render::Mesh Render::CreatePanelMesh(float startX,
+                                        float startY,
+                                        float endX,
+                                        float endY,
+                                        const std::string &materialPath)
+{
+    ds_render::Mesh mesh = ds_render::Mesh();
+
+    // Create vertex buffer data store
+    ds_com::StreamBuffer vertexBufferStore;
+    // Create vertex buffer descriptor
+    ds_render::VertexBufferDescription vertexBufferDescriptor;
+
+    // Add vertex positions
+    vertexBufferStore << startX;
+    vertexBufferStore << startY;
+    vertexBufferStore << endX;
+    vertexBufferStore << startY;
+    vertexBufferStore << endX;
+    vertexBufferStore << endY;
+    vertexBufferStore << startX;
+    vertexBufferStore << endY;
+
+    // Describe position data
+    ds_render::VertexBufferDescription::AttributeDescription
+        positionAttributeDescriptor;
+    positionAttributeDescriptor.attributeType =
+        ds_render::AttributeType::Position;
+    positionAttributeDescriptor.attributeDataType =
+        ds_render::RenderDataType::Float;
+    positionAttributeDescriptor.numElementsPerAttribute = 2;
+    positionAttributeDescriptor.stride = 0;
+    positionAttributeDescriptor.offset = 0;
+    positionAttributeDescriptor.normalized = false;
+
+    // Add position attribute descriptor to buffer descriptor
+    vertexBufferDescriptor.AddAttributeDescription(positionAttributeDescriptor);
+
+    // Add texcoord data
+    vertexBufferStore << 0.0f;
+    vertexBufferStore << 0.0f;
+    vertexBufferStore << 1.0f;
+    vertexBufferStore << 0.0f;
+    vertexBufferStore << 1.0f;
+    vertexBufferStore << 1.0f;
+    vertexBufferStore << 0.0f;
+    vertexBufferStore << 1.0f;
+
+    // Describe texCoord data
+    ds_render::VertexBufferDescription::AttributeDescription
+        texCoordAttributeDescriptor;
+    texCoordAttributeDescriptor.attributeType =
+        ds_render::AttributeType::TextureCoordinate;
+    texCoordAttributeDescriptor.attributeDataType =
+        ds_render::RenderDataType::Float;
+    texCoordAttributeDescriptor.numElementsPerAttribute = 2;
+    texCoordAttributeDescriptor.stride = 0;
+    texCoordAttributeDescriptor.offset = 8 * sizeof(float);
+    texCoordAttributeDescriptor.normalized = false;
+
+    // Add texcoord attribute descriptor to buffer descriptor
+    vertexBufferDescriptor.AddAttributeDescription(texCoordAttributeDescriptor);
+
+    // Create vertex buffer
+    ds_render::VertexBufferHandle vb = m_renderer->CreateVertexBuffer(
+        ds_render::BufferUsageType::Static, vertexBufferDescriptor,
+        vertexBufferStore.AvailableBytes(), vertexBufferStore.GetDataPtr());
+
+    // Create index buffer data store
+    ds_com::StreamBuffer indexBufferStore;
+
+    // Add indices
+    indexBufferStore << 0;
+    indexBufferStore << 1;
+    indexBufferStore << 3;
+    indexBufferStore << 3;
+    indexBufferStore << 1;
+    indexBufferStore << 2;
+
+    // Create index buffer
+    ds_render::IndexBufferHandle ib = m_renderer->CreateIndexBuffer(
+        ds_render::BufferUsageType::Static, indexBufferStore.AvailableBytes(),
+        indexBufferStore.GetDataPtr());
+
+    // Create mesh
+    mesh = ds_render::Mesh(vb, ib, ds_render::MeshResourceHandle());
+
+    std::stringstream materialFullPath;
+    materialFullPath << "../assets/" << materialPath;
+
+    // Add submesh
+    mesh.AddSubMesh(ds_render::SubMesh(
+        0, 6, CreateMaterialFromMaterialResource(
+                  materialFullPath.str(), m_sceneMatrices, m_objectMatrices)));
+
+    return mesh;
+}
+
 void Render::SetAnimationIndex(Entity entity, int animationIndex)
 {
     Instance i = m_renderComponentManager.GetInstanceForEntity(entity);
@@ -608,6 +706,22 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 
             SetSkyboxMaterial(StringIntern::Instance().GetString(
                 setSkyboxMaterialMsg.skyboxMaterialPath));
+            break;
+        }
+        case ds_msg::MessageType::CreatePanel:
+        {
+            ds_msg::CreatePanel createPanelMsg;
+            (*messages) >> createPanelMsg;
+
+            ds_render::Mesh mesh =
+                CreatePanelMesh(createPanelMsg.startX, createPanelMsg.startY,
+                                createPanelMsg.endX, createPanelMsg.endY,
+                                StringIntern::Instance().GetString(
+                                    createPanelMsg.materialPath));
+            Instance i = m_renderComponentManager.CreateComponentForEntity(
+                createPanelMsg.entity);
+
+            m_renderComponentManager.SetMesh(i, mesh);
             break;
         }
         default:

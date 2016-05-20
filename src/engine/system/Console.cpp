@@ -313,8 +313,22 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
                      << mouseMotionEvent.x << ", " << mouseMotionEvent.y
                      << " with buttons pressed Left: "
                      << mouseMotionEvent.button.left
-                     << "Middle:" << mouseMotionEvent.button.middle
+                     << " Middle: " << mouseMotionEvent.button.middle
                      << " Right: " << mouseMotionEvent.button.right << "."
+                     << std::endl;
+            break;
+        }
+        case ds_msg::MessageType::CreatePanel:
+        {
+            ds_msg::CreatePanel createPanelMsg;
+            (*messages) >> createPanelMsg;
+
+            m_buffer << "Console out: GUI panel created from ("
+                     << createPanelMsg.startX << ", " << createPanelMsg.startY
+                     << ") to (" << createPanelMsg.endX << ", "
+                     << createPanelMsg.endY << ") with material "
+                     << StringIntern::Instance().GetString(
+                            createPanelMsg.materialPath)
                      << std::endl;
             break;
         }
