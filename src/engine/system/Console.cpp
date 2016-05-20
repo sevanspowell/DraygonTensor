@@ -304,6 +304,20 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
                      << std::endl;
             break;
         }
+        case ds_msg::MessageType::MouseMotion:
+        {
+            ds_msg::MouseMotion mouseMotionEvent;
+            (*messages) >> mouseMotionEvent;
+
+            m_buffer << "Console out: mouse now at position "
+                     << mouseMotionEvent.x << ", " << mouseMotionEvent.y
+                     << " with buttons pressed Left: "
+                     << mouseMotionEvent.button.left
+                     << "Middle:" << mouseMotionEvent.button.middle
+                     << " Right: " << mouseMotionEvent.button.right << "."
+                     << std::endl;
+            break;
+        }
         default:
             // Always extract the payload
             messages->Extract(header.size);
