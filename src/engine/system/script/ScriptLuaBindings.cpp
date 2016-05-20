@@ -537,6 +537,64 @@ static int l_CreateGUIPanel(lua_State *L)
     return 1;
 }
 
+static int l_CreateGUIButton(lua_State *L)
+{
+    int n = lua_gettop(L);
+    int expected = 7;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push render system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our input system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        const char *defaultMaterialPath = NULL;
+        const char *pressedMaterialPath = NULL;
+        const char *hoverMaterialPath = NULL;
+
+        float startX = (float)luaL_checknumber(L, 1);
+        float startY = (float)luaL_checknumber(L, 2);
+        float endX = (float)luaL_checknumber(L, 3);
+        float endY = (float)luaL_checknumber(L, 4);
+        defaultMaterialPath = luaL_checkstring(L, 5);
+        pressedMaterialPath = luaL_checkstring(L, 6);
+        hoverMaterialPath = luaL_checkstring(L, 7);
+
+        if (defaultMaterialPath != NULL && pressedMaterialPath != NULL &&
+            hoverMaterialPath != NULL)
+        {
+            ds::Entity *entity =
+                (ds::Entity *)lua_newuserdata(L, sizeof(ds::Entity));
+
+            *entity = scriptPtr->CreateGUIButton(
+                startX, startY, endX, endY, defaultMaterialPath,
+                pressedMaterialPath, hoverMaterialPath);
+        }
+    }
+
+    // startX, startY, endX, endY, material path arguments (default, pressed,
+    // hover) and entity created
+    assert(lua_gettop(L) == 8);
+
+    // Return entity created
+    return 1;
+}
+
 ds::ScriptBindingSet LoadScriptBindings()
 {
     ds::ScriptBindingSet scriptBindings;
@@ -551,6 +609,7 @@ ds::ScriptBindingSet LoadScriptBindings()
                                l_SetEntityAnimationIndex);
     scriptBindings.AddFunction("set_skybox_material", l_SetSkyboxMaterial);
     scriptBindings.AddFunction("create_gui_panel", l_CreateGUIPanel);
+    scriptBindings.AddFunction("create_gui_button", l_CreateGUIButton);
 
     return scriptBindings;
 }

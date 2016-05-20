@@ -2,16 +2,17 @@
 
 #include <string>
 
-#include "engine/system/render/Skybox.h"
 #include "engine/common/HandleManager.h"
 #include "engine/resource/MeshResource.h"
 #include "engine/resource/ResourceFactory.h"
 #include "engine/system/ISystem.h"
+#include "engine/system/render/ButtonComponentManager.h"
 #include "engine/system/render/CameraComponentManager.h"
 #include "engine/system/render/IRenderer.h"
 #include "engine/system/render/Material.h"
 #include "engine/system/render/Mesh.h"
 #include "engine/system/render/RenderComponentManager.h"
+#include "engine/system/render/Skybox.h"
 #include "engine/system/render/Texture.h"
 #include "engine/system/scene/TransformComponentManager.h"
 
@@ -242,5 +243,8 @@ private:
     /** Skybox */
     ds_render::Skybox m_skybox;
     bool m_hasSkybox;
+
+    /** GUI-specific data */
+    ds_render::ButtonComponentManager m_buttonComponentManager;
 };
 }

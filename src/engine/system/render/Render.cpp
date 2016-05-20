@@ -724,6 +724,137 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
             m_renderComponentManager.SetMesh(i, mesh);
             break;
         }
+        case ds_msg::MessageType::CreateButton:
+        {
+            ds_msg::CreateButton createButtonMsg;
+            (*messages) >> createButtonMsg;
+
+            ds_render::Mesh mesh =
+                CreatePanelMesh(createButtonMsg.startX, createButtonMsg.startY,
+                                createButtonMsg.endX, createButtonMsg.endY,
+                                StringIntern::Instance().GetString(
+                                    createButtonMsg.defaultMaterialPath));
+
+            // Create render component
+            Instance render = m_renderComponentManager.CreateComponentForEntity(
+                createButtonMsg.entity);
+            m_renderComponentManager.SetMesh(render, mesh);
+
+            std::stringstream defaultMaterialPathFull;
+            defaultMaterialPathFull << "../assets/"
+                                    << StringIntern::Instance().GetString(
+                                           createButtonMsg.defaultMaterialPath);
+            std::stringstream pressedMaterialPathFull;
+            pressedMaterialPathFull << "../assets/"
+                                    << StringIntern::Instance().GetString(
+                                           createButtonMsg.pressedMaterialPath);
+            std::stringstream hoverMaterialPathFull;
+            hoverMaterialPathFull << "../assets/"
+                                  << StringIntern::Instance().GetString(
+                                         createButtonMsg.hoverMaterialPath);
+
+            // Create button component
+            Instance button = m_buttonComponentManager.CreateComponentForEntity(
+                createButtonMsg.entity);
+            m_buttonComponentManager.SetDefaultMaterial(
+                button, CreateMaterialFromMaterialResource(
+                            defaultMaterialPathFull.str(), m_sceneMatrices,
+                            m_objectMatrices));
+            m_buttonComponentManager.SetPressedMaterial(
+                button, CreateMaterialFromMaterialResource(
+                            pressedMaterialPathFull.str(), m_sceneMatrices,
+                            m_objectMatrices));
+            m_buttonComponentManager.SetHoverMaterial(
+                button, CreateMaterialFromMaterialResource(
+                            hoverMaterialPathFull.str(), m_sceneMatrices,
+                            m_objectMatrices));
+            m_buttonComponentManager.SetStartXCoordinate(
+                button, createButtonMsg.startX);
+            m_buttonComponentManager.SetStartYCoordinate(
+                button, createButtonMsg.startY);
+            m_buttonComponentManager.SetEndXCoordinate(button,
+                                                       createButtonMsg.endX);
+            m_buttonComponentManager.SetEndYCoordinate(button,
+                                                       createButtonMsg.endY);
+
+            break;
+        }
+        case ds_msg::MessageType::MouseMotion:
+        {
+            ds_msg::MouseMotion mouseMotionEvent;
+            (*messages) >> mouseMotionEvent;
+
+            // For each button component
+            for (unsigned int i = 0;
+                 i < m_buttonComponentManager.GetNumInstances(); ++i)
+            {
+                // Get button component instance
+                Instance button = Instance::MakeInstance(i);
+
+                // Get entity
+                Entity entity =
+                    m_buttonComponentManager.GetEntityForInstance(button);
+
+                // Get render component instance
+                Instance render =
+                    m_renderComponentManager.GetInstanceForEntity(entity);
+
+                if (render.IsValid())
+                {
+                    // Reset all materials to default material
+                    ds_render::Mesh mesh =
+                        m_renderComponentManager.GetMesh(render);
+                    ds_render::SubMesh subMesh = mesh.GetSubMesh(0);
+                    subMesh.material =
+                        m_buttonComponentManager.GetDefaultMaterial(button);
+                    mesh.SetSubMesh(0, subMesh);
+                    m_renderComponentManager.SetMesh(render, mesh);
+
+                    // Is mouse colliding with button
+                    if (mouseMotionEvent.x >
+                            m_buttonComponentManager.GetStartXCoordinate(
+                                button) &&
+                        mouseMotionEvent.y <
+                            m_buttonComponentManager.GetStartYCoordinate(
+                                button) &&
+                        mouseMotionEvent.x <
+                            m_buttonComponentManager.GetEndXCoordinate(
+                                button) &&
+                        mouseMotionEvent.y >
+                            m_buttonComponentManager.GetEndYCoordinate(button))
+
+                    {
+                        // If user is holding down left mouse button
+                        if (mouseMotionEvent.button.left == true)
+                        {
+                            // Set pressed material
+                            ds_render::Mesh mesh =
+                                m_renderComponentManager.GetMesh(render);
+                            ds_render::SubMesh subMesh = mesh.GetSubMesh(0);
+                            subMesh.material =
+                                m_buttonComponentManager.GetPressedMaterial(
+                                    button);
+                            mesh.SetSubMesh(0, subMesh);
+                            m_renderComponentManager.SetMesh(render, mesh);
+                        }
+                        // Else
+                        else
+                        {
+                            // Set hover material
+                            ds_render::Mesh mesh =
+                                m_renderComponentManager.GetMesh(render);
+                            ds_render::SubMesh subMesh = mesh.GetSubMesh(0);
+                            subMesh.material =
+                                m_buttonComponentManager.GetHoverMaterial(
+                                    button);
+                            mesh.SetSubMesh(0, subMesh);
+                            m_renderComponentManager.SetMesh(render, mesh);
+                        }
+                    }
+                }
+            }
+            break;
+        }
         default:
             messages->Extract(header.size);
             break;

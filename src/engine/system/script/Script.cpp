@@ -303,10 +303,10 @@ void Script::SetSkyboxMaterial(const std::string &skyboxMaterialPath)
 }
 
 Entity Script::CreateGUIPanel(float startX,
-                            float startY,
-                            float endX,
-                            float endY,
-                            const std::string &materialPath)
+                              float startY,
+                              float endX,
+                              float endY,
+                              const std::string &materialPath)
 {
     ds_msg::CreatePanel createPanelMsg;
     createPanelMsg.entity = m_entityManager.Create();
@@ -321,6 +321,34 @@ Entity Script::CreateGUIPanel(float startX,
                           sizeof(ds_msg::CreatePanel), &createPanelMsg);
 
     return createPanelMsg.entity;
+}
+
+Entity Script::CreateGUIButton(float startX,
+                               float startY,
+                               float endX,
+                               float endY,
+                               const std::string &defaultMaterialPath,
+                               const std::string &pressedMaterialPath,
+                               const std::string &hoverMaterialPath)
+{
+    ds_msg::CreateButton createButtonMsg;
+    createButtonMsg.entity = m_entityManager.Create();
+    createButtonMsg.startX = startX;
+    createButtonMsg.startY = startY;
+    createButtonMsg.endX = endX;
+    createButtonMsg.endY = endY;
+    createButtonMsg.defaultMaterialPath =
+        StringIntern::Instance().Intern(defaultMaterialPath);
+    createButtonMsg.pressedMaterialPath =
+        StringIntern::Instance().Intern(pressedMaterialPath);
+    createButtonMsg.hoverMaterialPath =
+        StringIntern::Instance().Intern(hoverMaterialPath);
+
+    ds_msg::AppendMessage(&m_messagesGenerated,
+                          ds_msg::MessageType::CreateButton,
+                          sizeof(ds_msg::CreateButton), &createButtonMsg);
+
+    return createButtonMsg.entity;
 }
 
 void Script::ProcessEvents(ds_msg::MessageStream *messages)

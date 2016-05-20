@@ -195,6 +195,28 @@ public:
                           float endY,
                           const std::string &materialPath);
 
+    /**
+     * Send a create GUI button message.
+     *
+     * @param   startX               float, start x co-ordinate of the panel.
+     * @param   startY               float, start y co-ordinate of the panel.
+     * @param   endX                 float, end x co-ordinate of the panel.
+     * @param   endY                 float, end y co-ordinate of the panel.
+     * @param   defaultMaterialPath  const std::string &, path to material to
+     * use to render the button when not pressed or hovered over.
+     * @param   pressedMaterialPath  const std::string &, path to material to
+     * use to render the button when pressed.
+     * @param   hoverMaterialPath    const std::string &, path to material to
+     * use to render the button when hovered over.
+     */
+    Entity CreateGUIButton(float startX,
+                           float startY,
+                           float endX,
+                           float endY,
+                           const std::string &defaultMaterialPath,
+                           const std::string &pressedMaterialPath,
+                           const std::string &hoverMaterialPath);
+
 private:
     /**
      * Process messages in the given message stream.

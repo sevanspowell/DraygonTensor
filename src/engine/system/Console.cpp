@@ -332,6 +332,26 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
                      << std::endl;
             break;
         }
+        case ds_msg::MessageType::CreateButton:
+        {
+            ds_msg::CreateButton createButtonMsg;
+            (*messages) >> createButtonMsg;
+
+            m_buffer << "Console out: GUI button created from ("
+                     << createButtonMsg.startX << ", " << createButtonMsg.startY
+                     << ") to (" << createButtonMsg.endX << ", "
+                     << createButtonMsg.endY << ") with materials: "
+                     << StringIntern::Instance().GetString(
+                            createButtonMsg.defaultMaterialPath)
+                     << ", "
+                     << StringIntern::Instance().GetString(
+                            createButtonMsg.pressedMaterialPath)
+                     << ", "
+                     << StringIntern::Instance().GetString(
+                            createButtonMsg.pressedMaterialPath)
+                     << std::endl;
+            break;
+        }
         default:
             // Always extract the payload
             messages->Extract(header.size);

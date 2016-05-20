@@ -118,13 +118,34 @@ void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
                               sizeof(ds_msg::TextInput), &textInput);
         break;
     case SDL_MOUSEMOTION:
+    {
         ds_msg::MouseMotion mouseMotionEvent;
         mouseMotionEvent.button =
             ConvertSDL2ButtonStateToButtonState(event.motion.state);
-        mouseMotionEvent.x = event.motion.x;
-        mouseMotionEvent.y = event.motion.y;
-        mouseMotionEvent.xRel = event.motion.xrel;
-        mouseMotionEvent.yRel = event.motion.yrel;
+
+        // Transform co-ordinates to our co-ordinate system
+        ds_math::Vector4 pos = ds_math::Vector4(
+            event.motion.x / 800.0f, event.motion.y / 600.0f, 0.0f, 1.0f);
+        ds_math::Vector4 relPos = ds_math::Vector4(
+            event.motion.xrel / 800.0f, event.motion.yrel / 600.0f, 0.0f, 1.0f);
+
+        ds_math::Matrix4 scale =
+            ds_math::Matrix4::CreateScaleMatrix(2.0f, 2.0f, 2.0f);
+        ds_math::Matrix4 translate =
+            ds_math::Matrix4::CreateTranslationMatrix(-1.0f, -1.0f, 0.0f);
+        ds_math::Matrix4 flip = ds_math::Matrix4(1.0f);
+        flip[1].y = -1.0f;
+
+        // Transform position
+        pos = flip * translate * scale * pos;
+
+        // Trnasform relative position
+        relPos = flip * translate * scale * relPos;
+
+        mouseMotionEvent.x = pos.x;
+        mouseMotionEvent.y = pos.y;
+        mouseMotionEvent.xRel = relPos.x;
+        mouseMotionEvent.yRel = relPos.y;
         mouseMotionEvent.timeStamp = event.motion.timestamp;
         mouseMotionEvent.windowID = event.motion.windowID;
 
@@ -132,6 +153,7 @@ void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
                               ds_msg::MessageType::MouseMotion,
                               sizeof(ds_msg::MouseMotion), &mouseMotionEvent);
         break;
+    }
     case SDL_QUIT:
         ds_msg::QuitEvent quitEvent;
 
