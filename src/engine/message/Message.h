@@ -5,6 +5,7 @@
 #include "engine/common/StringIntern.h"
 #include "engine/system/platform/GraphicsContext.h"
 #include "engine/system/platform/Keyboard.h"
+#include "engine/system/platform/Mouse.h"
 #include "math/Matrix4.h"
 #include "math/Vector3.h"
 
@@ -60,7 +61,9 @@ enum class MessageType
     // Set an entity's animation
     SetAnimationIndex,
     // Set skybox material
-    SetSkyboxMaterial
+    SetSkyboxMaterial,
+    // On mouse event
+    MouseMotion
 };
 
 /**
@@ -166,5 +169,16 @@ struct SetAnimationIndex
 struct SetSkyboxMaterial
 {
     ds::StringIntern::StringId skyboxMaterialPath; // Path to skybox material
+};
+
+struct MouseMotion
+{
+    ds_platform::Mouse::ButtonState button; // State of the mouse buttons 
+    int x;              // x-coordinate of cursor, relative to window
+    int y;              // y-coordinate of cursor, relative to window
+    int xRel;           // relative motion of cursor in the x direction
+    int yRel;           // relative motion of cursor in the y direction
+    uint32_t timeStamp; // Time stamp of mouse motion event
+    uint32_t windowID;  // ID of window with focus (if any)
 };
 }

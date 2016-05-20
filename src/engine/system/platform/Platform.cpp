@@ -117,6 +117,21 @@ void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
                               ds_msg::MessageType::TextInput,
                               sizeof(ds_msg::TextInput), &textInput);
         break;
+    case SDL_MOUSEMOTION:
+        ds_msg::MouseMotion mouseMotionEvent;
+        mouseMotionEvent.button =
+            ConvertSDL2ButtonStateToButtonState(event.motion.state);
+        mouseMotionEvent.x = event.motion.x;
+        mouseMotionEvent.y = event.motion.y;
+        mouseMotionEvent.xRel = event.motion.xrel;
+        mouseMotionEvent.yRel = event.motion.yrel;
+        mouseMotionEvent.timeStamp = event.motion.timestamp;
+        mouseMotionEvent.windowID = event.motion.windowID;
+
+        ds_msg::AppendMessage(&m_messagesGenerated,
+                              ds_msg::MessageType::MouseMotion,
+                              sizeof(ds_msg::MouseMotion), &mouseMotionEvent);
+        break;
     case SDL_QUIT:
         ds_msg::QuitEvent quitEvent;
 
@@ -191,5 +206,29 @@ void Platform::ToggleTextInput() const
     {
         SDL_StartTextInput();
     }
+}
+
+ds_platform::Mouse::ButtonState
+Platform::ConvertSDL2ButtonStateToButtonState(uint32_t state) const
+{
+    ds_platform::Mouse::ButtonState buttonState;
+    buttonState.left = false;
+    buttonState.middle = false;
+    buttonState.right = false;
+
+    if (state & SDL_BUTTON(SDL_BUTTON_LEFT))
+    {
+        buttonState.left = true;
+    }
+    if (state & SDL_BUTTON(SDL_BUTTON_MIDDLE))
+    {
+        buttonState.middle = true;
+    }
+    if (state & SDL_BUTTON(SDL_BUTTON_RIGHT))
+    {
+        buttonState.right = true;
+    }
+
+    return buttonState;
 }
 }

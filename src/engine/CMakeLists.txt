@@ -36,6 +36,7 @@ set(ENGINE_INCLUDE_FILES
   system/physics/PhysicsComponentManager.h
   system/physics/PhysicsHandler.h
   system/platform/Keyboard.h
+  system/platform/Mouse.h
   system/platform/Platform.h
   system/platform/Video.h
   system/platform/Window.h
