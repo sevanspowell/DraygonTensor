@@ -366,6 +366,15 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
                      << std::endl;
             break;
         }
+        case ds_msg::MessageType::ButtonFired:
+        {
+            ds_msg::ButtonFired buttonFireMsg;
+            (*messages) >> buttonFireMsg;
+
+            m_buffer << "Console out: button entity id: " << buttonFireMsg.entity.id
+                     << " fired." << std::endl;
+            break;
+        }
         default:
             // Always extract the payload
             messages->Extract(header.size);

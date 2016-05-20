@@ -46,6 +46,11 @@ static int l_SpawnPrefab(lua_State *L)
                 (ds::Entity *)lua_newuserdata(L, sizeof(ds::Entity));
 
             *entity = p->SpawnPrefab(prefabFile, *v);
+
+            // Get Entity metatable
+            luaL_getmetatable(L, "Entity");
+            // Set it as metatable of new user data
+            lua_setmetatable(L, -2);
         }
     }
 
@@ -183,6 +188,30 @@ static int l_GetNextMessage(lua_State *L)
                 lua_setfield(L, -2, "type"); // table.type = strafe_right
 
                 break;
+            case ds_msg::MessageType::ButtonFired:
+            {
+                ds_msg::ButtonFired buttonFiredMsg;
+                msg >> buttonFiredMsg;
+
+                // Create payload table
+                lua_pushliteral(L, "button_fired");
+                lua_setfield(L, -2, "type"); // table.type = button_fired
+
+                // Push entity to stack
+                ds::Entity *entity =
+                    (ds::Entity *)lua_newuserdata(L, sizeof(ds::Entity));
+                *entity = buttonFiredMsg.entity;
+
+                // Get Entity metatable
+                luaL_getmetatable(L, "Entity");
+                // Set it as metatable of new user data
+                lua_setmetatable(L, -2);
+
+                // Set entity field
+                lua_setfield(L, -2, "entity"); // table.entity = entity
+
+                break;
+            }
             default:
                 assert(false && "l_GetNextMessage should handle all received "
                                 "message types!");
@@ -528,6 +557,11 @@ static int l_CreateGUIPanel(lua_State *L)
 
             *entity = scriptPtr->CreateGUIPanel(startX, startY, endX, endY,
                                                 materialPath);
+
+            // Get Entity metatable
+            luaL_getmetatable(L, "Entity");
+            // Set it as metatable of new user data
+            lua_setmetatable(L, -2);
         }
     }
 
@@ -584,6 +618,11 @@ static int l_CreateGUIButton(lua_State *L)
             *entity = scriptPtr->CreateGUIButton(
                 startX, startY, endX, endY, defaultMaterialPath,
                 pressedMaterialPath, hoverMaterialPath);
+
+            // Get Entity metatable
+            luaL_getmetatable(L, "Entity");
+            // Set it as metatable of new user data
+            lua_setmetatable(L, -2);
         }
     }
 

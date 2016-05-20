@@ -1,11 +1,11 @@
 #include <fstream>
 #include <sstream>
 
+#include "engine/message/MessageHelper.h"
 #include "engine/resource/MaterialResource.h"
-// #include "engine/resource/MeshResource.h"
 #include "engine/resource/ShaderResource.h"
-#include "engine/resource/TextureResource.h"
 #include "engine/resource/TerrainResource.h"
+#include "engine/resource/TextureResource.h"
 #include "engine/system/render/GLRenderer.h"
 #include "engine/system/render/Render.h"
 #include "math/MathHelper.h"
@@ -912,6 +912,16 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                                     button);
                             mesh.SetSubMesh(0, subMesh);
                             m_renderComponentManager.SetMesh(render, mesh);
+
+                            // Send a button fired message with the id of the
+                            // pressed button
+                            ds_msg::ButtonFired buttonFiredMsg;
+                            buttonFiredMsg.entity = entity;
+
+                            ds_msg::AppendMessage(
+                                &m_messagesGenerated,
+                                ds_msg::MessageType::ButtonFired,
+                                sizeof(ds_msg::ButtonFired), &buttonFiredMsg);
                         }
                         // If user has let go of left mouse button
                         if (mouseButtonEvent.button.left == false)

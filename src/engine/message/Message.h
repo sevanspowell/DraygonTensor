@@ -69,7 +69,9 @@ enum class MessageType
     // Create GUI panel message
     CreatePanel,
     // Create GUI button message
-    CreateButton
+    CreateButton,
+    // On button fire (button click)
+    ButtonFired
 };
 
 /**
@@ -219,5 +221,10 @@ struct CreateButton
     ds::StringIntern::StringId defaultMaterialPath;
     ds::StringIntern::StringId pressedMaterialPath;
     ds::StringIntern::StringId hoverMaterialPath;
+};
+
+struct ButtonFired
+{
+    ds::Entity entity;
 };
 }

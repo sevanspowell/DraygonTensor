@@ -367,7 +367,7 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
 
             // Insert header into messages to be sent to script
             m_toScriptMessages << header;
-            // Insert payload into messages to be sent script
+            // Insert payload into messages to be sent to script
             m_toScriptMessages << scriptMsg;
 
             m_lua.ExecuteString(
@@ -379,7 +379,7 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
 
             // Insert header into messages to be sent to script
             m_toScriptMessages << header;
-            // Insert payload into messages to be sent script
+            // Insert payload into messages to be sent to script
             m_toScriptMessages << moveForwardMsg;
             break;
         case ds_msg::MessageType::MoveBackward:
@@ -388,7 +388,7 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
 
             // Insert header into messages to be sent to script
             m_toScriptMessages << header;
-            // Insert payload into messages to be sent script
+            // Insert payload into messages to be sent to script
             m_toScriptMessages << moveBackwardMsg;
             break;
         case ds_msg::MessageType::StrafeLeft:
@@ -397,7 +397,7 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
 
             // Insert header into messages to be sent to script
             m_toScriptMessages << header;
-            // Insert payload into messages to be sent script
+            // Insert payload into messages to be sent to script
             m_toScriptMessages << strafeLeftMsg;
             break;
         case ds_msg::MessageType::StrafeRight:
@@ -406,8 +406,17 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
 
             // Insert header into messages to be sent to script
             m_toScriptMessages << header;
-            // Insert payload into messages to be sent script
+            // Insert payload into messages to be sent to script
             m_toScriptMessages << strafeRightMsg;
+            break;
+        case ds_msg::MessageType::ButtonFired:
+            ds_msg::ButtonFired buttonFiredMsg;
+            (*messages) >> buttonFiredMsg;
+
+            // Insert header into messages to be sent to script
+            m_toScriptMessages << header;
+            // Insert payload into messages to be sent to script
+            m_toScriptMessages << buttonFiredMsg;
             break;
         case ds_msg::MessageType::CreateComponent:
         {
