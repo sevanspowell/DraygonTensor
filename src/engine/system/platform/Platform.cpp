@@ -154,6 +154,40 @@ void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
                               sizeof(ds_msg::MouseMotion), &mouseMotionEvent);
         break;
     }
+    // Intentional fall-thru
+    case SDL_MOUSEBUTTONUP:
+    case SDL_MOUSEBUTTONDOWN:
+    {
+        ds_msg::MouseButton mouseButtonEvent;
+        // Set appropriate button states
+        mouseButtonEvent.button =
+            ConvertSDL2ButtonStateToButtonState(SDL_GetMouseState(NULL, NULL));
+
+        // Transform co-ordinates to our co-ordinate system
+        ds_math::Vector4 pos = ds_math::Vector4(
+            event.button.x / 800.0f, event.button.y / 600.0f, 0.0f, 1.0f);
+
+        ds_math::Matrix4 scale =
+            ds_math::Matrix4::CreateScaleMatrix(2.0f, 2.0f, 2.0f);
+        ds_math::Matrix4 translate =
+            ds_math::Matrix4::CreateTranslationMatrix(-1.0f, -1.0f, 0.0f);
+        ds_math::Matrix4 flip = ds_math::Matrix4(1.0f);
+        flip[1].y = -1.0f;
+
+        // Transform position
+        pos = flip * translate * scale * pos;
+
+        mouseButtonEvent.x = pos.x;
+        mouseButtonEvent.y = pos.y;
+        mouseButtonEvent.timeStamp = event.button.timestamp;
+        mouseButtonEvent.windowID = event.button.windowID;
+        mouseButtonEvent.clicks = event.button.clicks;
+
+        ds_msg::AppendMessage(&m_messagesGenerated,
+                              ds_msg::MessageType::MouseButton,
+                              sizeof(ds_msg::MouseButton), &mouseButtonEvent);
+        break;
+    }
     case SDL_QUIT:
         ds_msg::QuitEvent quitEvent;
 

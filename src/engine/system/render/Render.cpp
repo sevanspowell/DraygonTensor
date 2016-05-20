@@ -855,6 +855,82 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
             }
             break;
         }
+        case ds_msg::MessageType::MouseButton:
+        {
+            ds_msg::MouseButton mouseButtonEvent;
+            (*messages) >> mouseButtonEvent;
+
+            // For each button component
+            for (unsigned int i = 0;
+                 i < m_buttonComponentManager.GetNumInstances(); ++i)
+            {
+                // Get button component instance
+                Instance button = Instance::MakeInstance(i);
+
+                // Get entity
+                Entity entity =
+                    m_buttonComponentManager.GetEntityForInstance(button);
+
+                // Get render component instance
+                Instance render =
+                    m_renderComponentManager.GetInstanceForEntity(entity);
+
+                if (render.IsValid())
+                {
+                    // Reset all materials to default material
+                    // ds_render::Mesh mesh =
+                    //     m_renderComponentManager.GetMesh(render);
+                    // ds_render::SubMesh subMesh = mesh.GetSubMesh(0);
+                    // subMesh.material =
+                    //     m_buttonComponentManager.GetDefaultMaterial(button);
+                    // mesh.SetSubMesh(0, subMesh);
+                    // m_renderComponentManager.SetMesh(render, mesh);
+
+                    // Is mouse colliding with button
+                    if (mouseButtonEvent.x >
+                            m_buttonComponentManager.GetStartXCoordinate(
+                                button) &&
+                        mouseButtonEvent.y <
+                            m_buttonComponentManager.GetStartYCoordinate(
+                                button) &&
+                        mouseButtonEvent.x <
+                            m_buttonComponentManager.GetEndXCoordinate(
+                                button) &&
+                        mouseButtonEvent.y >
+                            m_buttonComponentManager.GetEndYCoordinate(button))
+
+                    {
+                        // If user has pressed left mouse button
+                        if (mouseButtonEvent.button.left == true)
+                        {
+                            // Set pressed material
+                            ds_render::Mesh mesh =
+                                m_renderComponentManager.GetMesh(render);
+                            ds_render::SubMesh subMesh = mesh.GetSubMesh(0);
+                            subMesh.material =
+                                m_buttonComponentManager.GetPressedMaterial(
+                                    button);
+                            mesh.SetSubMesh(0, subMesh);
+                            m_renderComponentManager.SetMesh(render, mesh);
+                        }
+                        // If user has let go of left mouse button
+                        if (mouseButtonEvent.button.left == false)
+                        {
+                            // Set hover material
+                            ds_render::Mesh mesh =
+                                m_renderComponentManager.GetMesh(render);
+                            ds_render::SubMesh subMesh = mesh.GetSubMesh(0);
+                            subMesh.material =
+                                m_buttonComponentManager.GetHoverMaterial(
+                                    button);
+                            mesh.SetSubMesh(0, subMesh);
+                            m_renderComponentManager.SetMesh(render, mesh);
+                        }
+                    }
+                }
+            }
+            break;
+        }
         default:
             messages->Extract(header.size);
             break;

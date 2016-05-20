@@ -62,8 +62,10 @@ enum class MessageType
     SetAnimationIndex,
     // Set skybox material
     SetSkyboxMaterial,
-    // On mouse event
+    // On mouse move event
     MouseMotion,
+    // On mouse button click/release event
+    MouseButton,
     // Create GUI panel message
     CreatePanel,
     // Create GUI button message
@@ -183,6 +185,17 @@ struct MouseMotion
     float xRel;         // relative motion of cursor in the x direction
     float yRel;         // relative motion of cursor in the y direction
     uint32_t timeStamp; // Time stamp of mouse motion event
+    uint32_t windowID;  // ID of window with focus (if any)
+};
+
+struct MouseButton
+{
+    ds_platform::Mouse::ButtonState button; // State of the mouse buttons
+    float x;        // x-coordinate of cursor, relative to window
+    float y;        // y-coordinate of cursor, relative to window
+    uint8_t clicks; // Number of clicks (1 for single-click, 2 for double-click,
+                    // etc.)
+    uint32_t timeStamp; // Time stamp of mouse motion event;
     uint32_t windowID;  // ID of window with focus (if any)
 };
 

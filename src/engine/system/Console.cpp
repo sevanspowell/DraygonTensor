@@ -318,6 +318,20 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
                      << std::endl;
             break;
         }
+        case ds_msg::MessageType::MouseButton:
+        {
+            ds_msg::MouseButton mouseButtonEvent;
+            (*messages) >> mouseButtonEvent;
+
+            m_buffer << "Console out: mouse button state changed, current "
+                        "state: Left: "
+                     << mouseButtonEvent.button.left
+                     << " Middle: " << mouseButtonEvent.button.middle
+                     << " Right: " << mouseButtonEvent.button.right << " at ("
+                     << mouseButtonEvent.x << ", " << mouseButtonEvent.y << ")."
+                     << std::endl;
+            break;
+        }
         case ds_msg::MessageType::CreatePanel:
         {
             ds_msg::CreatePanel createPanelMsg;
