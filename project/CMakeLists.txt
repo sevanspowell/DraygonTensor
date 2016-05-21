@@ -1,6 +1,7 @@
 subdirs(
     animation
     bullet
+    multilayer
     pathfinding
     physics
     render_system
