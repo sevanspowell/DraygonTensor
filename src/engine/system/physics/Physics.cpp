@@ -119,13 +119,15 @@ void Physics::Update(float deltaTime)
                 // Get change in orientation
                 btQuaternion newWorldOrientationBullet =
                     rigidBody->getOrientation();
+                btQuaternionFloatData floatData;
+                newWorldOrientationBullet.serializeFloat(floatData);
                 ds_math::Quaternion newWorldOrientation = ds_math::Quaternion(
-                    newWorldOrientationBullet.getAxis().getX(),
-                    newWorldOrientationBullet.getAxis().getY(),
-                    newWorldOrientationBullet.getAxis().getZ(),
-                    newWorldOrientationBullet.getW());
+                    floatData.m_floats[0], floatData.m_floats[1],
+                    floatData.m_floats[2], floatData.m_floats[3]);
                 ds_math::Quaternion oldWorldOrientation =
-                    m_transformComponentManager.GetWorldOrientation(transform);
+                    ds_math::Quaternion::Normalize(
+                        m_transformComponentManager.GetWorldOrientation(
+                            transform));
                 ds_math::Quaternion changeInOrientation =
                     ds_math::Quaternion::Normalize(
                         newWorldOrientation *
@@ -164,35 +166,6 @@ void Physics::Update(float deltaTime)
                 ds_msg::AppendMessage(
                     &m_messagesGenerated, ds_msg::MessageType::SetLocalScale,
                     sizeof(ds_msg::SetLocalScale), &setScaleMsg);
-
-                // // Get new world transform in our math library
-                // const ds_math::Matrix4 newWorldTransform;
-                // bulletNewWorldTransform.getOpenGLMatrix(
-                //     (btScalar *)&newWorldTransform.data[0][0]);
-
-                // // Get current transforms
-                // const ds_math::Matrix4 &currentWorldTransform =
-                //     m_transformComponentManager.GetWorldTransform(transform);
-                // const ds_math::Matrix4 &currentLocalTransform =
-                //     m_transformComponentManager.GetLocalTransform(transform);
-
-                // // New local transform is current local transform multiplied
-                // by
-                // // currentLocalTransform * ((inv(currentWorldTransform) *
-                // // newWorldTransform)
-                // ds_math::Matrix4 newLocalTransform =
-                //     currentLocalTransform *
-                //     (ds_math::Matrix4::Inverse(currentWorldTransform) *
-                //      newWorldTransform);
-
-                // ds_msg::SetLocalTransform setTransformMsg;
-                // setTransformMsg.entity = entity;
-                // setTransformMsg.localTransform = newLocalTransform;
-
-                // ds_msg::AppendMessage(&m_messagesGenerated,
-                //                       ds_msg::MessageType::SetLocalTransform,
-                //                       sizeof(ds_msg::SetLocalTransform),
-                //                       &setTransformMsg);
             }
         }
     }
@@ -547,154 +520,66 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
             }
         }
         break;
-        // case ds_msg::MessageType::SetLocalTranslation:
-        // {
-        //     ds_msg::SetLocalTranslation setTranslationMsg;
-        //     (*messages) >> setTranslationMsg;
+        case ds_msg::MessageType::SetLocalTranslation:
+        {
+            ds_msg::SetLocalTranslation setTranslationMsg;
+            (*messages) >> setTranslationMsg;
 
-        //     // Get component instance of entity to move
-        //     Instance transform =
-        //         m_transformManager.GetInstanceForEntity(
-        //             setTranslationMsg.entity);
+            // Get component instance of entity to move
+            Instance transform =
+                m_transformComponentManager.GetInstanceForEntity(
+                    setTranslationMsg.entity);
 
-        //     // If has transform component
-        //     if (transform.IsValid())
-        //     {
-        //         // Set translation of entity
-        //         m_transformManager.SetLocalTranslation(
-        //             transform, setTranslationMsg.localTranslation);
-        //     }
+            // If has transform component
+            if (transform.IsValid())
+            {
+                // Set translation of entity
+                m_transformComponentManager.SetLocalTranslation(
+                    transform, setTranslationMsg.localTranslation);
+            }
 
-        //     break;
-        // }
-        // case ds_msg::MessageType::SetLocalOrientation:
-        // {
-        //     ds_msg::SetLocalOrientation setOrientationMsg;
-        //     (*messages) >> setOrientationMsg;
+            break;
+        }
+        case ds_msg::MessageType::SetLocalOrientation:
+        {
+            ds_msg::SetLocalOrientation setOrientationMsg;
+            (*messages) >> setOrientationMsg;
 
-        //     // Get component instance of entity to rotate
-        //     Instance transform =
-        //         m_transformManager.GetInstanceForEntity(
-        //             setOrientationMsg.entity);
+            // Get component instance of entity to move
+            Instance transform =
+                m_transformComponentManager.GetInstanceForEntity(
+                    setOrientationMsg.entity);
 
-        //     // If has transform component
-        //     if (transform.IsValid())
-        //     {
-        //         // Set orientation of entity
-        //         m_transformManager.SetLocalOrientation(
-        //             transform, setOrientationMsg.localOrientation);
-        //     }
+            // If has transform component
+            if (transform.IsValid())
+            {
+                // Set orientation of entity
+                m_transformComponentManager.SetLocalOrientation(
+                    transform, setOrientationMsg.localOrientation);
+            }
 
-        //     break;
-        // }
-        // case ds_msg::MessageType::SetLocalScale:
-        // {
-        //     ds_msg::SetLocalScale setScaleMsg;
-        //     (*messages) >> setScaleMsg;
+            break;
+        }
+        case ds_msg::MessageType::SetLocalScale:
+        {
+            ds_msg::SetLocalScale setScaleMsg;
+            (*messages) >> setScaleMsg;
 
-        //     // Get component instance of entity to scale
-        //     Instance transform = m_transformManager.GetInstanceForEntity(
-        //         setScaleMsg.entity);
+            // Get component instance of entity to move
+            Instance transform =
+                m_transformComponentManager.GetInstanceForEntity(
+                    setScaleMsg.entity);
 
-        //     // If has transform component
-        //     if (transform.IsValid())
-        //     {
-        //         // Set scale of entity
-        //         m_transformManager.SetLocalScale(
-        //             transform, setScaleMsg.localScale);
-        //     }
+            // If has transform component
+            if (transform.IsValid())
+            {
+                // Set scale of entity
+                m_transformComponentManager.SetLocalScale(
+                    transform, setScaleMsg.localScale);
+            }
 
-        //     break;
-        // }
-        // case ds_msg::MessageType::SetLocalTransform:
-        // {
-        //     ds_msg::SetLocalTransform setLocalMsg;
-        //     (*messages) >> setLocalMsg;
-
-        //     Entity entity = setLocalMsg.entity;
-
-        //     // Get component instance of entity to move
-        //     Instance transform =
-        //         m_transformComponentManager.GetInstanceForEntity(entity);
-
-        //     // Get physics component instance
-        //     // Instance phys =
-        //     //     m_physicsComponentManager.GetInstanceForEntity(entity);
-
-
-        //     // If has transform component
-        //     if (transform.IsValid())
-        //     {
-        //         // Set transform of entity
-        //         m_transformComponentManager.SetLocalTransform(
-        //             transform, setLocalMsg.localTransform);
-        //     }
-        //     // if (transform.IsValid() && phys.IsValid())
-        //     // {
-        //     //     // Get rigid body from physics component
-        //     //     const btRigidBody *rigidBody =
-        //     //         m_physicsComponentManager.GetRigidBody(phys);
-
-        //     //     // Get new transform
-        //     //     ds_math::Matrix4 newTransform =
-        //     // m_transformComponentManager.GetWorldTransform(transform);
-
-        //     //     if (rigidBody != nullptr)
-        //     //     {
-        //     //         if (rigidBody->getMotionState())
-        //     //         {
-        //     //             btTransform newWorldTransform;
-        //     //             rigidBody->getMotionState()->setWorldTransform()
-        //     //         }
-        //     //     }
-        //     // }
-
-        //     // btTransform bulletNewWorldTransform;
-        //     // if (rigidBody != nullptr)
-        //     // {
-        //     //     if (rigidBody->getMotionState())
-        //     //     {
-        //     //         rigidBody->getMotionState()->getWorldTransform(
-        //     //             bulletNewWorldTransform);
-        //     //     }
-        //     //     else
-        //     //     {
-        //     //         bulletNewWorldTransform =
-        //     rigidBody->getWorldTransform();
-        //     //     }
-
-        //     //     // Get new world transform in our math library
-        //     //     const ds_math::Matrix4 newWorldTransform;
-        //     //     bulletNewWorldTransform.getOpenGLMatrix(
-        //     //         (btScalar *)&newWorldTransform.data[0][0]);
-
-        //     //     // Get current transforms
-        //     //     const ds_math::Matrix4 &currentWorldTransform =
-        //     // m_transformComponentManager.GetWorldTransform(transform);
-        //     //     const ds_math::Matrix4 &currentLocalTransform =
-        //     // m_transformComponentManager.GetLocalTransform(transform);
-
-        //     //     // New local transform is current local transform
-        //     //     // multiplied by
-        //     //     // currentLocalTransform * ((inv(currentWorldTransform)
-        //     //     // *
-        //     //     // newWorldTransform)
-        //     //     ds_math::Matrix4 newLocalTransform =
-        //     //         currentLocalTransform *
-        //     //         (ds_math::Matrix4::Inverse(currentWorldTransform) *
-        //     //          newWorldTransform);
-
-        //     //     ds_msg::SetLocalTransform setTransformMsg;
-        //     //     setTransformMsg.entity = entity;
-        //     //     setTransformMsg.localTransform = newLocalTransform;
-
-        //     //     ds_msg::AppendMessage(&m_messagesGenerated,
-        //     // ds_msg::MessageType::SetLocalTransform,
-        //     //                           sizeof(ds_msg::SetLocalTransform),
-        //     //                           &setTransformMsg);
-        //     // }
-        // // }
-        // break;
+            break;
+        }
         default:
             messages->Extract(header.size);
             break;
@@ -734,7 +619,8 @@ btRigidBody *Physics::CreateRigidBody(const ds_math::Vector3 &origin,
         // Create rigid body
         btScalar bodyMass = btScalar(mass);
 
-        // Rigid body is dynamic if and only if mass is non-zero, otherwise
+        // Rigid body is dynamic if and only if mass is non-zero,
+        // otherwise
         // static
         bool isDynamic = (bodyMass != 0.0f);
 
@@ -753,9 +639,9 @@ btRigidBody *Physics::CreateRigidBody(const ds_math::Vector3 &origin,
     }
     else
     {
-        std::cerr
-            << "Physics::CreateRigidBody: Unhandled collision shape type: "
-            << colShapeType << std::endl;
+        std::cerr << "Physics::CreateRigidBody: Unhandled collision "
+                     "shape type: "
+                  << colShapeType << std::endl;
     }
 
     return rigidBody;
@@ -778,7 +664,9 @@ btRigidBody *Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
     // Set height scale of terrain resource
     terrainResource->SetHeightScale(heightScale);
 
-    // Copy terrain data - bullet doesn't copy data we pass to it, we need to
+    // Copy terrain data - bullet doesn't copy data we pass to it,
+    // we
+    // need to
     // keep the data 'alive' for the lifetime of the physics system.
     m_heightmapData.push_back(terrainResource->GetHeightArray());
 
