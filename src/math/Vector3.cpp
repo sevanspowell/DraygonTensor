@@ -260,4 +260,15 @@ std::ostream &operator<<(std::ostream &out, const Vector3 &vec)
 
     return out;
 }
+
+Vector3 operator*(const Vector3 &vec1, const Vector3 &vec2)
+{
+    Vector3 vec;
+
+    vec.x = vec1.x * vec2.x;
+    vec.y = vec1.y * vec2.y;
+    vec.z = vec1.z * vec2.z;
+
+    return vec;
+}
 }
