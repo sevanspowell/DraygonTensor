@@ -229,10 +229,10 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::SetLocalTranslation setLocalTranslationMsg;
             (*messages) >> setLocalTranslationMsg;
 
-            m_buffer << "Console out: Set local translation of Entity: "
-                     << setLocalTranslationMsg.entity.id
-                     << " to: " << setLocalTranslationMsg.localTranslation
-                     << std::endl;
+            // m_buffer << "Console out: Set local translation of Entity "
+            //          << setLocalTranslationMsg.entity.id
+            //          << " to: " << setLocalTranslationMsg.localTranslation
+            //          << std::endl;
             break;
         }
         case ds_msg::MessageType::SetLocalOrientation:
@@ -240,10 +240,10 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::SetLocalOrientation setLocalOrientationMsg;
             (*messages) >> setLocalOrientationMsg;
 
-            m_buffer << "Console out: Set local orientation of Entity: "
-                     << setLocalOrientationMsg.entity.id
-                     << " to: " << setLocalOrientationMsg.localOrientation
-                     << std::endl;
+            // m_buffer << "Console out: Set local orientation of Entity "
+            //          << setLocalOrientationMsg.entity.id
+            //          << " to: " << setLocalOrientationMsg.localOrientation
+            //          << std::endl;
             break;
         }
         case ds_msg::MessageType::SetLocalScale:
@@ -251,9 +251,9 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::SetLocalScale setLocalScaleMsg;
             (*messages) >> setLocalScaleMsg;
 
-            m_buffer << "Console out: Set local scale of Entity: "
-                     << setLocalScaleMsg.entity.id
-                     << " to: " << setLocalScaleMsg.localScale << std::endl;
+            // m_buffer << "Console out: Set local scale of Entity "
+            //          << setLocalScaleMsg.entity.id
+            //          << " to: " << setLocalScaleMsg.localScale << std::endl;
             break;
         }
         case ds_msg::MessageType::SetAnimationIndex:
