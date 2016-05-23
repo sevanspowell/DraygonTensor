@@ -46,18 +46,12 @@ enum class MessageType
     GraphicsContextCreated,
     // On component creation
     CreateComponent,
-    // Move an entity
-    MoveEntity,
-    // Move forward
-    MoveForward,
-    // Move backward
-    MoveBackward,
-    // Strafe left
-    StrafeLeft,
-    // Strafe Right
-    StrafeRight,
-    // Set an entity's local transform
-    SetLocalTransform,
+    // Set local translation of an entity
+    SetLocalTranslation,
+    // Set local orientation of an entity
+    SetLocalOrientation,
+    // Set local scale of an entity
+    SetLocalScale,
     // Set an entity's animation
     SetAnimationIndex,
     // Set skybox material
@@ -140,32 +134,28 @@ struct CreateComponent
     ds::StringIntern::StringId componentData; // Component config string.
 };
 
-struct MoveEntity
+// struct SetLocalTransform
+// {
+//     ds::Entity entity;               // Entity to set local transform of
+//     ds_math::Matrix4 localTransform; // New local transform
+// };
+
+struct SetLocalTranslation
 {
-    ds::Entity entity;              // Entity to move
-    ds_math::Vector3 deltaPosition; // Amount and direction to move
+    ds::Entity entity;
+    ds_math::Vector3 localTranslation;
 };
 
-struct MoveForward
+struct SetLocalOrientation
 {
+    ds::Entity entity;
+    ds_math::Quaternion localOrientation;
 };
 
-struct MoveBackward
+struct SetLocalScale
 {
-};
-
-struct StrafeLeft
-{
-};
-
-struct StrafeRight
-{
-};
-
-struct SetLocalTransform
-{
-    ds::Entity entity;               // Entity to set local transform of
-    ds_math::Matrix4 localTransform; // New local transform
+    ds::Entity entity;
+    ds_math::Vector3 localScale;
 };
 
 struct SetAnimationIndex

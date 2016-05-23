@@ -112,10 +112,10 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
 
             if (keyEvent.state == ds_platform::Keyboard::State::Key_Pressed)
             {
-                m_buffer << "Console out: "
-                         << "Key pressed: '"
-                         << ds_platform::Keyboard::PrintKey(keyEvent.key)
-                         << "'." << std::endl;
+                // m_buffer << "Console out: "
+                //          << "Key pressed: '"
+                //          << ds_platform::Keyboard::PrintKey(keyEvent.key)
+                //          << "'." << std::endl;
 
                 if (keyEvent.key == ds_platform::Keyboard::Key::Key_Backspace &&
                     m_inputText.length() > 0)
@@ -144,10 +144,10 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             else if (keyEvent.state ==
                      ds_platform::Keyboard::State::Key_Released)
             {
-                m_buffer << "Console out: "
-                         << "Key released: '"
-                         << ds_platform::Keyboard::PrintKey(keyEvent.key)
-                         << "'." << std::endl;
+                // m_buffer << "Console out: "
+                //          << "Key released: '"
+                //          << ds_platform::Keyboard::PrintKey(keyEvent.key)
+                //          << "'." << std::endl;
             }
             break;
         case ds_msg::MessageType::QuitEvent:
@@ -224,63 +224,36 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
                             createComponentMsg.componentType)
                      << std::endl;
             break;
-        case ds_msg::MessageType::MoveEntity:
+        case ds_msg::MessageType::SetLocalTranslation:
         {
-            ds_msg::MoveEntity entityMoveMsg;
-            (*messages) >> entityMoveMsg;
+            ds_msg::SetLocalTranslation setLocalTranslationMsg;
+            (*messages) >> setLocalTranslationMsg;
 
-            // Print console msg
-            m_buffer << "Console out: Entity moved: Entity: "
-                     << entityMoveMsg.entity.id
-                     << " deltaPosition: " << entityMoveMsg.deltaPosition
+            m_buffer << "Console out: Set local translation of Entity: "
+                     << setLocalTranslationMsg.entity.id
+                     << " to: " << setLocalTranslationMsg.localTranslation
                      << std::endl;
             break;
         }
-        case ds_msg::MessageType::MoveForward:
+        case ds_msg::MessageType::SetLocalOrientation:
         {
-            ds_msg::MoveForward moveForwardMsg;
-            (*messages) >> moveForwardMsg;
+            ds_msg::SetLocalOrientation setLocalOrientationMsg;
+            (*messages) >> setLocalOrientationMsg;
 
-            // Print move forward msg
-            m_buffer << "Console out: Move forward message." << std::endl;
-
+            m_buffer << "Console out: Set local orientation of Entity: "
+                     << setLocalOrientationMsg.entity.id
+                     << " to: " << setLocalOrientationMsg.localOrientation
+                     << std::endl;
             break;
         }
-        case ds_msg::MessageType::MoveBackward:
+        case ds_msg::MessageType::SetLocalScale:
         {
-            ds_msg::MoveBackward moveBackwardMsg;
-            (*messages) >> moveBackwardMsg;
+            ds_msg::SetLocalScale setLocalScaleMsg;
+            (*messages) >> setLocalScaleMsg;
 
-            // Print move backward msg
-            m_buffer << "Console out: Move backward message." << std::endl;
-
-            break;
-        }
-        case ds_msg::MessageType::StrafeLeft:
-        {
-            ds_msg::StrafeLeft strafeLeftMsg;
-            (*messages) >> strafeLeftMsg;
-
-            // Print strafe left msg
-            m_buffer << "Console out: Strafe left message." << std::endl;
-            break;
-        }
-        case ds_msg::MessageType::StrafeRight:
-        {
-            ds_msg::StrafeRight strafeRightMsg;
-            (*messages) >> strafeRightMsg;
-
-            // Print strafe right msg
-            m_buffer << "Console out: Strafe right message." << std::endl;
-            break;
-        }
-        case ds_msg::MessageType::SetLocalTransform:
-        {
-            ds_msg::SetLocalTransform setLocalMsg;
-            (*messages) >> setLocalMsg;
-
-            // m_buffer << "Set local transform of " << setLocalMsg.entity.id
-            //          << " to: " << setLocalMsg.localTransform << std::endl;
+            m_buffer << "Console out: Set local scale of Entity: "
+                     << setLocalScaleMsg.entity.id
+                     << " to: " << setLocalScaleMsg.localScale << std::endl;
             break;
         }
         case ds_msg::MessageType::SetAnimationIndex:
@@ -309,13 +282,13 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::MouseMotion mouseMotionEvent;
             (*messages) >> mouseMotionEvent;
 
-            m_buffer << "Console out: mouse now at position "
-                     << mouseMotionEvent.x << ", " << mouseMotionEvent.y
-                     << " with buttons pressed Left: "
-                     << mouseMotionEvent.button.left
-                     << " Middle: " << mouseMotionEvent.button.middle
-                     << " Right: " << mouseMotionEvent.button.right << "."
-                     << std::endl;
+            // m_buffer << "Console out: mouse now at position "
+            //          << mouseMotionEvent.x << ", " << mouseMotionEvent.y
+            //          << " with buttons pressed Left: "
+            //          << mouseMotionEvent.button.left
+            //          << " Middle: " << mouseMotionEvent.button.middle
+            //          << " Right: " << mouseMotionEvent.button.right << "."
+            //          << std::endl;
             break;
         }
         case ds_msg::MessageType::MouseButton:
@@ -323,13 +296,15 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::MouseButton mouseButtonEvent;
             (*messages) >> mouseButtonEvent;
 
-            m_buffer << "Console out: mouse button state changed, current "
-                        "state: Left: "
-                     << mouseButtonEvent.button.left
-                     << " Middle: " << mouseButtonEvent.button.middle
-                     << " Right: " << mouseButtonEvent.button.right << " at ("
-                     << mouseButtonEvent.x << ", " << mouseButtonEvent.y << ")."
-                     << std::endl;
+            // m_buffer << "Console out: mouse button state changed, current "
+            //             "state: Left: "
+            //          << mouseButtonEvent.button.left
+            //          << " Middle: " << mouseButtonEvent.button.middle
+            //          << " Right: " << mouseButtonEvent.button.right << " at
+            //          ("
+            //          << mouseButtonEvent.x << ", " << mouseButtonEvent.y <<
+            //          ")."
+            //          << std::endl;
             break;
         }
         case ds_msg::MessageType::CreatePanel:
@@ -371,8 +346,8 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::ButtonFired buttonFireMsg;
             (*messages) >> buttonFireMsg;
 
-            m_buffer << "Console out: button entity id: " << buttonFireMsg.entity.id
-                     << " fired." << std::endl;
+            m_buffer << "Console out: button entity id: "
+                     << buttonFireMsg.entity.id << " fired." << std::endl;
             break;
         }
         default:

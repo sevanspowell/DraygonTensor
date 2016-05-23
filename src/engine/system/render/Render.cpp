@@ -644,47 +644,109 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 
             break;
         }
-        case ds_msg::MessageType::MoveEntity:
-        {
-            ds_msg::MoveEntity entityMoveMsg;
-            (*messages) >> entityMoveMsg;
+        // case ds_msg::MessageType::MoveEntity:
+        // {
+        //     ds_msg::MoveEntity entityMoveMsg;
+        //     (*messages) >> entityMoveMsg;
 
+        //     Instance transform =
+        //         m_transformComponentManager.GetInstanceForEntity(
+        //             entityMoveMsg.entity);
+
+        //     if (transform.IsValid())
+        //     {
+        //         // Get current transform
+        //         const ds_math::Matrix4 &currentTransform =
+        //             m_transformComponentManager.GetLocalTransform(transform);
+        //         // Translate it
+        //         ds_math::Matrix4 newTransform =
+        //             currentTransform *
+        //             ds_math::Matrix4::CreateTranslationMatrix(
+        //                 entityMoveMsg.deltaPosition);
+
+        //         // Set transform of entity
+        //         m_transformComponentManager.SetLocalTransform(transform,
+        //                                                       newTransform);
+        //     }
+
+        //     break;
+        // }
+        // case ds_msg::MessageType::SetLocalTransform:
+        // {
+        //     ds_msg::SetLocalTransform setLocalMsg;
+        //     (*messages) >> setLocalMsg;
+
+        //     // std::cout << "Set local transform (Render): " <<
+        //     setLocalMsg.entity.id << std::endl;
+        //     Instance transform =
+        //         m_transformComponentManager.GetInstanceForEntity(
+        //             setLocalMsg.entity);
+
+        //     if (transform.IsValid())
+        //     {
+        //         // Set transform of entity
+        //         m_transformComponentManager.SetLocalTransform(
+        //             transform, setLocalMsg.localTransform);
+        //     }
+
+        //     break;
+        // }
+        case ds_msg::MessageType::SetLocalTranslation:
+        {
+            ds_msg::SetLocalTranslation setTranslationMsg;
+            (*messages) >> setTranslationMsg;
+
+            // Get component instance of entity to move
             Instance transform =
                 m_transformComponentManager.GetInstanceForEntity(
-                    entityMoveMsg.entity);
+                    setTranslationMsg.entity);
 
+            // If has transform component
             if (transform.IsValid())
             {
-                // Get current transform
-                const ds_math::Matrix4 &currentTransform =
-                    m_transformComponentManager.GetLocalTransform(transform);
-                // Translate it
-                ds_math::Matrix4 newTransform =
-                    currentTransform *
-                    ds_math::Matrix4::CreateTranslationMatrix(
-                        entityMoveMsg.deltaPosition);
-
-                // Set transform of entity
-                m_transformComponentManager.SetLocalTransform(transform,
-                                                              newTransform);
+                // Set translation of entity
+                m_transformComponentManager.SetLocalTranslation(
+                    transform, setTranslationMsg.localTranslation);
             }
 
             break;
         }
-        case ds_msg::MessageType::SetLocalTransform:
+        case ds_msg::MessageType::SetLocalOrientation:
         {
-            ds_msg::SetLocalTransform setLocalMsg;
-            (*messages) >> setLocalMsg;
+            ds_msg::SetLocalOrientation setOrientationMsg;
+            (*messages) >> setOrientationMsg;
 
+            // Get component instance of entity to rotate
             Instance transform =
                 m_transformComponentManager.GetInstanceForEntity(
-                    setLocalMsg.entity);
+                    setOrientationMsg.entity);
 
+            // If has transform component
             if (transform.IsValid())
             {
-                // Set transform of entity
-                m_transformComponentManager.SetLocalTransform(
-                    transform, setLocalMsg.localTransform);
+                // Set orientation of entity
+                m_transformComponentManager.SetLocalOrientation(
+                    transform, setOrientationMsg.localOrientation);
+            }
+
+            break;
+        }
+        case ds_msg::MessageType::SetLocalScale:
+        {
+            ds_msg::SetLocalScale setScaleMsg;
+            (*messages) >> setScaleMsg;
+
+            // Get component instance of entity to scale
+            Instance transform =
+                m_transformComponentManager.GetInstanceForEntity(
+                    setScaleMsg.entity);
+
+            // If has transform component
+            if (transform.IsValid())
+            {
+                // Set scale of entity
+                m_transformComponentManager.SetLocalScale(
+                    transform, setScaleMsg.localScale);
             }
 
             break;
@@ -1431,12 +1493,14 @@ void Render::RenderScene(float deltaTime)
             // If has transform instance
             if (transformInstance.IsValid())
             {
+                ds_math::Matrix4 worldTransform =
+                    m_transformComponentManager.GetWorldTransform(
+                        transformInstance);
                 // Update object constant buffer with world transform of this
                 // transform instance
-                m_objectBufferDescrip.InsertMemberData(
-                    "Object.modelMatrix", sizeof(ds_math::Matrix4),
-                    &m_transformComponentManager.GetWorldTransform(
-                        transformInstance));
+                m_objectBufferDescrip.InsertMemberData("Object.modelMatrix",
+                                                       sizeof(ds_math::Matrix4),
+                                                       &worldTransform[0][0]);
 
                 // First, get mesh resource that holds skeleton/animation data
                 MeshResource *meshResource =

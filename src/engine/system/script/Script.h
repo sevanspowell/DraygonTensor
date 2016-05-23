@@ -104,15 +104,6 @@ public:
                        const ds_math::Vector3 &position);
 
     /**
-     * Send a move entity message to all systems.
-     *
-     * @param  entity         Entity, entity to move.
-     * @param  deltaPosition  const ds_math::Vector3 &, amount and direction to
-     * move entity.
-     */
-    void MoveEntity(Entity entity, const ds_math::Vector3 &deltaPosition);
-
-    /**
      * Get the world transform of an entity.
      *
      * @param   entity  Entity, entity to get world transform of.
@@ -130,12 +121,57 @@ public:
     ds_math::Matrix4 GetLocalTransform(Entity entity) const;
 
     /**
-     * Send a set local transform message.
+     * Get the local translation of an entity.
      *
-     * @param  entity     Entity, entity to set local transform of.
-     * @param  transform  const ds_math::Matrix4 &, new local transform.
+     * @param   entity  Entity, entity to get local translation of.
+     * @return          ds_math::Vector3, local translation of the given
+     *                  entity.
      */
-    void SetLocalTransform(Entity entity, const ds_math::Matrix4 &transform);
+    ds_math::Vector3 GetLocalTranslation(Entity entity) const;
+
+    /**
+     * Set the local translation of an entity.
+     *
+     * @param  entity       Entity, entity to set the local translation of.
+     * @param  translation  const ds_math::Vector3 &, new translation to set.
+     */
+    void SetLocalTranslation(Entity entity,
+                             const ds_math::Vector3 &translation);
+
+    /**
+     * Get the local scale of an entity.
+     *
+     * @param   entity  Entity, entity to get the local scale of.
+     * @return          ds_math::Vector3, local scale of the given
+     *                  entity.
+     */
+    ds_math::Vector3 GetLocalScale(Entity entity) const;
+
+    /**
+     * Set the local scale of an entity.
+     *
+     * @param  entity  Entity, entity to set the local scale of.
+     * @param  scale   const ds_math::Vector3 &, new scale to set.
+     */
+    void SetLocalScale(Entity entity, const ds_math::Vector3 &scale);
+
+    /**
+     * Get the local orientation of an entity.
+     *
+     * @param   entity  Entity, entity to get the local orientation of.
+     * @return          ds_math::Quaternion, local orientation of the
+     *                  given entity.
+     */
+    ds_math::Quaternion GetLocalOrientation(Entity entity) const;
+
+    /**
+     * Set the local orientation of an entity.
+     *
+     * @param  entity       Entity, entity to set the local orientation of.
+     * @param  orientation  const ds_math::Quaternion &, orientatation to set.
+     */
+    void SetLocalOrientation(Entity entity,
+                             const ds_math::Quaternion &orientation);
 
     /**
      * Send a set animation index message.

@@ -152,42 +152,6 @@ static int l_GetNextMessage(lua_State *L)
                 lua_setfield(L, -2, "script"); // table.script = script message
 
                 break;
-            case ds_msg::MessageType::MoveForward:
-                ds_msg::MoveForward moveForwardMsg;
-                msg >> moveForwardMsg;
-
-                // Create payload table
-                lua_pushliteral(L, "move_forward");
-                lua_setfield(L, -2, "type"); // table.type = move_forward
-
-                break;
-            case ds_msg::MessageType::MoveBackward:
-                ds_msg::MoveBackward moveBackwardMsg;
-                msg >> moveBackwardMsg;
-
-                // Create payload table
-                lua_pushliteral(L, "move_backward");
-                lua_setfield(L, -2, "type"); // table.type = move_backward
-
-                break;
-            case ds_msg::MessageType::StrafeLeft:
-                ds_msg::StrafeLeft strafeLeftMsg;
-                msg >> strafeLeftMsg;
-
-                // Create payload table
-                lua_pushliteral(L, "strafe_left");
-                lua_setfield(L, -2, "type"); // table.type = strafe_left
-
-                break;
-            case ds_msg::MessageType::StrafeRight:
-                ds_msg::StrafeRight strafeRightMsg;
-                msg >> strafeRightMsg;
-
-                // Create payload table
-                lua_pushliteral(L, "strafe_right");
-                lua_setfield(L, -2, "type"); // table.type = strafe_right
-
-                break;
             case ds_msg::MessageType::ButtonFired:
             {
                 ds_msg::ButtonFired buttonFiredMsg;
@@ -226,51 +190,6 @@ static int l_GetNextMessage(lua_State *L)
     return 1;
 }
 
-static int l_MoveEntity(lua_State *L)
-{
-    // Get number of arguments provided
-    int n = lua_gettop(L);
-    int expected = 2;
-    if (n != expected)
-    {
-        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
-    }
-
-    // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
-
-    // If first item on stack isn't user data (our script system)
-    if (!lua_isuserdata(L, -1))
-    {
-        // Error
-        luaL_argerror(L, 1, "lightuserdata");
-    }
-    else
-    {
-        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
-        assert(scriptPtr != NULL);
-
-        // Pop user data off stack now that we are done with it
-        lua_pop(L, 1);
-
-        ds::Entity *entity = NULL;
-        ds_math::Vector3 *delta = NULL;
-
-        entity = (ds::Entity *)lua_touserdata(L, 1);
-        delta = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
-
-        if (entity != NULL && delta != NULL)
-        {
-            scriptPtr->MoveEntity(*entity, *delta);
-        }
-    }
-
-    // Entity and Vector3 arguments
-    assert(lua_gettop(L) == 2);
-
-    return 0;
-}
-
 static int l_GetWorldTransform(lua_State *L)
 {
     // Get number of arguments provided
@@ -300,7 +219,7 @@ static int l_GetWorldTransform(lua_State *L)
 
         ds::Entity *entity = NULL;
 
-        entity = (ds::Entity *)lua_touserdata(L, 1);
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
 
         if (entity != NULL)
         {
@@ -355,7 +274,7 @@ static int l_GetLocalTransform(lua_State *L)
 
         ds::Entity *entity = NULL;
 
-        entity = (ds::Entity *)lua_touserdata(L, 1);
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
 
         if (entity != NULL)
         {
@@ -383,51 +302,6 @@ static int l_GetLocalTransform(lua_State *L)
     assert(lua_gettop(L) == 2);
 
     return 1;
-}
-
-static int l_SetLocalTransform(lua_State *L)
-{
-    // Get number of arguments provided
-    int n = lua_gettop(L);
-    int expected = 2;
-    if (n != expected)
-    {
-        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
-    }
-
-    // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
-
-    // If first item on stack isn't user data (our script system)
-    if (!lua_isuserdata(L, -1))
-    {
-        // Error
-        luaL_argerror(L, 1, "lightuserdata");
-    }
-    else
-    {
-        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
-        assert(scriptPtr != NULL);
-
-        // Pop user data off stack now that we are done with it
-        lua_pop(L, 1);
-
-        ds::Entity *entity = NULL;
-        ds_math::Matrix4 *localTransform = NULL;
-
-        entity = (ds::Entity *)lua_touserdata(L, 1);
-        localTransform = (ds_math::Matrix4 *)luaL_checkudata(L, 2, "Matrix4");
-
-        if (entity != NULL && localTransform != NULL)
-        {
-            scriptPtr->SetLocalTransform(*entity, *localTransform);
-        }
-    }
-
-    // Entity and Matrix4 arguments
-    assert(lua_gettop(L) == 2);
-
-    return 0;
 }
 
 static int l_SetEntityAnimationIndex(lua_State *L)
@@ -458,7 +332,8 @@ static int l_SetEntityAnimationIndex(lua_State *L)
 
         ds::Entity *entity = NULL;
 
-        entity = (ds::Entity *)lua_touserdata(L, 1);
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
+
         ds_math::scalar animationIndex =
             (ds_math::scalar)luaL_checknumber(L, 2);
 
@@ -634,21 +509,351 @@ static int l_CreateGUIButton(lua_State *L)
     return 1;
 }
 
+static int l_GetLocalTranslation(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expected = 1;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push script system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our script system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
+
+        if (entity != NULL)
+        {
+            // Allocate memory for Vector3
+            ds_math::Vector3 *localTranslation =
+                (ds_math::Vector3 *)lua_newuserdata(L,
+                                                    sizeof(ds_math::Vector3));
+
+            // Get world transform
+            *localTranslation = scriptPtr->GetLocalTranslation(*entity);
+
+            // Get Matrix4 metatable and put on top of stack
+            luaL_getmetatable(L, "Vector3");
+            // Set it as metatable of new user data (the Matrix4 result - second
+            // from top of stack)
+            lua_setmetatable(L, -2);
+        }
+        else
+        {
+            return luaL_error(L, "Given entity is not valid.");
+        }
+    }
+
+    // Entity argument, Vector3 result
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_GetLocalScale(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expected = 1;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push script system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our script system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
+
+        if (entity != NULL)
+        {
+            // Allocate memory for Vector3
+            ds_math::Vector3 *localScale = (ds_math::Vector3 *)lua_newuserdata(
+                L, sizeof(ds_math::Vector3));
+
+            // Get world scale 
+            *localScale = scriptPtr->GetLocalScale(*entity);
+
+            // Get Matrix4 metatable and put on top of stack
+            luaL_getmetatable(L, "Vector3");
+            // Set it as metatable of new user data (the Matrix4 result - second
+            // from top of stack)
+            lua_setmetatable(L, -2);
+        }
+        else
+        {
+            return luaL_error(L, "Given entity is not valid.");
+        }
+    }
+
+    // Entity argument, Vector3 result
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_GetLocalOrientation(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expected = 1;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push script system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our script system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
+
+        if (entity != NULL)
+        {
+            // Allocate memory for Quaternion
+            ds_math::Quaternion *localScale =
+                (ds_math::Quaternion *)lua_newuserdata(
+                    L, sizeof(ds_math::Quaternion));
+
+            // Get local orientation 
+            *localScale = scriptPtr->GetLocalOrientation(*entity);
+
+            // Get Matrix4 metatable and put on top of stack
+            luaL_getmetatable(L, "Quaternion");
+            // Set it as metatable of new user data (the Matrix4 result - second
+            // from top of stack)
+            lua_setmetatable(L, -2);
+        }
+        else
+        {
+            return luaL_error(L, "Given entity is not valid.");
+        }
+    }
+
+    // Entity argument, Vector3 result
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_SetLocalTranslation(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expected = 2;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push script system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our script system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+        ds_math::Vector3 *translation = NULL;
+
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
+        translation = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
+
+        if (entity != NULL && translation != NULL)
+        {
+            // Set local translation 
+            scriptPtr->SetLocalTranslation(*entity, *translation);
+        }
+        else
+        {
+            return luaL_error(L, "Given entity or translation is not valid.");
+        }
+    }
+
+    // Entity argument, translation result
+    assert(lua_gettop(L) == 2);
+
+    return 0;
+}
+
+static int l_SetLocalScale(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expected = 2;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push script system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our script system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+        ds_math::Vector3 *scale = NULL;
+
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
+        scale = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
+
+        if (entity != NULL && scale != NULL)
+        {
+            // Set local scale 
+            scriptPtr->SetLocalScale(*entity, *scale);
+        }
+        else
+        {
+            return luaL_error(L, "Given entity or scale is not valid.");
+        }
+    }
+
+    // Entity argument, scale result
+    assert(lua_gettop(L) == 2);
+
+    return 0;
+}
+
+static int l_SetLocalOrientation(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expected = 2;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push script system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our script system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+        ds_math::Quaternion *orientation = NULL;
+
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
+        orientation = (ds_math::Quaternion *)luaL_checkudata(L, 2, "Quaternion");
+
+        if (entity != NULL && orientation != NULL)
+        {
+            // Set local orientation 
+            scriptPtr->SetLocalOrientation(*entity, *orientation);
+        }
+        else
+        {
+            return luaL_error(L, "Given entity or orientation is not valid.");
+        }
+    }
+
+    // Entity argument, quaternion result
+    assert(lua_gettop(L) == 2);
+
+    return 0;
+}
+
 ds::ScriptBindingSet LoadScriptBindings()
 {
     ds::ScriptBindingSet scriptBindings;
     scriptBindings.AddFunction("is_next_message", l_IsNextMessage);
     scriptBindings.AddFunction("get_next_message", l_GetNextMessage);
     scriptBindings.AddFunction("spawn_prefab", l_SpawnPrefab);
-    scriptBindings.AddFunction("move_entity", l_MoveEntity);
     scriptBindings.AddFunction("get_world_transform", l_GetWorldTransform);
     scriptBindings.AddFunction("get_local_transform", l_GetLocalTransform);
-    scriptBindings.AddFunction("set_local_transform", l_SetLocalTransform);
     scriptBindings.AddFunction("set_entity_animation_index",
                                l_SetEntityAnimationIndex);
     scriptBindings.AddFunction("set_skybox_material", l_SetSkyboxMaterial);
     scriptBindings.AddFunction("create_gui_panel", l_CreateGUIPanel);
     scriptBindings.AddFunction("create_gui_button", l_CreateGUIButton);
+    scriptBindings.AddFunction("get_local_translation", l_GetLocalTranslation);
+    scriptBindings.AddFunction("set_local_translation", l_SetLocalTranslation);
+    scriptBindings.AddFunction("get_local_scale", l_GetLocalScale);
+    scriptBindings.AddFunction("set_local_scale", l_SetLocalScale);
+    scriptBindings.AddFunction("get_local_orientation", l_GetLocalOrientation);
+    scriptBindings.AddFunction("set_local_orientation", l_SetLocalOrientation);
 
     return scriptBindings;
 }
