@@ -138,8 +138,8 @@ void Physics::Update(float deltaTime)
                 ds_msg::SetLocalOrientation setOrientationMsg;
                 setOrientationMsg.entity = entity;
                 setOrientationMsg.localOrientation =
-                    ds_math::Quaternion::Normalize(currentLocalOrientation *
-                                                   changeInOrientation);
+                    ds_math::Quaternion::Normalize(changeInOrientation *
+                                                   currentLocalOrientation);
                 ds_msg::AppendMessage(&m_messagesGenerated,
                                       ds_msg::MessageType::SetLocalOrientation,
                                       sizeof(ds_msg::SetLocalOrientation),

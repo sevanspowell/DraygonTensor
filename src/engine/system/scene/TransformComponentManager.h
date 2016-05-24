@@ -119,7 +119,7 @@ public:
     const ds_math::Quaternion &GetLocalOrientation(Instance i) const;
 
     /**
-     *  Get the world transform of the component instance.
+     *  Get the world transform of the given component instance.
      *
      *  @param  i   Instance, component instance to get the world transform
      *  of.
@@ -128,10 +128,32 @@ public:
      */
     ds_math::Matrix4 GetWorldTransform(Instance i) const;
 
+    /**
+     * Get the world translation of the given component instance.
+     *
+     * @param   i  Instance, component instance to get the world translation of.
+     * @return     const ds_math::Vector3 &, world translation of the component
+     *             instance.
+     */
     const ds_math::Vector3 &GetWorldTranslation(Instance i) const;
 
+    /**
+     * Get the world scale of the given component instance.
+     *
+     * @param   i  Instance, component instance to get the world scale of.
+     * @return     const ds_math::Vector3 &, world scale of the component
+     *             instance.
+     */
     const ds_math::Vector3 &GetWorldScale(Instance i) const;
 
+    /**
+     * Get the world orientation of the given component instance.
+     *
+     * @param   i   Instance, component instance to get the world orientation
+     *              of.
+     * @return      const ds_math::Quaternion &, world orientation of the
+     *              component instance.
+     */
     const ds_math::Quaternion &GetWorldOrientation(Instance i) const;
 
     /**

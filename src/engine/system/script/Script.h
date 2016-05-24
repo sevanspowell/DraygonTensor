@@ -121,6 +121,15 @@ public:
     ds_math::Matrix4 GetLocalTransform(Entity entity) const;
 
     /**
+     * Get the world translation of an entity.
+     *
+     * @param   entity  Entity, entity to get world translation of.
+     * @return          ds_math::Vector3, world translation of the given
+     *                  entity.
+     */
+    ds_math::Vector3 GetWorldTranslation(Entity entity) const;
+
+    /**
      * Get the local translation of an entity.
      *
      * @param   entity  Entity, entity to get local translation of.
@@ -139,6 +148,15 @@ public:
                              const ds_math::Vector3 &translation);
 
     /**
+     * Get the world scale of an entity.
+     *
+     * @param   entity  Entity, entity to get the world scale of.
+     * @return          ds_math::Vector3, world scale of the given
+     *                  entity.
+     */
+    ds_math::Vector3 GetWorldScale(Entity entity) const;
+
+    /**
      * Get the local scale of an entity.
      *
      * @param   entity  Entity, entity to get the local scale of.
@@ -154,6 +172,15 @@ public:
      * @param  scale   const ds_math::Vector3 &, new scale to set.
      */
     void SetLocalScale(Entity entity, const ds_math::Vector3 &scale);
+
+    /**
+     * Get the world orientation of an entity.
+     *
+     * @param   entity  Entity, entity to get the world orientation of.
+     * @return          ds_math::Quaternion, world orientation of the
+     *                  given entity.
+     */
+    ds_math::Quaternion GetWorldOrientation(Entity entity) const;
 
     /**
      * Get the local orientation of an entity.

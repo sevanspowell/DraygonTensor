@@ -76,7 +76,8 @@ TransformComponentManager::GetLocalTranslation(Instance i) const
 const ds_math::Vector3 &
 TransformComponentManager::GetLocalScale(Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(
+           i.index >= 0 && i.index < GetNumInstances() &&
            "TransformComponentManager::GetLocalScale tried to get invalid "
            "instance");
 
@@ -87,9 +88,9 @@ const ds_math::Quaternion &
 TransformComponentManager::GetLocalOrientation(Instance i) const
 {
     assert(
-        i.index >= 0 && i.index < GetNumInstances() &&
-        "TransformComponentManager::GetLocalOrientation tried to get invalid "
-        "instance");
+           i.index >= 0 && i.index < GetNumInstances() &&
+           "TransformComponentManager::GetLocalOrientation tried to get invalid "
+           "instance");
 
     return m_data.component[i.index].localOrientation;
 }

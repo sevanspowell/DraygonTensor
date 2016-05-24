@@ -568,6 +568,65 @@ static int l_GetLocalTranslation(lua_State *L)
     return 1;
 }
 
+static int l_GetWorldTranslation(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expected = 1;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push script system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our script system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
+
+        if (entity != NULL)
+        {
+            // Allocate memory for Vector3
+            ds_math::Vector3 *worldTranslation =
+                (ds_math::Vector3 *)lua_newuserdata(L,
+                                                    sizeof(ds_math::Vector3));
+
+            // Get world transform
+            *worldTranslation = scriptPtr->GetWorldTranslation(*entity);
+
+            // Get Matrix4 metatable and put on top of stack
+            luaL_getmetatable(L, "Vector3");
+            // Set it as metatable of new user data (the Matrix4 result - second
+            // from top of stack)
+            lua_setmetatable(L, -2);
+        }
+        else
+        {
+            return luaL_error(L, "Given entity is not valid.");
+        }
+    }
+
+    // Entity argument, Vector3 result
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
 static int l_GetLocalScale(lua_State *L)
 {
     // Get number of arguments provided
@@ -605,8 +664,66 @@ static int l_GetLocalScale(lua_State *L)
             ds_math::Vector3 *localScale = (ds_math::Vector3 *)lua_newuserdata(
                 L, sizeof(ds_math::Vector3));
 
-            // Get world scale 
+            // Get world scale
             *localScale = scriptPtr->GetLocalScale(*entity);
+
+            // Get Matrix4 metatable and put on top of stack
+            luaL_getmetatable(L, "Vector3");
+            // Set it as metatable of new user data (the Matrix4 result - second
+            // from top of stack)
+            lua_setmetatable(L, -2);
+        }
+        else
+        {
+            return luaL_error(L, "Given entity is not valid.");
+        }
+    }
+
+    // Entity argument, Vector3 result
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_GetWorldScale(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expected = 1;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push script system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our script system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
+
+        if (entity != NULL)
+        {
+            // Allocate memory for Vector3
+            ds_math::Vector3 *worldScale = (ds_math::Vector3 *)lua_newuserdata(
+                L, sizeof(ds_math::Vector3));
+
+            // Get world scale
+            *worldScale = scriptPtr->GetWorldScale(*entity);
 
             // Get Matrix4 metatable and put on top of stack
             luaL_getmetatable(L, "Vector3");
@@ -664,7 +781,7 @@ static int l_GetLocalOrientation(lua_State *L)
                 (ds_math::Quaternion *)lua_newuserdata(
                     L, sizeof(ds_math::Quaternion));
 
-            // Get local orientation 
+            // Get local orientation
             *localScale = scriptPtr->GetLocalOrientation(*entity);
 
             // Get Matrix4 metatable and put on top of stack
@@ -720,7 +837,7 @@ static int l_SetLocalTranslation(lua_State *L)
 
         if (entity != NULL && translation != NULL)
         {
-            // Set local translation 
+            // Set local translation
             scriptPtr->SetLocalTranslation(*entity, *translation);
         }
         else
@@ -770,7 +887,7 @@ static int l_SetLocalScale(lua_State *L)
 
         if (entity != NULL && scale != NULL)
         {
-            // Set local scale 
+            // Set local scale
             scriptPtr->SetLocalScale(*entity, *scale);
         }
         else
@@ -816,11 +933,12 @@ static int l_SetLocalOrientation(lua_State *L)
         ds_math::Quaternion *orientation = NULL;
 
         entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
-        orientation = (ds_math::Quaternion *)luaL_checkudata(L, 2, "Quaternion");
+        orientation =
+            (ds_math::Quaternion *)luaL_checkudata(L, 2, "Quaternion");
 
         if (entity != NULL && orientation != NULL)
         {
-            // Set local orientation 
+            // Set local orientation
             scriptPtr->SetLocalOrientation(*entity, *orientation);
         }
         else
@@ -833,6 +951,65 @@ static int l_SetLocalOrientation(lua_State *L)
     assert(lua_gettop(L) == 2);
 
     return 0;
+}
+
+static int l_GetWorldOrientation(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expected = 1;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push script system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our script system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
+
+        if (entity != NULL)
+        {
+            // Allocate memory for Quaternion
+            ds_math::Quaternion *worldScale =
+                (ds_math::Quaternion *)lua_newuserdata(
+                    L, sizeof(ds_math::Quaternion));
+
+            // Get world orientation
+            *worldScale = scriptPtr->GetWorldOrientation(*entity);
+
+            // Get Matrix4 metatable and put on top of stack
+            luaL_getmetatable(L, "Quaternion");
+            // Set it as metatable of new user data (the Matrix4 result - second
+            // from top of stack)
+            lua_setmetatable(L, -2);
+        }
+        else
+        {
+            return luaL_error(L, "Given entity is not valid.");
+        }
+    }
+
+    // Entity argument, Vector3 result
+    assert(lua_gettop(L) == 2);
+
+    return 1;
 }
 
 ds::ScriptBindingSet LoadScriptBindings()
@@ -850,10 +1027,13 @@ ds::ScriptBindingSet LoadScriptBindings()
     scriptBindings.AddFunction("create_gui_button", l_CreateGUIButton);
     scriptBindings.AddFunction("get_local_translation", l_GetLocalTranslation);
     scriptBindings.AddFunction("set_local_translation", l_SetLocalTranslation);
+    scriptBindings.AddFunction("get_world_translation", l_GetWorldTranslation);
     scriptBindings.AddFunction("get_local_scale", l_GetLocalScale);
     scriptBindings.AddFunction("set_local_scale", l_SetLocalScale);
+    scriptBindings.AddFunction("get_world_scale", l_GetWorldScale);
     scriptBindings.AddFunction("get_local_orientation", l_GetLocalOrientation);
     scriptBindings.AddFunction("set_local_orientation", l_SetLocalOrientation);
+    scriptBindings.AddFunction("get_world_orientation", l_GetWorldOrientation);
 
     return scriptBindings;
 }

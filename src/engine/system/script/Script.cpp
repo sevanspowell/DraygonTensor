@@ -222,6 +222,20 @@ ds_math::Matrix4 Script::GetLocalTransform(Entity entity) const
     return localTransform;
 }
 
+ds_math::Vector3 Script::GetWorldTranslation(Entity entity) const
+{
+    ds_math::Vector3 translation;
+
+    Instance i = m_transformManager.GetInstanceForEntity(entity);
+
+    if (i.IsValid())
+    {
+        translation = m_transformManager.GetWorldTranslation(i);
+    }
+
+    return translation;
+}
+
 ds_math::Vector3 Script::GetLocalTranslation(Entity entity) const
 {
     ds_math::Vector3 translation;
@@ -248,6 +262,20 @@ void Script::SetLocalTranslation(Entity entity,
         sizeof(ds_msg::SetLocalTranslation), &setTranslationMsg);
 }
 
+ds_math::Vector3 Script::GetWorldScale(Entity entity) const
+{
+    ds_math::Vector3 scale;
+
+    Instance i = m_transformManager.GetInstanceForEntity(entity);
+
+    if (i.IsValid())
+    {
+        scale = m_transformManager.GetWorldScale(i);
+    }
+
+    return scale;
+}
+
 ds_math::Vector3 Script::GetLocalScale(Entity entity) const
 {
     ds_math::Vector3 scale;
@@ -271,6 +299,20 @@ void Script::SetLocalScale(Entity entity, const ds_math::Vector3 &scale)
     ds_msg::AppendMessage(&m_messagesGenerated,
                           ds_msg::MessageType::SetLocalScale,
                           sizeof(ds_msg::SetLocalScale), &setScaleMsg);
+}
+
+ds_math::Quaternion Script::GetWorldOrientation(Entity entity) const
+{
+    ds_math::Quaternion orientation;
+
+    Instance i = m_transformManager.GetInstanceForEntity(entity);
+
+    if (i.IsValid())
+    {
+        orientation = m_transformManager.GetWorldOrientation(i);
+    }
+
+    return orientation;
 }
 
 ds_math::Quaternion Script::GetLocalOrientation(Entity entity) const
@@ -471,9 +513,8 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
             (*messages) >> setTranslationMsg;
 
             // Get component instance of entity to move
-            Instance transform =
-                m_transformManager.GetInstanceForEntity(
-                    setTranslationMsg.entity);
+            Instance transform = m_transformManager.GetInstanceForEntity(
+                setTranslationMsg.entity);
 
             // If has transform component
             if (transform.IsValid())
@@ -491,9 +532,8 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
             (*messages) >> setOrientationMsg;
 
             // Get component instance of entity to rotate
-            Instance transform =
-                m_transformManager.GetInstanceForEntity(
-                    setOrientationMsg.entity);
+            Instance transform = m_transformManager.GetInstanceForEntity(
+                setOrientationMsg.entity);
 
             // If has transform component
             if (transform.IsValid())
@@ -511,15 +551,15 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
             (*messages) >> setScaleMsg;
 
             // Get component instance of entity to scale
-            Instance transform = m_transformManager.GetInstanceForEntity(
-                setScaleMsg.entity);
+            Instance transform =
+                m_transformManager.GetInstanceForEntity(setScaleMsg.entity);
 
             // If has transform component
             if (transform.IsValid())
             {
                 // Set scale of entity
-                m_transformManager.SetLocalScale(
-                    transform, setScaleMsg.localScale);
+                m_transformManager.SetLocalScale(transform,
+                                                 setScaleMsg.localScale);
             }
 
             break;
