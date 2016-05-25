@@ -274,6 +274,8 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 
                     m_renderer->Init(viewportWidth, viewportHeight);
 
+                    m_renderer->SetBlending(true);
+
                     // Need a program to get information about Scene and Object
                     // constant
                     // buffers, so create a "fake" one.

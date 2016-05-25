@@ -46,6 +46,14 @@ public:
     virtual void SetDepthWriting(bool enableDisableDepthWriting);
 
     /**
+     * Enable or disable blending in the colour buffer.
+     *
+     * @param  enableBlending  bool, TRUE to enable colour buffer blending,
+     * FALSE to disable it.
+     */
+    virtual void SetBlending(bool enableBlending);
+
+    /**
      * Clear the colour, depth and/or stencil buffers of the renderer.
      *
      * Buffers passed a value of TRUE are cleared, buffers passed a value OF
