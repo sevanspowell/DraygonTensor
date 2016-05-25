@@ -155,13 +155,14 @@ public:
      * @param  height           unsigend int, height of the image in pixels.
      * @param  data             const void *, pointer to image data.
      */
-    virtual TextureHandle Create2DTexture(ImageFormat format,
-                                          RenderDataType imageDataType,
-                                          InternalImageFormat internalFormat,
-                                          bool generateMipMaps,
-                                          unsigned int width,
-                                          unsigned int height,
-                                          const void *data) = 0;
+    virtual RenderTextureHandle
+    Create2DTexture(ImageFormat format,
+                    RenderDataType imageDataType,
+                    InternalImageFormat internalFormat,
+                    bool generateMipMaps,
+                    unsigned int width,
+                    unsigned int height,
+                    const void *data) = 0;
 
     /**
      * Create a cubemap texture.
@@ -181,7 +182,7 @@ public:
      * @param  dataTopImage     const void *, pointer to top image data.
      * @param  dataBottomImage  const void *, pointer to bottom image data.
      */
-    virtual TextureHandle
+    virtual RenderTextureHandle
     CreateCubemapTexture(ImageFormat format,
                          RenderDataType imageDataType,
                          InternalImageFormat internalFormat,
@@ -202,22 +203,23 @@ public:
      * @param  samplerName    const std::string &, name of the sampler in
      * the
      * shader
-     * @param  textureHandle  TextureHandle, texture to bind to sampler.
+     * @param  textureHandle  RenderTextureHandle, texture to bind to sampler.
      */
     virtual void BindTextureToSampler(ProgramHandle programHandle,
                                       const std::string &samplerName,
-                                      const SamplerType &samplerType,
-                                      TextureHandle textureHandle) = 0;
+                                      const TextureType &samplerType,
+                                      RenderTextureHandle textureHandle) = 0;
 
     /**
      * Unbind texture from sampler.
      *
-     * @param  samplerType    const SamplerType &, type of sampler to unbind
+     * @param  samplerType    const TextureType &, type of sampler to unbind
      * texture from.
-     * @param  textureHandle  TextureHandle, texture to unbind.
+     * @param  textureHandle  RenderTextureHandle, texture to unbind.
      */
-    virtual void UnbindTextureFromSampler(const SamplerType &samplerType,
-                                          TextureHandle textureHandle) = 0;
+    virtual void
+    UnbindTextureFromSampler(const TextureType &samplerType,
+                             RenderTextureHandle textureHandle) = 0;
 
     /**
      * Memory layout of constant buffer in renderer may not match that of C/C++.

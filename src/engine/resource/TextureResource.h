@@ -28,13 +28,42 @@ public:
     /**
      * Default constructor.
      */
-
     TextureResource();
+
+    /**
+     * Copy constructor.
+     *
+     * @param  other  const TextureResource &, texture resource to
+     * copy.
+     */
+    TextureResource(const TextureResource &other);
+
+    /**
+     * Move constructor.
+     *
+     * @param  other  TextureResource &&, texture resource to move.
+     */
+    TextureResource(TextureResource &&other);
+
+    /**
+     * Copy assignment operator.
+     *
+     * @param   other  TextureResource &, texture resource to copy.
+     * @return         TextureResource &, copied texture resource.
+     */
+    TextureResource &operator=(const TextureResource &other);
+
+    /**
+     * Move assignment operator.
+     *
+     * @param   other  TextureResource &&, texture resource to move.
+     * @return         TextureResource &, moved texture resource.
+     */
+    TextureResource &operator=(TextureResource &&other);
 
     /**
      * Destructor.
      */
-
     ~TextureResource();
 
     /**

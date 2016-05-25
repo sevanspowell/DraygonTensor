@@ -18,46 +18,46 @@ public:
     /**
      * Texture constructor.
      *
-     * @param  samplerType  SamplerType, type of sampler that should be used to
+     * @param  textureType  TextureType, type of sampler that should be used to
      * sample from this texture.
-     * @param  texture      TextureHandle, handle to renderer texture.
+     * @param  texture      RenderTextureHandle, handle to renderer texture.
      */
-    Texture(SamplerType samplerType, TextureHandle texture);
+    Texture(TextureType textureType, RenderTextureHandle texture);
 
     /**
      * Get handle to renderer texture.
      *
-     * @return  TextureHandle, handle to renderer texture.
+     * @return  RenderTextureHandle, handle to renderer texture.
      */
-    TextureHandle GetTextureHandle() const;
+    RenderTextureHandle GetRenderTextureHandle() const;
 
     /**
      * Set the handle to renderer texture.
      *
-     * @param  textureHandle  TextureHandle, handle to renderer texture.
+     * @param  textureHandle  RenderTextureHandle, handle to renderer texture.
      */
-    void SetTextureHandle(TextureHandle textureHandle);
+    void SetRenderTextureHandle(RenderTextureHandle textureHandle);
 
     /**
      * Get the type of sampler that should be used to sample from this texture.
      *
-     * @return  SamplerType, type of sampler that should be used to sample from
+     * @return  TextureType, type of sampler that should be used to sample from
      * this texture.
      */
-    SamplerType GetSamplerType() const;
+    TextureType GetTextureType() const;
 
     /**
      * Set the type of sampler that should be used to sample from this texture.
      *
-     * @param  samplerType  SamplerType, type of sampler that should be used to
+     * @param  textureType  TextureType, type of sampler that should be used to
      * sample from this texture.
      */
-    void SetSamplerType(SamplerType samplerType);
+    void SetTextureType(TextureType textureType);
 
 private:
     /** Texture sampler type */
-    SamplerType m_samplerType;
+    TextureType m_textureType;
     /** Handle to renderer texture */
-    TextureHandle m_texture;
+    RenderTextureHandle m_texture;
 };
 }

@@ -5,6 +5,7 @@
 #include "engine/common/HandleManager.h"
 #include "engine/resource/MeshResource.h"
 #include "engine/resource/ResourceFactory.h"
+#include "engine/resource/TextureResourceManager.h"
 #include "engine/system/ISystem.h"
 #include "engine/system/render/ButtonComponentManager.h"
 #include "engine/system/render/CameraComponentManager.h"
@@ -20,6 +21,9 @@
 
 namespace ds
 {
+/** Handle to texture object */
+typedef Handle TextureHandle;
+
 /**
  * The render system is responsible for rendering the world, it contains all
  * render specific data, including the render component data for each entity.
@@ -27,6 +31,74 @@ namespace ds
 class Render : public ISystem
 {
 public:
+    /**
+     * The texture manager class manages access to and creation of texture
+     * objects.
+     */
+    class TextureManager
+    {
+    public:
+        /**
+         * Get the texture associated with the given texture handle.
+         *
+         * If no texture associated with given handle, will return FALSE and
+         * memory at the address given will be set to nullptr.
+         *
+         * @param   textureHandle  TextureHandle, texture handle to get texture
+         * associated with.
+         * @param   texture        ds_render::Texture **, address in memory to
+         * place Texture pointer at.
+         * @return                 bool, TRUE if texture for texture handle
+         * found, FALSE otherwise.
+         */
+        bool GetTexture(TextureHandle textureHandle,
+                        ds_render::Texture **texture);
+
+        /**
+         * Get the texture associated with the given texture handle.
+         *
+         * If no texture associated with given handle, will return FALSE and
+         * memory at the address given will not be modified.
+         *
+         * @param   textureHandle  TextureHandle, texture handle to get texture
+         * associated with.
+         * @param   texture        const ds_render::Texture **, address in
+         * memory to place Texture
+         * pointer.
+         * @return                 bool, TRUE if texture for texture handle
+         * found, FALSE otherwise.
+         */
+        bool GetTexture(TextureHandle textureHandle,
+                        const ds_render::Texture **texture) const;
+
+        /**
+         * Get the handle to the texture associated with the given texture
+         * resource handle, if no texture is associated with that texture
+         * resource handle, one will be created and the caller will be given a
+         * handle to it.
+         *
+         * @param   textureResourceHandle  TextureResourceHandle, handle to
+         * texture resource to get texture for.
+         * @return                         TextureHandle, handle to texture
+         * created/found.
+         */
+        TextureHandle GetTextureForResourceHandle(
+            TextureResourceHandle textureResourceHandle);
+
+    private:
+        /** Store handle with managed texture object for update purposes */
+        struct ManagedTexture
+        {
+            TextureHandle handle;
+            ds_render::Texture texture;
+        };
+
+        /** Texture storage */
+        std::vector<ManagedTexture> m_textures;
+        /** Handle manager */
+        HandleManager m_handleManager;
+    };
+
     /**
      * Initialize the render system.
      *
@@ -111,14 +183,14 @@ private:
      * paths that will be bound to that sampler. In the case of a cubemap
      * sampler for example, 6 images should be provided.
      *
-     * @param   samplerType  const ds_render::SamplerType &, type of the sampler
+     * @param   textureType  const ds_render::TextureType &, type of the sampler
      * to use to sample the provided texture resources.
      * @param   filePaths  const std::vector<std::string> &, path to texture
      *                     resources.
      * @return             ds_render::Texture, texture created.
      */
     ds_render::Texture
-    CreateTextureFromTextureResource(const ds_render::SamplerType &samplerType,
+    CreateTextureFromTextureResource(const ds_render::TextureType &textureType,
                                      const std::vector<std::string> &filePaths);
 
     /**
@@ -246,5 +318,8 @@ private:
 
     /** GUI-specific data */
     ds_render::ButtonComponentManager m_buttonComponentManager;
+
+    /** Texture resource manager */
+    TextureResourceManager m_textureResourceManager;
 };
 }

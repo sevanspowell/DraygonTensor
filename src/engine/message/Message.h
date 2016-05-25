@@ -65,7 +65,17 @@ enum class MessageType
     // Create GUI button message
     CreateButton,
     // On button fire (button click)
-    ButtonFired
+    ButtonFired,
+    // On set material parameter
+    SetMaterialParameterMatrix4,
+    SetMaterialParameterVector4,
+    SetMaterialParameterVector3,
+    SetMaterialParameterInt,
+    SetMaterialParameterFloat,
+    // On destroy entity
+    DestroyEntity,
+    // On reload all assets
+    ReloadAll
 };
 
 /**
@@ -216,5 +226,66 @@ struct CreateButton
 struct ButtonFired
 {
     ds::Entity entity;
+};
+
+struct SetMaterialParameterMatrix4
+{
+    ds::StringIntern::StringId materialResourceFilePath; // Path to material
+                                                         // resource file
+                                                         // containing material
+                                                         // to adjust parameter
+    ds::StringIntern::StringId parameter; // material parameter to change
+    ds_math::Matrix4 data; // data to change material parameter to
+};
+
+struct SetMaterialParameterVector4
+{
+    ds::StringIntern::StringId materialResourceFilePath; // Path to material
+                                                         // resource file
+                                                         // containing material
+                                                         // to adjust parameter
+    ds::StringIntern::StringId parameter; // material parameter to change
+    ds_math::Vector4 data; // data to change material parameter to
+};
+
+struct SetMaterialParameterVector3
+{
+    ds::StringIntern::StringId materialResourceFilePath; // Path to material
+                                                         // resource file
+                                                         // containing material
+                                                         // to adjust parameter
+    ds::StringIntern::StringId parameter; // material parameter to change
+    ds_math::Vector3 data; // data to change material parameter to
+};
+
+struct SetMaterialParameterInt
+{
+    ds::StringIntern::StringId materialResourceFilePath; // Path to material
+                                                         // resource file
+                                                         // containing material
+                                                         // to adjust parameter
+    ds::StringIntern::StringId
+        parameter; // data to change material parameter to
+    int data;      // data to change material parameter to
+};
+
+struct SetMaterialParameterFloat
+{
+    ds::StringIntern::StringId materialResourceFilePath; // Path to material
+                                                         // resource file
+                                                         // containing material
+                                                         // to adjust parameter
+    ds::StringIntern::StringId
+        parameter; // data to change material parameter to
+    float data;    // data to change material parameter to
+};
+
+struct DestroyEntity
+{
+    ds::Entity entity; // Entity to destroy
+};
+
+struct ReloadAll
+{
 };
 }

@@ -57,18 +57,18 @@ MaterialResource::CreateFromFile(std::string filePath)
                 // Convert type of the sampler as a string to an enum
                 std::string samplerTypeAsString;
                 // Type of the sampler as an enum
-                ds_render::SamplerType samplerType =
-                    ds_render::SamplerType::None;
+                ds_render::TextureType samplerType =
+                    ds_render::TextureType::None;
                 if (config.GetString(samplerTypeKey.str(),
                                      &samplerTypeAsString))
                 {
                     if (samplerTypeAsString == "2D")
                     {
-                        samplerType = ds_render::SamplerType::TwoDimensional;
+                        samplerType = ds_render::TextureType::TwoDimensional;
                     }
                     else if (samplerTypeAsString == "Cubemap")
                     {
-                        samplerType = ds_render::SamplerType::Cubemap;
+                        samplerType = ds_render::TextureType::Cubemap;
                     }
 
                     // Create new texture sampler
@@ -86,7 +86,7 @@ MaterialResource::CreateFromFile(std::string filePath)
                 // type key.
                 switch (samplerType)
                 {
-                case ds_render::SamplerType::TwoDimensional:
+                case ds_render::TextureType::TwoDimensional:
                 {
                     if ((samplerObjectKeys.size() - 1) != 1)
                     {
@@ -98,7 +98,7 @@ MaterialResource::CreateFromFile(std::string filePath)
                     }
                     break;
                 }
-                case ds_render::SamplerType::Cubemap:
+                case ds_render::TextureType::Cubemap:
                 {
                     if ((samplerObjectKeys.size() - 1) != 6)
                     {
@@ -318,10 +318,10 @@ std::vector<std::string> MaterialResource::GetTextureSamplerNames() const
     return textureSamplerNames;
 }
 
-ds_render::SamplerType
-MaterialResource::GetTextureSamplerType(const std::string &samplerName) const
+ds_render::TextureType
+MaterialResource::GetTextureTextureType(const std::string &samplerName) const
 {
-    ds_render::SamplerType type = ds_render::SamplerType::None;
+    ds_render::TextureType type = ds_render::TextureType::None;
 
     std::map<std::string, SamplerEntry>::const_iterator it =
         m_textureSamplers.find(samplerName);
@@ -335,7 +335,7 @@ MaterialResource::GetTextureSamplerType(const std::string &samplerName) const
 }
 
 void MaterialResource::AddTextureSampler(const std::string &samplerName,
-                                         const ds_render::SamplerType &type)
+                                         const ds_render::TextureType &type)
 {
     SamplerEntry entry;
     entry.type = type;

@@ -7,7 +7,7 @@ namespace ds_render
 /**
  * Possible texture types.
  */
-enum class SamplerType 
+enum class TextureType
 {
     None,
     TwoDimensional,
@@ -91,7 +91,7 @@ typedef ds::Handle ShaderHandle;
 /** Handle to a shader program */
 typedef ds::Handle ProgramHandle;
 /** Handle to a texture */
-typedef ds::Handle TextureHandle;
+typedef ds::Handle RenderTextureHandle;
 /** Handle to constant buffer */
 typedef ds::Handle ConstantBufferHandle;
 /** Handle to mesh resource */

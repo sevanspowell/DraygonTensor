@@ -19,6 +19,24 @@ extern ds::ScriptBindingSet LoadRenderScriptBindings();
 
 namespace ds
 {
+bool Render::TextureManager::GetTexture(TextureHandle textureHandle,
+                                        ds_render::Texture **texture)
+{
+    return false;
+}
+
+bool Render::TextureManager::GetTexture(
+    TextureHandle textureHandle, const ds_render::Texture **texture) const
+{
+    return false;
+}
+
+TextureHandle Render::TextureManager::GetTextureForResourceHandle(
+    TextureResourceHandle textureResourceHandle)
+{
+    return Handle();
+}
+
 bool Render::Initialize(const Config &config)
 {
     bool result = true;
@@ -1011,18 +1029,22 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 }
 
 ds_render::Texture Render::CreateTextureFromTextureResource(
-    const ds_render::SamplerType &samplerType,
+    const ds_render::TextureType &textureType,
     const std::vector<std::string> &filePaths)
 {
     ds_render::Texture texture;
 
-    switch (samplerType)
+    switch (textureType)
     {
-    case ds_render::SamplerType::TwoDimensional:
+    case ds_render::TextureType::TwoDimensional:
     {
-        // Texture from texture resource
-        std::unique_ptr<TextureResource> textureResource =
-            m_factory.CreateResource<TextureResource>(filePaths[0]);
+
+        TextureResource *textureResource = nullptr;
+        TextureResourceHandle handle;
+        m_textureResourceManager.LoadTextureResourceFromFile(filePaths[0],
+                                                             &handle);
+
+        m_textureResourceManager.GetTextureResource(handle, &textureResource);
 
         ds_render::ImageFormat format;
         switch (textureResource->GetComponentFlag())
@@ -1047,7 +1069,7 @@ ds_render::Texture Render::CreateTextureFromTextureResource(
 
         // Create texture
         texture = ds_render::Texture(
-            ds_render::SamplerType::TwoDimensional,
+            ds_render::TextureType::TwoDimensional,
             m_renderer->Create2DTexture(
                 format, ds_render::RenderDataType::UnsignedByte,
                 ds_render::InternalImageFormat::RGBA8, true,
@@ -1057,7 +1079,7 @@ ds_render::Texture Render::CreateTextureFromTextureResource(
 
         break;
     }
-    case ds_render::SamplerType::Cubemap:
+    case ds_render::TextureType::Cubemap:
     {
         assert(filePaths.size() == 6 &&
                "Incorrect number of cubemap images provided.");
@@ -1093,7 +1115,7 @@ ds_render::Texture Render::CreateTextureFromTextureResource(
 
         // Create texture
         texture = ds_render::Texture(
-            ds_render::SamplerType::Cubemap,
+            ds_render::TextureType::Cubemap,
             m_renderer->CreateCubemapTexture(
                 format, ds_render::RenderDataType::UnsignedByte,
                 ds_render::InternalImageFormat::RGBA8,
@@ -1382,7 +1404,7 @@ ds_render::Material Render::CreateMaterialFromMaterialResource(
         material.AddTexture(
             samplerName,
             CreateTextureFromTextureResource(
-                materialResource->GetTextureSamplerType(samplerName),
+                materialResource->GetTextureTextureType(samplerName),
                 textureResourceFilePaths));
     }
 
@@ -1444,12 +1466,12 @@ void Render::RenderScene(float deltaTime)
                 m_renderer->SetProgram(material.GetProgram());
 
                 // For each texture in material, bind it to shader
-                for (auto samplerTexture : material.GetTextures())
+                for (auto shaderTexture : material.GetTextures())
                 {
                     m_renderer->BindTextureToSampler(
-                        material.GetProgram(), samplerTexture.first,
-                        samplerTexture.second.GetSamplerType(),
-                        samplerTexture.second.GetTextureHandle());
+                        material.GetProgram(), shaderTexture.samplerName,
+                        shaderTexture.texture.GetTextureType(),
+                        shaderTexture.texture.GetRenderTextureHandle());
                 }
 
                 // Draw the mesh
@@ -1460,11 +1482,11 @@ void Render::RenderScene(float deltaTime)
                     m_skybox.GetMesh().GetSubMesh(iSubMesh).numIndices);
 
                 // For each texture in material, unbind
-                for (auto samplerTexture : material.GetTextures())
+                for (auto shaderTexture : material.GetTextures())
                 {
                     m_renderer->UnbindTextureFromSampler(
-                        samplerTexture.second.GetSamplerType(),
-                        samplerTexture.second.GetTextureHandle());
+                        shaderTexture.texture.GetTextureType(),
+                        shaderTexture.texture.GetRenderTextureHandle());
                 }
             }
             // Re-enable depth writing
@@ -1531,12 +1553,12 @@ void Render::RenderScene(float deltaTime)
                 m_renderer->SetProgram(material.GetProgram());
 
                 // For each texture in material, bind it to shader
-                for (auto samplerTexture : material.GetTextures())
+                for (auto shaderTexture : material.GetTextures())
                 {
                     m_renderer->BindTextureToSampler(
-                        material.GetProgram(), samplerTexture.first,
-                        samplerTexture.second.GetSamplerType(),
-                        samplerTexture.second.GetTextureHandle());
+                        material.GetProgram(), shaderTexture.samplerName,
+                        shaderTexture.texture.GetTextureType(),
+                        shaderTexture.texture.GetRenderTextureHandle());
                 }
 
                 // Draw the mesh
@@ -1547,11 +1569,11 @@ void Render::RenderScene(float deltaTime)
                     mesh.GetSubMesh(iSubMesh).numIndices);
 
                 // For each texture in material, unbind
-                for (auto samplerTexture : material.GetTextures())
+                for (auto shaderTexture : material.GetTextures())
                 {
                     m_renderer->UnbindTextureFromSampler(
-                        samplerTexture.second.GetSamplerType(),
-                        samplerTexture.second.GetTextureHandle());
+                        shaderTexture.texture.GetTextureType(),
+                        shaderTexture.texture.GetRenderTextureHandle());
                 }
             }
         }

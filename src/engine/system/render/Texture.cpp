@@ -4,33 +4,33 @@ namespace ds_render
 {
 Texture::Texture()
 {
-    m_samplerType = SamplerType::None;
-    m_texture = TextureHandle();
+    m_textureType = TextureType::None;
+    m_texture = RenderTextureHandle();
 }
 
-Texture::Texture(SamplerType samplerType, TextureHandle texture)
+Texture::Texture(TextureType textureType, RenderTextureHandle texture)
 {
-    m_samplerType = samplerType;
+    m_textureType = textureType;
     m_texture = texture;
 }
 
-TextureHandle Texture::GetTextureHandle() const
+RenderTextureHandle Texture::GetRenderTextureHandle() const
 {
     return m_texture;
 }
 
-void Texture::SetTextureHandle(TextureHandle textureHandle)
+void Texture::SetRenderTextureHandle(RenderTextureHandle textureHandle)
 {
     m_texture = textureHandle;
 }
 
-SamplerType Texture::GetSamplerType() const
+TextureType Texture::GetTextureType() const
 {
-    return m_samplerType;
+    return m_textureType;
 }
 
-void Texture::SetSamplerType(SamplerType samplerType)
+void Texture::SetTextureType(TextureType textureType)
 {
-    m_samplerType = samplerType;
+    m_textureType = textureType;
 }
 }

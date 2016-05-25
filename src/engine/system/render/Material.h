@@ -12,6 +12,18 @@ class Material
 {
 public:
     /**
+     * A shader texture is composed of the name of the sampler to bind the
+     * texture to and the texture to bind to that sampler.
+     */
+    struct ShaderTexture
+    {
+        /** Name of sampler to bind texture to */
+        std::string samplerName;
+        /** Texture to bind to sampler */
+        Texture texture;
+    };
+
+    /**
      * Get the shader program this material uses.
      *
      * @return  ProgramHandle, shader program this material uses.
@@ -37,10 +49,10 @@ public:
     /**
      * Get a list sampler names and their corresponding texture.
      *
-     * @return  const std::vector<std::pair<std::string, Texture>> &, list of
-     * sampler names and their corresponding textures.
+     * @return  const std::vector<ShaderTexture> &, list of sampler names and
+     * their corresponding textures.
      */
-    const std::vector<std::pair<std::string, Texture>> &GetTextures();
+    const std::vector<ShaderTexture> &GetTextures();
 
     /**
      * Add a constant buffer to this material.
@@ -57,7 +69,7 @@ private:
     /** Shader program */
     ProgramHandle m_program;
     /** Material textures */
-    std::vector<std::pair<std::string, Texture>> m_textures;
+    std::vector<ShaderTexture> m_textures;
     /** Material constant buffer */
     std::vector<std::pair<std::string, ConstantBuffer>> m_constantBuffers;
 };

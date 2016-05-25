@@ -13,6 +13,82 @@ TextureResource::TextureResource()
     m_heightPixels = 0;
 }
 
+TextureResource::TextureResource(const TextureResource &other)
+{
+    // Copy texture data
+    size_t imageSize = sizeof(unsigned char) * other.m_widthPixels *
+                       other.m_heightPixels * (int)other.m_channelInfo;
+    this->m_textureData = (unsigned char *)malloc(imageSize);
+    memcpy(this->m_textureData, other.m_textureData, imageSize);
+
+    // Copy other
+    this->m_widthPixels = other.m_widthPixels;
+    this->m_heightPixels = other.m_heightPixels;
+    this->m_channelInfo = other.m_channelInfo;
+    this->m_imgFormat = other.m_imgFormat;
+    this->m_filePath = other.m_filePath;
+}
+
+TextureResource &TextureResource::operator=(const TextureResource &other)
+{
+    // Delete current texture data
+    if (this->m_textureData != nullptr)
+    {
+        free(this->m_textureData);
+    }
+
+    // Deep copy texture data
+    size_t imageSize = sizeof(unsigned char) * other.m_widthPixels *
+                       other.m_heightPixels * (int)other.m_channelInfo;
+    this->m_textureData = (unsigned char *)malloc(imageSize);
+    memcpy(this->m_textureData, other.m_textureData, imageSize);
+
+    // Copy other
+    this->m_widthPixels = other.m_widthPixels;
+    this->m_heightPixels = other.m_heightPixels;
+    this->m_channelInfo = other.m_channelInfo;
+    this->m_imgFormat = other.m_imgFormat;
+    this->m_filePath = other.m_filePath;
+
+    return *this;
+}
+
+TextureResource::TextureResource(TextureResource &&other)
+{
+    // Move texture data
+    this->m_textureData = other.m_textureData;
+    other.m_textureData = nullptr;
+
+    // Copy other
+    this->m_widthPixels = other.m_widthPixels;
+    this->m_heightPixels = other.m_heightPixels;
+    this->m_channelInfo = other.m_channelInfo;
+    this->m_imgFormat = other.m_imgFormat;
+    this->m_filePath = other.m_filePath;
+}
+
+TextureResource &TextureResource::operator=(TextureResource &&other)
+{
+    // Delete current texture data
+    if (this->m_textureData != nullptr)
+    {
+        free(this->m_textureData);
+    }
+
+    // Move texture data
+    this->m_textureData = other.m_textureData;
+    other.m_textureData = nullptr;
+
+    // Copy other
+    this->m_widthPixels = other.m_widthPixels;
+    this->m_heightPixels = other.m_heightPixels;
+    this->m_channelInfo = other.m_channelInfo;
+    this->m_imgFormat = other.m_imgFormat;
+    this->m_filePath = other.m_filePath;
+
+    return *this;
+}
+
 const std::string &TextureResource::GetResourceFilePath() const
 {
     return m_filePath;
@@ -205,6 +281,9 @@ bool TextureResource::IsGrey() const
 
 TextureResource::~TextureResource()
 {
-    stbi_image_free(m_textureData);
+    if (m_textureData != nullptr)
+    {
+        stbi_image_free(m_textureData);
+    }
 }
 }

@@ -15,10 +15,16 @@ void Material::SetProgram(ProgramHandle program)
 void Material::AddTexture(const std::string &samplerName,
                           const Texture &texture)
 {
-    m_textures.push_back(std::pair<std::string, Texture>(samplerName, texture));
+    // Construct shader texture
+    ShaderTexture shaderTexture;
+    shaderTexture.samplerName = samplerName;
+    shaderTexture.texture = texture;
+
+    // Add it
+    m_textures.push_back(shaderTexture);
 }
 
-const std::vector<std::pair<std::string, Texture>> &Material::GetTextures()
+const std::vector<Material::ShaderTexture> &Material::GetTextures()
 {
     return m_textures;
 }

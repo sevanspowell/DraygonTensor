@@ -68,11 +68,11 @@ public:
      *
      * @param   samplerName  const std::string &, name of the texture sampler to
      *                       get the type of.
-     * @return               ds_render::SamplerType, type of the texture
+     * @return               ds_render::TextureType, type of the texture
      * sampler.
      */
-    ds_render::SamplerType
-    GetTextureSamplerType(const std::string &samplerName) const;
+    ds_render::TextureType
+    GetTextureTextureType(const std::string &samplerName) const;
 
     /**
      * Add a new empty texture sampler to the material resource with no texture
@@ -80,11 +80,11 @@ public:
      * be erased and a blank sampler entry created.
      *
      * @param  samplerName  const std::string &, new texture sampler name.
-     * @param  type         const ds_render::SamplerType &, type of the texture
+     * @param  type         const ds_render::TextureType &, type of the texture
      * sampler.
      */
     void AddTextureSampler(const std::string &samplerName,
-                           const ds_render::SamplerType &type);
+                           const ds_render::TextureType &type);
 
     /**
      * Get the texture resource file paths for the sampler with the given
@@ -137,7 +137,7 @@ private:
     struct SamplerEntry
     {
         /** Type of the texture */
-        ds_render::SamplerType type;
+        ds_render::TextureType type;
         /** Collection of texture files that form this texture */
         std::vector<std::string> filePaths;
     };

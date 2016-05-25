@@ -27,6 +27,7 @@ set(ENGINE_INCLUDE_FILES
   resource/ShaderResource.h
   resource/TerrainResource.h
   resource/TextureResource.h
+  resource/TextureResourceManager.h
   system/Console.h
   system/input/Input.h
   system/input/InputContext.h
@@ -86,6 +87,7 @@ set(ENGINE_SRC_FILES
   resource/ShaderResource.cpp
   resource/TerrainResource.cpp
   resource/TextureResource.cpp
+  resource/TextureResourceManager.cpp
   system/Console.cpp
   system/input/Input.cpp
   system/input/InputContext.cpp
