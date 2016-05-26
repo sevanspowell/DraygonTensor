@@ -33,8 +33,8 @@ std::unique_ptr<IResource> TerrainResource::CreateFromFile(std::string filePath)
     // set base height of the terrain - must be above 0
     // float normalX, normalZ
 
-    unsigned int width = changedResourcePointer->GetWidthInPixels();
-    unsigned int height = changedResourcePointer->GetHeightInPixels();
+    unsigned int width = changedResourcePointer->GetWidthInPixels(0);
+    unsigned int height = changedResourcePointer->GetHeightInPixels(0);
 
     std::vector<float> heights;
     heights.resize(width * height, 0.0f);
@@ -52,8 +52,7 @@ std::unique_ptr<IResource> TerrainResource::CreateFromFile(std::string filePath)
             // get the color of the current pixel to be used to determine height
             // (lighter = higher)
             unsigned char color =
-                (unsigned char)changedResourcePointer
-                    ->GetTextureContents()[3 * (z * (int)width + x)];
+                (unsigned char)changedResourcePointer->GetImageData(0)[3 * (z * (int)width + x)];
 
             // calculate the height of the point using the color of the
             // associated pixel

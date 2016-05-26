@@ -60,34 +60,24 @@ bool TextureResourceManager::LoadTextureResourceFromFile(
     return result;
 }
 
-bool TextureResourceManager::GetTextureResource(
-    TextureResourceHandle textureResourceHandle,
-    TextureResource **textureResource)
+const TextureResource *TextureResourceManager::GetTextureResource(
+    TextureResourceHandle textureResourceHandle) const
 {
-    bool result = false;
+    const TextureResource *textureResource = nullptr;
 
-    if (textureResource != nullptr)
+    // Get managed texture resource
+    ManagedTextureResource *managedTextureResource = nullptr;
+    bool result = m_handleManager.Get(textureResourceHandle,
+                                      (void **)&managedTextureResource);
+
+    // If successful
+    if (result == true)
     {
-        // Get managed texture resource
-        ManagedTextureResource *managedTextureResource = nullptr;
-        result = m_handleManager.Get(textureResourceHandle,
-                                     (void **)&managedTextureResource);
-
-        // If fail
-        if (result == false)
-        {
-            // Clear provided memory
-            *textureResource = nullptr;
-        }
-        // Else
-        else
-        {
-            // Get texture resource from managed texture resource
-            *textureResource = &(managedTextureResource->textureResource);
-        }
+        // Get texture resource from managed texture resource
+        textureResource = &managedTextureResource->textureResource;
     }
 
-    return result;
+    return textureResource;
 }
 
 void TextureResourceManager::ReloadAll()

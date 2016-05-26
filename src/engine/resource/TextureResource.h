@@ -4,8 +4,10 @@
 #include <algorithm>
 #include <string>
 #include <iostream>
+#include <vector>
 
 #include "engine/resource/IResource.h"
+#include "engine/system/render/RenderCommon.h"
 
 namespace ds
 {
@@ -81,108 +83,118 @@ public:
     virtual void SetResourceFilePath(const std::string &filePath);
 
     /**
-     * Gets width in pixels.
+     * Get the type of this texture.
      *
-     * @return	The width in pixels.
+     * @return  ds_render::TextureType, type of this texture.
      */
-
-    unsigned int GetWidthInPixels() const;
+    ds_render::TextureType GetTextureType() const;
 
     /**
-     * Gets height in pixels.
+     * Get the number of images that make up this texture.
      *
-     * @return	The height in pixels.
+     * @return  unsigned int, number of images that make up this texture.
      */
-
-    unsigned int GetHeightInPixels() const;
+    unsigned int GetNumImages() const;
 
     /**
-     * Query if this object is RGB.
+     * Gets width in pixels for a particular image in the texture.
      *
-     * @return	true if rgb, false if not.
+     * @param   imageIndex  unsigned int, index of image to get the width in
+     * pixels of.
+     * @return	unsigned int, the width in pixels of the given image in the
+     * texture.
      */
-
-    bool IsRGB() const;
+    unsigned int GetWidthInPixels(unsigned int imageIndex) const;
 
     /**
-     * Query if this object is RGBA.
+     * Gets height in pixels for a particular image in the texture.
      *
-     * @return	true if rgba, false if not.
+     * @param   imageIndex  unsigned int, index of image to get the height in
+     * pixels of.
+     * @return	unsigned int, the height in pixels of the given image in the
+     * texture.
      */
-
-    bool IsRGBA() const;
+    unsigned int GetHeightInPixels(unsigned int imageIndex) const;
 
     /**
-     * Query if this object is grey alpha.
+     * Gets image format for a particular image in the texture.
      *
-     * @return	true if grey alpha, false if not.
+     * @param   imageIndex  unsigned int, index of image to get the image format
+     * for.
+     * @return	int, The image format of the given image in the texture.
      */
-
-    bool IsGreyAlpha() const;
+    int GetImageFormat(unsigned int imageIndex) const;
 
     /**
-     * Query if this object is grey.
+     * Get the component flag for a particular image in the texture.
      *
-     * @return	true if grey, false if not.
+     * @param   imageIndex  unsigned int, index of image to get component flag
+     * for.
+     * @return	int, the component flag for the given image in the texture.
      */
-
-    bool IsGrey() const;
+    int GetComponentFlag(unsigned int imageIndex) const;
 
     /**
-     * Gets image format.
+     * Get the image data for a particular image in the texture.
      *
-     * @return	The image format.
+     * @param   imageIndex  unsigned int, index of image to get data for.
+     * @return	            const unsigned char *, nullptr if method fails, else
+     * the texture contents.
      */
-
-    int GetImageFormat() const;
-
-    /**
-     * Gets component flag.
-     *
-     * @return	The component flag.
-     */
-
-    int GetComponentFlag() const;
-
-    /**
-     * Gets texture contents.
-     *
-     * @return	null if it fails, else the texture contents.
-     */
-
-    unsigned char *GetTextureContents();
+    const unsigned char *GetImageData(unsigned int imageIndex) const;
 
 
     /** Values that represent image formats. */
     enum ImageFormat
     {
-        TGA = 1,
-        BMP = 2,
-        PNG = 3,
-        JPEG = 4
+        IMAGE_FORMAT_NONE = 0,
+        IMAGE_FORMAT_TGA = 1,
+        IMAGE_FORMAT_BMP = 2,
+        IMAGE_FORMAT_PNG = 3,
+        IMAGE_FORMAT_JPEG = 4
     };
 
     /** Values that represent component flags. */
     enum ComponentFlag
     {
-        GREY = 1,
-        GREYALPHA = 2,
-        RGB = 3,
-        RGBA = 4
+        COMPONENT_FLAG_NONE = 0,
+        COMPONENT_FLAG_GREY = 1,
+        COMPONENT_FLAG_GREYALPHA = 2,
+        COMPONENT_FLAG_RGB = 3,
+        COMPONENT_FLAG_RGBA = 4
     };
 
 
 private:
-    /** Information describing the texture. */
-    unsigned char *m_textureData = nullptr;
-    /** The width pixels. */
-    unsigned int m_widthPixels = 0;
-    /** The height pixels. */
-    unsigned int m_heightPixels = 0;
-    /** Information describing the channel. */
-    ComponentFlag m_channelInfo;
-    /** The image format. */
-    ImageFormat m_imgFormat;
+    struct Image
+    {
+        Image()
+        {
+            imageData = nullptr;
+            widthPixels = 0;
+            heightPixels = 0;
+            channelInfo = ComponentFlag::COMPONENT_FLAG_NONE;
+            imgFormat = ImageFormat::IMAGE_FORMAT_NONE;
+        };
+
+        /** Information describing the texture. */
+        unsigned char *imageData;
+        /** The width pixels. */
+        unsigned int widthPixels;
+        /** The height pixels. */
+        unsigned int heightPixels;
+        /** Information describing the channel. */
+        ComponentFlag channelInfo;
+        /** The image format. */
+        ImageFormat imgFormat;
+    };
+
+    /** Type of the texture */
+    ds_render::TextureType m_textureType;
+
+    /** Images making up texture */
+    std::vector<Image> m_images;
+
     /** The path to this resource */
     std::string m_filePath;
 
@@ -192,7 +204,6 @@ private:
      * @param	path	Full pathname of the file.
      * @return	The extracted extension.
      */
-
     static std::string ExtractExtension(std::string path);
 
     /**
@@ -201,47 +212,67 @@ private:
      * @param	ext	The extentension.
      * @return	An ImageFormat.
      */
-
     static ImageFormat DetermineTypeFlag(std::string ext);
 
     /**
-     * Sets image format.
+     * Set the texture type of the texture.
      *
-     * @param	format	Describes the format loaded.
+     * @param  textureType  ds_render::TextureType, type of the texture to set.
      */
-
-    void SetImageFormat(ImageFormat format);
+    void SetTextureType(ds_render::TextureType textureType);
 
     /**
-     * Sets component flag.
+     * Set the number of images the texture resource contains. Will destory
+     * textures that already exist if size is set smaller than current size.
      *
-     * @param	comp	The component/channel.
+     * @param  numImages  unsigned int, number of images this texture resource
+     * is made up of.
      */
-
-    void SetComponentFlag(ComponentFlag comp);
+    void SetNumImages(unsigned int numImages);
 
     /**
-     * Sets width in pixels.
+     * Sets image format of a particular image in the texture.
      *
-     * @param	width	The width in pixels.
+     * @param  imageIndex  unsigned int, index of image to set the image
+     * format of.
+     * @param  format	   ImageFormat, format of the image to set.
      */
-
-    void SetWidthInPixels(int width);
+    void SetImageFormat(unsigned int imageIndex, ImageFormat format);
 
     /**
-     * Sets height in pixels.
+     * Sets component flag of a particular image in the texture.
      *
-     * @param	height	The height in pixels.
+     * @param  imageIndex  unsigned int, index of image to set the component
+     * flag of.
+     * @param  comp        The component/channel to set for the given image.
      */
-
-    void SetHeightInPixels(int height);
+    void SetComponentFlag(unsigned int imageIndex, ComponentFlag comp);
 
     /**
-     * Sets texture contents.
+     * Sets width in pixels of a particular image in the texture.
      *
-     * @param [in,out]	textCont	If non-null, the text container.
+     * @param   imageIndex  unsigned int, image index to set the width in
+     * pixels of.
+     * @param	width	    unsigned int, width in pixels to set.
      */
+    void SetWidthInPixels(unsigned int imageIndex, unsigned int width);
 
-    void SetTextureContents(unsigned char *textCont);
+    /**
+     * Sets height in pixels of a particular image in the texture.
+     *
+     * @param   imageIndex  unsigned int, image index to set the height in
+     * pixels of.
+     * @param	height	    unsigned int, height in pixels to set.
+     */
+    void SetHeightInPixels(unsigned int imageIndex, unsigned int height);
+
+    /**
+     * Sets texture contents of a particular image in the texture.
+     *
+     * @param  imageIndex  unsigned int, image index to set the texture contents
+     * of.
+     * @param  textCont	   unsigned char *, texture contents to set.
+     */
+    void SetTextureContents(unsigned int imageIndex, unsigned char *textCont);
 };
 }

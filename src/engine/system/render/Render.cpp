@@ -1,4 +1,4 @@
-#include <fstream>
+ #include <fstream>
 #include <sstream>
 
 #include "engine/message/MessageHelper.h"
@@ -19,6 +19,8 @@ extern ds::ScriptBindingSet LoadRenderScriptBindings();
 
 namespace ds
 {
+TextureResourceManager Render::m_textureResourceManager;
+
 bool Render::TextureManager::GetTexture(TextureHandle textureHandle,
                                         ds_render::Texture **texture)
 {
@@ -34,7 +36,42 @@ bool Render::TextureManager::GetTexture(
 TextureHandle Render::TextureManager::GetTextureForResourceHandle(
     TextureResourceHandle textureResourceHandle)
 {
-    return Handle();
+    TextureHandle textureHandle = Handle();
+
+    // Attempt to find texture for the given resource handle
+    std::vector<ManagedTexture>::const_iterator it =
+        std::find_if(m_textures.begin(), m_textures.end(),
+                     [&](const ManagedTexture &managedTexture)
+                     {
+                         return managedTexture.texture.textureResourceHandle ==
+                                textureResourceHandle;
+                     });
+
+    // If found, return it
+    if (it != m_textures.end())
+    {
+        textureHandle = it->handle;
+    }
+    // If not found, create texture for texture resource
+    else
+    {
+        // Get texture resource for texture resource handle
+        const TextureResource *textureResource =
+            m_textureResourceManager.GetTextureResource(textureResourceHandle);
+
+        if (textureResource != nullptr)
+        {
+        }
+        else
+        {
+            std::cout << "Render::TextureManager::GetTextureForResourceHandle: "
+                         "Could not get texture resource for given texture "
+                         "resource handle."
+                      << std::endl;
+        }
+    }
+
+    return textureHandle;
 }
 
 bool Render::Initialize(const Config &config)
@@ -1029,36 +1066,40 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 }
 
 ds_render::Texture Render::CreateTextureFromTextureResource(
-    const ds_render::TextureType &textureType,
-    const std::vector<std::string> &filePaths)
+    const std::string &textureResourceFilePath)
 {
     ds_render::Texture texture;
 
-    switch (textureType)
+    // Create texture resource and get handle to it
+    TextureResourceHandle handle;
+    m_textureResourceManager.LoadTextureResourceFromFile(
+        textureResourceFilePath, &handle);
+    // Get the texture resource
+    const TextureResource *textureResource =
+        m_textureResourceManager.GetTextureResource(handle);
+
+    // Use it to make the appropriate texture
+    switch (textureResource->GetTextureType())
     {
     case ds_render::TextureType::TwoDimensional:
     {
-
-        TextureResource *textureResource = nullptr;
-        TextureResourceHandle handle;
-        m_textureResourceManager.LoadTextureResourceFromFile(filePaths[0],
-                                                             &handle);
-
-        m_textureResourceManager.GetTextureResource(handle, &textureResource);
+        assert(
+            textureResource->GetNumImages() == 1 &&
+            "Incorrect number of images for two-dimensional texture - need 1.");
 
         ds_render::ImageFormat format;
-        switch (textureResource->GetComponentFlag())
+        switch (textureResource->GetComponentFlag(0))
         {
-        case TextureResource::ComponentFlag::GREY:
+        case TextureResource::ComponentFlag::COMPONENT_FLAG_GREY:
             format = ds_render::ImageFormat::R;
             break;
-        case TextureResource::ComponentFlag::GREYALPHA:
+        case TextureResource::ComponentFlag::COMPONENT_FLAG_GREYALPHA:
             format = ds_render::ImageFormat::RG;
             break;
-        case TextureResource::ComponentFlag::RGB:
+        case TextureResource::ComponentFlag::COMPONENT_FLAG_RGB:
             format = ds_render::ImageFormat::RGB;
             break;
-        case TextureResource::ComponentFlag::RGBA:
+        case TextureResource::ComponentFlag::COMPONENT_FLAG_RGBA:
             format = ds_render::ImageFormat::RGBA;
             break;
         default:
@@ -1069,42 +1110,35 @@ ds_render::Texture Render::CreateTextureFromTextureResource(
 
         // Create texture
         texture = ds_render::Texture(
-            ds_render::TextureType::TwoDimensional,
+            handle, ds_render::TextureType::TwoDimensional,
             m_renderer->Create2DTexture(
                 format, ds_render::RenderDataType::UnsignedByte,
                 ds_render::InternalImageFormat::RGBA8, true,
-                textureResource->GetWidthInPixels(),
-                textureResource->GetHeightInPixels(),
-                textureResource->GetTextureContents()));
+                textureResource->GetWidthInPixels(0),
+                textureResource->GetHeightInPixels(0),
+                textureResource->GetImageData(0)));
 
         break;
     }
     case ds_render::TextureType::Cubemap:
     {
-        assert(filePaths.size() == 6 &&
-               "Incorrect number of cubemap images provided.");
-        // Get texture resources
-        std::vector<std::unique_ptr<TextureResource>> textureResources;
-        for (auto filePath : filePaths)
-        {
-            textureResources.push_back(
-                m_factory.CreateResource<TextureResource>(filePath));
-        }
+        assert(textureResource->GetNumImages() == 6 &&
+               "Incorrect number of cubemap images provided - need 6.");
 
         // Use format of first image for all images
         ds_render::ImageFormat format;
-        switch (textureResources[0]->GetComponentFlag())
+        switch (textureResource->GetComponentFlag(0))
         {
-        case TextureResource::ComponentFlag::GREY:
+        case TextureResource::ComponentFlag::COMPONENT_FLAG_GREY:
             format = ds_render::ImageFormat::R;
             break;
-        case TextureResource::ComponentFlag::GREYALPHA:
+        case TextureResource::ComponentFlag::COMPONENT_FLAG_GREYALPHA:
             format = ds_render::ImageFormat::RG;
             break;
-        case TextureResource::ComponentFlag::RGB:
+        case TextureResource::ComponentFlag::COMPONENT_FLAG_RGB:
             format = ds_render::ImageFormat::RGB;
             break;
-        case TextureResource::ComponentFlag::RGBA:
+        case TextureResource::ComponentFlag::COMPONENT_FLAG_RGBA:
             format = ds_render::ImageFormat::RGBA;
             break;
         default:
@@ -1115,21 +1149,20 @@ ds_render::Texture Render::CreateTextureFromTextureResource(
 
         // Create texture
         texture = ds_render::Texture(
-            ds_render::TextureType::Cubemap,
+            handle, ds_render::TextureType::Cubemap,
             m_renderer->CreateCubemapTexture(
                 format, ds_render::RenderDataType::UnsignedByte,
                 ds_render::InternalImageFormat::RGBA8,
-                textureResources[0]->GetWidthInPixels(), // Use width of first
-                // resource for all resources
-                textureResources[0]->GetHeightInPixels(), // Use height of first
-                // resource for all resources
-                textureResources[0]->GetTextureContents(),
-                textureResources[1]->GetTextureContents(),
-                textureResources[2]->GetTextureContents(),
-                textureResources[3]->GetTextureContents(),
-                textureResources[4]->GetTextureContents(),
-                textureResources[5]->GetTextureContents()));
-
+                textureResource->GetWidthInPixels(0), // Use width of first
+                // image for all resources
+                textureResource->GetHeightInPixels(0), // Use height of first
+                // image for all resources
+                textureResource->GetImageData(0),
+                textureResource->GetImageData(1),
+                textureResource->GetImageData(2),
+                textureResource->GetImageData(3),
+                textureResource->GetImageData(4),
+                textureResource->GetImageData(5)));
         break;
     }
     default:
@@ -1398,14 +1431,11 @@ ds_render::Material Render::CreateMaterialFromMaterialResource(
         // Create texture from texture resource
         // const std::string &textureResourceFilePath =
         //     materialResource->GetTextureResourceFilePath(samplerName);
-        std::vector<std::string> textureResourceFilePaths =
-            materialResource->GetTextureSamplerFilePaths(samplerName);
+        std::string textureResourceFilePath =
+            materialResource->GetSamplerTextureResourceFilePath(samplerName);
 
-        material.AddTexture(
-            samplerName,
-            CreateTextureFromTextureResource(
-                materialResource->GetTextureTextureType(samplerName),
-                textureResourceFilePaths));
+        material.AddTexture(samplerName, CreateTextureFromTextureResource(
+                                             textureResourceFilePath));
     }
 
     // Bind constant buffers to program
@@ -1470,8 +1500,8 @@ void Render::RenderScene(float deltaTime)
                 {
                     m_renderer->BindTextureToSampler(
                         material.GetProgram(), shaderTexture.samplerName,
-                        shaderTexture.texture.GetTextureType(),
-                        shaderTexture.texture.GetRenderTextureHandle());
+                        shaderTexture.texture.textureType,
+                        shaderTexture.texture.renderTextureHandle);
                 }
 
                 // Draw the mesh
@@ -1485,8 +1515,8 @@ void Render::RenderScene(float deltaTime)
                 for (auto shaderTexture : material.GetTextures())
                 {
                     m_renderer->UnbindTextureFromSampler(
-                        shaderTexture.texture.GetTextureType(),
-                        shaderTexture.texture.GetRenderTextureHandle());
+                        shaderTexture.texture.textureType,
+                        shaderTexture.texture.renderTextureHandle);
                 }
             }
             // Re-enable depth writing
@@ -1557,8 +1587,8 @@ void Render::RenderScene(float deltaTime)
                 {
                     m_renderer->BindTextureToSampler(
                         material.GetProgram(), shaderTexture.samplerName,
-                        shaderTexture.texture.GetTextureType(),
-                        shaderTexture.texture.GetRenderTextureHandle());
+                        shaderTexture.texture.textureType,
+                        shaderTexture.texture.renderTextureHandle);
                 }
 
                 // Draw the mesh
@@ -1572,8 +1602,8 @@ void Render::RenderScene(float deltaTime)
                 for (auto shaderTexture : material.GetTextures())
                 {
                     m_renderer->UnbindTextureFromSampler(
-                        shaderTexture.texture.GetTextureType(),
-                        shaderTexture.texture.GetRenderTextureHandle());
+                        shaderTexture.texture.textureType,
+                        shaderTexture.texture.renderTextureHandle);
                 }
             }
         }

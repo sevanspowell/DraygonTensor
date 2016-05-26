@@ -183,15 +183,12 @@ private:
      * paths that will be bound to that sampler. In the case of a cubemap
      * sampler for example, 6 images should be provided.
      *
-     * @param   textureType  const ds_render::TextureType &, type of the sampler
-     * to use to sample the provided texture resources.
-     * @param   filePaths  const std::vector<std::string> &, path to texture
-     *                     resources.
-     * @return             ds_render::Texture, texture created.
+     * @param   textureResourceFilePath const std::vector<std::string> &, path
+     * to texture resource.
+     * @return                          ds_render::Texture, texture created.
      */
-    ds_render::Texture
-    CreateTextureFromTextureResource(const ds_render::TextureType &textureType,
-                                     const std::vector<std::string> &filePaths);
+    ds_render::Texture CreateTextureFromTextureResource(
+        const std::string &textureResourceFilePath);
 
     /**
      * Create the mesh for a skybox.
@@ -320,6 +317,6 @@ private:
     ds_render::ButtonComponentManager m_buttonComponentManager;
 
     /** Texture resource manager */
-    TextureResourceManager m_textureResourceManager;
+    static TextureResourceManager m_textureResourceManager;
 };
 }

@@ -38,18 +38,13 @@ public:
      * Get the texture resource associated with the given texture resource
      * handle.
      *
-     * If no texture associated with given handle, will return FALSE and
-     * memory at the address given will be set to nullptr.
-     *
      * @param   textureResourceHandle  TextureResourceHandle, texture resource
      * handle to get associated texture resource for.
-     * @param   texture        ds_render::Texture **, address in memory to
-     * place Texture Resource pointer at.
-     * @return                 bool, TRUE if texture resource for texture
-     * resource handle found, FALSE otherwise.
+     * @return                         const TextureResource *, pointer to
+     * texture resource associated with handle or nullptr if handle is invalid.
      */
-    bool GetTextureResource(TextureResourceHandle textureResourceHandle,
-                            TextureResource **textureResource);
+    const TextureResource *
+    GetTextureResource(TextureResourceHandle textureResourceHandle) const;
 
     /**
      * Reload all texture resources from file.

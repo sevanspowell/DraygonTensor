@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/resource/TextureResourceManager.h"
 #include "engine/system/render/RenderCommon.h"
 
 namespace ds_render
@@ -18,46 +19,22 @@ public:
     /**
      * Texture constructor.
      *
-     * @param  textureType  TextureType, type of sampler that should be used to
-     * sample from this texture.
-     * @param  texture      RenderTextureHandle, handle to renderer texture.
+     * @param  textureResourceHandle  TextureResourceHandle, handle to texture
+     * resource used to create this texture.
+     * @param  textureType            TextureType, type of sampler that should
+     * be used to sample from this texture.
+     * @param  renderTextureHandle    RenderTextureHandle, handle to renderer
+     * texture.
      */
-    Texture(TextureType textureType, RenderTextureHandle texture);
+    Texture(ds::TextureResourceHandle textureResourceHandle,
+            TextureType textureType,
+            RenderTextureHandle renderTextureHandle);
 
-    /**
-     * Get handle to renderer texture.
-     *
-     * @return  RenderTextureHandle, handle to renderer texture.
-     */
-    RenderTextureHandle GetRenderTextureHandle() const;
-
-    /**
-     * Set the handle to renderer texture.
-     *
-     * @param  textureHandle  RenderTextureHandle, handle to renderer texture.
-     */
-    void SetRenderTextureHandle(RenderTextureHandle textureHandle);
-
-    /**
-     * Get the type of sampler that should be used to sample from this texture.
-     *
-     * @return  TextureType, type of sampler that should be used to sample from
-     * this texture.
-     */
-    TextureType GetTextureType() const;
-
-    /**
-     * Set the type of sampler that should be used to sample from this texture.
-     *
-     * @param  textureType  TextureType, type of sampler that should be used to
-     * sample from this texture.
-     */
-    void SetTextureType(TextureType textureType);
-
-private:
+    /** Handle to texture resource used to create this texture */
+    ds::TextureResourceHandle textureResourceHandle;
     /** Texture sampler type */
-    TextureType m_textureType;
+    TextureType textureType;
     /** Handle to renderer texture */
-    RenderTextureHandle m_texture;
+    RenderTextureHandle renderTextureHandle;
 };
 }
