@@ -1,6 +1,7 @@
 #include <fstream>
 #include <sstream>
 
+#include "engine/common/HandleCommon.h"
 #include "engine/message/MessageHelper.h"
 #include "engine/resource/MaterialResource.h"
 #include "engine/resource/ShaderResource.h"
@@ -19,24 +20,53 @@ extern ds::ScriptBindingSet LoadRenderScriptBindings();
 
 namespace ds
 {
+// Static member definitions
 TextureResourceManager Render::m_textureResourceManager;
+std::unique_ptr<ds_render::IRenderer> Render::m_renderer;
+Render::TextureManager Render::m_textureManager;
 
-bool Render::TextureManager::GetTexture(TextureHandle textureHandle,
-                                        ds_render::Texture **texture)
+ds_render::Texture *
+Render::TextureManager::GetTexture(TextureHandle textureHandle)
 {
-    return false;
+    ds_render::Texture *texture = nullptr;
+
+    // Get managed texture resource
+    ManagedTexture *managedTexture = nullptr;
+    bool result = m_handleManager.Get(textureHandle, (void **)&managedTexture);
+
+    // If successful
+    if (result == true)
+    {
+        // Get texture resource from managed texture
+        texture = &(managedTexture->texture);
+    }
+
+    return texture;
 }
 
-bool Render::TextureManager::GetTexture(
-    TextureHandle textureHandle, const ds_render::Texture **texture) const
+const ds_render::Texture *
+Render::TextureManager::GetTexture(TextureHandle textureHandle) const
 {
-    return false;
+    const ds_render::Texture *texture = nullptr;
+
+    // Get managed texture resource
+    ManagedTexture *managedTexture = nullptr;
+    bool result = m_handleManager.Get(textureHandle, (void **)&managedTexture);
+
+    // If successful
+    if (result == true)
+    {
+        // Get texture resource from managed texture
+        texture = &(managedTexture->texture);
+    }
+
+    return texture;
 }
 
-TextureHandle Render::TextureManager::GetTextureForResourceHandle(
-    TextureResourceHandle textureResourceHandle)
+bool Render::TextureManager::GetTextureForResourceHandle(
+    TextureResourceHandle textureResourceHandle, TextureHandle *textureHandle)
 {
-    TextureHandle textureHandle = Handle();
+    bool result = false;
 
     // Attempt to find texture for the given resource handle
     std::vector<ManagedTexture>::const_iterator it =
@@ -50,28 +80,49 @@ TextureHandle Render::TextureManager::GetTextureForResourceHandle(
     // If found, return it
     if (it != m_textures.end())
     {
-        textureHandle = it->handle;
+        *textureHandle = it->handle;
+
+        result = true;
     }
     // If not found, create texture for texture resource
     else
     {
-        // Get texture resource for texture resource handle
-        const TextureResource *textureResource =
-            m_textureResourceManager.GetTextureResource(textureResourceHandle);
+        // Create texture from texture resource handle
+        ds_render::Texture texture =
+            CreateTextureFromTextureResource(textureResourceHandle);
 
-        if (textureResource != nullptr)
+        ManagedTexture managedTexture;
+        managedTexture.texture = texture;
+
+        // Add texture to list
+        m_textures.push_back(managedTexture);
+        // Location in vector of texture we just added
+        size_t loc = m_textures.size() - 1;
+
+        // Add texture to handle manager
+        Handle handle = m_handleManager.Add(
+            (void *)&m_textures[loc], (uint32_t)HandleTypes::TextureHandleType);
+        // Store handle with texture resource
+        m_textures[loc].handle = handle;
+
+        // Because pushing adding an element to the vector might cause the
+        // vector to realloc, update the address of all managed texture
+        // resource objects
+        for (unsigned int i = 0; i < m_textures.size(); ++i)
         {
+            // Get handle
+            ds::Handle handle = m_textures[i].handle;
+            // Update with new memory address
+            m_handleManager.Update(handle, &m_textures[i]);
         }
-        else
-        {
-            std::cout << "Render::TextureManager::GetTextureForResourceHandle: "
-                         "Could not get texture resource for given texture "
-                         "resource handle."
-                      << std::endl;
-        }
+
+        // If successful, return texture resource handle to caller
+        *textureHandle = handle;
+
+        result = true;
     }
 
-    return textureHandle;
+    return result;
 }
 
 bool Render::Initialize(const Config &config)
@@ -131,31 +182,6 @@ ScriptBindingSet Render::GetScriptBindings() const
 {
     return ds_lua::LoadRenderScriptBindings();
 }
-
-// ds_math::Quaternion Render::GetCameraOrientation(Entity entity) const
-// {
-//     ds_math::Quaternion orientation;
-
-//     Instance i = m_cameraComponentManager.GetInstanceForEntity(entity);
-
-//     if (i.IsValid())
-//     {
-//         orientation = m_cameraComponentManager.GetOrientation(i);
-//     }
-
-//     return orientation;
-// }
-
-// void Render::SetCameraOrientation(Entity entity,
-//                                   const ds_math::Quaternion &orientation)
-// {
-//     Instance i = m_cameraComponentManager.GetInstanceForEntity(entity);
-
-//     if (i.IsValid())
-//     {
-//         m_cameraComponentManager.SetOrientation(i, orientation);
-//     }
-// }
 
 void Render::SetSkyboxMaterial(const std::string &skyboxMaterial)
 {
@@ -699,53 +725,6 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 
             break;
         }
-        // case ds_msg::MessageType::MoveEntity:
-        // {
-        //     ds_msg::MoveEntity entityMoveMsg;
-        //     (*messages) >> entityMoveMsg;
-
-        //     Instance transform =
-        //         m_transformComponentManager.GetInstanceForEntity(
-        //             entityMoveMsg.entity);
-
-        //     if (transform.IsValid())
-        //     {
-        //         // Get current transform
-        //         const ds_math::Matrix4 &currentTransform =
-        //             m_transformComponentManager.GetLocalTransform(transform);
-        //         // Translate it
-        //         ds_math::Matrix4 newTransform =
-        //             currentTransform *
-        //             ds_math::Matrix4::CreateTranslationMatrix(
-        //                 entityMoveMsg.deltaPosition);
-
-        //         // Set transform of entity
-        //         m_transformComponentManager.SetLocalTransform(transform,
-        //                                                       newTransform);
-        //     }
-
-        //     break;
-        // }
-        // case ds_msg::MessageType::SetLocalTransform:
-        // {
-        //     ds_msg::SetLocalTransform setLocalMsg;
-        //     (*messages) >> setLocalMsg;
-
-        //     // std::cout << "Set local transform (Render): " <<
-        //     setLocalMsg.entity.id << std::endl;
-        //     Instance transform =
-        //         m_transformComponentManager.GetInstanceForEntity(
-        //             setLocalMsg.entity);
-
-        //     if (transform.IsValid())
-        //     {
-        //         // Set transform of entity
-        //         m_transformComponentManager.SetLocalTransform(
-        //             transform, setLocalMsg.localTransform);
-        //     }
-
-        //     break;
-        // }
         case ds_msg::MessageType::SetLocalTranslation:
         {
             ds_msg::SetLocalTranslation setTranslationMsg;
@@ -1175,6 +1154,116 @@ ds_render::Texture Render::CreateTextureFromTextureResource(
     return texture;
 }
 
+ds_render::Texture
+Render::CreateTextureFromTextureResource(TextureResourceHandle handle)
+{
+    ds_render::Texture texture;
+
+    // Get the texture resource
+    const TextureResource *textureResource =
+        m_textureResourceManager.GetTextureResource(handle);
+
+    if (textureResource != nullptr)
+    {
+        // Use it to make the appropriate texture
+        switch (textureResource->GetTextureType())
+        {
+        case ds_render::TextureType::TwoDimensional:
+        {
+            assert(textureResource->GetNumImages() == 1 &&
+                   "Incorrect number of images for two-dimensional texture - "
+                   "need 1.");
+
+            ds_render::ImageFormat format;
+            switch (textureResource->GetComponentFlag(0))
+            {
+            case TextureResource::ComponentFlag::COMPONENT_FLAG_GREY:
+                format = ds_render::ImageFormat::R;
+                break;
+            case TextureResource::ComponentFlag::COMPONENT_FLAG_GREYALPHA:
+                format = ds_render::ImageFormat::RG;
+                break;
+            case TextureResource::ComponentFlag::COMPONENT_FLAG_RGB:
+                format = ds_render::ImageFormat::RGB;
+                break;
+            case TextureResource::ComponentFlag::COMPONENT_FLAG_RGBA:
+                format = ds_render::ImageFormat::RGBA;
+                break;
+            default:
+                assert(false && "Unsupported image component flag.");
+                format = ds_render::ImageFormat::RGBA;
+                break;
+            }
+
+            // Create texture
+            texture = ds_render::Texture(
+                handle, ds_render::TextureType::TwoDimensional,
+                m_renderer->Create2DTexture(
+                    format, ds_render::RenderDataType::UnsignedByte,
+                    ds_render::InternalImageFormat::RGBA8, true,
+                    textureResource->GetWidthInPixels(0),
+                    textureResource->GetHeightInPixels(0),
+                    textureResource->GetImageData(0)));
+
+            break;
+        }
+        case ds_render::TextureType::Cubemap:
+        {
+            assert(textureResource->GetNumImages() == 6 &&
+                   "Incorrect number of cubemap images provided - need 6.");
+
+            // Use format of first image for all images
+            ds_render::ImageFormat format;
+            switch (textureResource->GetComponentFlag(0))
+            {
+            case TextureResource::ComponentFlag::COMPONENT_FLAG_GREY:
+                format = ds_render::ImageFormat::R;
+                break;
+            case TextureResource::ComponentFlag::COMPONENT_FLAG_GREYALPHA:
+                format = ds_render::ImageFormat::RG;
+                break;
+            case TextureResource::ComponentFlag::COMPONENT_FLAG_RGB:
+                format = ds_render::ImageFormat::RGB;
+                break;
+            case TextureResource::ComponentFlag::COMPONENT_FLAG_RGBA:
+                format = ds_render::ImageFormat::RGBA;
+                break;
+            default:
+                assert(false && "Unsupported image component flag.");
+                format = ds_render::ImageFormat::RGBA;
+                break;
+            }
+
+            // Create texture
+            texture = ds_render::Texture(
+                handle, ds_render::TextureType::Cubemap,
+                m_renderer->CreateCubemapTexture(
+                    format, ds_render::RenderDataType::UnsignedByte,
+                    ds_render::InternalImageFormat::RGBA8,
+                    textureResource->GetWidthInPixels(0), // Use width of first
+                    // image for all resources
+                    textureResource->GetHeightInPixels(
+                        0), // Use height of first
+                    // image for all resources
+                    textureResource->GetImageData(0),
+                    textureResource->GetImageData(1),
+                    textureResource->GetImageData(2),
+                    textureResource->GetImageData(3),
+                    textureResource->GetImageData(4),
+                    textureResource->GetImageData(5)));
+            break;
+        }
+        default:
+        {
+            assert(false && "Unhandled sampler type for texture.");
+            break;
+        }
+        }
+    }
+
+    return texture;
+}
+
 ds_render::Mesh Render::CreateSkyboxMesh()
 {
     ds_render::Mesh mesh = ds_render::Mesh();
@@ -1434,8 +1523,19 @@ ds_render::Material Render::CreateMaterialFromMaterialResource(
         std::string textureResourceFilePath =
             materialResource->GetSamplerTextureResourceFilePath(samplerName);
 
-        material.AddTexture(samplerName, CreateTextureFromTextureResource(
-                                             textureResourceFilePath));
+        TextureResourceHandle textureResourceHandle;
+        m_textureResourceManager.LoadTextureResourceFromFile(
+            textureResourceFilePath, &textureResourceHandle);
+
+        TextureHandle textureHandle;
+        m_textureManager.GetTextureForResourceHandle(textureResourceHandle,
+                                                     &textureHandle);
+
+        const ds_render::Texture *texture =
+            m_textureManager.GetTexture(textureHandle);
+
+        // Change this to take texture handle
+        material.AddTexture(samplerName, *texture);
     }
 
     // Bind constant buffers to program

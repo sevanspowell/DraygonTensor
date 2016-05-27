@@ -46,30 +46,22 @@ public:
          *
          * @param   textureHandle  TextureHandle, texture handle to get texture
          * associated with.
-         * @param   texture        ds_render::Texture **, address in memory to
-         * place Texture pointer at.
-         * @return                 bool, TRUE if texture for texture handle
-         * found, FALSE otherwise.
+         * @return                 ds_render::Texture *, pointer to texture or
+         * nullptr.
          */
-        bool GetTexture(TextureHandle textureHandle,
-                        ds_render::Texture **texture);
+        ds_render::Texture *GetTexture(TextureHandle textureHandle);
 
         /**
          * Get the texture associated with the given texture handle.
          *
-         * If no texture associated with given handle, will return FALSE and
-         * memory at the address given will not be modified.
+         * If no texture associated with given handle, will return nullptr.
          *
          * @param   textureHandle  TextureHandle, texture handle to get texture
          * associated with.
-         * @param   texture        const ds_render::Texture **, address in
-         * memory to place Texture
-         * pointer.
-         * @return                 bool, TRUE if texture for texture handle
-         * found, FALSE otherwise.
+         * @return                 const ds_render::Texture *, pointer to
+         * texture or nullptr.
          */
-        bool GetTexture(TextureHandle textureHandle,
-                        const ds_render::Texture **texture) const;
+        const ds_render::Texture *GetTexture(TextureHandle textureHandle) const;
 
         /**
          * Get the handle to the texture associated with the given texture
@@ -77,13 +69,19 @@ public:
          * resource handle, one will be created and the caller will be given a
          * handle to it.
          *
+         * If the result is TRUE, the textureHandle pointer is updated with the
+         * texture handle, otherwise it is not touched.
+         *
          * @param   textureResourceHandle  TextureResourceHandle, handle to
          * texture resource to get texture for.
-         * @return                         TextureHandle, handle to texture
-         * created/found.
+         * @param   textureHandle          TextureHandle *, address to put
+         * texture handle if found.
+         * @return                         bool, TRUE if texture was created or
+         * found for texture resource handle, FALSE otherwise.
          */
-        TextureHandle GetTextureForResourceHandle(
-            TextureResourceHandle textureResourceHandle);
+        bool
+        GetTextureForResourceHandle(TextureResourceHandle textureResourceHandle,
+                                    TextureHandle *textureHandle);
 
     private:
         /** Store handle with managed texture object for update purposes */
@@ -191,6 +189,16 @@ private:
         const std::string &textureResourceFilePath);
 
     /**
+     * Create a Texture object from a texture resource handle.
+     *
+     * @param   handle  TextureResourceHandle, texture handle to create Texture
+     * from.
+     * @return          ds_render::Texture, texture object created.
+     */
+    static ds_render::Texture
+    CreateTextureFromTextureResource(TextureResourceHandle handle);
+
+    /**
      * Create the mesh for a skybox.
      *
      * @return  ds_render::Mesh, skybox mesh.
@@ -280,7 +288,7 @@ private:
     ResourceFactory m_factory;
 
     /** Renderer */
-    std::unique_ptr<ds_render::IRenderer> m_renderer;
+    static std::unique_ptr<ds_render::IRenderer> m_renderer;
 
     /** Render component manager */
     ds_render::RenderComponentManager m_renderComponentManager;
@@ -318,5 +326,7 @@ private:
 
     /** Texture resource manager */
     static TextureResourceManager m_textureResourceManager;
+    /** Texture manager */
+    static TextureManager m_textureManager;
 };
 }

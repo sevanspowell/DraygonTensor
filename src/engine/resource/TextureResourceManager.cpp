@@ -41,8 +41,7 @@ bool TextureResourceManager::LoadTextureResourceFromFile(
 
             // Because pushing adding an element to the vector might cause the
             // vector to realloc, update the address of all managed texture
-            // resource
-            // objects
+            // resource objects
             for (unsigned int i = 0; i < m_textureResources.size(); ++i)
             {
                 // Get handle
