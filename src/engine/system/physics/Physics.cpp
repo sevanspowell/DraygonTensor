@@ -4,8 +4,14 @@
 
 #include "engine/common/StringIntern.h"
 #include "engine/message/MessageHelper.h"
-#include "engine/system/physics/Physics.h"
 #include "engine/resource/TextureResource.h"
+#include "engine/system/physics/Physics.h"
+#include "engine/system/render/RenderCommon.h"
+
+namespace ds_lua
+{
+extern ds::ScriptBindingSet LoadPhysicsScriptBindings();
+}
 
 namespace ds
 {
@@ -87,33 +93,129 @@ void Physics::Update(float deltaTime)
                     bulletNewWorldTransform = rigidBody->getWorldTransform();
                 }
 
-                // Get new world transform in our math library
-                const ds_math::Matrix4 newWorldTransform;
+                // Get change in translation
+                ds_math::Matrix4 newWorldTransform;
                 bulletNewWorldTransform.getOpenGLMatrix(
                     (btScalar *)&newWorldTransform.data[0][0]);
-
-                // Get current transforms
-                const ds_math::Matrix4 &currentWorldTransform =
-                    m_transformComponentManager.GetWorldTransform(transform);
-                const ds_math::Matrix4 &currentLocalTransform =
-                    m_transformComponentManager.GetLocalTransform(transform);
-
-                // New local transform is current local transform multiplied by
-                // currentLocalTransform * ((inv(currentWorldTransform) *
-                // newWorldTransform)
-                ds_math::Matrix4 newLocalTransform =
-                    currentLocalTransform *
-                    (ds_math::Matrix4::Inverse(currentWorldTransform) *
-                     newWorldTransform);
-
-                ds_msg::SetLocalTransform setTransformMsg;
-                setTransformMsg.entity = entity;
-                setTransformMsg.localTransform = newLocalTransform;
-
+                ds_math::Vector3 newWorldTranslation = ds_math::Vector3(
+                    newWorldTransform[3].x, newWorldTransform[3].y,
+                    newWorldTransform[3].z);
+                ds_math::Vector3 oldWorldTranslation =
+                    m_transformComponentManager.GetWorldTranslation(transform);
+                ds_math::Vector3 changeInTranslation =
+                    newWorldTranslation - oldWorldTranslation;
+                // Change local translation by change in translation
+                ds_math::Vector3 currentLocalTranslation =
+                    m_transformComponentManager.GetLocalTranslation(transform);
+                ds_msg::SetLocalTranslation setTranslationMsg;
+                setTranslationMsg.entity = entity;
+                setTranslationMsg.localTranslation =
+                    currentLocalTranslation + changeInTranslation;
                 ds_msg::AppendMessage(&m_messagesGenerated,
-                                      ds_msg::MessageType::SetLocalTransform,
-                                      sizeof(ds_msg::SetLocalTransform),
-                                      &setTransformMsg);
+                                      ds_msg::MessageType::SetLocalTranslation,
+                                      sizeof(ds_msg::SetLocalTranslation),
+                                      &setTranslationMsg);
+
+                // Get change in orientation
+                btQuaternion newWorldOrientationBullet =
+                    rigidBody->getOrientation();
+                btQuaternionFloatData floatData;
+                newWorldOrientationBullet.serializeFloat(floatData);
+                ds_math::Quaternion newWorldOrientation = ds_math::Quaternion(
+                    floatData.m_floats[0], floatData.m_floats[1],
+                    floatData.m_floats[2], floatData.m_floats[3]);
+                ds_math::Quaternion oldWorldOrientation =
+                    ds_math::Quaternion::Normalize(
+                        m_transformComponentManager.GetWorldOrientation(
+                            transform));
+                ds_math::Quaternion changeInOrientation =
+                    ds_math::Quaternion::Normalize(
+                        newWorldOrientation *
+                        ds_math::Quaternion::Invert(oldWorldOrientation));
+                // Change local orientation by change in orientation
+                ds_math::Quaternion currentLocalOrientation =
+                    m_transformComponentManager.GetLocalOrientation(transform);
+                ds_msg::SetLocalOrientation setOrientationMsg;
+                setOrientationMsg.entity = entity;
+                setOrientationMsg.localOrientation =
+                    ds_math::Quaternion::Normalize(changeInOrientation *
+                                                   currentLocalOrientation);
+                ds_msg::AppendMessage(&m_messagesGenerated,
+                                      ds_msg::MessageType::SetLocalOrientation,
+                                      sizeof(ds_msg::SetLocalOrientation),
+                                      &setOrientationMsg);
+
+                // Get change in scale
+                btVector3 newWorldScaleBullet =
+                    rigidBody->getCollisionShape()->getLocalScaling();
+                ds_math::Vector3 newWorldScale = ds_math::Vector3(
+                    newWorldScaleBullet.getX(), newWorldScaleBullet.getY(),
+                    newWorldScaleBullet.getZ());
+                ds_math::Vector3 oldWorldScale =
+                    m_transformComponentManager.GetWorldScale(transform);
+                ds_math::Vector3 changeInScale =
+                    newWorldScale * ds_math::Vector3(1.0f / oldWorldScale.x,
+                                                     1.0f / oldWorldScale.y,
+                                                     1.0f / oldWorldScale.z);
+                // Change local scale by change in scale
+                ds_math::Vector3 currentLocalScale =
+                    m_transformComponentManager.GetLocalScale(transform);
+                ds_msg::SetLocalScale setScaleMsg;
+                setScaleMsg.entity = entity;
+                setScaleMsg.localScale = currentLocalScale * changeInScale;
+                ds_msg::AppendMessage(
+                    &m_messagesGenerated, ds_msg::MessageType::SetLocalScale,
+                    sizeof(ds_msg::SetLocalScale), &setScaleMsg);
+            }
+        }
+    }
+
+    // Iterate thru manifolds
+    int numManifolds = m_dynamicsWorld->getDispatcher()->getNumManifolds();
+    for (unsigned int i = 0; i < numManifolds; ++i)
+    {
+        // Get colliding bodies
+        btPersistentManifold *contactManifold =
+            m_dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
+        const btCollisionObject *objA = contactManifold->getBody0();
+        const btCollisionObject *objB = contactManifold->getBody1();
+
+        // Get component instance for collision objects
+        Instance physA = m_physicsComponentManager.GetInstanceForRigidBody(
+            (btRigidBody *)objA);
+        Instance physB = m_physicsComponentManager.GetInstanceForRigidBody(
+            (btRigidBody *)objB);
+        // Find entity for component instance
+        Entity a = m_physicsComponentManager.GetEntityForInstance(physA);
+        Entity b = m_physicsComponentManager.GetEntityForInstance(physB);
+
+        // Iterate thru contact points
+        int numContacts = contactManifold->getNumContacts();
+        for (int j = 0; j < numContacts; ++j)
+        {
+            // Get collision info
+            btManifoldPoint &pt = contactManifold->getContactPoint(j);
+            if (pt.getDistance() < 0.0f)
+            {
+                const btVector3 &ptA = pt.getPositionWorldOnA();
+                const btVector3 &ptB = pt.getPositionWorldOnB();
+                const btVector3 &normalOnB = pt.m_normalWorldOnB;
+
+                // Create collision message
+                ds_msg::PhysicsCollision collisionMsg;
+                collisionMsg.entityA = a;
+                collisionMsg.entityB = b;
+                collisionMsg.pointWorldOnA =
+                    ds_math::Vector3(ptA.getX(), ptA.getY(), ptA.getZ());
+                collisionMsg.pointWorldOnB =
+                    ds_math::Vector3(ptB.getX(), ptB.getY(), ptB.getZ());
+                collisionMsg.normalWorldOnB = ds_math::Vector3(
+                    normalOnB.getX(), normalOnB.getY(), normalOnB.getZ());
+
+                // Send it
+                ds_msg::AppendMessage(
+                    &m_messagesGenerated, ds_msg::MessageType::PhysicsCollision,
+                    sizeof(ds_msg::PhysicsCollision), &collisionMsg);
             }
         }
     }
@@ -169,6 +271,66 @@ ds_msg::MessageStream Physics::CollectMessages()
     m_messagesGenerated.Clear();
 
     return tmp;
+}
+
+ScriptBindingSet Physics::GetScriptBindings() const
+{
+    return ds_lua::LoadPhysicsScriptBindings();
+}
+
+float Physics::GetTerrainHeight(Entity entity, const ds_math::Vector3 &position)
+{
+    float result = 0.0f;
+
+    btVector3 start = btVector3(position.x, position.y, position.z);
+    btVector3 end = btVector3(position.x, position.y - 1000.0f, position.z);
+
+    btCollisionWorld::ClosestRayResultCallback rayCallback(start, end);
+
+    // Perform raycast
+    m_dynamicsWorld->rayTest(start, end, rayCallback);
+
+    if (rayCallback.hasHit())
+    {
+        end = rayCallback.m_hitPointWorld;
+        btVector3 normal = rayCallback.m_hitNormalWorld;
+
+        btVector3 startToEnd = start - end;
+        result = ds_math::Vector3::Magnitude(ds_math::Vector3(
+            startToEnd.getX(), startToEnd.getY(), startToEnd.getZ()));
+    }
+
+    return result;
+}
+
+Physics::Raycast Physics::PerformRaycast(const ds_math::Vector3 &rayStart,
+                                         const ds_math::Vector3 &rayEnd)
+{
+    Raycast result = {rayStart, rayEnd, ds_math::Vector3(0.0f, 0.0f, 0.0f),
+                      false};
+
+    btVector3 start = btVector3(rayStart.x, rayStart.y, rayStart.z);
+    btVector3 end = btVector3(rayEnd.x, rayEnd.y, rayEnd.z);
+
+    btCollisionWorld::ClosestRayResultCallback rayCallback(start, end);
+
+    // Perform raycast
+    m_dynamicsWorld->rayTest(start, end, rayCallback);
+
+    if (rayCallback.hasHit())
+    {
+        btVector3 normal = rayCallback.m_hitNormalWorld;
+
+        result.start = rayStart;
+        result.end.x = rayCallback.m_hitPointWorld.getX();
+        result.end.y = rayCallback.m_hitPointWorld.getY();
+        result.end.z = rayCallback.m_hitPointWorld.getZ();
+        result.normal =
+            ds_math::Vector3(normal.getX(), normal.getY(), normal.getZ());
+        result.hasHit = true;
+    }
+
+    return result;
 }
 
 void Physics::ProcessEvents(ds_msg::MessageStream *messages)
@@ -359,43 +521,115 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                             origin = ds_math::Vector3(temp.x, temp.y, temp.z);
                         }
 
-                        // Create rigid body
-                        btRigidBody *rigidBody = CreateHeightMapRigidBody(
-                            origin, fullPath.str(), heightScale);
+                        // Get the terrain data
+                        TerrainResource *terrainResource =
+                            m_factory.CreateResource<TerrainResource>(
+                                         fullPath.str())
+                                .release();
 
-                        if (rigidBody != nullptr)
+                        if (terrainResource != nullptr)
                         {
-                            // Add rigid body to physics component
-                            m_physicsComponentManager.SetRigidBody(phys,
-                                                                   rigidBody);
+                            // Create rigid body
+                            btRigidBody *rigidBody = CreateHeightMapRigidBody(
+                                origin, terrainResource, heightScale);
 
-                            // Add rigid body to world
-                            m_dynamicsWorld->addRigidBody(rigidBody);
+                            if (rigidBody != nullptr)
+                            {
+                                // Add rigid body to physics component
+                                m_physicsComponentManager.SetRigidBody(
+                                    phys, rigidBody);
+
+                                // Add rigid body to world
+                                m_dynamicsWorld->addRigidBody(rigidBody);
+
+                                // If successful, store terrain resource, get
+                                // handle to it
+                                ds_render::TerrainResourceHandle
+                                    terrainResourceHandle =
+                                        (ds_render::TerrainResourceHandle)
+                                            m_handleManager.Add(
+                                                (void *)terrainResource, 0);
+
+                                // Associate terrain resource with entity
+                                Instance terrain =
+                                    m_terrainComponentManager
+                                        .CreateComponentForEntity(entity);
+                                m_terrainComponentManager
+                                    .SetTerrainResourceHandle(
+                                        terrain, terrainResourceHandle);
+                            }
+                        }
+                        else
+                        {
+                            std::cerr << "Physics::CreateHeightmapRigidBody: "
+                                         "failed to load heightmap: "
+                                      << fullPath.str() << "." << std::endl;
                         }
                     }
                 }
             }
         }
         break;
-        case ds_msg::MessageType::SetLocalTransform:
+        case ds_msg::MessageType::SetLocalTranslation:
         {
-            ds_msg::SetLocalTransform setLocalMsg;
-            (*messages) >> setLocalMsg;
+            ds_msg::SetLocalTranslation setTranslationMsg;
+            (*messages) >> setTranslationMsg;
 
             // Get component instance of entity to move
             Instance transform =
                 m_transformComponentManager.GetInstanceForEntity(
-                    setLocalMsg.entity);
+                    setTranslationMsg.entity);
 
             // If has transform component
             if (transform.IsValid())
             {
-                // Set transform of entity
-                m_transformComponentManager.SetLocalTransform(
-                    transform, setLocalMsg.localTransform);
+                // Set translation of entity
+                m_transformComponentManager.SetLocalTranslation(
+                    transform, setTranslationMsg.localTranslation);
             }
+
+            break;
         }
-        break;
+        case ds_msg::MessageType::SetLocalOrientation:
+        {
+            ds_msg::SetLocalOrientation setOrientationMsg;
+            (*messages) >> setOrientationMsg;
+
+            // Get component instance of entity to move
+            Instance transform =
+                m_transformComponentManager.GetInstanceForEntity(
+                    setOrientationMsg.entity);
+
+            // If has transform component
+            if (transform.IsValid())
+            {
+                // Set orientation of entity
+                m_transformComponentManager.SetLocalOrientation(
+                    transform, setOrientationMsg.localOrientation);
+            }
+
+            break;
+        }
+        case ds_msg::MessageType::SetLocalScale:
+        {
+            ds_msg::SetLocalScale setScaleMsg;
+            (*messages) >> setScaleMsg;
+
+            // Get component instance of entity to move
+            Instance transform =
+                m_transformComponentManager.GetInstanceForEntity(
+                    setScaleMsg.entity);
+
+            // If has transform component
+            if (transform.IsValid())
+            {
+                // Set scale of entity
+                m_transformComponentManager.SetLocalScale(
+                    transform, setScaleMsg.localScale);
+            }
+
+            break;
+        }
         default:
             messages->Extract(header.size);
             break;
@@ -435,7 +669,8 @@ btRigidBody *Physics::CreateRigidBody(const ds_math::Vector3 &origin,
         // Create rigid body
         btScalar bodyMass = btScalar(mass);
 
-        // Rigid body is dynamic if and only if mass is non-zero, otherwise
+        // Rigid body is dynamic if and only if mass is non-zero,
+        // otherwise
         // static
         bool isDynamic = (bodyMass != 0.0f);
 
@@ -454,18 +689,17 @@ btRigidBody *Physics::CreateRigidBody(const ds_math::Vector3 &origin,
     }
     else
     {
-        std::cerr
-            << "Physics::CreateRigidBody: Unhandled collision shape type: "
-            << colShapeType << std::endl;
+        std::cerr << "Physics::CreateRigidBody: Unhandled collision "
+                     "shape type: "
+                  << colShapeType << std::endl;
     }
 
     return rigidBody;
 }
 
-btRigidBody *
-Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
-                                  const std::string &heightmapFilePath,
-                                  float heightScale)
+btRigidBody *Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
+                                               TerrainResource *terrainResource,
+                                               float heightScale)
 {
     btRigidBody *rigidBody = nullptr;
 
@@ -477,12 +711,12 @@ Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
     // Create collision shape
     btCollisionShape *colShape = nullptr;
 
-    // Create terrain resource
-    std::unique_ptr<TerrainResource> terrainResource =
-        m_factory.CreateResource<TerrainResource>(heightmapFilePath);
+    // Set height scale of terrain resource
     terrainResource->SetHeightScale(heightScale);
 
-    // Copy terrain data - bullet doesn't copy data we pass to it, we need to
+    // Copy terrain data - bullet doesn't copy data we pass to it,
+    // we
+    // need to
     // keep the data 'alive' for the lifetime of the physics system.
     m_heightmapData.push_back(terrainResource->GetHeightArray());
 
@@ -491,17 +725,14 @@ Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
         colShape = new btHeightfieldTerrainShape(
             terrainResource->GetHeightmapWidth(),
             terrainResource->GetHeightmapHeight(), &m_heightmapData.back()[0],
-            1, -0.5f * 20.0f, 0.5f * 20.0f, 1, PHY_FLOAT, false);
+            1, -0.5f * heightScale, 0.5f * heightScale, 1, PHY_FLOAT, false);
+        // colShape->setLocalScaling(btVector3(2.0f, 2.0f, 2.0f));
 
         m_collisionShapes.push_back(colShape);
 
         btVector3 aabMin;
         btVector3 aabMax;
         colShape->getAabb(bodyTransform, aabMin, aabMax);
-        std::cout << "aabMin: " << aabMin.x() << ", " << aabMin.y() << ", "
-                  << aabMin.z() << std::endl;
-        std::cout << "aabMax: " << aabMax.x() << ", " << aabMax.y() << ", "
-                  << aabMax.z() << std::endl;
 
         if (colShape != nullptr)
         {
@@ -517,14 +748,7 @@ Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
                 bodyMass, bodyMotionState, colShape, localInertia);
 
             rigidBody = new btRigidBody(rbInfo);
-            std::cout << "Created height map rigid body!" << std::endl;
         }
-    }
-    else
-    {
-        std::cerr
-            << "Physics::CreateHeightmapRigidBody: failed to load heightmap: "
-            << heightmapFilePath << std::endl;
     }
 
     return rigidBody;

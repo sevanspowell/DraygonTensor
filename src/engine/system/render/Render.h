@@ -2,14 +2,18 @@
 
 #include <string>
 
+#include "engine/common/HandleManager.h"
 #include "engine/resource/MeshResource.h"
 #include "engine/resource/ResourceFactory.h"
+#include "engine/resource/TextureResourceManager.h"
 #include "engine/system/ISystem.h"
+#include "engine/system/render/ButtonComponentManager.h"
 #include "engine/system/render/CameraComponentManager.h"
 #include "engine/system/render/IRenderer.h"
 #include "engine/system/render/Material.h"
 #include "engine/system/render/Mesh.h"
 #include "engine/system/render/RenderComponentManager.h"
+#include "engine/system/render/Skybox.h"
 #include "engine/system/render/Texture.h"
 #include "engine/system/scene/TransformComponentManager.h"
 
@@ -17,6 +21,9 @@
 
 namespace ds
 {
+/** Handle to texture object */
+typedef Handle TextureHandle;
+
 /**
  * The render system is responsible for rendering the world, it contains all
  * render specific data, including the render component data for each entity.
@@ -24,6 +31,74 @@ namespace ds
 class Render : public ISystem
 {
 public:
+    /**
+     * The texture manager class manages access to and creation of texture
+     * objects.
+     */
+    class TextureManager
+    {
+    public:
+        /**
+         * Get the texture associated with the given texture handle.
+         *
+         * If no texture associated with given handle, will return FALSE and
+         * memory at the address given will be set to nullptr.
+         *
+         * @param   textureHandle  TextureHandle, texture handle to get texture
+         * associated with.
+         * @param   texture        ds_render::Texture **, address in memory to
+         * place Texture pointer at.
+         * @return                 bool, TRUE if texture for texture handle
+         * found, FALSE otherwise.
+         */
+        bool GetTexture(TextureHandle textureHandle,
+                        ds_render::Texture **texture);
+
+        /**
+         * Get the texture associated with the given texture handle.
+         *
+         * If no texture associated with given handle, will return FALSE and
+         * memory at the address given will not be modified.
+         *
+         * @param   textureHandle  TextureHandle, texture handle to get texture
+         * associated with.
+         * @param   texture        const ds_render::Texture **, address in
+         * memory to place Texture
+         * pointer.
+         * @return                 bool, TRUE if texture for texture handle
+         * found, FALSE otherwise.
+         */
+        bool GetTexture(TextureHandle textureHandle,
+                        const ds_render::Texture **texture) const;
+
+        /**
+         * Get the handle to the texture associated with the given texture
+         * resource handle, if no texture is associated with that texture
+         * resource handle, one will be created and the caller will be given a
+         * handle to it.
+         *
+         * @param   textureResourceHandle  TextureResourceHandle, handle to
+         * texture resource to get texture for.
+         * @return                         TextureHandle, handle to texture
+         * created/found.
+         */
+        TextureHandle GetTextureForResourceHandle(
+            TextureResourceHandle textureResourceHandle);
+
+    private:
+        /** Store handle with managed texture object for update purposes */
+        struct ManagedTexture
+        {
+            TextureHandle handle;
+            ds_render::Texture texture;
+        };
+
+        /** Texture storage */
+        std::vector<ManagedTexture> m_textures;
+        /** Handle manager */
+        HandleManager m_handleManager;
+    };
+
     /**
      * Initialize the render system.
      *
@@ -104,13 +179,23 @@ private:
     void ProcessEvents(ds_msg::MessageStream *messages);
 
     /**
-     * Create a Texture object from a path to a texture resource.
+     * Create a Texture object from a texture sampler type and a list of file
+     * paths that will be bound to that sampler. In the case of a cubemap
+     * sampler for example, 6 images should be provided.
      *
-     * @param   filePath  const std::string &, path to texture resource.
-     * @return            ds_render::Texture, texture created.
+     * @param   textureResourceFilePath const std::vector<std::string> &, path
+     * to texture resource.
+     * @return                          ds_render::Texture, texture created.
      */
-    ds_render::Texture
-    CreateTextureFromTextureResource(const std::string &filePath);
+    ds_render::Texture CreateTextureFromTextureResource(
+        const std::string &textureResourceFilePath);
+
+    /**
+     * Create the mesh for a skybox.
+     *
+     * @return  ds_render::Mesh, skybox mesh.
+     */
+    ds_render::Mesh CreateSkyboxMesh();
 
     /**
      * Create a Mesh object from a path to a mesh resource.
@@ -152,8 +237,42 @@ private:
 
     /**
      * Render the scene.
+     *
+     * @param  deltaTime  float, time since last engine tick.
      */
-    void RenderScene();
+    void RenderScene(float deltaTime);
+
+    /**
+     * Set the animation index (which animation to play) of the mesh associated
+     * with the given entity (if any).
+     *
+     * @param  entity          Entity, entity to set animation of.
+     * @param  animationIndex  int, index of animation to set.
+     */
+    void SetAnimationIndex(Entity entity, int animationIndex);
+
+    /**
+     * Set the skybox material.
+     *
+     * @param  skyboxMaterial  const std::string &, path to skybox material.
+     */
+    void SetSkyboxMaterial(const std::string &skyboxMaterial);
+
+    /**
+     * Create the mesh for a GUI panel.
+     *
+     * @param  startX        float, start x co-ordinate of the panel.
+     * @param  startY        float, start y co-ordinate of the panel.
+     * @param  endX          float, end x co-ordinate of the panel.
+     * @param  endY          float, end y co-ordinate of the panel.
+     * @param  materialPath  const std::string &, path to material to render
+     * panel with.
+     */
+    ds_render::Mesh CreatePanelMesh(float startX,
+                                    float startY,
+                                    float endX,
+                                    float endY,
+                                    const std::string &materialPath);
 
     /** Messages generated and received by this system */
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
@@ -185,7 +304,19 @@ private:
     bool m_cameraActive;
     Entity m_activeCameraEntity;
 
-    std::unique_ptr<MeshResource> m_animatedMesh;
     float m_timeInSeconds;
+
+    /** Manage storage of mesh resources among other things */
+    ds::HandleManager m_handleManager;
+
+    /** Skybox */
+    ds_render::Skybox m_skybox;
+    bool m_hasSkybox;
+
+    /** GUI-specific data */
+    ds_render::ButtonComponentManager m_buttonComponentManager;
+
+    /** Texture resource manager */
+    static TextureResourceManager m_textureResourceManager;
 };
 }

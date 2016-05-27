@@ -16,46 +16,46 @@ MessageStream MessageFactory::ConstructMessage(std::string messageString)
 
         stream << header << consoleToggle;
     }
-    else if (messageString == "move_forward")
-    {
-        MessageHeader header;
-        header.type = ds_msg::MessageType::MoveForward;
-        header.size = sizeof(ds_msg::MoveForward);
+    // else if (messageString == "move_forward")
+    // {
+    //     MessageHeader header;
+    //     header.type = ds_msg::MessageType::MoveForward;
+    //     header.size = sizeof(ds_msg::MoveForward);
 
-        MoveForward moveForward;
+    //     MoveForward moveForward;
 
-        stream << header << moveForward;
-    }
-    else if (messageString == "move_backward")
-    {
-        MessageHeader header;
-        header.type = ds_msg::MessageType::MoveBackward;
-        header.size = sizeof(ds_msg::MoveBackward);
+    //     stream << header << moveForward;
+    // }
+    // else if (messageString == "move_backward")
+    // {
+    //     MessageHeader header;
+    //     header.type = ds_msg::MessageType::MoveBackward;
+    //     header.size = sizeof(ds_msg::MoveBackward);
 
-        MoveBackward moveBackward;
+    //     MoveBackward moveBackward;
 
-        stream << header << moveBackward;
-    }
-    else if (messageString == "strafe_left")
-    {
-        MessageHeader header;
-        header.type = ds_msg::MessageType::StrafeLeft;
-        header.size = sizeof(ds_msg::StrafeLeft);
+    //     stream << header << moveBackward;
+    // }
+    // else if (messageString == "strafe_left")
+    // {
+    //     MessageHeader header;
+    //     header.type = ds_msg::MessageType::StrafeLeft;
+    //     header.size = sizeof(ds_msg::StrafeLeft);
 
-        StrafeLeft strafeLeft;
+    //     StrafeLeft strafeLeft;
 
-        stream << header << strafeLeft;
-    }
-    else if (messageString == "strafe_right")
-    {
-        MessageHeader header;
-        header.type = ds_msg::MessageType::StrafeRight;
-        header.size = sizeof(ds_msg::StrafeRight);
+    //     stream << header << strafeLeft;
+    // }
+    // else if (messageString == "strafe_right")
+    // {
+    //     MessageHeader header;
+    //     header.type = ds_msg::MessageType::StrafeRight;
+    //     header.size = sizeof(ds_msg::StrafeRight);
 
-        StrafeRight strafeRight;
+    //     StrafeRight strafeRight;
 
-        stream << header << strafeRight;
-    }
+    //     stream << header << strafeRight;
+    // }
     else if (messageString == "quit")
     {
         MessageHeader header;

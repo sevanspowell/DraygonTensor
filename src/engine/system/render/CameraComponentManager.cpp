@@ -31,6 +31,8 @@ CameraComponentManager::GetOrientation(ds::Instance i) const
            "CameraComponentManager::GetOrientation: tried to get invalid "
            "instance");
 
+    std::cout << "GetOrientation: " << m_data.component[i.index].orientation
+              << std::endl;
     return m_data.component[i.index].orientation;
 }
 

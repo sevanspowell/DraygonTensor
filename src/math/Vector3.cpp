@@ -1,9 +1,11 @@
 #include <cassert>
 #include <cmath>
 
+#include "MathHelper.h"
+#include "Matrix4.h"
+#include "Quaternion.h"
 #include "Vector3.h"
 #include "Vector4.h"
-#include "Matrix4.h"
 
 namespace ds_math
 {
@@ -161,6 +163,58 @@ Vector3 Vector3::Transform(const Vector3 &vec, const Matrix4 &matrix)
     return (Vector3(v.x, v.y, v.z));
 }
 
+Quaternion Vector3::GetRotationFromTo(const Vector3 &vec1, const Vector3 &vec2)
+{
+    Quaternion q;
+
+    /*
+     * From:
+     * https://bitbucket.org/sinbad/ogre/src/9db75e3ba05c/OgreMain/include/OgreVector3.h?fileviewer=file-view-default#cl-651
+     */
+    // Normalize two provided vectors
+    Vector3 v1 = Vector3::Normalize(vec1);
+    Vector3 v2 = Vector3::Normalize(vec2);
+
+    scalar dot = Vector3::Dot(v1, v2);
+
+    // If vectors are parallel
+    if (dot >= 1.0f)
+    {
+        return q;
+    }
+    // If vector very close to -1 (vectors have an angle of almost 180 degrees
+    // between them)
+    if (dot < (1e-6f - 1.0f))
+    {
+        // Generate an axis
+        Vector3 axis = Vector3::Cross(Vector3::UnitX, v1);
+        // If colinear axis
+        if (Vector3::Magnitude(axis) == 0.0f)
+        {
+            // Pick another axis
+            axis = Vector3::Cross(Vector3::UnitY, v1);
+        }
+        axis.Normalize();
+
+        q = Quaternion::CreateFromAxisAngle(axis, MathHelper::PI);
+    }
+    else
+    {
+        scalar s = sqrt((1 + dot) * 2);
+        scalar inverse = 1 / s;
+
+        Vector3 c = Vector3::Cross(v1, v2);
+
+        q.x = c.x * inverse;
+        q.y = c.y * inverse;
+        q.z = c.z * inverse;
+        q.w = s * 0.5f;
+        q.Normalize();
+    }
+
+    return q;
+}
+
 const Vector3 Vector3::UnitX = Vector3(1.0f, 0.0f, 0.0f);
 
 const Vector3 Vector3::UnitY = Vector3(0.0f, 1.0f, 0.0f);
@@ -205,5 +259,16 @@ std::ostream &operator<<(std::ostream &out, const Vector3 &vec)
     out << "{" << vec.x << ", " << vec.y << ", " << vec.z << "}";
 
     return out;
+}
+
+Vector3 operator*(const Vector3 &vec1, const Vector3 &vec2)
+{
+    Vector3 vec;
+
+    vec.x = vec1.x * vec2.x;
+    vec.y = vec1.y * vec2.y;
+    vec.z = vec1.z * vec2.z;
+
+    return vec;
 }
 }

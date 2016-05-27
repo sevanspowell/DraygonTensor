@@ -572,7 +572,7 @@ Config::GetDocumentMember(const std::string &key) const
                         ++tokenPrint;
                         for (; tokenPrint != tokenIt + 1; ++tokenPrint)
                         {
-                            std::cerr << "." << *tokenPrint << "a";
+                            std::cerr << "." << *tokenPrint;
                         }
                         std::cerr << "' in config file." << std::endl;
                         break;

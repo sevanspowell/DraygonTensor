@@ -279,17 +279,42 @@ public:
     void SetBoneCount(unsigned int boneCount);
 
     /**
+     * Get a collection of bone transforms.
      *
-     * @param  timeInSeconds  float, time since application begun in seconds.
-     * @param  transforms     std::vector<ds_math::Matrix4> *, array of
-     * transforms out.
+     * @param  deltaTime   float, time since last animation sample in
+     *                     seconds.
+     * @param  transforms  std::vector<ds_math::Matrix4> *, array of
+     *                     transforms out. Vector must have
+     *                     MeshResource::MAX_BONES elements.
      */
-    void BoneTransform(float timeInSeconds,
+    void BoneTransform(float deltaTime,
                        std::vector<ds_math::Matrix4> *transforms);
+
+    /**
+     * Set the index of the animation to be sampled by the BoneTransform
+     * method.
+     *
+     * @param  animationIndex  int, index of animation to be sampled by the
+     * BoneTransform method.
+     */
+    void SetAnimationIndex(int animationIndex);
+
+    /**
+     * Get the number of bones in the scene.
+     *
+     * @return  unsigned int, number of bones in the scene.
+     */
+    unsigned int GetNumBones() const;
 
     const std::vector<VertexBoneData> &GetVertexBoneData() const;
 
     void SetVertexBoneData(const std::vector<VertexBoneData> &vertexBoneData);
+
+    size_t GetBaseVertex(unsigned int meshIndex) const;
+
+    size_t GetBaseIndex(unsigned int meshIndex) const;
+
+    size_t GetNumIndices(unsigned int meshIndex) const;
 
     /** Maximum number of bones */
     static const int MAX_BONES = 100;
@@ -489,6 +514,22 @@ private:
     const aiNodeAnim *FindNodeAnim(const aiAnimation *animation,
                                    const std::string &nodeName);
 
+    void SetMeshEntry(size_t meshIndex,
+                      size_t baseVertex,
+                      size_t baseIndex,
+                      size_t numIndices);
+
+    void SetPositionBufferSize(size_t size);
+
+    void SetNormalBufferSize(size_t size);
+
+    void SetTexCoordBufferSize(size_t size);
+
+    void SetIndexBufferSize(size_t size);
+
+    void LoadMeshData(unsigned int meshIndex, const aiMesh *mesh);
+
+
     /** Collection of meshes. */
     std::vector<struct SingularMesh> m_meshCollection;
     /** The path to this resource */
@@ -506,5 +547,36 @@ private:
     ds_math::Matrix4 m_globalInverseTransform;
     /** Vertex bone data */
     std::vector<VertexBoneData> m_vertexBoneData;
+
+    struct MeshEntry
+    {
+        MeshEntry()
+        {
+            baseVertex = 0;
+            baseIndex = 0;
+            numIndices = 0;
+        }
+
+        /** Where in the vertex buffer to set as index 0 */
+        size_t baseVertex;
+        /** Where in index buffer to begin mesh indices */
+        size_t baseIndex;
+        /** Number of indices used to create mesh */
+        size_t numIndices;
+    };
+
+    std::vector<ds_math::Vector3> m_positionBuffer;
+    std::vector<ds_math::Vector3> m_normalBuffer;
+    std::vector<ds_math::Vector3> m_texCoordBuffer;
+    std::vector<unsigned int> m_indexBuffer;
+    std::vector<MeshEntry> m_meshEntries;
+
+    // Material information - diffuse texture path.
+    std::vector<std::string> m_diffuseTexturePaths;
+
+    // Time accumulator (for animation)
+    float m_animationTime;
+    // Current animation to use
+    int m_currentAnimationIndex;
 };
 }
