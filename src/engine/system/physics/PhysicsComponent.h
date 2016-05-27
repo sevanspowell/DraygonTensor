@@ -19,7 +19,7 @@ struct PhysicsComponent
     ds_math::Vector3 scale;
     // Mass of rigid body
     float mass;
-    // Bullet rigid body
-    btRigidBody *rigidBody;
+    // Bullet collision object
+    btCollisionObject *collisionObject;
 };
 }
