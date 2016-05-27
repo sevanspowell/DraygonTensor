@@ -564,6 +564,18 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
 
             break;
         }
+        case ds_msg::MessageType::PhysicsCollision:
+        {
+            ds_msg::PhysicsCollision collisionMsg;
+            (*messages) >> collisionMsg;
+
+            // Insert header into messages to be sent to script
+            m_toScriptMessages << header;
+            // Insert payload into messages to be sent to script
+            m_toScriptMessages << collisionMsg;
+
+            break;
+        }
         default:
             messages->Extract(header.size);
             break;

@@ -75,7 +75,9 @@ enum class MessageType
     // On destroy entity
     DestroyEntity,
     // On reload all assets
-    ReloadAll
+    ReloadAll,
+    // On physics collision
+    PhysicsCollision
 };
 
 /**
@@ -287,5 +289,17 @@ struct DestroyEntity
 
 struct ReloadAll
 {
+};
+
+struct PhysicsCollision
+{
+    ds::Entity entityA; // Object one involved in collision.
+    ds::Entity entityB; // Object two involved in collision.
+    ds_math::Vector3
+        pointWorldOnA; // Collision point on object one in world space.
+    ds_math::Vector3
+        pointWorldOnB; // Collision point on object two in world space.
+    ds_math::Vector3
+        normalWorldOnB; // Collision normal in world space on object two.
 };
 }

@@ -176,6 +176,86 @@ static int l_GetNextMessage(lua_State *L)
 
                 break;
             }
+            case ds_msg::MessageType::PhysicsCollision:
+            {
+                ds_msg::PhysicsCollision collisionMsg;
+                msg >> collisionMsg;
+
+                // Create payload table
+                lua_pushliteral(L, "physics_collision");
+                lua_setfield(L, -2, "type"); // table.type = physics_collision
+
+                // Create entityA and push to stack
+                ds::Entity *entityA =
+                    (ds::Entity *)lua_newuserdata(L, sizeof(ds::Entity));
+                *entityA = collisionMsg.entityA;
+
+                // Get Entity metatable
+                luaL_getmetatable(L, "Entity");
+                // Set it as metatable of new user data
+                lua_setmetatable(L, -2);
+
+                // Set entityA field
+                lua_setfield(L, -2, "entityA"); // table.entityA = entityA
+
+                // Create entityB and push to stack
+                ds::Entity *entityB =
+                    (ds::Entity *)lua_newuserdata(L, sizeof(ds::Entity));
+                *entityB = collisionMsg.entityB;
+
+                // Get Entity metatable
+                luaL_getmetatable(L, "Entity");
+                // Set it as metatable of new user data
+                lua_setmetatable(L, -2);
+
+                // Set entityB field
+                lua_setfield(L, -2, "entityB"); // table.entityB = entityB
+
+                // Create Vector3 and push to stack
+                ds_math::Vector3 *pointA = (ds_math::Vector3 *)lua_newuserdata(
+                    L, sizeof(ds_math::Vector3));
+                *pointA = collisionMsg.pointWorldOnA;
+
+                // Get Vector3 metatable
+                luaL_getmetatable(L, "Vector3");
+                // Set it as metatable of new user data
+                lua_setmetatable(L, -2);
+
+                // Set pointWorldOnA field
+                lua_setfield(L, -2,
+                             "pointWorldOnA"); // table.pointWorldOnA = pointA
+
+                // Create Vector3 and push to stack
+                ds_math::Vector3 *pointB = (ds_math::Vector3 *)lua_newuserdata(
+                    L, sizeof(ds_math::Vector3));
+                *pointB = collisionMsg.pointWorldOnB;
+
+                // Get Vector3 metatable
+                luaL_getmetatable(L, "Vector3");
+                // Set it as metatable of new user data
+                lua_setmetatable(L, -2);
+
+                // Set pointWorldOnB field
+                lua_setfield(L, -2,
+                             "pointWorldOnB"); // table.pointWorldOnB = pointB
+
+                // Create Vector3 and push to stack
+                ds_math::Vector3 *normalB = (ds_math::Vector3 *)lua_newuserdata(
+                    L, sizeof(ds_math::Vector3));
+                *normalB = collisionMsg.normalWorldOnB;
+
+                // Get Vector3 metatable
+                luaL_getmetatable(L, "Vector3");
+                // Set it as metatable of new user data
+                lua_setmetatable(L, -2);
+
+                // Set normalWorldOnB field
+                lua_setfield(
+                    L, -2,
+                    "normalWorldOnB"); // table.normalWorldOnB = normalB
+
+                break;
+            }
             default:
                 assert(false && "l_GetNextMessage should handle all received "
                                 "message types!");

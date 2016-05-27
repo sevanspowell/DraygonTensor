@@ -169,6 +169,56 @@ void Physics::Update(float deltaTime)
             }
         }
     }
+
+    // Iterate thru manifolds
+    int numManifolds = m_dynamicsWorld->getDispatcher()->getNumManifolds();
+    for (unsigned int i = 0; i < numManifolds; ++i)
+    {
+        // Get colliding bodies
+        btPersistentManifold *contactManifold =
+            m_dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
+        const btCollisionObject *objA = contactManifold->getBody0();
+        const btCollisionObject *objB = contactManifold->getBody1();
+
+        // Get component instance for collision objects
+        Instance physA = m_physicsComponentManager.GetInstanceForRigidBody(
+            (btRigidBody *)objA);
+        Instance physB = m_physicsComponentManager.GetInstanceForRigidBody(
+            (btRigidBody *)objB);
+        // Find entity for component instance
+        Entity a = m_physicsComponentManager.GetEntityForInstance(physA);
+        Entity b = m_physicsComponentManager.GetEntityForInstance(physB);
+
+        // Iterate thru contact points
+        int numContacts = contactManifold->getNumContacts();
+        for (int j = 0; j < numContacts; ++j)
+        {
+            // Get collision info
+            btManifoldPoint &pt = contactManifold->getContactPoint(j);
+            if (pt.getDistance() < 0.0f)
+            {
+                const btVector3 &ptA = pt.getPositionWorldOnA();
+                const btVector3 &ptB = pt.getPositionWorldOnB();
+                const btVector3 &normalOnB = pt.m_normalWorldOnB;
+
+                // Create collision message
+                ds_msg::PhysicsCollision collisionMsg;
+                collisionMsg.entityA = a;
+                collisionMsg.entityB = b;
+                collisionMsg.pointWorldOnA =
+                    ds_math::Vector3(ptA.getX(), ptA.getY(), ptA.getZ());
+                collisionMsg.pointWorldOnB =
+                    ds_math::Vector3(ptB.getX(), ptB.getY(), ptB.getZ());
+                collisionMsg.normalWorldOnB = ds_math::Vector3(
+                    normalOnB.getX(), normalOnB.getY(), normalOnB.getZ());
+
+                // Send it
+                ds_msg::AppendMessage(
+                    &m_messagesGenerated, ds_msg::MessageType::PhysicsCollision,
+                    sizeof(ds_msg::PhysicsCollision), &collisionMsg);
+            }
+        }
+    }
 }
 
 void Physics::Shutdown()
