@@ -1,14 +1,4 @@
 subdirs(
-    animation
-    bullet
     multilayer
-    pathfinding
-    physics
-    render_system
-    script_console
-    script_message
-    skybox
-    sound
-    terrain
     ui
 )
