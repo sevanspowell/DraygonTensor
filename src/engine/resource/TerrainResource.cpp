@@ -33,8 +33,8 @@ std::unique_ptr<IResource> TerrainResource::CreateFromFile(std::string filePath)
     // set base height of the terrain - must be above 0
     // float normalX, normalZ
 
-    unsigned int width = changedResourcePointer->GetWidthInPixels();
-    unsigned int height = changedResourcePointer->GetHeightInPixels();
+    unsigned int width = changedResourcePointer->GetWidthInPixels(0);
+    unsigned int height = changedResourcePointer->GetHeightInPixels(0);
 
     std::vector<float> heights;
     heights.resize(width * height, 0.0f);
@@ -52,8 +52,7 @@ std::unique_ptr<IResource> TerrainResource::CreateFromFile(std::string filePath)
             // get the color of the current pixel to be used to determine height
             // (lighter = higher)
             unsigned char color =
-                (unsigned char)changedResourcePointer
-                    ->GetTextureContents()[3 * (z * (int)width + x)];
+                (unsigned char)changedResourcePointer->GetImageData(0)[3 * (z * (int)width + x)];
 
             // calculate the height of the point using the color of the
             // associated pixel
@@ -133,6 +132,8 @@ std::unique_ptr<IResource> TerrainResource::CreateFromFile(std::string filePath)
 
 TerrainResource::TerrainResource()
 {
+    m_maxTerrainHeight = 0.5f;
+    m_minTerrainHeight = -0.5f;
 }
 
 
@@ -367,6 +368,10 @@ void TerrainResource::CenterVertices(unsigned int width, unsigned int height)
 
 void TerrainResource::SetHeightScale(float heightScale)
 {
+    // Update max and minimum terrain height
+    m_maxTerrainHeight *= heightScale;
+    m_minTerrainHeight *= heightScale;
+
     // Scale vertices
     for (unsigned int i = 0; i < m_terrain.m_vertices.size(); ++i)
     {
@@ -379,5 +384,15 @@ void TerrainResource::SetHeightScale(float heightScale)
     {
         m_heights[i] *= heightScale;
     }
+}
+
+float TerrainResource::GetMaxTerrainHeight() const
+{
+    return m_maxTerrainHeight;
+}
+
+float TerrainResource::GetMinTerrainHeight() const
+{
+    return m_minTerrainHeight;
 }
 }

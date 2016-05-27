@@ -117,6 +117,77 @@ void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
                               ds_msg::MessageType::TextInput,
                               sizeof(ds_msg::TextInput), &textInput);
         break;
+    case SDL_MOUSEMOTION:
+    {
+        ds_msg::MouseMotion mouseMotionEvent;
+        mouseMotionEvent.button =
+            ConvertSDL2ButtonStateToButtonState(event.motion.state);
+
+        // Transform co-ordinates to our co-ordinate system
+        ds_math::Vector4 pos = ds_math::Vector4(
+            event.motion.x / 800.0f, event.motion.y / 600.0f, 0.0f, 1.0f);
+        ds_math::Vector4 relPos = ds_math::Vector4(
+            event.motion.xrel / 800.0f, event.motion.yrel / 600.0f, 0.0f, 1.0f);
+
+        ds_math::Matrix4 scale =
+            ds_math::Matrix4::CreateScaleMatrix(2.0f, 2.0f, 2.0f);
+        ds_math::Matrix4 translate =
+            ds_math::Matrix4::CreateTranslationMatrix(-1.0f, -1.0f, 0.0f);
+        ds_math::Matrix4 flip = ds_math::Matrix4(1.0f);
+        flip[1].y = -1.0f;
+
+        // Transform position
+        pos = flip * translate * scale * pos;
+
+        // Trnasform relative position
+        relPos = flip * translate * scale * relPos;
+
+        mouseMotionEvent.x = pos.x;
+        mouseMotionEvent.y = pos.y;
+        mouseMotionEvent.xRel = relPos.x;
+        mouseMotionEvent.yRel = relPos.y;
+        mouseMotionEvent.timeStamp = event.motion.timestamp;
+        mouseMotionEvent.windowID = event.motion.windowID;
+
+        ds_msg::AppendMessage(&m_messagesGenerated,
+                              ds_msg::MessageType::MouseMotion,
+                              sizeof(ds_msg::MouseMotion), &mouseMotionEvent);
+        break;
+    }
+    // Intentional fall-thru
+    case SDL_MOUSEBUTTONUP:
+    case SDL_MOUSEBUTTONDOWN:
+    {
+        ds_msg::MouseButton mouseButtonEvent;
+        // Set appropriate button states
+        mouseButtonEvent.button =
+            ConvertSDL2ButtonStateToButtonState(SDL_GetMouseState(NULL, NULL));
+
+        // Transform co-ordinates to our co-ordinate system
+        ds_math::Vector4 pos = ds_math::Vector4(
+            event.button.x / 800.0f, event.button.y / 600.0f, 0.0f, 1.0f);
+
+        ds_math::Matrix4 scale =
+            ds_math::Matrix4::CreateScaleMatrix(2.0f, 2.0f, 2.0f);
+        ds_math::Matrix4 translate =
+            ds_math::Matrix4::CreateTranslationMatrix(-1.0f, -1.0f, 0.0f);
+        ds_math::Matrix4 flip = ds_math::Matrix4(1.0f);
+        flip[1].y = -1.0f;
+
+        // Transform position
+        pos = flip * translate * scale * pos;
+
+        mouseButtonEvent.x = pos.x;
+        mouseButtonEvent.y = pos.y;
+        mouseButtonEvent.timeStamp = event.button.timestamp;
+        mouseButtonEvent.windowID = event.button.windowID;
+        mouseButtonEvent.clicks = event.button.clicks;
+
+        ds_msg::AppendMessage(&m_messagesGenerated,
+                              ds_msg::MessageType::MouseButton,
+                              sizeof(ds_msg::MouseButton), &mouseButtonEvent);
+        break;
+    }
     case SDL_QUIT:
         ds_msg::QuitEvent quitEvent;
 
@@ -191,5 +262,29 @@ void Platform::ToggleTextInput() const
     {
         SDL_StartTextInput();
     }
+}
+
+ds_platform::Mouse::ButtonState
+Platform::ConvertSDL2ButtonStateToButtonState(uint32_t state) const
+{
+    ds_platform::Mouse::ButtonState buttonState;
+    buttonState.left = false;
+    buttonState.middle = false;
+    buttonState.right = false;
+
+    if (state & SDL_BUTTON(SDL_BUTTON_LEFT))
+    {
+        buttonState.left = true;
+    }
+    if (state & SDL_BUTTON(SDL_BUTTON_MIDDLE))
+    {
+        buttonState.middle = true;
+    }
+    if (state & SDL_BUTTON(SDL_BUTTON_RIGHT))
+    {
+        buttonState.right = true;
+    }
+
+    return buttonState;
 }
 }

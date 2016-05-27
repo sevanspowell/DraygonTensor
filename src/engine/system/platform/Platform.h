@@ -106,6 +106,16 @@ private:
      */
     void ToggleTextInput() const;
 
+    /**
+     * Convert an SDL2 mouse button state to an API-independent representation.
+     *
+     * @param   state  uint32_t, SDL2 mouse button state
+     * @return         ds_platform::Mouse::ButtonState, engine mouse button
+     * state representation.
+     */
+    ds_platform::Mouse::ButtonState
+    ConvertSDL2ButtonStateToButtonState(uint32_t state) const;
+
     ds_platform::Video m_video;
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
 };

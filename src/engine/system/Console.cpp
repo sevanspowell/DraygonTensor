@@ -112,10 +112,10 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
 
             if (keyEvent.state == ds_platform::Keyboard::State::Key_Pressed)
             {
-                m_buffer << "Console out: "
-                         << "Key pressed: '"
-                         << ds_platform::Keyboard::PrintKey(keyEvent.key)
-                         << "'." << std::endl;
+                // m_buffer << "Console out: "
+                //          << "Key pressed: '"
+                //          << ds_platform::Keyboard::PrintKey(keyEvent.key)
+                //          << "'." << std::endl;
 
                 if (keyEvent.key == ds_platform::Keyboard::Key::Key_Backspace &&
                     m_inputText.length() > 0)
@@ -144,10 +144,10 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             else if (keyEvent.state ==
                      ds_platform::Keyboard::State::Key_Released)
             {
-                m_buffer << "Console out: "
-                         << "Key released: '"
-                         << ds_platform::Keyboard::PrintKey(keyEvent.key)
-                         << "'." << std::endl;
+                // m_buffer << "Console out: "
+                //          << "Key released: '"
+                //          << ds_platform::Keyboard::PrintKey(keyEvent.key)
+                //          << "'." << std::endl;
             }
             break;
         case ds_msg::MessageType::QuitEvent:
@@ -224,63 +224,144 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
                             createComponentMsg.componentType)
                      << std::endl;
             break;
-        case ds_msg::MessageType::MoveEntity:
+        case ds_msg::MessageType::SetLocalTranslation:
         {
-            ds_msg::MoveEntity entityMoveMsg;
-            (*messages) >> entityMoveMsg;
+            ds_msg::SetLocalTranslation setLocalTranslationMsg;
+            (*messages) >> setLocalTranslationMsg;
 
-            // Print console msg
-            m_buffer << "Console out: Entity moved: Entity: "
-                     << entityMoveMsg.entity.id
-                     << " deltaPosition: " << entityMoveMsg.deltaPosition
+            // m_buffer << "Console out: Set local translation of Entity "
+            //          << setLocalTranslationMsg.entity.id
+            //          << " to: " << setLocalTranslationMsg.localTranslation
+            //          << std::endl;
+            break;
+        }
+        case ds_msg::MessageType::SetLocalOrientation:
+        {
+            ds_msg::SetLocalOrientation setLocalOrientationMsg;
+            (*messages) >> setLocalOrientationMsg;
+
+            // m_buffer << "Console out: Set local orientation of Entity "
+            //          << setLocalOrientationMsg.entity.id
+            //          << " to: " << setLocalOrientationMsg.localOrientation
+            //          << std::endl;
+            break;
+        }
+        case ds_msg::MessageType::SetLocalScale:
+        {
+            ds_msg::SetLocalScale setLocalScaleMsg;
+            (*messages) >> setLocalScaleMsg;
+
+            // m_buffer << "Console out: Set local scale of Entity "
+            //          << setLocalScaleMsg.entity.id
+            //          << " to: " << setLocalScaleMsg.localScale << std::endl;
+            break;
+        }
+        case ds_msg::MessageType::SetAnimationIndex:
+        {
+            ds_msg::SetAnimationIndex setAnimationMsg;
+            (*messages) >> setAnimationMsg;
+
+            m_buffer << "Console out: animation of entity id "
+                     << setAnimationMsg.entity.id << " changed to index "
+                     << setAnimationMsg.animationIndex << std::endl;
+            break;
+        }
+        case ds_msg::MessageType::SetSkyboxMaterial:
+        {
+            ds_msg::SetSkyboxMaterial setSkyboxMaterialMsg;
+            (*messages) >> setSkyboxMaterialMsg;
+
+            m_buffer << "Console out: set skybox material to: "
+                     << StringIntern::Instance().GetString(
+                            setSkyboxMaterialMsg.skyboxMaterialPath)
                      << std::endl;
             break;
         }
-        case ds_msg::MessageType::MoveForward:
+        case ds_msg::MessageType::MouseMotion:
         {
-            ds_msg::MoveForward moveForwardMsg;
-            (*messages) >> moveForwardMsg;
+            ds_msg::MouseMotion mouseMotionEvent;
+            (*messages) >> mouseMotionEvent;
 
-            // Print move forward msg
-            m_buffer << "Console out: Move forward message." << std::endl;
-
+            // m_buffer << "Console out: mouse now at position "
+            //          << mouseMotionEvent.x << ", " << mouseMotionEvent.y
+            //          << " with buttons pressed Left: "
+            //          << mouseMotionEvent.button.left
+            //          << " Middle: " << mouseMotionEvent.button.middle
+            //          << " Right: " << mouseMotionEvent.button.right << "."
+            //          << std::endl;
             break;
         }
-        case ds_msg::MessageType::MoveBackward:
+        case ds_msg::MessageType::MouseButton:
         {
-            ds_msg::MoveBackward moveBackwardMsg;
-            (*messages) >> moveBackwardMsg;
+            ds_msg::MouseButton mouseButtonEvent;
+            (*messages) >> mouseButtonEvent;
 
-            // Print move backward msg
-            m_buffer << "Console out: Move backward message." << std::endl;
-
+            // m_buffer << "Console out: mouse button state changed, current "
+            //             "state: Left: "
+            //          << mouseButtonEvent.button.left
+            //          << " Middle: " << mouseButtonEvent.button.middle
+            //          << " Right: " << mouseButtonEvent.button.right << " at
+            //          ("
+            //          << mouseButtonEvent.x << ", " << mouseButtonEvent.y <<
+            //          ")."
+            //          << std::endl;
             break;
         }
-        case ds_msg::MessageType::StrafeLeft:
+        case ds_msg::MessageType::CreatePanel:
         {
-            ds_msg::StrafeLeft strafeLeftMsg;
-            (*messages) >> strafeLeftMsg;
+            ds_msg::CreatePanel createPanelMsg;
+            (*messages) >> createPanelMsg;
 
-            // Print strafe left msg
-            m_buffer << "Console out: Strafe left message." << std::endl;
+            m_buffer << "Console out: GUI panel created from ("
+                     << createPanelMsg.startX << ", " << createPanelMsg.startY
+                     << ") to (" << createPanelMsg.endX << ", "
+                     << createPanelMsg.endY << ") with material "
+                     << StringIntern::Instance().GetString(
+                            createPanelMsg.materialPath)
+                     << std::endl;
             break;
         }
-        case ds_msg::MessageType::StrafeRight:
+        case ds_msg::MessageType::CreateButton:
         {
-            ds_msg::StrafeRight strafeRightMsg;
-            (*messages) >> strafeRightMsg;
+            ds_msg::CreateButton createButtonMsg;
+            (*messages) >> createButtonMsg;
 
-            // Print strafe right msg
-            m_buffer << "Console out: Strafe right message." << std::endl;
+            m_buffer << "Console out: GUI button created from ("
+                     << createButtonMsg.startX << ", " << createButtonMsg.startY
+                     << ") to (" << createButtonMsg.endX << ", "
+                     << createButtonMsg.endY << ") with materials: "
+                     << StringIntern::Instance().GetString(
+                            createButtonMsg.defaultMaterialPath)
+                     << ", "
+                     << StringIntern::Instance().GetString(
+                            createButtonMsg.pressedMaterialPath)
+                     << ", "
+                     << StringIntern::Instance().GetString(
+                            createButtonMsg.pressedMaterialPath)
+                     << std::endl;
             break;
         }
-        case ds_msg::MessageType::SetLocalTransform:
+        case ds_msg::MessageType::ButtonFired:
         {
-            ds_msg::SetLocalTransform setLocalMsg;
-            (*messages) >> setLocalMsg;
+            ds_msg::ButtonFired buttonFireMsg;
+            (*messages) >> buttonFireMsg;
 
-            // m_buffer << "Set local transform of " << setLocalMsg.entity.id
-            //          << " to: " << setLocalMsg.localTransform << std::endl;
+            m_buffer << "Console out: button entity id: "
+                     << buttonFireMsg.entity.id << " fired." << std::endl;
+            break;
+        }
+        case ds_msg::MessageType::PhysicsCollision:
+        {
+            ds_msg::PhysicsCollision collisionMsg;
+            (*messages) >> collisionMsg;
+
+            // m_buffer << "Console out: Collision between entity A: "
+            //          << collisionMsg.entityA.id
+            //          << " and entity B: " << collisionMsg.entityB.id
+            //          << ". Point on A (world): " << collisionMsg.pointWorldOnA
+            //          << ", point on B (world): " << collisionMsg.pointWorldOnB
+            //          << ", normal on B (world): " << collisionMsg.normalWorldOnB
+            //          << std::endl;
             break;
         }
         default:

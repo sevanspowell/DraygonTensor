@@ -27,6 +27,22 @@ bool LuaEnvironment::Init()
         // Ensure stack is clean
         assert(lua_gettop(m_lua) == oldStackSize);
 
+        // Append ../assets/?.lua to require path
+        lua_getglobal(m_lua, "package");
+        // Push field path from package table to top of stack
+        lua_getfield(m_lua, -1, "path");
+        // Grab string path
+        std::string curPath = lua_tostring(m_lua, -1);
+        curPath.append(";../assets/?.lua");
+        // Pop off path string from stack
+        lua_pop(m_lua, 1);
+        // Push the new path to stack
+        lua_pushstring(m_lua, curPath.c_str());
+        // Set the path field to new path
+        lua_setfield(m_lua, -2, "path");
+        // Pop off package table
+        lua_pop(m_lua, 1);
+
         result = true;
     }
 

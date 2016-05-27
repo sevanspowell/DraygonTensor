@@ -368,6 +368,116 @@ static int l_Vector3UnaryInvert(lua_State *L)
     return 1;
 }
 
+static int l_Vector3Subtract(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Vector3 *v1 = NULL;
+    ds_math::Vector3 *v2 = NULL;
+
+    v1 = (ds_math::Vector3 *)luaL_checkudata(L, 1, "Vector3");
+    v2 = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
+
+    if (v1 != NULL && v2 != NULL)
+    {
+        // Allocate memory for Vector3 result
+        ds_math::Vector3 *sub =
+            (ds_math::Vector3 *)lua_newuserdata(L, sizeof(ds_math::Vector3));
+
+        // Subtract two arguments
+        *sub = *v1 - *v2;
+
+        // Get Vector3 metatable and put on top of stack
+        luaL_getmetatable(L, "Vector3");
+        // Set it as metatable of new user data (the Vector3 - second from top
+        // on stack)
+        lua_setmetatable(L, -2);
+    }
+
+    // Two Vector3 arguments, subtraction result
+    assert(lua_gettop(L) == 3);
+
+    return 1;
+}
+
+static int l_Vector3Add(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Vector3 *v1 = NULL;
+    ds_math::Vector3 *v2 = NULL;
+
+    v1 = (ds_math::Vector3 *)luaL_checkudata(L, 1, "Vector3");
+    v2 = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
+
+    if (v1 != NULL && v2 != NULL)
+    {
+        // Allocate memory for Vector3 result
+        ds_math::Vector3 *add =
+            (ds_math::Vector3 *)lua_newuserdata(L, sizeof(ds_math::Vector3));
+
+        // Subtract two arguments
+        *add = *v1 + *v2;
+
+        // Get Vector3 metatable and put on top of stack
+        luaL_getmetatable(L, "Vector3");
+        // Set it as metatable of new user data (the Vector3 - second from top
+        // on stack)
+        lua_setmetatable(L, -2);
+    }
+
+    // Two Vector3 arguments, addition result
+    assert(lua_gettop(L) == 3);
+
+    return 1;
+}
+
+static int l_Vector3MulScalar(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Vector3 *v = NULL;
+
+    v = (ds_math::Vector3 *)luaL_checkudata(L, 1, "Vector3");
+    ds_math::scalar scalar = (ds_math::scalar)luaL_checknumber(L, 2);
+
+    if (v != NULL)
+    {
+        // Allocate memory for Vector3 result
+        ds_math::Vector3 *scaledVector =
+            (ds_math::Vector3 *)lua_newuserdata(L, sizeof(ds_math::Vector3));
+
+        // Multiply two arguments
+        *scaledVector = *v * scalar;
+
+        // Get Vector3 metatable and put on top of stack
+        luaL_getmetatable(L, "Vector3");
+        // Set it as metatable of new user data (the Vector3 - second from top
+        // on stack)
+        lua_setmetatable(L, -2);
+    }
+
+    // Two arguments, scaled result
+    assert(lua_gettop(L) == 3);
+
+    return 1;
+}
+
 static int l_Vector3Dot(lua_State *L)
 {
     // Get number of arguments provided
@@ -545,6 +655,44 @@ static int l_Vector3MatrixTransform(lua_State *L)
     }
 
     // Vector3 and Matrix4 arguments and transformed vector result
+    assert(lua_gettop(L) == 3);
+
+    return 1;
+}
+
+static int l_Vector3GetRotationFromTo(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Vector3 *v1 = NULL;
+    ds_math::Vector3 *v2 = NULL;
+
+    v1 = (ds_math::Vector3 *)luaL_checkudata(L, 1, "Vector3");
+    v2 = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
+
+    if (v1 != NULL && v2 != NULL)
+    {
+        // Allocate memory for Quaternion result
+        ds_math::Quaternion *rotation = (ds_math::Quaternion *)lua_newuserdata(
+            L, sizeof(ds_math::Quaternion));
+
+        // Get rotation from first argument vector to second
+        *rotation = ds_math::Vector3::GetRotationFromTo(*v1, *v2);
+
+        // Get Quaternion metatable and put on top of stack
+        luaL_getmetatable(L, "Quaternion");
+        // Set it as metatable of new user data (the Quaternion - second from
+        // top
+        // on stack)
+        lua_setmetatable(L, -2);
+    }
+
+    // Two Vector3 arguments, Quaternion rotation result
     assert(lua_gettop(L) == 3);
 
     return 1;
@@ -1099,6 +1247,43 @@ static int l_Matrix4Mul(lua_State *L)
 
     // Two Matrix4 arguments, matrix multiplication result
     assert(lua_gettop(L) == 3);
+
+    return 1;
+}
+
+static int l_Matrix4GetTranslation(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expected = 1;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", expected);
+    }
+
+    ds_math::Matrix4 *matrix = NULL;
+
+    // Get matrix
+    matrix = (ds_math::Matrix4 *)luaL_checkudata(L, 1, "Matrix4");
+
+    if (matrix != NULL)
+    {
+        // Allocate memory for translation vector
+        ds_math::Vector3 *translation =
+            (ds_math::Vector3 *)lua_newuserdata(L, sizeof(ds_math::Vector3));
+
+        *translation =
+            ds_math::Vector3((*matrix)[3].x, (*matrix)[3].y, (*matrix)[3].z);
+
+        // Get Vector3 metatable and put on top of stack
+        luaL_getmetatable(L, "Vector3");
+        // Set it as metatable of new user data (the Vector3 result - second
+        // from top of stack)
+        lua_setmetatable(L, -2);
+    }
+
+    // Vector3 result
+    assert(lua_gettop(L) == 2);
 
     return 1;
 }
@@ -1684,13 +1869,95 @@ static int l_Vector4SetW(lua_State *L)
     return 0;
 }
 
-// static int l_Vector3Scale(lua_State *L)
-// {
-    
-// }
+static int l_EntityToString(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 1)
+    {
+        return luaL_error(L, "Got %d arguments, expected 1.", n);
+    }
+
+    ds::Entity *entity = NULL;
+
+    entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
+
+    if (entity != NULL)
+    {
+        std::stringstream ss;
+        ss << "Entity id: " << entity->id;
+        lua_pushstring(L, ss.str().c_str());
+    }
+
+    // user data passed to this method, string representation
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_EntityEquality(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds::Entity *entity1 = NULL;
+    ds::Entity *entity2 = NULL;
+
+    entity1 = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
+    entity2 = (ds::Entity *)luaL_checkudata(L, 2, "Entity");
+
+    if (entity1 != NULL && entity2 != NULL)
+    {
+        bool equal = false;
+
+        if (entity1->id == entity2->id)
+        {
+            equal = true;
+        }
+
+        // Push result to stack
+        lua_pushboolean(L, equal);
+    }
+
+    // Two entities and boolean result
+    assert(lua_gettop(L) == 3);
+
+    return 1;
+}
+
+static int l_EntityGetId(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 1)
+    {
+        return luaL_error(L, "Got %d arguments, expected 1.", n);
+    }
+
+    ds::Entity *entity = NULL;
+
+    entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
+
+    if (entity != NULL)
+    {
+        lua_pushnumber(L, entity->id); 
+    }
+
+    // Entity passed to this method, id returned
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
 
 static const luaL_Reg vector3Methods[] = {{"__tostring", l_Vector3ToString},
                                           {"__unm", l_Vector3UnaryInvert},
+                                          {"__sub", l_Vector3Subtract},
+                                          {"__add", l_Vector3Add},
+                                          {"__mul", l_Vector3MulScalar},
                                           {"get_x", l_Vector3GetX},
                                           {"set_x", l_Vector3SetX},
                                           {"get_y", l_Vector3GetY},
@@ -1710,6 +1977,7 @@ static const luaL_Reg vector3Functions[] = {
     {"unit_y", l_Vector3UnitY},
     {"unit_z", l_Vector3UnitZ},
     {"transform", l_Vector3MatrixTransform},
+    {"get_rotation_from_to", l_Vector3GetRotationFromTo},
     // {"scale", l_Vector3Scale},
     {NULL, NULL},
 };
@@ -1746,6 +2014,7 @@ static const luaL_Reg vector4Functions[] = {
 static const luaL_Reg vector4Special[] = {
     {"__call", l_Vector4Ctor}, {NULL, NULL},
 };
+
 static const luaL_Reg quaternionMethods[] = {
     {"__tostring", l_QuaternionToString},
     {"__mul", l_QuaternionMul},
@@ -1764,7 +2033,10 @@ static const luaL_Reg quaternionSpecial[] = {{"__call", l_QuaternionCtor},
                                              {NULL, NULL}};
 
 static const luaL_Reg matrix4Methods[] = {
-    {"__tostring", l_Matrix4ToString}, {"__mul", l_Matrix4Mul}, {NULL, NULL}};
+    {"__tostring", l_Matrix4ToString},
+    {"__mul", l_Matrix4Mul},
+    {"get_translation", l_Matrix4GetTranslation},
+    {NULL, NULL}};
 
 static const luaL_Reg matrix4Functions[] = {
     {"transpose", l_Matrix4Transpose},
@@ -1777,6 +2049,15 @@ static const luaL_Reg matrix4Functions[] = {
 static const luaL_Reg matrix4Special[] = {{"__call", l_Matrix4Ctor},
                                           {NULL, NULL}};
 
+static const luaL_Reg entityMethods[] = {{"__tostring", l_EntityToString},
+                                         {"__eq", l_EntityEquality},
+                                         {"get_id", l_EntityGetId},
+                                         {NULL, NULL}};
+
+static const luaL_Reg entityFunctions[] = {{NULL, NULL}};
+
+static const luaL_Reg entitySpecial[] = {{NULL, NULL}};
+
 void LoadMathAPI(LuaEnvironment &luaEnv)
 {
     luaEnv.RegisterClass("Vector3", vector3Methods, vector3Functions,
@@ -1787,5 +2068,7 @@ void LoadMathAPI(LuaEnvironment &luaEnv)
                          quaternionSpecial);
     luaEnv.RegisterClass("Matrix4", matrix4Methods, matrix4Functions,
                          matrix4Special);
+    luaEnv.RegisterClass("Entity", entityMethods, entityFunctions,
+                         entitySpecial);
 }
 }

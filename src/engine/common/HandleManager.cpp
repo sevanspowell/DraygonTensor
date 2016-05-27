@@ -142,6 +142,7 @@ void *HandleManager::Get(Handle handle) const
 
 bool HandleManager::Get(const Handle handle, void **out) const
 {
+    assert(out != nullptr && "HandleManager::Get: Null 'out' pointer");
     const int index = handle.index;
     if (m_entries[index].counter != handle.counter ||
         m_entries[index].active == false)

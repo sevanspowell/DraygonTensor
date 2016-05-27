@@ -4,21 +4,17 @@ namespace ds_render
 {
 Texture::Texture()
 {
-    m_texture = TextureHandle();
+    this->textureResourceHandle = ds::TextureResourceHandle();
+    this->textureType = TextureType::None;
+    this->renderTextureHandle = RenderTextureHandle();
 }
 
-Texture::Texture(TextureHandle texture)
+Texture::Texture(ds::TextureResourceHandle textureResourceHandle,
+                 TextureType textureType,
+                 RenderTextureHandle texture)
 {
-    m_texture = texture;
-}
-
-TextureHandle Texture::GetTextureHandle() const
-{
-    return m_texture;
-}
-
-void Texture::SetTextureHandle(TextureHandle textureHandle)
-{
-    m_texture = textureHandle;
+    this->textureResourceHandle = textureResourceHandle;
+    this->textureType = textureType;
+    this->renderTextureHandle = texture;
 }
 }

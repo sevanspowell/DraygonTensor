@@ -104,15 +104,6 @@ public:
                        const ds_math::Vector3 &position);
 
     /**
-     * Send a move entity message to all systems.
-     *
-     * @param  entity         Entity, entity to move.
-     * @param  deltaPosition  const ds_math::Vector3 &, amount and direction to
-     * move entity.
-     */
-    void MoveEntity(Entity entity, const ds_math::Vector3 &deltaPosition);
-
-    /**
      * Get the world transform of an entity.
      *
      * @param   entity  Entity, entity to get world transform of.
@@ -130,12 +121,92 @@ public:
     ds_math::Matrix4 GetLocalTransform(Entity entity) const;
 
     /**
-     * Send a set local transform message.
+     * Get the world translation of an entity.
      *
-     * @param  entity     Entity, entity to set local transform of.
-     * @param  transform  const ds_math::Matrix4 &, new local transform.
+     * @param   entity  Entity, entity to get world translation of.
+     * @return          ds_math::Vector3, world translation of the given
+     *                  entity.
      */
-    void SetLocalTransform(Entity entity, const ds_math::Matrix4 &transform);
+    ds_math::Vector3 GetWorldTranslation(Entity entity) const;
+
+    /**
+     * Get the local translation of an entity.
+     *
+     * @param   entity  Entity, entity to get local translation of.
+     * @return          ds_math::Vector3, local translation of the given
+     *                  entity.
+     */
+    ds_math::Vector3 GetLocalTranslation(Entity entity) const;
+
+    /**
+     * Set the local translation of an entity.
+     *
+     * @param  entity       Entity, entity to set the local translation of.
+     * @param  translation  const ds_math::Vector3 &, new translation to set.
+     */
+    void SetLocalTranslation(Entity entity,
+                             const ds_math::Vector3 &translation);
+
+    /**
+     * Get the world scale of an entity.
+     *
+     * @param   entity  Entity, entity to get the world scale of.
+     * @return          ds_math::Vector3, world scale of the given
+     *                  entity.
+     */
+    ds_math::Vector3 GetWorldScale(Entity entity) const;
+
+    /**
+     * Get the local scale of an entity.
+     *
+     * @param   entity  Entity, entity to get the local scale of.
+     * @return          ds_math::Vector3, local scale of the given
+     *                  entity.
+     */
+    ds_math::Vector3 GetLocalScale(Entity entity) const;
+
+    /**
+     * Set the local scale of an entity.
+     *
+     * @param  entity  Entity, entity to set the local scale of.
+     * @param  scale   const ds_math::Vector3 &, new scale to set.
+     */
+    void SetLocalScale(Entity entity, const ds_math::Vector3 &scale);
+
+    /**
+     * Get the world orientation of an entity.
+     *
+     * @param   entity  Entity, entity to get the world orientation of.
+     * @return          ds_math::Quaternion, world orientation of the
+     *                  given entity.
+     */
+    ds_math::Quaternion GetWorldOrientation(Entity entity) const;
+
+    /**
+     * Get the local orientation of an entity.
+     *
+     * @param   entity  Entity, entity to get the local orientation of.
+     * @return          ds_math::Quaternion, local orientation of the
+     *                  given entity.
+     */
+    ds_math::Quaternion GetLocalOrientation(Entity entity) const;
+
+    /**
+     * Set the local orientation of an entity.
+     *
+     * @param  entity       Entity, entity to set the local orientation of.
+     * @param  orientation  const ds_math::Quaternion &, orientatation to set.
+     */
+    void SetLocalOrientation(Entity entity,
+                             const ds_math::Quaternion &orientation);
+
+    /**
+     * Send a set animation index message.
+     *
+     * @param  entity          Entity, entity to set animation of.
+     * @param  animationIndex  int, animation index to set.
+     */
+    void SetAnimationIndex(Entity entity, int animationIndex);
 
     /**
      * Is a new message available for the external script?
@@ -153,6 +224,61 @@ public:
      * @return  ds_msg::MessageStream, next script message available.
      */
     ds_msg::MessageStream GetNextScriptMessage();
+
+    /**
+     * Rotate an entity to look at a target.
+     *
+     * @param  entity  Entity, entity to get to look at target.
+     * @param  target  const ds_math::Vector3 &, target to look at.
+     */
+    void LookAt(Entity entity, const ds_math::Vector3 &target);
+
+    /**
+     * Set the material of the skybox.
+     *
+     * @param  skyboxMaterialPath  const std::string &, path to skybox material
+     * to set.
+     */
+    void SetSkyboxMaterial(const std::string &skyboxMaterialPath);
+
+    /**
+     * Send a create GUI panel message.
+     *
+     * @param  startX        float, start x co-ordinate of the panel.
+     * @param  startY        float, start y co-ordinate of the panel.
+     * @param  endX          float, end x co-ordinate of the panel.
+     * @param  endY          float, end y co-ordinate of the panel.
+     * @param  materialPath  const std::string &, path to material to use to
+     * render the panel.
+     * @return               Entity, entity id of panel.
+     */
+    Entity CreateGUIPanel(float startX,
+                          float startY,
+                          float endX,
+                          float endY,
+                          const std::string &materialPath);
+
+    /**
+     * Send a create GUI button message.
+     *
+     * @param   startX               float, start x co-ordinate of the panel.
+     * @param   startY               float, start y co-ordinate of the panel.
+     * @param   endX                 float, end x co-ordinate of the panel.
+     * @param   endY                 float, end y co-ordinate of the panel.
+     * @param   defaultMaterialPath  const std::string &, path to material to
+     * use to render the button when not pressed or hovered over.
+     * @param   pressedMaterialPath  const std::string &, path to material to
+     * use to render the button when pressed.
+     * @param   hoverMaterialPath    const std::string &, path to material to
+     * use to render the button when hovered over.
+     */
+    Entity CreateGUIButton(float startX,
+                           float startY,
+                           float endX,
+                           float endY,
+                           const std::string &defaultMaterialPath,
+                           const std::string &pressedMaterialPath,
+                           const std::string &hoverMaterialPath);
 
 private:
     /**

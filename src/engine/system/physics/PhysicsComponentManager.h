@@ -83,5 +83,18 @@ public:
      * @param  mass  float, mass to give given physics component instance.
      */
     void SetMass(Instance i, float mass);
+
+    /**
+     * Get the component instance with the given rigidbody.
+     *
+     * Returns invalid instance if no physics component instance has the given
+     * rigidbody.
+     *
+     * @param   rigidBody  btRigidBody *, rigidbody to find component instance
+     * for.
+     * @return             Instance, component instance with the given
+     * rigidbody.
+     */
+    Instance GetInstanceForRigidBody(btRigidBody *rigidBody);
 };
 }

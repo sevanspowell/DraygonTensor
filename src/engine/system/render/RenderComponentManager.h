@@ -12,22 +12,6 @@ class RenderComponentManager : public ds::ComponentManager<RenderComponent>
 {
 public:
     /**
-     * Get the material of the given component instance.
-     *
-     * @param   i  ds::Instance, component instance to get material of.
-     * @return     const Material &, material of given component instance.
-     */
-    const Material &GetMaterial(ds::Instance i) const;
-
-    /**
-     * Set the material of the given component instance.
-     *
-     * @param  i         ds::Instance, component instance to set material of.
-     * @param  material  const Material &, material to set.
-     */
-    void SetMaterial(ds::Instance i, const Material &material);
-
-    /**
      * Get the mesh of the given component instance.
      *
      * @param   i  ds::Instance, component instance to get mesh of.

@@ -36,35 +36,36 @@ MaterialResource::CreateFromFile(std::string filePath)
             static_cast<MaterialResource *>(materialResource.get())
                 ->SetShaderResourceFilePath(fullShaderPath.str());
 
-            // Get path to textures to use
+            // Get path to texture samplers to use
             std::vector<std::string> textureKeys =
                 config.GetObjectKeys("textures");
 
-            // For each texture
+            // For each texture sampler, grab texture sampler details and add it
+            // to the material resource
             for (auto key : textureKeys)
             {
-                std::string relTexturePath;
+                // Get path to sampler
+                std::stringstream samplerKey;
+                samplerKey << "textures"
+                           << "." << key;
 
-                std::stringstream configKey;
-                configKey << "textures"
-                          << "." << key;
+                // Key to texture field in config file
+                std::stringstream textureFieldKey;
+                textureFieldKey << samplerKey.str() << "."
+                                << "texture";
 
-                if (config.GetString(configKey.str(), &relTexturePath))
+                // Get path to texture resource file
+                std::string textureResourcePath;
+
+                if (config.GetString(textureFieldKey.str(),
+                                     &textureResourcePath))
                 {
-                    std::stringstream fullTexturePath;
-                    fullTexturePath << folder << relTexturePath;
+                    std::stringstream fullTextureResourcePath;
+                    fullTextureResourcePath << folder << textureResourcePath;
 
-                    // Set texture resource path of texture uniform name
+                    // Create new texture sampler
                     static_cast<MaterialResource *>(materialResource.get())
-                        ->SetTextureResourceFilePath(key,
-                                                     fullTexturePath.str());
-                }
-                else
-                {
-                    std::cerr << "MaterialResource::CreateFromFile: could not "
-                                 "get texture path from key: '"
-                              << configKey.str() << "': " << filePath
-                              << std::endl;
+                        ->AddTextureSampler(key, fullTextureResourcePath.str());
                 }
             }
 
@@ -226,7 +227,7 @@ std::vector<std::string> MaterialResource::GetTextureSamplerNames() const
 {
     std::vector<std::string> textureSamplerNames;
 
-    for (auto samplerPath : m_textures)
+    for (auto samplerPath : m_textureSamplers)
     {
         textureSamplerNames.push_back(samplerPath.first);
     }
@@ -234,26 +235,30 @@ std::vector<std::string> MaterialResource::GetTextureSamplerNames() const
     return textureSamplerNames;
 }
 
-const std::string &MaterialResource::GetTextureResourceFilePath(
-    const std::string &textureSamplerName) const
-{
-    std::map<std::string, std::string>::const_iterator it =
-        m_textures.find(textureSamplerName);
-
-    if (it == m_textures.end())
-    {
-        assert("MaterialResource::GetTextureResourceFilePath: No texture with "
-               "that sampler name exists.");
-    }
-
-    return it->second;
-}
-
-void MaterialResource::SetTextureResourceFilePath(
-    const std::string &textureUniformName,
+void MaterialResource::AddTextureSampler(
+    const std::string &samplerName,
     const std::string &textureResourceFilePath)
 {
-    m_textures[textureUniformName] = textureResourceFilePath;
+    SamplerEntry entry;
+    entry.textureResourceFilePath = textureResourceFilePath;
+
+    m_textureSamplers[samplerName] = entry;
+}
+
+std::string MaterialResource::GetSamplerTextureResourceFilePath(
+    const std::string &samplerName) const
+{
+    std::string filePath = "";
+
+    std::map<std::string, SamplerEntry>::const_iterator it =
+        m_textureSamplers.find(samplerName);
+
+    if (it != m_textureSamplers.end())
+    {
+        filePath = it->second.textureResourceFilePath;
+    }
+
+    return filePath;
 }
 
 void MaterialResource::AddUniformBlock(
