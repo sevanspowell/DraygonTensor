@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "btBulletDynamicsCommon.h"
+#include "BulletCollision/CollisionDispatch/btGhostObject.h"
 
 #include "engine/common/HandleManager.h"
 #include "engine/resource/ResourceFactory.h"
@@ -71,7 +72,7 @@ private:
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
 
     /**
-     * Create a bullet rigid body from the given parameters.
+     * Create a Bullet rigid body from the given parameters.
      *
      * btRigidBody should be freed by user.
      *
@@ -81,6 +82,8 @@ private:
      * @param   scale   const ds_math::Vector3 &, scale of rigid body.
      * @param   mass    float, mass of the rigid body. 0 for a static rigid
      * body.
+     * @return          btRigidBody *, pointer to rigid body created or nullptr
+     * if failed.
      */
     btRigidBody *CreateRigidBody(const ds_math::Vector3 &origin,
                                  StringIntern::StringId shape,
@@ -88,7 +91,7 @@ private:
                                  float mass);
 
     /**
-     * Create a bullet rigid body for a height map from the given
+     * Create a Bullet rigid body for a height map from the given
      * TerrainResource, modify the terrain resource to be scaled by the given
      * heightscale.
      *
@@ -99,10 +102,28 @@ private:
      * @param   terrainResource  TerrainResource *, pointer to terrain resource
      * to construct rigidbody from.
      * @param   heightScale      float, factor to scale terrain height by.
+     * @return                   btRigidBody *, pointer to rigid body created or
+     * nullptr if failed.
      */
     btRigidBody *CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
                                           TerrainResource *terrainResource,
                                           float heightScale);
+
+    /**
+     * Create a Bullet ghost object from the given parameters.
+     *
+     * btGhostObject should be freed by user.
+     *
+     * @param   origin  const ds_math::Vector3 &, origin of ghost object.
+     * @param   shape   StringIntern::StringId, interned string that will give
+     * string representing collision shape of ghost object.
+     * @param   scale   const ds_math::Vector3 &, scale of ghost object.
+     * @return          btRigidBody *, pointer to ghost object
+     * created or nullptr if failed.
+     */
+    btRigidBody *CreateGhostObject(const ds_math::Vector3 &origin,
+                                   StringIntern::StringId shape,
+                                   const ds_math::Vector3 &scale);
 
     btDiscreteDynamicsWorld *m_dynamicsWorld;
     btSequentialImpulseConstraintSolver *m_solver;

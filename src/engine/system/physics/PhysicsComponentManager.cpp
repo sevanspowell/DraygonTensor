@@ -4,22 +4,22 @@
 
 namespace ds
 {
-btRigidBody *PhysicsComponentManager::GetRigidBody(Instance i) const
+btCollisionObject *PhysicsComponentManager::GetCollisionObject(Instance i) const
 {
     assert(
         i.index >= 0 && i.index < GetNumInstances() &&
-        "PhysicsComponentManager::GetRigidBody: tried to get invalid instance");
+        "PhysicsComponentManager::GetCollisionObject: tried to get invalid instance");
 
-    return m_data.component[i.index].rigidBody;
+    return m_data.component[i.index].collisionObject;
 }
 
-void PhysicsComponentManager::SetRigidBody(Instance i, btRigidBody *rigidBody)
+void PhysicsComponentManager::SetCollisionObject(Instance i, btCollisionObject *collisionObject)
 {
     assert(
         i.index >= 0 && i.index < GetNumInstances() &&
-        "PhysicsComponentManager::SetRigidBody: tried to set invalid instance");
+        "PhysicsComponentManager::SetCollisionObject: tried to set invalid instance");
 
-    m_data.component[i.index].rigidBody = rigidBody;
+    m_data.component[i.index].collisionObject = collisionObject;
 }
 
 
@@ -72,15 +72,15 @@ void PhysicsComponentManager::SetMass(Instance i, float mass)
     m_data.component[i.index].mass = mass;
 }
 
-Instance
-PhysicsComponentManager::GetInstanceForRigidBody(btRigidBody *rigidBody)
+Instance PhysicsComponentManager::GetInstanceForCollisionObject(
+    const btCollisionObject *collisionObject)
 {
     Instance phys;
 
     // Iterate thru physics component instances
     for (unsigned int i = 0; i < GetNumInstances(); ++i)
     {
-        if (m_data.component[i].rigidBody == rigidBody)
+        if (m_data.component[i].collisionObject == collisionObject)
         {
             phys = Instance::MakeInstance(i);
             break;

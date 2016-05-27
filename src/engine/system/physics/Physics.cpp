@@ -37,11 +37,18 @@ bool Physics::Initialize(const Config &config)
     // different solver.
     m_solver = new btSequentialImpulseConstraintSolver();
 
+    // Create dynamics world
     m_dynamicsWorld =
         new btDiscreteDynamicsWorld(m_dispatcher, m_overlappingPairCache,
                                     m_solver, m_collisionConfiguration);
 
+    // Set gravity
     m_dynamicsWorld->setGravity(btVector3(0, -9.8, 0));
+
+    // Enable use of ghost objects
+    m_dynamicsWorld->getBroadphase()
+        ->getOverlappingPairCache()
+        ->setInternalGhostPairCallback(new btGhostPairCallback());
 
     ds_msg::SystemInit initMsg;
     initMsg.systemName = "Physics";
@@ -75,97 +82,251 @@ void Physics::Update(float deltaTime)
         // If it does...
         if (transform.IsValid())
         {
-            // Get rigid body from physics component
-            const btRigidBody *rigidBody =
-                m_physicsComponentManager.GetRigidBody(phys);
+            // Get collision object
+            const btCollisionObject *colObject =
+                m_physicsComponentManager.GetCollisionObject(phys);
 
-            // Get new transform
-            btTransform bulletNewWorldTransform;
-            if (rigidBody != nullptr)
+            if (colObject != nullptr)
             {
-                if (rigidBody->getMotionState())
+                if (colObject->getInternalType() ==
+                    btCollisionObject::CollisionObjectTypes::CO_RIGID_BODY)
                 {
-                    rigidBody->getMotionState()->getWorldTransform(
-                        bulletNewWorldTransform);
+                    // Downcast collision object to rigidbody
+                    const btRigidBody *rigidBody =
+                        (const btRigidBody *)colObject;
+
+                    // Get new transform
+                    btTransform bulletNewWorldTransform;
+                    if (rigidBody != nullptr)
+                    {
+                        if (rigidBody->getMotionState())
+                        {
+                            rigidBody->getMotionState()->getWorldTransform(
+                                bulletNewWorldTransform);
+                        }
+                        else
+                        {
+                            bulletNewWorldTransform =
+                                rigidBody->getWorldTransform();
+                        }
+
+                        // Get change in translation
+                        ds_math::Matrix4 newWorldTransform;
+                        bulletNewWorldTransform.getOpenGLMatrix(
+                            (btScalar *)&newWorldTransform.data[0][0]);
+                        ds_math::Vector3 newWorldTranslation = ds_math::Vector3(
+                            newWorldTransform[3].x, newWorldTransform[3].y,
+                            newWorldTransform[3].z);
+                        ds_math::Vector3 oldWorldTranslation =
+                            m_transformComponentManager.GetWorldTranslation(
+                                transform);
+                        ds_math::Vector3 changeInTranslation =
+                            newWorldTranslation - oldWorldTranslation;
+                        // Change local translation by change in translation
+                        ds_math::Vector3 currentLocalTranslation =
+                            m_transformComponentManager.GetLocalTranslation(
+                                transform);
+                        ds_msg::SetLocalTranslation setTranslationMsg;
+                        setTranslationMsg.entity = entity;
+                        setTranslationMsg.localTranslation =
+                            currentLocalTranslation + changeInTranslation;
+                        ds_msg::AppendMessage(
+                            &m_messagesGenerated,
+                            ds_msg::MessageType::SetLocalTranslation,
+                            sizeof(ds_msg::SetLocalTranslation),
+                            &setTranslationMsg);
+
+                        // Get change in orientation
+                        btQuaternion newWorldOrientationBullet =
+                            rigidBody->getOrientation();
+                        btQuaternionFloatData floatData;
+                        newWorldOrientationBullet.serializeFloat(floatData);
+                        ds_math::Quaternion newWorldOrientation =
+                            ds_math::Quaternion(
+                                floatData.m_floats[0], floatData.m_floats[1],
+                                floatData.m_floats[2], floatData.m_floats[3]);
+                        ds_math::Quaternion oldWorldOrientation =
+                            ds_math::Quaternion::Normalize(
+                                m_transformComponentManager.GetWorldOrientation(
+                                    transform));
+                        ds_math::Quaternion changeInOrientation =
+                            ds_math::Quaternion::Normalize(
+                                newWorldOrientation *
+                                ds_math::Quaternion::Invert(
+                                    oldWorldOrientation));
+                        // Change local orientation by change in orientation
+                        ds_math::Quaternion currentLocalOrientation =
+                            m_transformComponentManager.GetLocalOrientation(
+                                transform);
+                        ds_msg::SetLocalOrientation setOrientationMsg;
+                        setOrientationMsg.entity = entity;
+                        setOrientationMsg.localOrientation =
+                            ds_math::Quaternion::Normalize(
+                                changeInOrientation * currentLocalOrientation);
+                        ds_msg::AppendMessage(
+                            &m_messagesGenerated,
+                            ds_msg::MessageType::SetLocalOrientation,
+                            sizeof(ds_msg::SetLocalOrientation),
+                            &setOrientationMsg);
+
+                        // Get change in scale
+                        btVector3 newWorldScaleBullet =
+                            rigidBody->getCollisionShape()->getLocalScaling();
+                        ds_math::Vector3 newWorldScale =
+                            ds_math::Vector3(newWorldScaleBullet.getX(),
+                                             newWorldScaleBullet.getY(),
+                                             newWorldScaleBullet.getZ());
+                        ds_math::Vector3 oldWorldScale =
+                            m_transformComponentManager.GetWorldScale(
+                                transform);
+                        ds_math::Vector3 changeInScale =
+                            newWorldScale *
+                            ds_math::Vector3(1.0f / oldWorldScale.x,
+                                             1.0f / oldWorldScale.y,
+                                             1.0f / oldWorldScale.z);
+                        // Change local scale by change in scale
+                        ds_math::Vector3 currentLocalScale =
+                            m_transformComponentManager.GetLocalScale(
+                                transform);
+                        ds_msg::SetLocalScale setScaleMsg;
+                        setScaleMsg.entity = entity;
+                        setScaleMsg.localScale =
+                            currentLocalScale * changeInScale;
+                        ds_msg::AppendMessage(
+                            &m_messagesGenerated,
+                            ds_msg::MessageType::SetLocalScale,
+                            sizeof(ds_msg::SetLocalScale), &setScaleMsg);
+                    }
+
+                    // Iterate thru contact manifolds
+                    int numManifolds =
+                        m_dynamicsWorld->getDispatcher()->getNumManifolds();
+                    for (unsigned int j = 0; j < numManifolds; ++j)
+                    {
+                        // Get colliding bodies
+                        btPersistentManifold *contactManifold =
+                            m_dynamicsWorld->getDispatcher()
+                                ->getManifoldByIndexInternal(j);
+                        const btCollisionObject *objA =
+                            contactManifold->getBody0();
+                        const btCollisionObject *objB =
+                            contactManifold->getBody1();
+
+                        // Get component instance for collision objects
+                        Instance physA =
+                            m_physicsComponentManager
+                                .GetInstanceForCollisionObject(objA);
+                        Instance physB =
+                            m_physicsComponentManager
+                                .GetInstanceForCollisionObject(objB);
+                        // Find entity for component instance
+                        Entity a =
+                            m_physicsComponentManager.GetEntityForInstance(
+                                physA);
+                        Entity b =
+                            m_physicsComponentManager.GetEntityForInstance(
+                                physB);
+
+                        // Iterate thru contact points
+                        int numContacts = contactManifold->getNumContacts();
+                        for (int k = 0; k < numContacts; ++k)
+                        {
+                            // Get collision info
+                            btManifoldPoint &pt =
+                                contactManifold->getContactPoint(k);
+                            if (pt.getDistance() < 0.0f)
+                            {
+                                const btVector3 &ptA = pt.getPositionWorldOnA();
+                                const btVector3 &ptB = pt.getPositionWorldOnB();
+                                const btVector3 &normalOnB =
+                                    pt.m_normalWorldOnB;
+
+                                // Create collision message
+                                ds_msg::PhysicsCollision collisionMsg;
+                                collisionMsg.entityA = a;
+                                collisionMsg.entityB = b;
+                                collisionMsg.pointWorldOnA = ds_math::Vector3(
+                                    ptA.getX(), ptA.getY(), ptA.getZ());
+                                collisionMsg.pointWorldOnB = ds_math::Vector3(
+                                    ptB.getX(), ptB.getY(), ptB.getZ());
+                                collisionMsg.normalWorldOnB = ds_math::Vector3(
+                                    normalOnB.getX(), normalOnB.getY(),
+                                    normalOnB.getZ());
+
+                                // Send it
+                                ds_msg::AppendMessage(
+                                    &m_messagesGenerated,
+                                    ds_msg::MessageType::PhysicsCollision,
+                                    sizeof(ds_msg::PhysicsCollision),
+                                    &collisionMsg);
+                            }
+                        }
+                    }
                 }
-                else
+                else if (colObject->getInternalType() ==
+                         btCollisionObject::CollisionObjectTypes::
+                             CO_GHOST_OBJECT)
                 {
-                    bulletNewWorldTransform = rigidBody->getWorldTransform();
+                    // Downcast collision object to ghost object
+                    btPairCachingGhostObject *ghostObject =
+                        (btPairCachingGhostObject *)colObject;
+
+                    std::cout << "We have a ghost object." << std::endl;
+
+                    btManifoldArray manifoldArray;
+                    btBroadphasePairArray &pairArray =
+                        ghostObject->getOverlappingPairCache()
+                            ->getOverlappingPairArray();
+                    int numPairs = pairArray.size();
+                    std::cout << "num pairs: " << numPairs << std::endl;
+
+                    for (int j = 0; j < numPairs; ++j)
+                    {
+                        manifoldArray.clear();
+
+                        const btBroadphasePair &pair = pairArray[j];
+
+                        btBroadphasePair *collisionPair =
+                            m_dynamicsWorld->getPairCache()->findPair(
+                                pair.m_pProxy0, pair.m_pProxy1);
+
+                        if (!collisionPair)
+                        {
+                            std::cout << "No collision pair" << std::endl;
+                            continue;
+                        }
+
+                        if (collisionPair->m_algorithm)
+                        {
+                            std::cout << "Algorithm" << std::endl;
+                            collisionPair->m_algorithm->getAllContactManifolds(
+                                manifoldArray);
+                        }
+
+                        for (int k = 0; k < manifoldArray.size(); ++k)
+                        {
+                            std::cout << "Inner manifold" << std::endl;
+                            btPersistentManifold *manifold = manifoldArray[k];
+
+                            // bool isFirstBody =
+                            //     (manifold->getBody0() == ghostObject);
+
+                            // btScalar direction =
+                            //     isFirstBody ? btScalar(-1.0) : btScalar(1.0);
+
+                            for (int p = 0; p < manifold->getNumContacts(); ++p)
+                            {
+                                const btManifoldPoint &pt =
+                                    manifold->getContactPoint(p);
+
+                                if (pt.getDistance() < 0.0f)
+                                {
+                                    std::cout << "Nyan" << std::endl;
+                                }
+                            }
+                        }
+                    }
                 }
-
-                // Get change in translation
-                ds_math::Matrix4 newWorldTransform;
-                bulletNewWorldTransform.getOpenGLMatrix(
-                    (btScalar *)&newWorldTransform.data[0][0]);
-                ds_math::Vector3 newWorldTranslation = ds_math::Vector3(
-                    newWorldTransform[3].x, newWorldTransform[3].y,
-                    newWorldTransform[3].z);
-                ds_math::Vector3 oldWorldTranslation =
-                    m_transformComponentManager.GetWorldTranslation(transform);
-                ds_math::Vector3 changeInTranslation =
-                    newWorldTranslation - oldWorldTranslation;
-                // Change local translation by change in translation
-                ds_math::Vector3 currentLocalTranslation =
-                    m_transformComponentManager.GetLocalTranslation(transform);
-                ds_msg::SetLocalTranslation setTranslationMsg;
-                setTranslationMsg.entity = entity;
-                setTranslationMsg.localTranslation =
-                    currentLocalTranslation + changeInTranslation;
-                ds_msg::AppendMessage(&m_messagesGenerated,
-                                      ds_msg::MessageType::SetLocalTranslation,
-                                      sizeof(ds_msg::SetLocalTranslation),
-                                      &setTranslationMsg);
-
-                // Get change in orientation
-                btQuaternion newWorldOrientationBullet =
-                    rigidBody->getOrientation();
-                btQuaternionFloatData floatData;
-                newWorldOrientationBullet.serializeFloat(floatData);
-                ds_math::Quaternion newWorldOrientation = ds_math::Quaternion(
-                    floatData.m_floats[0], floatData.m_floats[1],
-                    floatData.m_floats[2], floatData.m_floats[3]);
-                ds_math::Quaternion oldWorldOrientation =
-                    ds_math::Quaternion::Normalize(
-                        m_transformComponentManager.GetWorldOrientation(
-                            transform));
-                ds_math::Quaternion changeInOrientation =
-                    ds_math::Quaternion::Normalize(
-                        newWorldOrientation *
-                        ds_math::Quaternion::Invert(oldWorldOrientation));
-                // Change local orientation by change in orientation
-                ds_math::Quaternion currentLocalOrientation =
-                    m_transformComponentManager.GetLocalOrientation(transform);
-                ds_msg::SetLocalOrientation setOrientationMsg;
-                setOrientationMsg.entity = entity;
-                setOrientationMsg.localOrientation =
-                    ds_math::Quaternion::Normalize(changeInOrientation *
-                                                   currentLocalOrientation);
-                ds_msg::AppendMessage(&m_messagesGenerated,
-                                      ds_msg::MessageType::SetLocalOrientation,
-                                      sizeof(ds_msg::SetLocalOrientation),
-                                      &setOrientationMsg);
-
-                // Get change in scale
-                btVector3 newWorldScaleBullet =
-                    rigidBody->getCollisionShape()->getLocalScaling();
-                ds_math::Vector3 newWorldScale = ds_math::Vector3(
-                    newWorldScaleBullet.getX(), newWorldScaleBullet.getY(),
-                    newWorldScaleBullet.getZ());
-                ds_math::Vector3 oldWorldScale =
-                    m_transformComponentManager.GetWorldScale(transform);
-                ds_math::Vector3 changeInScale =
-                    newWorldScale * ds_math::Vector3(1.0f / oldWorldScale.x,
-                                                     1.0f / oldWorldScale.y,
-                                                     1.0f / oldWorldScale.z);
-                // Change local scale by change in scale
-                ds_math::Vector3 currentLocalScale =
-                    m_transformComponentManager.GetLocalScale(transform);
-                ds_msg::SetLocalScale setScaleMsg;
-                setScaleMsg.entity = entity;
-                setScaleMsg.localScale = currentLocalScale * changeInScale;
-                ds_msg::AppendMessage(
-                    &m_messagesGenerated, ds_msg::MessageType::SetLocalScale,
-                    sizeof(ds_msg::SetLocalScale), &setScaleMsg);
             }
         }
     }
@@ -181,9 +342,9 @@ void Physics::Update(float deltaTime)
         const btCollisionObject *objB = contactManifold->getBody1();
 
         // Get component instance for collision objects
-        Instance physA = m_physicsComponentManager.GetInstanceForRigidBody(
+        Instance physA = m_physicsComponentManager.GetInstanceForCollisionObject(
             (btRigidBody *)objA);
-        Instance physB = m_physicsComponentManager.GetInstanceForRigidBody(
+        Instance physB = m_physicsComponentManager.GetInstanceForCollisionObject(
             (btRigidBody *)objB);
         // Find entity for component instance
         Entity a = m_physicsComponentManager.GetEntityForInstance(physA);
@@ -379,29 +540,41 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                     // component too)
                     if (phys.IsValid())
                     {
-                        btRigidBody *rigidBody =
-                            m_physicsComponentManager.GetRigidBody(phys);
+                        btCollisionObject *colObject =
+                            m_physicsComponentManager.GetCollisionObject(phys);
 
-                        if (rigidBody != nullptr)
+                        if (colObject != nullptr)
                         {
-                            ds_math::Vector4 temp =
-                                m_transformComponentManager.GetWorldTransform(
-                                    transform)[3];
-                            ds_math::Vector3 origin =
-                                ds_math::Vector3(temp.x, temp.y, temp.z);
+                            if (colObject->getInternalType() ==
+                                btCollisionObject::CollisionObjectTypes::
+                                    CO_RIGID_BODY)
+                            {
+                                btRigidBody *rigidBody =
+                                    (btRigidBody *)colObject;
 
-                            btTransform worldTransform;
-                            worldTransform.setIdentity();
-                            worldTransform.setOrigin(
-                                btVector3(origin.x, origin.y, origin.z));
+                                if (rigidBody != nullptr)
+                                {
+                                    ds_math::Vector4 temp =
+                                        m_transformComponentManager
+                                            .GetWorldTransform(transform)[3];
+                                    ds_math::Vector3 origin = ds_math::Vector3(
+                                        temp.x, temp.y, temp.z);
 
-                            // Delete old motion state
-                            delete rigidBody->getMotionState();
+                                    btTransform worldTransform;
+                                    worldTransform.setIdentity();
+                                    worldTransform.setOrigin(btVector3(
+                                        origin.x, origin.y, origin.z));
 
-                            // Create new motion state
-                            btDefaultMotionState *bodyMotionState =
-                                new btDefaultMotionState(worldTransform);
-                            rigidBody->setMotionState(bodyMotionState);
+                                    // Delete old motion state
+                                    delete rigidBody->getMotionState();
+
+                                    // Create new motion state
+                                    btDefaultMotionState *bodyMotionState =
+                                        new btDefaultMotionState(
+                                            worldTransform);
+                                    rigidBody->setMotionState(bodyMotionState);
+                                }
+                            }
                         }
                     }
                 }
@@ -425,8 +598,8 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                             Instance phys =
                                 m_physicsComponentManager
                                     .CreateComponentForEntity(entity);
-                            m_physicsComponentManager.SetRigidBody(phys,
-                                                                   nullptr);
+                            m_physicsComponentManager.SetCollisionObject(
+                                phys, nullptr);
                             m_physicsComponentManager.SetShape(
                                 phys,
                                 StringIntern::Instance().Intern(dataShape));
@@ -461,18 +634,38 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                                     ds_math::Vector3(temp.x, temp.y, temp.z);
                             }
 
-                            // Create rigid body
-                            btRigidBody *rigidBody =
-                                CreateRigidBody(origin, shape, scale, mass);
-
-                            if (rigidBody != nullptr)
+                            // If shape is not a ghost shape ('ghost' prefix)
+                            if (dataShape.find("ghost") != 0)
                             {
-                                // Add to physics component
-                                m_physicsComponentManager.SetRigidBody(
-                                    phys, rigidBody);
+                                // Create rigid body
+                                btRigidBody *rigidBody =
+                                    CreateRigidBody(origin, shape, scale, mass);
 
-                                // Add rigidbody to world
-                                m_dynamicsWorld->addRigidBody(rigidBody);
+                                if (rigidBody != nullptr)
+                                {
+                                    // Add to physics component
+                                    m_physicsComponentManager
+                                        .SetCollisionObject(phys, rigidBody);
+
+                                    // Add rigidbody to world
+                                    m_dynamicsWorld->addRigidBody(rigidBody);
+                                }
+                            }
+                            else
+                            {
+                                // Create ghost object
+                                btRigidBody *ghostObject =
+                                    CreateGhostObject(origin, shape, scale);
+
+                                if (ghostObject != nullptr)
+                                {
+                                    // Add to physics component
+                                    m_physicsComponentManager
+                                        .SetCollisionObject(phys, ghostObject);
+
+                                    // Add ghost object to world
+                                    m_dynamicsWorld->addRigidBody(ghostObject);
+                                }
                             }
                         }
                         else
@@ -536,7 +729,7 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                             if (rigidBody != nullptr)
                             {
                                 // Add rigid body to physics component
-                                m_physicsComponentManager.SetRigidBody(
+                                m_physicsComponentManager.SetCollisionObject(
                                     phys, rigidBody);
 
                                 // Add rigid body to world
@@ -749,6 +942,116 @@ btRigidBody *Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
 
             rigidBody = new btRigidBody(rbInfo);
         }
+    }
+
+    return rigidBody;
+}
+
+btRigidBody *Physics::CreateGhostObject(const ds_math::Vector3 &origin,
+                                        StringIntern::StringId shape,
+                                        const ds_math::Vector3 &scale)
+{
+    // btPairCachingGhostObject *ghostObject = new btPairCachingGhostObject();
+
+    // // Create transform
+    // btTransform objectTransform;
+    // objectTransform.setIdentity();
+    // objectTransform.setOrigin(btVector3(origin.x, origin.y, origin.z));
+
+    // // Create collision shape
+    // btCollisionShape *colShape = nullptr;
+    // std::string colShapeType = StringIntern::Instance().GetString(shape);
+    // if (colShapeType == "ghostBox")
+    // {
+    //     colShape = new btBoxShape(
+    //         btVector3(btScalar(scale.x), btScalar(scale.y),
+    //         btScalar(scale.z)));
+    //     // TODO Do we need this?
+    //     // m_collisionShapes.push_back(colShape);
+    // }
+    // else if (colShapeType == "ghostSphere")
+    // {
+    //     colShape = new btSphereShape(btScalar(scale.x));
+    //     // TODO Do we need this?
+    //     // m_collisionShapes.push_back(colShape);
+    // }
+
+    // if (colShape != nullptr)
+    // {
+    //     ghostObject->setCollisionShape(colShape);
+    //     ghostObject->setWorldTransform(objectTransform);
+    //     ghostObject->setCollisionFlags(
+    //         ghostObject->getCollisionFlags() |
+    //         btCollisionObject::CF_NO_CONTACT_RESPONSE);
+    //     m_dynamicsWorld->addCollisionObject(ghostObject);
+    // }
+    // // If fail
+    // else
+    // {
+    //     // Clean up memory
+    //     delete ghostObject;
+    //     ghostObject = nullptr;
+
+    //     std::cerr << "Physics::CreateRigidBody: Unhandled collision "
+    //                  "shape type: "
+    //               << colShapeType << std::endl;
+    // }
+
+    // return ghostObject;
+    btRigidBody *rigidBody = nullptr;
+
+    // Create transform
+    btTransform bodyTransform;
+    bodyTransform.setIdentity();
+    bodyTransform.setOrigin(btVector3(origin.x, origin.y, origin.z));
+
+    // Create collision shape
+    btCollisionShape *colShape = nullptr;
+    std::string colShapeType = StringIntern::Instance().GetString(shape);
+    if (colShapeType == "ghostBox")
+    {
+        colShape = new btBoxShape(
+            btVector3(btScalar(scale.x), btScalar(scale.y), btScalar(scale.z)));
+        m_collisionShapes.push_back(colShape);
+    }
+    else if (colShapeType == "ghostSphere")
+    {
+        colShape = new btSphereShape(btScalar(scale.x));
+        m_collisionShapes.push_back(colShape);
+    }
+
+    if (colShape != nullptr)
+    {
+        // Create rigid body
+        btScalar bodyMass = 0.0f;
+
+        // Rigid body is dynamic if and only if mass is non-zero,
+        // otherwise
+        // static
+        bool isDynamic = (bodyMass != 0.0f);
+
+        btVector3 localInertia(0, 0, 0);
+        if (isDynamic)
+        {
+            colShape->calculateLocalInertia(bodyMass, localInertia);
+        }
+
+        btDefaultMotionState *bodyMotionState =
+            new btDefaultMotionState(bodyTransform);
+        btRigidBody::btRigidBodyConstructionInfo rbInfo(
+            bodyMass, bodyMotionState, colShape, localInertia);
+
+        rigidBody = new btRigidBody(rbInfo);
+
+        // Make ghost
+        rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() |
+                                     btRigidBody::CF_NO_CONTACT_RESPONSE);
+    }
+    else
+    {
+        std::cerr << "Physics::CreateGhostObject: Unhandled collision "
+                     "shape type: "
+                  << colShapeType << std::endl;
     }
 
     return rigidBody;

@@ -9,8 +9,9 @@ namespace ds
  * Physics component manager.
  *
  * Associates an entity with some physics properties. The memory of each Bullet
- * rigidbody is managed by the Physics system. The Physics system is responsible
- * for deleting PhysicsComponent instances when their rigidbodies are deleted.
+ * collisionObject is managed by the Physics system. The Physics system is
+ * responsible for deleting PhysicsComponent instances when their rigidbodies
+ * are deleted.
  */
 class PhysicsComponentManager : public ComponentManager<PhysicsComponent>
 {
@@ -19,17 +20,17 @@ public:
      * Get the rigid body of the given component instance.
      *
      * @param   i  Instance, component instance to get rigid body of.
-     * @return     btRigidBody *, physics rigid body.
+     * @return     btCollisionObject *, physics rigid body.
      */
-    btRigidBody *GetRigidBody(Instance i) const;
+    btCollisionObject *GetCollisionObject(Instance i) const;
 
     /**
      * Set the rigid body of the given component instance.
      *
      * @param  i          Instance, component instance to set rigid body of.
-     * @param  rigidBody  btRigidBody *, rigid body to set.
+     * @param  collisionObject  btCollisionObject *, rigid body to set.
      */
-    void SetRigidBody(Instance i, btRigidBody *rigidBody);
+    void SetCollisionObject(Instance i, btCollisionObject *collisionObject);
 
     /**
      * Get the collision shape type of the given component instance.
@@ -85,16 +86,17 @@ public:
     void SetMass(Instance i, float mass);
 
     /**
-     * Get the component instance with the given rigidbody.
+     * Get the component instance with the given collision object.
      *
      * Returns invalid instance if no physics component instance has the given
-     * rigidbody.
+     * collision object.
      *
-     * @param   rigidBody  btRigidBody *, rigidbody to find component instance
-     * for.
-     * @return             Instance, component instance with the given
-     * rigidbody.
+     * @param   collisionObject  const btCollisionObject *, collision object to
+     * find component instance for.
+     * @return                   Instance, component instance with the given
+     * collisionObject.
      */
-    Instance GetInstanceForRigidBody(btRigidBody *rigidBody);
+    Instance
+    GetInstanceForCollisionObject(const btCollisionObject *collisionObject);
 };
 }
