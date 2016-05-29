@@ -182,6 +182,9 @@ TextureResource &TextureResource::operator=(const TextureResource &other)
 
 TextureResource::TextureResource(TextureResource &&other)
 {
+    // Resize our image vector
+    this->m_images.resize(other.m_images.size());
+
     // For each image in other texture
     for (unsigned int i = 0; i < other.m_images.size(); ++i)
     {
@@ -211,6 +214,9 @@ TextureResource &TextureResource::operator=(TextureResource &&other)
             free(this->m_images[i].imageData);
         }
     }
+
+    // Resize our image vector
+    this->m_images.resize(other.m_images.size());
 
     // For each image in other texture
     for (unsigned int i = 0; i < other.m_images.size(); ++i)
