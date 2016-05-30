@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "btBulletDynamicsCommon.h"
+#include "BulletCollision/CollisionDispatch/btGhostObject.h"
 
 #include "engine/common/HandleManager.h"
 #include "engine/resource/ResourceFactory.h"
@@ -67,14 +68,18 @@ public:
                            const ds_math::Vector3 &rayEnd);
 
 private:
+    /**
+     * Process messages in the given message stream.
+     *
+     * @param  ds_msg::MessageStream *, messages to process.
+     */
     void ProcessEvents(ds_msg::MessageStream *messages);
-    ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
 
     /**
-     * Create a bullet rigid body from the given parameters.
+     * Create a Bullet rigid body from the given parameters and add it to the
+     * Physics system.
      *
-     * btRigidBody should be freed by user.
-     *
+     * @param   phys    Instance, physics instance to add rigid body to.
      * @param   origin  const ds_math::Vector3 &, origin of rigid body.
      * @param   shape   StringIntern::StringId, interned string that will give
      * string representing collision shape of rigidbody.
@@ -82,27 +87,46 @@ private:
      * @param   mass    float, mass of the rigid body. 0 for a static rigid
      * body.
      */
-    btRigidBody *CreateRigidBody(const ds_math::Vector3 &origin,
-                                 StringIntern::StringId shape,
-                                 const ds_math::Vector3 &scale,
-                                 float mass);
+    void CreateRigidBody(Instance phys,
+                         const ds_math::Vector3 &origin,
+                         StringIntern::StringId shape,
+                         const ds_math::Vector3 &scale,
+                         float mass);
 
     /**
-     * Create a bullet rigid body for a height map from the given
-     * TerrainResource, modify the terrain resource to be scaled by the given
+     * Create a Bullet rigid body for a height map from the given
+     * TerrainResource, modify the terrain resource to be scaled by the
+     * given
      * heightscale.
      *
-     * btRigidBody should be freed by user.
-     *
+     * @param   phys    Instance, physics instance to add rigid body to.
      * @param   origin           const ds_math::Vector3 &, origin of rigid
      *                           body.
-     * @param   terrainResource  TerrainResource *, pointer to terrain resource
+     * @param   terrainResource  TerrainResource *, pointer to terrain
+     * resource
      * to construct rigidbody from.
      * @param   heightScale      float, factor to scale terrain height by.
      */
-    btRigidBody *CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
-                                          TerrainResource *terrainResource,
-                                          float heightScale);
+    void CreateHeightMapRigidBody(Instance phys,
+                                  const ds_math::Vector3 &origin,
+                                  TerrainResource *terrainResource,
+                                  float heightScale);
+
+    /**
+     * Create a Bullet ghost object from the given parameters and add it to the
+     * Physics system.
+     *
+     * @param   origin  const ds_math::Vector3 &, origin of ghost object.
+     * @param   shape   StringIntern::StringId, interned string that will give
+     * string representing collision shape of ghost object.
+     * @param   scale   const ds_math::Vector3 &, scale of ghost object.
+     * @return          btRigidBody *, pointer to ghost object
+     * created or nullptr if failed.
+     */
+    void CreateGhostObject(Instance phys,
+                           const ds_math::Vector3 &origin,
+                           StringIntern::StringId shape,
+                           const ds_math::Vector3 &scale);
 
     btDiscreteDynamicsWorld *m_dynamicsWorld;
     btSequentialImpulseConstraintSolver *m_solver;
@@ -126,5 +150,7 @@ private:
 
     /** Manage storage of terrain resources */
     ds::HandleManager m_handleManager;
+
+    ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
 };
 }

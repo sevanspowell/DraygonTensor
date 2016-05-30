@@ -194,17 +194,6 @@ Entity Script::SpawnPrefab(std::string prefabFile,
     return entity;
 }
 
-void Script::MoveEntity(Entity entity, const ds_math::Vector3 &deltaPosition)
-{
-    // Send an entity move message
-    ds_msg::MoveEntity entityMoveMsg;
-    entityMoveMsg.entity = entity;
-    entityMoveMsg.deltaPosition = deltaPosition;
-
-    ds_msg::AppendMessage(&m_messagesGenerated, ds_msg::MessageType::MoveEntity,
-                          sizeof(ds_msg::MoveEntity), &entityMoveMsg);
-}
-
 ds_math::Matrix4 Script::GetWorldTransform(Entity entity) const
 {
     ds_math::Matrix4 worldTransform;
@@ -233,15 +222,123 @@ ds_math::Matrix4 Script::GetLocalTransform(Entity entity) const
     return localTransform;
 }
 
-void Script::SetLocalTransform(Entity entity, const ds_math::Matrix4 &transform)
+ds_math::Vector3 Script::GetWorldTranslation(Entity entity) const
 {
-    ds_msg::SetLocalTransform setLocalMsg;
-    setLocalMsg.entity = entity;
-    setLocalMsg.localTransform = transform;
+    ds_math::Vector3 translation;
+
+    Instance i = m_transformManager.GetInstanceForEntity(entity);
+
+    if (i.IsValid())
+    {
+        translation = m_transformManager.GetWorldTranslation(i);
+    }
+
+    return translation;
+}
+
+ds_math::Vector3 Script::GetLocalTranslation(Entity entity) const
+{
+    ds_math::Vector3 translation;
+
+    Instance i = m_transformManager.GetInstanceForEntity(entity);
+
+    if (i.IsValid())
+    {
+        translation = m_transformManager.GetLocalTranslation(i);
+    }
+
+    return translation;
+}
+
+void Script::SetLocalTranslation(Entity entity,
+                                 const ds_math::Vector3 &translation)
+{
+    ds_msg::SetLocalTranslation setTranslationMsg;
+    setTranslationMsg.entity = entity;
+    setTranslationMsg.localTranslation = translation;
+
+    ds_msg::AppendMessage(
+        &m_messagesGenerated, ds_msg::MessageType::SetLocalTranslation,
+        sizeof(ds_msg::SetLocalTranslation), &setTranslationMsg);
+}
+
+ds_math::Vector3 Script::GetWorldScale(Entity entity) const
+{
+    ds_math::Vector3 scale;
+
+    Instance i = m_transformManager.GetInstanceForEntity(entity);
+
+    if (i.IsValid())
+    {
+        scale = m_transformManager.GetWorldScale(i);
+    }
+
+    return scale;
+}
+
+ds_math::Vector3 Script::GetLocalScale(Entity entity) const
+{
+    ds_math::Vector3 scale;
+
+    Instance i = m_transformManager.GetInstanceForEntity(entity);
+
+    if (i.IsValid())
+    {
+        scale = m_transformManager.GetLocalScale(i);
+    }
+
+    return scale;
+}
+
+void Script::SetLocalScale(Entity entity, const ds_math::Vector3 &scale)
+{
+    ds_msg::SetLocalScale setScaleMsg;
+    setScaleMsg.entity = entity;
+    setScaleMsg.localScale = scale;
 
     ds_msg::AppendMessage(&m_messagesGenerated,
-                          ds_msg::MessageType::SetLocalTransform,
-                          sizeof(ds_msg::SetLocalTransform), &setLocalMsg);
+                          ds_msg::MessageType::SetLocalScale,
+                          sizeof(ds_msg::SetLocalScale), &setScaleMsg);
+}
+
+ds_math::Quaternion Script::GetWorldOrientation(Entity entity) const
+{
+    ds_math::Quaternion orientation;
+
+    Instance i = m_transformManager.GetInstanceForEntity(entity);
+
+    if (i.IsValid())
+    {
+        orientation = m_transformManager.GetWorldOrientation(i);
+    }
+
+    return orientation;
+}
+
+ds_math::Quaternion Script::GetLocalOrientation(Entity entity) const
+{
+    ds_math::Quaternion orientation;
+
+    Instance i = m_transformManager.GetInstanceForEntity(entity);
+
+    if (i.IsValid())
+    {
+        orientation = m_transformManager.GetLocalOrientation(i);
+    }
+
+    return orientation;
+}
+
+void Script::SetLocalOrientation(Entity entity,
+                                 const ds_math::Quaternion &orientation)
+{
+    ds_msg::SetLocalOrientation setOrientationMsg;
+    setOrientationMsg.entity = entity;
+    setOrientationMsg.localOrientation = orientation;
+
+    ds_msg::AppendMessage(
+        &m_messagesGenerated, ds_msg::MessageType::SetLocalOrientation,
+        sizeof(ds_msg::SetLocalOrientation), &setOrientationMsg);
 }
 
 void Script::SetAnimationIndex(Entity entity, int animationIndex)
@@ -351,6 +448,17 @@ Entity Script::CreateGUIButton(float startX,
     return createButtonMsg.entity;
 }
 
+void Script::DestroyEntity(Entity entity)
+{
+    // Send destroy entity message
+    ds_msg::DestroyEntity destroyEntityMsg;
+    destroyEntityMsg.entity = entity;
+
+    ds_msg::AppendMessage(&m_messagesGenerated,
+                          ds_msg::MessageType::DestroyEntity,
+                          sizeof(ds_msg::DestroyEntity), &destroyEntityMsg);
+}
+
 void Script::ProcessEvents(ds_msg::MessageStream *messages)
 {
     while (messages->AvailableBytes() != 0)
@@ -362,6 +470,7 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
         switch (header.type)
         {
         case ds_msg::MessageType::ScriptInterpret:
+        {
             ds_msg::ScriptInterpret scriptMsg;
             (*messages) >> scriptMsg;
 
@@ -373,43 +482,9 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
             m_lua.ExecuteString(
                 StringIntern::Instance().GetString(scriptMsg.stringId).c_str());
             break;
-        case ds_msg::MessageType::MoveForward:
-            ds_msg::MoveForward moveForwardMsg;
-            (*messages) >> moveForwardMsg;
-
-            // Insert header into messages to be sent to script
-            m_toScriptMessages << header;
-            // Insert payload into messages to be sent to script
-            m_toScriptMessages << moveForwardMsg;
-            break;
-        case ds_msg::MessageType::MoveBackward:
-            ds_msg::MoveBackward moveBackwardMsg;
-            (*messages) >> moveBackwardMsg;
-
-            // Insert header into messages to be sent to script
-            m_toScriptMessages << header;
-            // Insert payload into messages to be sent to script
-            m_toScriptMessages << moveBackwardMsg;
-            break;
-        case ds_msg::MessageType::StrafeLeft:
-            ds_msg::StrafeLeft strafeLeftMsg;
-            (*messages) >> strafeLeftMsg;
-
-            // Insert header into messages to be sent to script
-            m_toScriptMessages << header;
-            // Insert payload into messages to be sent to script
-            m_toScriptMessages << strafeLeftMsg;
-            break;
-        case ds_msg::MessageType::StrafeRight:
-            ds_msg::StrafeRight strafeRightMsg;
-            (*messages) >> strafeRightMsg;
-
-            // Insert header into messages to be sent to script
-            m_toScriptMessages << header;
-            // Insert payload into messages to be sent to script
-            m_toScriptMessages << strafeRightMsg;
-            break;
+        }
         case ds_msg::MessageType::ButtonFired:
+        {
             ds_msg::ButtonFired buttonFiredMsg;
             (*messages) >> buttonFiredMsg;
 
@@ -418,12 +493,13 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
             // Insert payload into messages to be sent to script
             m_toScriptMessages << buttonFiredMsg;
             break;
+        }
         case ds_msg::MessageType::CreateComponent:
         {
             ds_msg::CreateComponent createComponentMsg;
             (*messages) >> createComponentMsg;
 
-            // Lod up component data for component
+            // Load up component data for component
             Config componentData;
             if (componentData.LoadMemory(StringIntern::Instance().GetString(
                     createComponentMsg.componentData)))
@@ -442,46 +518,82 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
             }
             break;
         }
-        case ds_msg::MessageType::MoveEntity:
+        case ds_msg::MessageType::SetLocalTranslation:
         {
-            ds_msg::MoveEntity entityMoveMsg;
-            (*messages) >> entityMoveMsg;
+            ds_msg::SetLocalTranslation setTranslationMsg;
+            (*messages) >> setTranslationMsg;
 
-            // Instance transform =
-            //     m_transformManager.GetInstanceForEntity(entityMoveMsg.entity);
+            // Get component instance of entity to move
+            Instance transform = m_transformManager.GetInstanceForEntity(
+                setTranslationMsg.entity);
 
-            // if (transform.IsValid())
-            // {
-            //     // Get current transform
-            //     const ds_math::Matrix4 &currentTransform =
-            //         m_transformManager.GetLocalTransform(transform);
-            //     // Translate it
-            //     ds_math::Matrix4 newTransform =
-            //         currentTransform *
-            //         ds_math::Matrix4::CreateTranslationMatrix(
-            //             entityMoveMsg.deltaPosition);
-
-            //     // Set transform of entity
-            //     m_transformManager.SetLocalTransform(transform,
-            //     newTransform);
-            // }
-            break;
-        }
-        case ds_msg::MessageType::SetLocalTransform:
-        {
-            ds_msg::SetLocalTransform setLocalMsg;
-            (*messages) >> setLocalMsg;
-
-            Instance transform =
-                m_transformManager.GetInstanceForEntity(setLocalMsg.entity);
-
+            // If has transform component
             if (transform.IsValid())
             {
-                // Set transform of entity
-                m_transformManager.SetLocalTransform(
-                    transform, setLocalMsg.localTransform);
+                // Set translation of entity
+                m_transformManager.SetLocalTranslation(
+                    transform, setTranslationMsg.localTranslation);
             }
+
             break;
+        }
+        case ds_msg::MessageType::SetLocalOrientation:
+        {
+            ds_msg::SetLocalOrientation setOrientationMsg;
+            (*messages) >> setOrientationMsg;
+
+            // Get component instance of entity to rotate
+            Instance transform = m_transformManager.GetInstanceForEntity(
+                setOrientationMsg.entity);
+
+            // If has transform component
+            if (transform.IsValid())
+            {
+                // Set orientation of entity
+                m_transformManager.SetLocalOrientation(
+                    transform, setOrientationMsg.localOrientation);
+            }
+
+            break;
+        }
+        case ds_msg::MessageType::SetLocalScale:
+        {
+            ds_msg::SetLocalScale setScaleMsg;
+            (*messages) >> setScaleMsg;
+
+            // Get component instance of entity to scale
+            Instance transform =
+                m_transformManager.GetInstanceForEntity(setScaleMsg.entity);
+
+            // If has transform component
+            if (transform.IsValid())
+            {
+                // Set scale of entity
+                m_transformManager.SetLocalScale(transform,
+                                                 setScaleMsg.localScale);
+            }
+
+            break;
+        }
+        case ds_msg::MessageType::PhysicsCollision:
+        {
+            ds_msg::PhysicsCollision collisionMsg;
+            (*messages) >> collisionMsg;
+
+            // Insert header into messages to be sent to script
+            m_toScriptMessages << header;
+            // Insert payload into messages to be sent to script
+            m_toScriptMessages << collisionMsg;
+
+            break;
+        }
+        case ds_msg::MessageType::DestroyEntity:
+        {
+            ds_msg::DestroyEntity destroyEntityMsg;
+            (*messages) >> destroyEntityMsg;
+
+            // Remove entity from entity manager
+            m_entityManager.Destroy(destroyEntityMsg.entity);
         }
         default:
             messages->Extract(header.size);

@@ -21,12 +21,14 @@ set(ENGINE_INCLUDE_FILES
   message/MessageHelper.h
   resource/IResource.h
   resource/MaterialResource.h
+  resource/MaterialResourceManager.h
   resource/MeshResource.h
   resource/ResourceFactory.h
   resource/ResourceFactory.hpp
   resource/ShaderResource.h
   resource/TerrainResource.h
   resource/TextureResource.h
+  resource/TextureResourceManager.h
   system/Console.h
   system/input/Input.h
   system/input/InputContext.h
@@ -82,10 +84,12 @@ set(ENGINE_SRC_FILES
   message/MessageFactory.cpp
   message/MessageHelper.cpp
   resource/MaterialResource.cpp
+  resource/MaterialResourceManager.cpp
   resource/MeshResource.cpp
   resource/ShaderResource.cpp
   resource/TerrainResource.cpp
   resource/TextureResource.cpp
+  resource/TextureResourceManager.cpp
   system/Console.cpp
   system/input/Input.cpp
   system/input/InputContext.cpp

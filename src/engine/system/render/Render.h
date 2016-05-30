@@ -5,6 +5,8 @@
 #include "engine/common/HandleManager.h"
 #include "engine/resource/MeshResource.h"
 #include "engine/resource/ResourceFactory.h"
+#include "engine/resource/MaterialResourceManager.h"
+#include "engine/resource/TextureResourceManager.h"
 #include "engine/system/ISystem.h"
 #include "engine/system/render/ButtonComponentManager.h"
 #include "engine/system/render/CameraComponentManager.h"
@@ -27,6 +29,143 @@ namespace ds
 class Render : public ISystem
 {
 public:
+    /**
+     * The texture manager class manages access to and creation of texture
+     * objects.
+     */
+    class TextureManager
+    {
+    public:
+        /**
+         * Get the texture associated with the given texture handle.
+         *
+         * If no texture associated with given handle, will return FALSE and
+         * memory at the address given will be set to nullptr.
+         *
+         * @param   textureHandle  TextureHandle, texture handle to get texture
+         * associated with.
+         * @return                 ds_render::Texture *, pointer to texture or
+         * nullptr.
+         */
+        ds_render::Texture *GetTexture(ds_render::TextureHandle textureHandle);
+
+        /**
+         * Get the texture associated with the given texture handle.
+         *
+         * If no texture associated with given handle, will return nullptr.
+         *
+         * @param   textureHandle  TextureHandle, texture handle to get texture
+         * associated with.
+         * @return                 const ds_render::Texture *, pointer to
+         * texture or nullptr.
+         */
+        const ds_render::Texture *
+        GetTexture(ds_render::TextureHandle textureHandle) const;
+
+        /**
+         * Get the handle to the texture associated with the given texture
+         * resource handle, if no texture is associated with that texture
+         * resource handle, one will be created and the caller will be given a
+         * handle to it.
+         *
+         * If the result is TRUE, the textureHandle pointer is updated with the
+         * texture handle, otherwise it is not touched.
+         *
+         * @param   textureResourceHandle  TextureResourceHandle, handle to
+         * texture resource to get texture for.
+         * @param   textureHandle          TextureHandle *, address to put
+         * texture handle if found.
+         * @return                         bool, TRUE if texture was created or
+         * found for texture resource handle, FALSE otherwise.
+         */
+        bool
+        GetTextureForResourceHandle(TextureResourceHandle textureResourceHandle,
+                                    ds_render::TextureHandle *textureHandle);
+
+    private:
+        /** Store handle with managed texture object for update purposes */
+        struct ManagedTexture
+        {
+            ds_render::TextureHandle handle;
+            ds_render::Texture texture;
+        };
+
+        /** Texture storage */
+        std::vector<ManagedTexture> m_textures;
+        /** Handle manager */
+        HandleManager m_handleManager;
+    };
+
+    /**
+     * The material manager class manages access to and creation of material
+     * objects.
+     */
+    class MaterialManager
+    {
+    public:
+        /**
+         * Get the material associated with the given material handle.
+         *
+         * If no material associated with given handle, will return FALSE and
+         * memory at the address given will be set to nullptr.
+         *
+         * @param   materialHandle  MaterialHandle, material handle to get
+         * material
+         * associated with.
+         * @return                  ds_render::Material *, pointer to material
+         * or nullptr.
+         */
+        ds_render::Material *
+        GetMaterial(ds_render::MaterialHandle materialHandle);
+
+        /**
+         * Get the material associated with the given material handle.
+         *
+         * If no material associated with given handle, will return nullptr.
+         *
+         * @param   materialHandle  MaterialHandle, material handle to get
+         * material
+         * associated with.
+         * @return                 const ds_render::Material *, pointer to
+         * material or nullptr.
+         */
+        const ds_render::Material *
+        GetMaterial(ds_render::MaterialHandle materialHandle) const;
+
+        /**
+         * Get the handle to the material associated with the given material
+         * resource handle, if no material is associated with that material
+         * resource handle, one will be created and the caller will be given a
+         * handle to it.
+         *
+         * If the result is TRUE, the materialHandle pointer is updated with the
+         * material handle, otherwise it is not touched.
+         *
+         * @param   materialResourceHandle  MaterialResourceHandle, handle to
+         * material resource to get material for.
+         * @param   materialHandle          MaterialHandle *, address to put
+         * material handle if found.
+         * @return                         bool, TRUE if material was created or
+         * found for material resource handle, FALSE otherwise.
+         */
+        bool GetMaterialForResourceHandle(
+            MaterialResourceHandle materialResourceHandle,
+            ds_render::MaterialHandle *materialHandle);
+
+    private:
+        /** Store handle with managed material object for update purposes */
+        struct ManagedMaterial
+        {
+            ds_render::MaterialHandle handle;
+            ds_render::Material material;
+        };
+
+        /** Material storage */
+        std::vector<ManagedMaterial> m_materials;
+        /** Handle manager */
+        HandleManager m_handleManager;
+    };
+
     /**
      * Initialize the render system.
      *
@@ -111,15 +250,22 @@ private:
      * paths that will be bound to that sampler. In the case of a cubemap
      * sampler for example, 6 images should be provided.
      *
-     * @param   samplerType  const ds_render::SamplerType &, type of the sampler
-     * to use to sample the provided texture resources.
-     * @param   filePaths  const std::vector<std::string> &, path to texture
-     *                     resources.
-     * @return             ds_render::Texture, texture created.
+     * @param   textureResourceFilePath const std::vector<std::string> &, path
+     * to texture resource.
+     * @return                          ds_render::Texture, texture created.
      */
-    ds_render::Texture
-    CreateTextureFromTextureResource(const ds_render::SamplerType &samplerType,
-                                     const std::vector<std::string> &filePaths);
+    ds_render::Texture CreateTextureFromTextureResource(
+        const std::string &textureResourceFilePath);
+
+    /**
+     * Create a Texture object from a texture resource handle.
+     *
+     * @param   handle  TextureResourceHandle, texture handle to create Texture
+     * from.
+     * @return          ds_render::Texture, texture object created.
+     */
+    static ds_render::Texture
+    CreateTextureFromTextureResource(TextureResourceHandle handle);
 
     /**
      * Create the mesh for a skybox.
@@ -154,6 +300,16 @@ private:
         const std::string &filePath,
         ds_render::ConstantBufferHandle sceneMatrices,
         ds_render::ConstantBufferHandle objectMatrices);
+
+    /**
+     * Create a Material object from a material resource handle.
+     *
+     * @param   handle  MaterialResourceHandle, material handle to create Material
+     * from.
+     * @return          ds_render::Material, material object created.
+     */
+    static ds_render::Material
+    CreateMaterialFromMaterialResource(MaterialResourceHandle handle);
 
     /**
      * Create a render component for the given entity using the given component
@@ -208,10 +364,8 @@ private:
     /** Messages generated and received by this system */
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
 
-    ResourceFactory m_factory;
-
     /** Renderer */
-    std::unique_ptr<ds_render::IRenderer> m_renderer;
+    static std::unique_ptr<ds_render::IRenderer> m_renderer;
 
     /** Render component manager */
     ds_render::RenderComponentManager m_renderComponentManager;
@@ -219,13 +373,15 @@ private:
     TransformComponentManager m_transformComponentManager;
     /** Camera component manager */
     ds_render::CameraComponentManager m_cameraComponentManager;
+    /** GUI-specific data */
+    ds_render::ButtonComponentManager m_buttonComponentManager;
 
     ds_render::Mesh m_mesh;
     ds_render::Material m_material;
     ds_render::ProgramHandle m_program;
 
-    ds_render::ConstantBufferHandle m_sceneMatrices;
-    ds_render::ConstantBufferHandle m_objectMatrices;
+    static ds_render::ConstantBufferHandle m_sceneMatrices;
+    static ds_render::ConstantBufferHandle m_objectMatrices;
     ds_render::ConstantBufferDescription m_sceneBufferDescrip;
     ds_render::ConstantBufferDescription m_objectBufferDescrip;
 
@@ -244,7 +400,16 @@ private:
     ds_render::Skybox m_skybox;
     bool m_hasSkybox;
 
-    /** GUI-specific data */
-    ds_render::ButtonComponentManager m_buttonComponentManager;
+    /** Texture resource manager */
+    static TextureResourceManager m_textureResourceManager;
+    /** Texture manager */
+    static TextureManager m_textureManager;
+    /** Material resource Manager */
+    static MaterialResourceManager m_materialResourceManager;
+    /** Material manager */
+    static MaterialManager m_materialManager;
+
+    /** Resource factory */
+    static ResourceFactory m_factory;
 };
 }

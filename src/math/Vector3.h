@@ -254,6 +254,14 @@ Vector3 operator*(const Vector3 &vec, scalar factor);
  * @return       Vector3, inverted vector.
  */
 Vector3 operator-(const Vector3 &vec);
+/**
+ * Multiply the components of two vectors.
+ *
+ * @param   vec1  const Vector3 &, vector 1.
+ * @param   vec2  const Vector3 &, vector 2.
+ * @return        Vector3, multiplied vector result.
+ */
+Vector3 operator*(const Vector3 &vec1, const Vector3 &vec2);
 
 /**
  * Output stream operator.

@@ -161,7 +161,7 @@ public:
      * @param  height           unsigend int, height of the image in pixels.
      * @param  data             const void *, pointer to image data.
      */
-    virtual TextureHandle Create2DTexture(ImageFormat format,
+    virtual RenderTextureHandle Create2DTexture(ImageFormat format,
                                           RenderDataType imageDataType,
                                           InternalImageFormat internalFormat,
                                           bool generateMipMaps,
@@ -187,7 +187,7 @@ public:
      * @param  dataTopImage     const void *, pointer to top image data.
      * @param  dataBottomImage  const void *, pointer to bottom image data.
      */
-    virtual TextureHandle
+    virtual RenderTextureHandle
     CreateCubemapTexture(ImageFormat format,
                          RenderDataType imageDataType,
                          InternalImageFormat internalFormat,
@@ -208,22 +208,22 @@ public:
      * @param  samplerName    const std::string &, name of the sampler in
      * the
      * shader
-     * @param  textureHandle  TextureHandle, texture to bind to sampler.
+     * @param  textureHandle  RenderTextureHandle, texture to bind to sampler.
      */
     virtual void BindTextureToSampler(ProgramHandle programHandle,
                                       const std::string &samplerName,
-                                      const SamplerType &samplerType,
-                                      TextureHandle textureHandle);
+                                      const TextureType &textureType,
+                                      RenderTextureHandle textureHandle);
 
     /**
      * Unbind texture from sampler.
      *
-     * @param  samplerType    const SamplerType &, type of sampler to unbind
+     * @param  textureType    const TextureType &, type of sampler to unbind
      * texture from.
-     * @param  textureHandle  TextureHandle, texture to unbind.
+     * @param  textureHandle  RenderTextureHandle, texture to unbind.
      */
-    virtual void UnbindTextureFromSampler(const SamplerType &samplerType,
-                                          TextureHandle textureHandle);
+    virtual void UnbindTextureFromSampler(const TextureType &textureType,
+                                          RenderTextureHandle textureHandle);
 
     /**
      * Memory layout of constant buffer in renderer may not match that of C/C++.
@@ -463,10 +463,10 @@ private:
      * Convert an internal texture sampler type to an OpenGL-specific
      * equivalent.
      *
-     * @param   samplerType  const SamplerType &, internal texture sampler type.
+     * @param   textureType  const TextureType &, internal texture sampler type.
      * @return  GLenum, OpenGL internal image format.
      */
-    GLenum ToGLSamplerType(const SamplerType &samplerType) const;
+    GLenum ToGLTextureType(const TextureType &textureType) const;
 
     /** Handle manager used to manage the handles of all OpenGL objects we
      * create */
@@ -478,7 +478,7 @@ private:
     std::vector<GLObject> m_openGLObjects;
 
     /** Texture slots used/available */
-    std::vector<TextureHandle> m_textureSlots;
+    std::vector<RenderTextureHandle> m_textureSlots;
 
     /** Uniform binding points used/available */
     std::vector<ConstantBufferHandle> m_constantBufferBindingPoints;

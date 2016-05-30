@@ -1,6 +1,7 @@
 #include <cassert>
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 
 #include "engine/Config.h"
 #include "engine/common/Common.h"
@@ -49,106 +50,23 @@ MaterialResource::CreateFromFile(std::string filePath)
                 samplerKey << "textures"
                            << "." << key;
 
-                // Get path to type of sampler
-                std::stringstream samplerTypeKey;
-                samplerTypeKey << samplerKey.str() << "."
-                               << "type";
+                // Key to texture field in config file
+                std::stringstream textureFieldKey;
+                textureFieldKey << samplerKey.str() << "."
+                                << "texture";
 
-                // Convert type of the sampler as a string to an enum
-                std::string samplerTypeAsString;
-                // Type of the sampler as an enum
-                ds_render::SamplerType samplerType =
-                    ds_render::SamplerType::None;
-                if (config.GetString(samplerTypeKey.str(),
-                                     &samplerTypeAsString))
+                // Get path to texture resource file
+                std::string textureResourcePath;
+
+                if (config.GetString(textureFieldKey.str(),
+                                     &textureResourcePath))
                 {
-                    if (samplerTypeAsString == "2D")
-                    {
-                        samplerType = ds_render::SamplerType::TwoDimensional;
-                    }
-                    else if (samplerTypeAsString == "Cubemap")
-                    {
-                        samplerType = ds_render::SamplerType::Cubemap;
-                    }
+                    std::stringstream fullTextureResourcePath;
+                    fullTextureResourcePath << folder << textureResourcePath;
 
                     // Create new texture sampler
                     static_cast<MaterialResource *>(materialResource.get())
-                        ->AddTextureSampler(key, samplerType);
-                }
-
-                // Get the sampler object keys, we're going to iterate thru each
-                // key (skipping the type key), and add the texture file path to
-                // the material resource
-                std::vector<std::string> samplerObjectKeys =
-                    config.GetObjectKeys(samplerKey.str());
-                // Check that the correct number of textures exist for the given
-                // sampler type (samplerObjectsKeys.size() - 1) to ignore the
-                // type key.
-                switch (samplerType)
-                {
-                case ds_render::SamplerType::TwoDimensional:
-                {
-                    if ((samplerObjectKeys.size() - 1) != 1)
-                    {
-                        std::cerr
-                            << "MaterialResource::CreateFromFile: "
-                               "incorrect number of textures specified (not 1) "
-                               "for 2D texture for sampler '"
-                            << key << "' in file: " << filePath << std::endl;
-                    }
-                    break;
-                }
-                case ds_render::SamplerType::Cubemap:
-                {
-                    if ((samplerObjectKeys.size() - 1) != 6)
-                    {
-                        std::cerr
-                            << "MaterialResource::CreateFromFile: "
-                               "incorrect number of textures specified (not 6)"
-                               "for cubemap texture for sampler '"
-                            << key << "' in file: " << filePath << std::endl;
-                    }
-                    break;
-                }
-                default:
-                {
-                    std::cerr << "MaterialResource::CreateFromFile: "
-                                 "Unknown sampler type '"
-                              << samplerTypeAsString << "' for sampler '" << key
-                              << "' in file: " << filePath << std::endl;
-                    break;
-                }
-                }
-                for (unsigned int i = 1; i < samplerObjectKeys.size(); ++i)
-                {
-                    // Key to the file path in the sampler object
-                    std::stringstream textureFilePathKey;
-                    textureFilePathKey << samplerKey.str() << "."
-                                       << samplerObjectKeys[i];
-
-                    // Get file path of that texture
-                    std::string relTexturePath;
-                    if (config.GetString(textureFilePathKey.str(),
-                                         &relTexturePath))
-                    {
-                        // Make full texture path from relative one
-                        std::stringstream fullTexturePath;
-                        fullTexturePath << folder << relTexturePath;
-
-                        // Add texture resource file path to this texture
-                        // sampler
-                        static_cast<MaterialResource *>(materialResource.get())
-                            ->AddTextureSamplerFilePath(key,
-                                                        fullTexturePath.str());
-                    }
-                    else
-                    {
-                        std::cerr
-                            << "MaterialResource::CreateFromFile: could not "
-                               "get texture path from key: '"
-                            << textureFilePathKey.str() << "': " << filePath
-                            << std::endl;
-                    }
+                        ->AddTextureSampler(key, fullTextureResourcePath.str());
                 }
             }
 
@@ -318,58 +236,30 @@ std::vector<std::string> MaterialResource::GetTextureSamplerNames() const
     return textureSamplerNames;
 }
 
-ds_render::SamplerType
-MaterialResource::GetTextureSamplerType(const std::string &samplerName) const
-{
-    ds_render::SamplerType type = ds_render::SamplerType::None;
-
-    std::map<std::string, SamplerEntry>::const_iterator it =
-        m_textureSamplers.find(samplerName);
-
-    if (it != m_textureSamplers.end())
-    {
-        type = it->second.type;
-    }
-
-    return type;
-}
-
-void MaterialResource::AddTextureSampler(const std::string &samplerName,
-                                         const ds_render::SamplerType &type)
+void MaterialResource::AddTextureSampler(
+    const std::string &samplerName,
+    const std::string &textureResourceFilePath)
 {
     SamplerEntry entry;
-    entry.type = type;
-    entry.filePaths = std::vector<std::string>();
+    entry.textureResourceFilePath = textureResourceFilePath;
 
     m_textureSamplers[samplerName] = entry;
 }
 
-std::vector<std::string> MaterialResource::GetTextureSamplerFilePaths(
+std::string MaterialResource::GetSamplerTextureResourceFilePath(
     const std::string &samplerName) const
 {
-    std::vector<std::string> filePaths;
+    std::string filePath = "";
 
     std::map<std::string, SamplerEntry>::const_iterator it =
         m_textureSamplers.find(samplerName);
 
     if (it != m_textureSamplers.end())
     {
-        filePaths = it->second.filePaths;
+        filePath = it->second.textureResourceFilePath;
     }
 
-    return filePaths;
-}
-
-void MaterialResource::AddTextureSamplerFilePath(
-    const std::string &samplerName, const std::string &textureResourceFilePath)
-{
-    std::map<std::string, SamplerEntry>::iterator it =
-        m_textureSamplers.find(samplerName);
-
-    if (it != m_textureSamplers.end())
-    {
-        it->second.filePaths.push_back(textureResourceFilePath);
-    }
+    return filePath;
 }
 
 void MaterialResource::AddUniformBlock(
@@ -388,7 +278,7 @@ MaterialResource::GetUniformBlocks() const
 // {
 //     // Find a uniform with the same name
 //     std::vector<ds_render::Uniform>::iterator it =
-//         find_if(m_uniforms.begin(), m_uniforms.end(),
+//         (m_uniforms.begin(), m_uniforms.end(),
 //                 [&](const ds_render::Uniform &materialUniform)
 //                 {
 //                     if (materialUniform.GetName() == uniform.GetName())

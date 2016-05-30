@@ -50,8 +50,6 @@ std::unique_ptr<IResource> MeshResource::CreateFromFile(std::string filePath)
         int meshCount = ourScene->mNumMeshes;
         meshResource->SetMeshCount(meshCount);
 
-        std::cout << filePath << " " << meshCount << std::endl;
-
         if (meshCount > 0)
         {
             // Bone information
@@ -104,7 +102,6 @@ std::unique_ptr<IResource> MeshResource::CreateFromFile(std::string filePath)
             // TODO: Fix for multiple meshes in scene
             for (unsigned int iMesh = 0; iMesh < meshCount; ++iMesh)
             {
-                std::cout << "About to load bone data" << std::endl;
                 meshResource->LoadBones(iMesh, ourScene->mMeshes[iMesh],
                                         &bones);
             }
@@ -518,7 +515,6 @@ void MeshResource::LoadBones(unsigned int meshIndex,
            "MeshResource::LoadBones: Tried to access invalid mesh index.");
     if (bones != nullptr)
     {
-        std::cout << "Num bones: " << mesh->mNumBones << std::endl;
         for (unsigned int i = 0; i < mesh->mNumBones; ++i)
         {
             unsigned int boneIndex = 0;

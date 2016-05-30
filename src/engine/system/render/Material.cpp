@@ -13,12 +13,18 @@ void Material::SetProgram(ProgramHandle program)
 }
 
 void Material::AddTexture(const std::string &samplerName,
-                          const Texture &texture)
+                          TextureHandle textureHandle)
 {
-    m_textures.push_back(std::pair<std::string, Texture>(samplerName, texture));
+    // Construct shader texture
+    ShaderTexture shaderTexture;
+    shaderTexture.samplerName = samplerName;
+    shaderTexture.textureHandle = textureHandle;
+
+    // Add it
+    m_textures.push_back(shaderTexture);
 }
 
-const std::vector<std::pair<std::string, Texture>> &Material::GetTextures()
+const std::vector<Material::ShaderTexture> &Material::GetTextures() const
 {
     return m_textures;
 }
@@ -28,5 +34,16 @@ void Material::AddConstantBuffer(const std::string &constantBufferName,
 {
     m_constantBuffers.push_back(std::pair<std::string, ConstantBuffer>(
         constantBufferName, constantBuffer));
+}
+
+ds::MaterialResourceHandle Material::GetMaterialResourceHandle() const
+{
+    return m_materialResourceHandle;
+}
+
+void Material::SetMaterialResourceHandle(
+    ds::MaterialResourceHandle materialResourceHandle)
+{
+    m_materialResourceHandle = materialResourceHandle;
 }
 }

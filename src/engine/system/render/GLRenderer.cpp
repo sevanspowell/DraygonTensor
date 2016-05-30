@@ -273,13 +273,14 @@ void GLRenderer::SetProgram(ProgramHandle programHandle)
     }
 }
 
-TextureHandle GLRenderer::Create2DTexture(ImageFormat format,
-                                          RenderDataType imageDataType,
-                                          InternalImageFormat internalFormat,
-                                          bool generateMipMaps,
-                                          unsigned int width,
-                                          unsigned int height,
-                                          const void *data)
+RenderTextureHandle
+GLRenderer::Create2DTexture(ImageFormat format,
+                            RenderDataType imageDataType,
+                            InternalImageFormat internalFormat,
+                            bool generateMipMaps,
+                            unsigned int width,
+                            unsigned int height,
+                            const void *data)
 {
     // Create OpenGL texture object
     GLuint tex;
@@ -318,10 +319,11 @@ TextureHandle GLRenderer::Create2DTexture(ImageFormat format,
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // Create handle to texture object
-    return (TextureHandle)StoreOpenGLObject(tex, GLObjectType::TextureObject);
+    return (RenderTextureHandle)StoreOpenGLObject(tex,
+                                                  GLObjectType::TextureObject);
 }
 
-TextureHandle
+RenderTextureHandle
 GLRenderer::CreateCubemapTexture(ImageFormat format,
                                  RenderDataType imageDataType,
                                  InternalImageFormat internalFormat,
@@ -375,17 +377,17 @@ GLRenderer::CreateCubemapTexture(ImageFormat format,
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
     // Create handle to texture object
-    return (TextureHandle)StoreOpenGLObject(texCube,
-                                            GLObjectType::TextureObject);
+    return (RenderTextureHandle)StoreOpenGLObject(texCube,
+                                                  GLObjectType::TextureObject);
 }
 
 void GLRenderer::BindTextureToSampler(ProgramHandle programHandle,
                                       const std::string &samplerName,
-                                      const SamplerType &samplerType,
-                                      TextureHandle textureHandle)
+                                      const TextureType &textureType,
+                                      RenderTextureHandle textureHandle)
 {
     // Is texture already bound to a texture slot?
-    std::vector<TextureHandle>::iterator it =
+    std::vector<RenderTextureHandle>::iterator it =
         std::find(m_textureSlots.begin(), m_textureSlots.end(), textureHandle);
 
     // Texture not already bound
@@ -393,7 +395,7 @@ void GLRenderer::BindTextureToSampler(ProgramHandle programHandle,
     {
         // Find an empty texture slot
         it = std::find(m_textureSlots.begin(), m_textureSlots.end(),
-                       TextureHandle());
+                       RenderTextureHandle());
 
         // Insert into slot
         if (it != m_textureSlots.end())
@@ -416,7 +418,7 @@ void GLRenderer::BindTextureToSampler(ProgramHandle programHandle,
     if (GetOpenGLObject(textureHandle, GLObjectType::TextureObject, &tex))
     {
         glActiveTexture(GL_TEXTURE0 + textureSlot);
-        glBindTexture(ToGLSamplerType(samplerType), tex);
+        glBindTexture(ToGLTextureType(textureType), tex);
 
         GLuint program = 0;
         if (GetOpenGLObject(programHandle, GLObjectType::ProgramObject,
@@ -440,23 +442,24 @@ void GLRenderer::BindTextureToSampler(ProgramHandle programHandle,
     }
 }
 
-void GLRenderer::UnbindTextureFromSampler(const SamplerType &samplerType,
-                                          TextureHandle textureHandle)
+
+void GLRenderer::UnbindTextureFromSampler(const TextureType &textureType,
+                                          RenderTextureHandle textureHandle)
 {
     // Find texture slot of texture
-    std::vector<TextureHandle>::iterator it =
+    std::vector<RenderTextureHandle>::iterator it =
         std::find(m_textureSlots.begin(), m_textureSlots.end(), textureHandle);
     unsigned int textureSlot = it - m_textureSlots.begin();
 
     // Insert into empty texture handle
     if (it != m_textureSlots.end())
     {
-        *it = TextureHandle();
+        *it = RenderTextureHandle();
     }
 
     // Unbind OpenGL texture from sampler
     glActiveTexture(GL_TEXTURE0 + textureSlot);
-    glBindTexture(ToGLSamplerType(samplerType), 0);
+    glBindTexture(ToGLTextureType(textureType), 0);
 }
 
 void GLRenderer::GetConstantBufferDescription(
@@ -1059,16 +1062,16 @@ GLenum GLRenderer::ToGLInternalImageFormat(
     return format;
 }
 
-GLenum GLRenderer::ToGLSamplerType(const SamplerType &samplerType) const
+GLenum GLRenderer::ToGLTextureType(const TextureType &textureType) const
 {
     GLenum type = GL_INVALID_ENUM;
 
-    switch (samplerType)
+    switch (textureType)
     {
-    case SamplerType::TwoDimensional:
+    case TextureType::TwoDimensional:
         type = GL_TEXTURE_2D;
         break;
-    case SamplerType::Cubemap:
+    case TextureType::Cubemap:
         type = GL_TEXTURE_CUBE_MAP;
         break;
     default:

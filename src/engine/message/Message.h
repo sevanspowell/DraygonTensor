@@ -46,18 +46,12 @@ enum class MessageType
     GraphicsContextCreated,
     // On component creation
     CreateComponent,
-    // Move an entity
-    MoveEntity,
-    // Move forward
-    MoveForward,
-    // Move backward
-    MoveBackward,
-    // Strafe left
-    StrafeLeft,
-    // Strafe Right
-    StrafeRight,
-    // Set an entity's local transform
-    SetLocalTransform,
+    // Set local translation of an entity
+    SetLocalTranslation,
+    // Set local orientation of an entity
+    SetLocalOrientation,
+    // Set local scale of an entity
+    SetLocalScale,
     // Set an entity's animation
     SetAnimationIndex,
     // Set skybox material
@@ -71,7 +65,19 @@ enum class MessageType
     // Create GUI button message
     CreateButton,
     // On button fire (button click)
-    ButtonFired
+    ButtonFired,
+    // On set material parameter
+    SetMaterialParameterMatrix4,
+    SetMaterialParameterVector4,
+    SetMaterialParameterVector3,
+    SetMaterialParameterInt,
+    SetMaterialParameterFloat,
+    // On destroy entity
+    DestroyEntity,
+    // On reload all assets
+    ReloadAll,
+    // On physics collision
+    PhysicsCollision
 };
 
 /**
@@ -140,32 +146,28 @@ struct CreateComponent
     ds::StringIntern::StringId componentData; // Component config string.
 };
 
-struct MoveEntity
+// struct SetLocalTransform
+// {
+//     ds::Entity entity;               // Entity to set local transform of
+//     ds_math::Matrix4 localTransform; // New local transform
+// };
+
+struct SetLocalTranslation
 {
-    ds::Entity entity;              // Entity to move
-    ds_math::Vector3 deltaPosition; // Amount and direction to move
+    ds::Entity entity;
+    ds_math::Vector3 localTranslation;
 };
 
-struct MoveForward
+struct SetLocalOrientation
 {
+    ds::Entity entity;
+    ds_math::Quaternion localOrientation;
 };
 
-struct MoveBackward
+struct SetLocalScale
 {
-};
-
-struct StrafeLeft
-{
-};
-
-struct StrafeRight
-{
-};
-
-struct SetLocalTransform
-{
-    ds::Entity entity;               // Entity to set local transform of
-    ds_math::Matrix4 localTransform; // New local transform
+    ds::Entity entity;
+    ds_math::Vector3 localScale;
 };
 
 struct SetAnimationIndex
@@ -226,5 +228,78 @@ struct CreateButton
 struct ButtonFired
 {
     ds::Entity entity;
+};
+
+struct SetMaterialParameterMatrix4
+{
+    ds::StringIntern::StringId materialResourceFilePath; // Path to material
+                                                         // resource file
+                                                         // containing material
+                                                         // to adjust parameter
+    ds::StringIntern::StringId parameter; // material parameter to change
+    ds_math::Matrix4 data; // data to change material parameter to
+};
+
+struct SetMaterialParameterVector4
+{
+    ds::StringIntern::StringId materialResourceFilePath; // Path to material
+                                                         // resource file
+                                                         // containing material
+                                                         // to adjust parameter
+    ds::StringIntern::StringId parameter; // material parameter to change
+    ds_math::Vector4 data; // data to change material parameter to
+};
+
+struct SetMaterialParameterVector3
+{
+    ds::StringIntern::StringId materialResourceFilePath; // Path to material
+                                                         // resource file
+                                                         // containing material
+                                                         // to adjust parameter
+    ds::StringIntern::StringId parameter; // material parameter to change
+    ds_math::Vector3 data; // data to change material parameter to
+};
+
+struct SetMaterialParameterInt
+{
+    ds::StringIntern::StringId materialResourceFilePath; // Path to material
+                                                         // resource file
+                                                         // containing material
+                                                         // to adjust parameter
+    ds::StringIntern::StringId
+        parameter; // data to change material parameter to
+    int data;      // data to change material parameter to
+};
+
+struct SetMaterialParameterFloat
+{
+    ds::StringIntern::StringId materialResourceFilePath; // Path to material
+                                                         // resource file
+                                                         // containing material
+                                                         // to adjust parameter
+    ds::StringIntern::StringId
+        parameter; // data to change material parameter to
+    float data;    // data to change material parameter to
+};
+
+struct DestroyEntity
+{
+    ds::Entity entity; // Entity to destroy
+};
+
+struct ReloadAll
+{
+};
+
+struct PhysicsCollision
+{
+    ds::Entity entityA; // Object one involved in collision.
+    ds::Entity entityB; // Object two involved in collision.
+    ds_math::Vector3
+        pointWorldOnA; // Collision point on object one in world space.
+    ds_math::Vector3
+        pointWorldOnB; // Collision point on object two in world space.
+    ds_math::Vector3
+        normalWorldOnB; // Collision normal in world space on object two.
 };
 }

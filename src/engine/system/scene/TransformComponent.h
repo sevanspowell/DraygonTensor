@@ -7,11 +7,15 @@ namespace ds
 {
 struct TransformComponent
 {
-    ds_math::Vector3 position;
-    ds_math::Vector3 scale;
-    ds_math::Quaternion orientation;
-    ds_math::Matrix4 localTransform;
-    ds_math::Matrix4 worldTransform;
+    ds_math::Vector3 localTranslation;
+    ds_math::Vector3 localScale;
+    ds_math::Quaternion localOrientation;
+
+    // Cache world data
+    ds_math::Vector3 worldTranslation;
+    ds_math::Vector3 worldScale;
+    ds_math::Quaternion worldOrientation;
+
     Instance parent;
     Instance firstChild;
     Instance nextSibling;

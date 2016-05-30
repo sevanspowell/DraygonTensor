@@ -10,8 +10,8 @@ struct ButtonComponent
     float startY;
     float endX;
     float endY;
-    Material defaultMaterial;
-    Material pressedMaterial;
-    Material hoverMaterial;
+    MaterialHandle defaultMaterial;
+    MaterialHandle pressedMaterial;
+    MaterialHandle hoverMaterial;
 };
 }

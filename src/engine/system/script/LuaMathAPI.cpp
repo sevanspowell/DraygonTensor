@@ -405,6 +405,79 @@ static int l_Vector3Subtract(lua_State *L)
     return 1;
 }
 
+static int l_Vector3Add(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Vector3 *v1 = NULL;
+    ds_math::Vector3 *v2 = NULL;
+
+    v1 = (ds_math::Vector3 *)luaL_checkudata(L, 1, "Vector3");
+    v2 = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
+
+    if (v1 != NULL && v2 != NULL)
+    {
+        // Allocate memory for Vector3 result
+        ds_math::Vector3 *add =
+            (ds_math::Vector3 *)lua_newuserdata(L, sizeof(ds_math::Vector3));
+
+        // Subtract two arguments
+        *add = *v1 + *v2;
+
+        // Get Vector3 metatable and put on top of stack
+        luaL_getmetatable(L, "Vector3");
+        // Set it as metatable of new user data (the Vector3 - second from top
+        // on stack)
+        lua_setmetatable(L, -2);
+    }
+
+    // Two Vector3 arguments, addition result
+    assert(lua_gettop(L) == 3);
+
+    return 1;
+}
+
+static int l_Vector3MulScalar(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Vector3 *v = NULL;
+
+    v = (ds_math::Vector3 *)luaL_checkudata(L, 1, "Vector3");
+    ds_math::scalar scalar = (ds_math::scalar)luaL_checknumber(L, 2);
+
+    if (v != NULL)
+    {
+        // Allocate memory for Vector3 result
+        ds_math::Vector3 *scaledVector =
+            (ds_math::Vector3 *)lua_newuserdata(L, sizeof(ds_math::Vector3));
+
+        // Multiply two arguments
+        *scaledVector = *v * scalar;
+
+        // Get Vector3 metatable and put on top of stack
+        luaL_getmetatable(L, "Vector3");
+        // Set it as metatable of new user data (the Vector3 - second from top
+        // on stack)
+        lua_setmetatable(L, -2);
+    }
+
+    // Two arguments, scaled result
+    assert(lua_gettop(L) == 3);
+
+    return 1;
+}
+
 static int l_Vector3Dot(lua_State *L)
 {
     // Get number of arguments provided
@@ -1880,12 +1953,18 @@ static int l_EntityGetId(lua_State *L)
     return 1;
 }
 
-static const luaL_Reg vector3Methods[] = {
-    {"__tostring", l_Vector3ToString}, {"__unm", l_Vector3UnaryInvert},
-    {"__sub", l_Vector3Subtract},      {"get_x", l_Vector3GetX},
-    {"set_x", l_Vector3SetX},          {"get_y", l_Vector3GetY},
-    {"set_y", l_Vector3SetY},          {"get_z", l_Vector3GetZ},
-    {"set_z", l_Vector3SetZ},          {NULL, NULL}};
+static const luaL_Reg vector3Methods[] = {{"__tostring", l_Vector3ToString},
+                                          {"__unm", l_Vector3UnaryInvert},
+                                          {"__sub", l_Vector3Subtract},
+                                          {"__add", l_Vector3Add},
+                                          {"__mul", l_Vector3MulScalar},
+                                          {"get_x", l_Vector3GetX},
+                                          {"set_x", l_Vector3SetX},
+                                          {"get_y", l_Vector3GetY},
+                                          {"set_y", l_Vector3SetY},
+                                          {"get_z", l_Vector3GetZ},
+                                          {"set_z", l_Vector3SetZ},
+                                          {NULL, NULL}};
 
 static const luaL_Reg vector3Functions[] = {
     {"new", l_Vector3New},

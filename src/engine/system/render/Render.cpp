@@ -1,6 +1,7 @@
 #include <fstream>
 #include <sstream>
 
+#include "engine/common/HandleCommon.h"
 #include "engine/message/MessageHelper.h"
 #include "engine/resource/MaterialResource.h"
 #include "engine/resource/ShaderResource.h"
@@ -19,6 +20,221 @@ extern ds::ScriptBindingSet LoadRenderScriptBindings();
 
 namespace ds
 {
+// Static member definitions
+std::unique_ptr<ds_render::IRenderer> Render::m_renderer;
+TextureResourceManager Render::m_textureResourceManager;
+Render::TextureManager Render::m_textureManager;
+MaterialResourceManager Render::m_materialResourceManager;
+Render::MaterialManager Render::m_materialManager;
+ResourceFactory Render::m_factory;
+ds_render::ConstantBufferHandle Render::m_sceneMatrices;
+ds_render::ConstantBufferHandle Render::m_objectMatrices;
+
+ds_render::Texture *
+Render::TextureManager::GetTexture(ds_render::TextureHandle textureHandle)
+{
+    ds_render::Texture *texture = nullptr;
+
+    // Get managed texture resource
+    ManagedTexture *managedTexture = nullptr;
+    bool result = m_handleManager.Get(textureHandle, (void **)&managedTexture);
+
+    // If successful
+    if (result == true)
+    {
+        // Get texture resource from managed texture
+        texture = &(managedTexture->texture);
+    }
+
+    return texture;
+}
+
+const ds_render::Texture *
+Render::TextureManager::GetTexture(ds_render::TextureHandle textureHandle) const
+{
+    const ds_render::Texture *texture = nullptr;
+
+    // Get managed texture resource
+    ManagedTexture *managedTexture = nullptr;
+    bool result = m_handleManager.Get(textureHandle, (void **)&managedTexture);
+
+    // If successful
+    if (result == true)
+    {
+        // Get texture resource from managed texture
+        texture = &(managedTexture->texture);
+    }
+
+    return texture;
+}
+
+bool Render::TextureManager::GetTextureForResourceHandle(
+    TextureResourceHandle textureResourceHandle,
+    ds_render::TextureHandle *textureHandle)
+{
+    bool result = false;
+
+    // Attempt to find texture for the given resource handle
+    std::vector<ManagedTexture>::const_iterator it =
+        std::find_if(m_textures.begin(), m_textures.end(),
+                     [&](const ManagedTexture &managedTexture)
+                     {
+                         return managedTexture.texture.textureResourceHandle ==
+                                textureResourceHandle;
+                     });
+
+    // If found, return it
+    if (it != m_textures.end())
+    {
+        *textureHandle = it->handle;
+
+        result = true;
+    }
+    // If not found, create texture for texture resource
+    else
+    {
+        // Create texture from texture resource handle
+        ds_render::Texture texture =
+            CreateTextureFromTextureResource(textureResourceHandle);
+
+        ManagedTexture managedTexture;
+        managedTexture.texture = texture;
+
+        // Add texture to list
+        m_textures.push_back(managedTexture);
+        // Location in vector of texture we just added
+        size_t loc = m_textures.size() - 1;
+
+        // Add texture to handle manager
+        Handle handle = m_handleManager.Add(
+            (void *)&m_textures[loc], (uint32_t)HandleTypes::TextureHandleType);
+        // Store handle with texture resource
+        m_textures[loc].handle = handle;
+
+        // Because pushing adding an element to the vector might cause the
+        // vector to realloc, update the address of all managed texture
+        // resource objects
+        for (unsigned int i = 0; i < m_textures.size(); ++i)
+        {
+            // Get handle
+            ds::Handle handle = m_textures[i].handle;
+            // Update with new memory address
+            m_handleManager.Update(handle, &m_textures[i]);
+        }
+
+        // If successful, return texture resource handle to caller
+        *textureHandle = handle;
+
+        result = true;
+    }
+
+    return result;
+}
+
+ds_render::Material *
+Render::MaterialManager::GetMaterial(ds_render::MaterialHandle materialHandle)
+{
+    ds_render::Material *material = nullptr;
+
+    // Get managed material resource
+    ManagedMaterial *managedMaterial = nullptr;
+    bool result =
+        m_handleManager.Get(materialHandle, (void **)&managedMaterial);
+
+    // If successful
+    if (result == true)
+    {
+        // Get material resource from managed material
+        material = &(managedMaterial->material);
+    }
+
+    return material;
+}
+
+const ds_render::Material *Render::MaterialManager::GetMaterial(
+    ds_render::MaterialHandle materialHandle) const
+{
+    const ds_render::Material *material = nullptr;
+
+    // Get managed material resource
+    ManagedMaterial *managedMaterial = nullptr;
+    bool result =
+        m_handleManager.Get(materialHandle, (void **)&managedMaterial);
+
+    // If successful
+    if (result == true)
+    {
+        // Get material resource from managed material
+        material = &(managedMaterial->material);
+    }
+
+    return material;
+}
+
+bool Render::MaterialManager::GetMaterialForResourceHandle(
+    MaterialResourceHandle materialResourceHandle,
+    ds_render::MaterialHandle *materialHandle)
+{
+    bool result = false;
+
+    // Attempt to find material for the given resource handle
+    std::vector<ManagedMaterial>::const_iterator it = std::find_if(
+        m_materials.begin(), m_materials.end(),
+        [&](const ManagedMaterial &managedMaterial)
+        {
+            return managedMaterial.material.GetMaterialResourceHandle() ==
+                   materialResourceHandle;
+        });
+
+    // If found, return it
+    if (it != m_materials.end())
+    {
+        *materialHandle = it->handle;
+
+        result = true;
+    }
+    // If not found, create material for material resource
+    else
+    {
+        // Create material from material resource handle
+        ds_render::Material material =
+            CreateMaterialFromMaterialResource(materialResourceHandle);
+
+        ManagedMaterial managedMaterial;
+        managedMaterial.material = material;
+
+        // Add material to list
+        m_materials.push_back(managedMaterial);
+        // Location in vector of material we just added
+        size_t loc = m_materials.size() - 1;
+
+        // Add material to handle manager
+        Handle handle =
+            m_handleManager.Add((void *)&m_materials[loc],
+                                (uint32_t)HandleTypes::MaterialHandleType);
+        // Store handle with material resource
+        m_materials[loc].handle = handle;
+
+        // Because pushing adding an element to the vector might cause the
+        // vector to realloc, update the address of all managed material
+        // resource objects
+        for (unsigned int i = 0; i < m_materials.size(); ++i)
+        {
+            // Get handle
+            ds::Handle handle = m_materials[i].handle;
+            // Update with new memory address
+            m_handleManager.Update(handle, &m_materials[i]);
+        }
+
+        // If successful, return material resource handle to caller
+        *materialHandle = handle;
+
+        result = true;
+    }
+
+    return result;
+}
+
 bool Render::Initialize(const Config &config)
 {
     bool result = true;
@@ -77,31 +293,6 @@ ScriptBindingSet Render::GetScriptBindings() const
     return ds_lua::LoadRenderScriptBindings();
 }
 
-ds_math::Quaternion Render::GetCameraOrientation(Entity entity) const
-{
-    ds_math::Quaternion orientation;
-
-    Instance i = m_cameraComponentManager.GetInstanceForEntity(entity);
-
-    if (i.IsValid())
-    {
-        orientation = m_cameraComponentManager.GetOrientation(i);
-    }
-
-    return orientation;
-}
-
-void Render::SetCameraOrientation(Entity entity,
-                                  const ds_math::Quaternion &orientation)
-{
-    Instance i = m_cameraComponentManager.GetInstanceForEntity(entity);
-
-    if (i.IsValid())
-    {
-        m_cameraComponentManager.SetOrientation(i, orientation);
-    }
-}
-
 void Render::SetSkyboxMaterial(const std::string &skyboxMaterial)
 {
     std::stringstream skyboxMaterialFullPath;
@@ -114,15 +305,28 @@ void Render::SetSkyboxMaterial(const std::string &skyboxMaterial)
 
     ds_render::Mesh currentMesh = m_skybox.GetMesh();
     ds_render::SubMesh currentSubMesh = currentMesh.GetSubMesh(0);
-    // Update material
-    currentSubMesh.material = CreateMaterialFromMaterialResource(
-        skyboxMaterialFullPath.str(), m_sceneMatrices, m_objectMatrices);
-    // Update submesh
-    currentMesh.SetSubMesh(0, currentSubMesh);
-    // Update mesh
-    m_skybox.SetMesh(currentMesh);
 
-    m_hasSkybox = true;
+    // Get material resource handle
+    MaterialResourceHandle materialResourceHandle;
+    if (m_materialResourceManager.LoadMaterialResourceFromFile(
+            skyboxMaterialFullPath.str(), &materialResourceHandle) == true)
+    {
+        // Get material handle for material resource handle
+        ds_render::MaterialHandle materialHandle;
+        if (m_materialManager.GetMaterialForResourceHandle(
+                materialResourceHandle, &materialHandle) == true)
+        {
+            // Update material handle
+            currentSubMesh.materialHandle = materialHandle;
+
+            // Update submesh
+            currentMesh.SetSubMesh(0, currentSubMesh);
+            // Update mesh
+            m_skybox.SetMesh(currentMesh);
+
+            m_hasSkybox = true;
+        }
+    }
 }
 
 ds_render::Mesh Render::CreatePanelMesh(float startX,
@@ -212,13 +416,23 @@ ds_render::Mesh Render::CreatePanelMesh(float startX,
     // Create mesh
     mesh = ds_render::Mesh(vb, ib, ds_render::MeshResourceHandle());
 
-    std::stringstream materialFullPath;
-    materialFullPath << "../assets/" << materialPath;
+    std::stringstream materialResourceFullPath;
+    materialResourceFullPath << "../assets/" << materialPath;
 
-    // Add submesh
-    mesh.AddSubMesh(ds_render::SubMesh(
-        0, 6, CreateMaterialFromMaterialResource(
-                  materialFullPath.str(), m_sceneMatrices, m_objectMatrices)));
+    // Get handle to material resource
+    MaterialResourceHandle materialResourceHandle;
+    if (m_materialResourceManager.LoadMaterialResourceFromFile(
+            materialResourceFullPath.str(), &materialResourceHandle) == true)
+    {
+        // Get material handle for material resource
+        ds_render::MaterialHandle materialHandle;
+        if (m_materialManager.GetMaterialForResourceHandle(
+                materialResourceHandle, &materialHandle) == true)
+        {
+            // Add submesh
+            mesh.AddSubMesh(ds_render::SubMesh(0, 6, materialHandle));
+        }
+    }
 
     return mesh;
 }
@@ -411,19 +625,31 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                                 materialResourcePath << "../assets/"
                                                      << materialKeys[iMaterial];
 
-                                // Create material
-                                ds_render::Material material =
-                                    CreateMaterialFromMaterialResource(
-                                        materialResourcePath.str(),
-                                        m_sceneMatrices, m_objectMatrices);
+                                // Get material resource handle
+                                MaterialResourceHandle materialResourceHandle;
 
-                                // Each material maps to one submesh, get that
-                                // submesh and set material
-                                ds_render::SubMesh subMesh =
-                                    mesh.GetSubMesh(iMaterial);
-                                subMesh.material = material;
+                                // If loaded material resource successfully
+                                if (m_materialResourceManager
+                                        .LoadMaterialResourceFromFile(
+                                            materialResourcePath.str(),
+                                            &materialResourceHandle) == true)
+                                {
+                                    // Get material handle
+                                    ds_render::MaterialHandle materialHandle;
+                                    if (m_materialManager
+                                            .GetMaterialForResourceHandle(
+                                                materialResourceHandle,
+                                                &materialHandle) == true)
+                                    {
+                                        // Each material maps to one submesh,
+                                        // get that submesh and set material
+                                        ds_render::SubMesh subMesh =
+                                            mesh.GetSubMesh(iMaterial);
+                                        subMesh.materialHandle = materialHandle;
 
-                                mesh.SetSubMesh(iMaterial, subMesh);
+                                        mesh.SetSubMesh(iMaterial, subMesh);
+                                    }
+                                }
                             }
 
                             Instance i = m_renderComponentManager
@@ -514,13 +740,6 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                                 heightMapPath.str());
                         terrainResource->SetHeightScale(heightScale);
 
-                        std::stringstream materialResourcePath;
-                        materialResourcePath << "../assets/" << materialName;
-
-                        ds_render::Material material =
-                            CreateMaterialFromMaterialResource(
-                                materialResourcePath.str(), m_sceneMatrices,
-                                m_objectMatrices);
                         // above function does this
                         // std::unique_ptr<MaterialResource> materialResource =
                         // m_factory.CreateResource<materialResource>(materialResourcePath.str());
@@ -632,8 +851,28 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 
                         ds_render::Mesh mesh = ds_render::Mesh(
                             vb, ib, ds_render::MeshResourceHandle());
-                        mesh.AddSubMesh(
-                            ds_render::SubMesh(0, indices.size(), material));
+
+                        // Create and load material
+                        std::stringstream materialResourcePath;
+                        materialResourcePath << "../assets/" << materialName;
+
+                        // Get handle to material resource created
+                        MaterialResourceHandle materialResourceHandle;
+                        if (m_materialResourceManager
+                                .LoadMaterialResourceFromFile(
+                                    materialResourcePath.str(),
+                                    &materialResourceHandle))
+                        {
+                            // Get material handle for material resource
+                            ds_render::MaterialHandle materialHandle;
+                            if (m_materialManager.GetMaterialForResourceHandle(
+                                    materialResourceHandle, &materialHandle) ==
+                                true)
+                            {
+                                mesh.AddSubMesh(ds_render::SubMesh(
+                                    0, indices.size(), materialHandle));
+                            }
+                        }
 
                         Instance i =
                             m_renderComponentManager.CreateComponentForEntity(
@@ -646,47 +885,62 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 
             break;
         }
-        case ds_msg::MessageType::MoveEntity:
+        case ds_msg::MessageType::SetLocalTranslation:
         {
-            ds_msg::MoveEntity entityMoveMsg;
-            (*messages) >> entityMoveMsg;
+            ds_msg::SetLocalTranslation setTranslationMsg;
+            (*messages) >> setTranslationMsg;
 
+            // Get component instance of entity to move
             Instance transform =
                 m_transformComponentManager.GetInstanceForEntity(
-                    entityMoveMsg.entity);
+                    setTranslationMsg.entity);
 
+            // If has transform component
             if (transform.IsValid())
             {
-                // Get current transform
-                const ds_math::Matrix4 &currentTransform =
-                    m_transformComponentManager.GetLocalTransform(transform);
-                // Translate it
-                ds_math::Matrix4 newTransform =
-                    currentTransform *
-                    ds_math::Matrix4::CreateTranslationMatrix(
-                        entityMoveMsg.deltaPosition);
-
-                // Set transform of entity
-                m_transformComponentManager.SetLocalTransform(transform,
-                                                              newTransform);
+                // Set translation of entity
+                m_transformComponentManager.SetLocalTranslation(
+                    transform, setTranslationMsg.localTranslation);
             }
 
             break;
         }
-        case ds_msg::MessageType::SetLocalTransform:
+        case ds_msg::MessageType::SetLocalOrientation:
         {
-            ds_msg::SetLocalTransform setLocalMsg;
-            (*messages) >> setLocalMsg;
+            ds_msg::SetLocalOrientation setOrientationMsg;
+            (*messages) >> setOrientationMsg;
 
+            // Get component instance of entity to rotate
             Instance transform =
                 m_transformComponentManager.GetInstanceForEntity(
-                    setLocalMsg.entity);
+                    setOrientationMsg.entity);
 
+            // If has transform component
             if (transform.IsValid())
             {
-                // Set transform of entity
-                m_transformComponentManager.SetLocalTransform(
-                    transform, setLocalMsg.localTransform);
+                // Set orientation of entity
+                m_transformComponentManager.SetLocalOrientation(
+                    transform, setOrientationMsg.localOrientation);
+            }
+
+            break;
+        }
+        case ds_msg::MessageType::SetLocalScale:
+        {
+            ds_msg::SetLocalScale setScaleMsg;
+            (*messages) >> setScaleMsg;
+
+            // Get component instance of entity to scale
+            Instance transform =
+                m_transformComponentManager.GetInstanceForEntity(
+                    setScaleMsg.entity);
+
+            // If has transform component
+            if (transform.IsValid())
+            {
+                // Set scale of entity
+                m_transformComponentManager.SetLocalScale(
+                    transform, setScaleMsg.localScale);
             }
 
             break;
@@ -755,29 +1009,57 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                                   << StringIntern::Instance().GetString(
                                          createButtonMsg.hoverMaterialPath);
 
-            // Create button component
-            Instance button = m_buttonComponentManager.CreateComponentForEntity(
-                createButtonMsg.entity);
-            m_buttonComponentManager.SetDefaultMaterial(
-                button, CreateMaterialFromMaterialResource(
-                            defaultMaterialPathFull.str(), m_sceneMatrices,
-                            m_objectMatrices));
-            m_buttonComponentManager.SetPressedMaterial(
-                button, CreateMaterialFromMaterialResource(
-                            pressedMaterialPathFull.str(), m_sceneMatrices,
-                            m_objectMatrices));
-            m_buttonComponentManager.SetHoverMaterial(
-                button, CreateMaterialFromMaterialResource(
-                            hoverMaterialPathFull.str(), m_sceneMatrices,
-                            m_objectMatrices));
-            m_buttonComponentManager.SetStartXCoordinate(
-                button, createButtonMsg.startX);
-            m_buttonComponentManager.SetStartYCoordinate(
-                button, createButtonMsg.startY);
-            m_buttonComponentManager.SetEndXCoordinate(button,
-                                                       createButtonMsg.endX);
-            m_buttonComponentManager.SetEndYCoordinate(button,
-                                                       createButtonMsg.endY);
+            // Create material resources for buttons
+            MaterialResourceHandle defaultMaterialResourceHandle,
+                pressedMaterialResourceHandle, hoverMaterialResourceHandle;
+            if (m_materialResourceManager.LoadMaterialResourceFromFile(
+                    defaultMaterialPathFull.str(),
+                    &defaultMaterialResourceHandle) &&
+                m_materialResourceManager.LoadMaterialResourceFromFile(
+                    pressedMaterialPathFull.str(),
+                    &hoverMaterialResourceHandle) &&
+                m_materialResourceManager.LoadMaterialResourceFromFile(
+                    hoverMaterialPathFull.str(),
+                    &hoverMaterialResourceHandle) == true)
+            {
+                // Create material from material resource
+                ds_render::MaterialHandle defaultMaterialHandle,
+                    pressedMaterialHandle, hoverMaterialHandle;
+                if (m_materialManager.GetMaterialForResourceHandle(
+                        defaultMaterialResourceHandle,
+                        &defaultMaterialHandle) &&
+                    m_materialManager.GetMaterialForResourceHandle(
+                        pressedMaterialResourceHandle,
+                        &pressedMaterialHandle) &&
+                    m_materialManager.GetMaterialForResourceHandle(
+                        hoverMaterialResourceHandle, &hoverMaterialHandle) ==
+                        true)
+                {
+                    // Create button component
+                    Instance button =
+                        m_buttonComponentManager.CreateComponentForEntity(
+                            createButtonMsg.entity);
+
+                    // Set material handles
+                    m_buttonComponentManager.SetDefaultMaterialHandle(
+                        button, defaultMaterialHandle);
+                    m_buttonComponentManager.SetPressedMaterialHandle(
+                        button, pressedMaterialHandle);
+                    m_buttonComponentManager.SetHoverMaterialHandle(
+                        button, hoverMaterialHandle);
+
+                    // Set button properties
+                    m_buttonComponentManager.SetStartXCoordinate(
+                        button, createButtonMsg.startX);
+                    m_buttonComponentManager.SetStartYCoordinate(
+                        button, createButtonMsg.startY);
+                    m_buttonComponentManager.SetEndXCoordinate(
+                        button, createButtonMsg.endX);
+                    m_buttonComponentManager.SetEndYCoordinate(
+                        button, createButtonMsg.endY);
+                }
+            }
+
 
             break;
         }
@@ -807,8 +1089,9 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                     ds_render::Mesh mesh =
                         m_renderComponentManager.GetMesh(render);
                     ds_render::SubMesh subMesh = mesh.GetSubMesh(0);
-                    subMesh.material =
-                        m_buttonComponentManager.GetDefaultMaterial(button);
+                    subMesh.materialHandle =
+                        m_buttonComponentManager.GetDefaultMaterialHandle(
+                            button);
                     mesh.SetSubMesh(0, subMesh);
                     m_renderComponentManager.SetMesh(render, mesh);
 
@@ -833,9 +1116,9 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                             ds_render::Mesh mesh =
                                 m_renderComponentManager.GetMesh(render);
                             ds_render::SubMesh subMesh = mesh.GetSubMesh(0);
-                            subMesh.material =
-                                m_buttonComponentManager.GetPressedMaterial(
-                                    button);
+                            subMesh.materialHandle =
+                                m_buttonComponentManager
+                                    .GetPressedMaterialHandle(button);
                             mesh.SetSubMesh(0, subMesh);
                             m_renderComponentManager.SetMesh(render, mesh);
                         }
@@ -846,8 +1129,8 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                             ds_render::Mesh mesh =
                                 m_renderComponentManager.GetMesh(render);
                             ds_render::SubMesh subMesh = mesh.GetSubMesh(0);
-                            subMesh.material =
-                                m_buttonComponentManager.GetHoverMaterial(
+                            subMesh.materialHandle =
+                                m_buttonComponentManager.GetHoverMaterialHandle(
                                     button);
                             mesh.SetSubMesh(0, subMesh);
                             m_renderComponentManager.SetMesh(render, mesh);
@@ -909,9 +1192,9 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                             ds_render::Mesh mesh =
                                 m_renderComponentManager.GetMesh(render);
                             ds_render::SubMesh subMesh = mesh.GetSubMesh(0);
-                            subMesh.material =
-                                m_buttonComponentManager.GetPressedMaterial(
-                                    button);
+                            subMesh.materialHandle =
+                                m_buttonComponentManager
+                                    .GetPressedMaterialHandle(button);
                             mesh.SetSubMesh(0, subMesh);
                             m_renderComponentManager.SetMesh(render, mesh);
 
@@ -932,8 +1215,8 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                             ds_render::Mesh mesh =
                                 m_renderComponentManager.GetMesh(render);
                             ds_render::SubMesh subMesh = mesh.GetSubMesh(0);
-                            subMesh.material =
-                                m_buttonComponentManager.GetHoverMaterial(
+                            subMesh.materialHandle =
+                                m_buttonComponentManager.GetHoverMaterialHandle(
                                     button);
                             mesh.SetSubMesh(0, subMesh);
                             m_renderComponentManager.SetMesh(render, mesh);
@@ -941,6 +1224,51 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                     }
                 }
             }
+            break;
+        }
+        case ds_msg::MessageType::DestroyEntity:
+        {
+            ds_msg::DestroyEntity destroyEntityMsg;
+            (*messages) >> destroyEntityMsg;
+
+            Entity e = destroyEntityMsg.entity;
+
+            // Remove entity from all component managers
+
+            // Render
+            // Get component instance for entity
+            Instance render = m_renderComponentManager.GetInstanceForEntity(e);
+
+            // If valid, remove it from component manager
+            if (render.IsValid())
+            {
+                m_renderComponentManager.RemoveInstance(render);
+            }
+
+            // Transform
+            Instance transform = m_transformComponentManager.GetInstanceForEntity(e);
+
+            if (transform.IsValid())
+            {
+                m_transformComponentManager.RemoveInstance(transform);
+            }
+
+            // Camera
+            Instance camera = m_cameraComponentManager.GetInstanceForEntity(e);
+
+            if (camera.IsValid())
+            {
+                m_cameraComponentManager.RemoveInstance(camera);
+            }
+
+            // Buttons 
+            Instance button = m_buttonComponentManager.GetInstanceForEntity(e);
+
+            if (button.IsValid())
+            {
+                m_buttonComponentManager.RemoveInstance(button);
+            }
+
             break;
         }
         default:
@@ -951,32 +1279,40 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 }
 
 ds_render::Texture Render::CreateTextureFromTextureResource(
-    const ds_render::SamplerType &samplerType,
-    const std::vector<std::string> &filePaths)
+    const std::string &textureResourceFilePath)
 {
     ds_render::Texture texture;
 
-    switch (samplerType)
+    // Create texture resource and get handle to it
+    TextureResourceHandle handle;
+    m_textureResourceManager.LoadTextureResourceFromFile(
+        textureResourceFilePath, &handle);
+    // Get the texture resource
+    const TextureResource *textureResource =
+        m_textureResourceManager.GetTextureResource(handle);
+
+    // Use it to make the appropriate texture
+    switch (textureResource->GetTextureType())
     {
-    case ds_render::SamplerType::TwoDimensional:
+    case ds_render::TextureType::TwoDimensional:
     {
-        // Texture from texture resource
-        std::unique_ptr<TextureResource> textureResource =
-            m_factory.CreateResource<TextureResource>(filePaths[0]);
+        assert(
+            textureResource->GetNumImages() == 1 &&
+            "Incorrect number of images for two-dimensional texture - need 1.");
 
         ds_render::ImageFormat format;
-        switch (textureResource->GetComponentFlag())
+        switch (textureResource->GetComponentFlag(0))
         {
-        case TextureResource::ComponentFlag::GREY:
+        case TextureResource::ComponentFlag::COMPONENT_FLAG_GREY:
             format = ds_render::ImageFormat::R;
             break;
-        case TextureResource::ComponentFlag::GREYALPHA:
+        case TextureResource::ComponentFlag::COMPONENT_FLAG_GREYALPHA:
             format = ds_render::ImageFormat::RG;
             break;
-        case TextureResource::ComponentFlag::RGB:
+        case TextureResource::ComponentFlag::COMPONENT_FLAG_RGB:
             format = ds_render::ImageFormat::RGB;
             break;
-        case TextureResource::ComponentFlag::RGBA:
+        case TextureResource::ComponentFlag::COMPONENT_FLAG_RGBA:
             format = ds_render::ImageFormat::RGBA;
             break;
         default:
@@ -987,42 +1323,35 @@ ds_render::Texture Render::CreateTextureFromTextureResource(
 
         // Create texture
         texture = ds_render::Texture(
-            ds_render::SamplerType::TwoDimensional,
+            handle, ds_render::TextureType::TwoDimensional,
             m_renderer->Create2DTexture(
                 format, ds_render::RenderDataType::UnsignedByte,
                 ds_render::InternalImageFormat::RGBA8, true,
-                textureResource->GetWidthInPixels(),
-                textureResource->GetHeightInPixels(),
-                textureResource->GetTextureContents()));
+                textureResource->GetWidthInPixels(0),
+                textureResource->GetHeightInPixels(0),
+                textureResource->GetImageData(0)));
 
         break;
     }
-    case ds_render::SamplerType::Cubemap:
+    case ds_render::TextureType::Cubemap:
     {
-        assert(filePaths.size() == 6 &&
-               "Incorrect number of cubemap images provided.");
-        // Get texture resources
-        std::vector<std::unique_ptr<TextureResource>> textureResources;
-        for (auto filePath : filePaths)
-        {
-            textureResources.push_back(
-                m_factory.CreateResource<TextureResource>(filePath));
-        }
+        assert(textureResource->GetNumImages() == 6 &&
+               "Incorrect number of cubemap images provided - need 6.");
 
         // Use format of first image for all images
         ds_render::ImageFormat format;
-        switch (textureResources[0]->GetComponentFlag())
+        switch (textureResource->GetComponentFlag(0))
         {
-        case TextureResource::ComponentFlag::GREY:
+        case TextureResource::ComponentFlag::COMPONENT_FLAG_GREY:
             format = ds_render::ImageFormat::R;
             break;
-        case TextureResource::ComponentFlag::GREYALPHA:
+        case TextureResource::ComponentFlag::COMPONENT_FLAG_GREYALPHA:
             format = ds_render::ImageFormat::RG;
             break;
-        case TextureResource::ComponentFlag::RGB:
+        case TextureResource::ComponentFlag::COMPONENT_FLAG_RGB:
             format = ds_render::ImageFormat::RGB;
             break;
-        case TextureResource::ComponentFlag::RGBA:
+        case TextureResource::ComponentFlag::COMPONENT_FLAG_RGBA:
             format = ds_render::ImageFormat::RGBA;
             break;
         default:
@@ -1033,21 +1362,20 @@ ds_render::Texture Render::CreateTextureFromTextureResource(
 
         // Create texture
         texture = ds_render::Texture(
-            ds_render::SamplerType::Cubemap,
+            handle, ds_render::TextureType::Cubemap,
             m_renderer->CreateCubemapTexture(
                 format, ds_render::RenderDataType::UnsignedByte,
                 ds_render::InternalImageFormat::RGBA8,
-                textureResources[0]->GetWidthInPixels(), // Use width of first
-                // resource for all resources
-                textureResources[0]->GetHeightInPixels(), // Use height of first
-                // resource for all resources
-                textureResources[0]->GetTextureContents(),
-                textureResources[1]->GetTextureContents(),
-                textureResources[2]->GetTextureContents(),
-                textureResources[3]->GetTextureContents(),
-                textureResources[4]->GetTextureContents(),
-                textureResources[5]->GetTextureContents()));
-
+                textureResource->GetWidthInPixels(0), // Use width of first
+                // image for all resources
+                textureResource->GetHeightInPixels(0), // Use height of first
+                // image for all resources
+                textureResource->GetImageData(0),
+                textureResource->GetImageData(1),
+                textureResource->GetImageData(2),
+                textureResource->GetImageData(3),
+                textureResource->GetImageData(4),
+                textureResource->GetImageData(5)));
         break;
     }
     default:
@@ -1055,6 +1383,116 @@ ds_render::Texture Render::CreateTextureFromTextureResource(
         assert(false && "Unhandled sampler type for texture.");
         break;
     }
+    }
+
+    return texture;
+}
+
+ds_render::Texture
+Render::CreateTextureFromTextureResource(TextureResourceHandle handle)
+{
+    ds_render::Texture texture;
+
+    // Get the texture resource
+    const TextureResource *textureResource =
+        m_textureResourceManager.GetTextureResource(handle);
+
+    if (textureResource != nullptr)
+    {
+        // Use it to make the appropriate texture
+        switch (textureResource->GetTextureType())
+        {
+        case ds_render::TextureType::TwoDimensional:
+        {
+            assert(textureResource->GetNumImages() == 1 &&
+                   "Incorrect number of images for two-dimensional texture - "
+                   "need 1.");
+
+            ds_render::ImageFormat format;
+            switch (textureResource->GetComponentFlag(0))
+            {
+            case TextureResource::ComponentFlag::COMPONENT_FLAG_GREY:
+                format = ds_render::ImageFormat::R;
+                break;
+            case TextureResource::ComponentFlag::COMPONENT_FLAG_GREYALPHA:
+                format = ds_render::ImageFormat::RG;
+                break;
+            case TextureResource::ComponentFlag::COMPONENT_FLAG_RGB:
+                format = ds_render::ImageFormat::RGB;
+                break;
+            case TextureResource::ComponentFlag::COMPONENT_FLAG_RGBA:
+                format = ds_render::ImageFormat::RGBA;
+                break;
+            default:
+                assert(false && "Unsupported image component flag.");
+                format = ds_render::ImageFormat::RGBA;
+                break;
+            }
+
+            // Create texture
+            texture = ds_render::Texture(
+                handle, ds_render::TextureType::TwoDimensional,
+                m_renderer->Create2DTexture(
+                    format, ds_render::RenderDataType::UnsignedByte,
+                    ds_render::InternalImageFormat::RGBA8, true,
+                    textureResource->GetWidthInPixels(0),
+                    textureResource->GetHeightInPixels(0),
+                    textureResource->GetImageData(0)));
+
+            break;
+        }
+        case ds_render::TextureType::Cubemap:
+        {
+            assert(textureResource->GetNumImages() == 6 &&
+                   "Incorrect number of cubemap images provided - need 6.");
+
+            // Use format of first image for all images
+            ds_render::ImageFormat format;
+            switch (textureResource->GetComponentFlag(0))
+            {
+            case TextureResource::ComponentFlag::COMPONENT_FLAG_GREY:
+                format = ds_render::ImageFormat::R;
+                break;
+            case TextureResource::ComponentFlag::COMPONENT_FLAG_GREYALPHA:
+                format = ds_render::ImageFormat::RG;
+                break;
+            case TextureResource::ComponentFlag::COMPONENT_FLAG_RGB:
+                format = ds_render::ImageFormat::RGB;
+                break;
+            case TextureResource::ComponentFlag::COMPONENT_FLAG_RGBA:
+                format = ds_render::ImageFormat::RGBA;
+                break;
+            default:
+                assert(false && "Unsupported image component flag.");
+                format = ds_render::ImageFormat::RGBA;
+                break;
+            }
+
+            // Create texture
+            texture = ds_render::Texture(
+                handle, ds_render::TextureType::Cubemap,
+                m_renderer->CreateCubemapTexture(
+                    format, ds_render::RenderDataType::UnsignedByte,
+                    ds_render::InternalImageFormat::RGBA8,
+                    textureResource->GetWidthInPixels(0), // Use width of first
+                    // image for all resources
+                    textureResource->GetHeightInPixels(
+                        0), // Use height of first
+                    // image for all resources
+                    textureResource->GetImageData(0),
+                    textureResource->GetImageData(1),
+                    textureResource->GetImageData(2),
+                    textureResource->GetImageData(3),
+                    textureResource->GetImageData(4),
+                    textureResource->GetImageData(5)));
+            break;
+        }
+        default:
+        {
+            assert(false && "Unhandled sampler type for texture.");
+            break;
+        }
+        }
     }
 
     return texture;
@@ -1108,7 +1546,7 @@ ds_render::Mesh Render::CreateSkyboxMesh()
                            ds_render::MeshResourceHandle());
 
     // Add submesh
-    mesh.AddSubMesh(ds_render::SubMesh(0, 6, ds_render::Material()));
+    mesh.AddSubMesh(ds_render::SubMesh(0, 6, ds_render::MaterialHandle()));
 
     return mesh;
 }
@@ -1260,9 +1698,10 @@ ds_render::Mesh Render::CreateMeshFromMeshResource(const std::string &filePath)
         for (unsigned int iSubMesh = 0; iSubMesh < meshResource->GetMeshCount();
              ++iSubMesh)
         {
-            mesh.AddSubMesh(ds_render::SubMesh(
-                meshResource->GetBaseIndex(iSubMesh),
-                meshResource->GetNumIndices(iSubMesh), ds_render::Material()));
+            mesh.AddSubMesh(
+                ds_render::SubMesh(meshResource->GetBaseIndex(iSubMesh),
+                                   meshResource->GetNumIndices(iSubMesh),
+                                   ds_render::MaterialHandle()));
         }
     }
     else
@@ -1316,14 +1755,19 @@ ds_render::Material Render::CreateMaterialFromMaterialResource(
         // Create texture from texture resource
         // const std::string &textureResourceFilePath =
         //     materialResource->GetTextureResourceFilePath(samplerName);
-        std::vector<std::string> textureResourceFilePaths =
-            materialResource->GetTextureSamplerFilePaths(samplerName);
+        std::string textureResourceFilePath =
+            materialResource->GetSamplerTextureResourceFilePath(samplerName);
 
-        material.AddTexture(
-            samplerName,
-            CreateTextureFromTextureResource(
-                materialResource->GetTextureSamplerType(samplerName),
-                textureResourceFilePaths));
+        TextureResourceHandle textureResourceHandle;
+        m_textureResourceManager.LoadTextureResourceFromFile(
+            textureResourceFilePath, &textureResourceHandle);
+
+        ds_render::TextureHandle textureHandle;
+        m_textureManager.GetTextureForResourceHandle(textureResourceHandle,
+                                                     &textureHandle);
+
+        // Change this to take texture handle
+        material.AddTexture(samplerName, textureHandle);
     }
 
     // Bind constant buffers to program
@@ -1331,6 +1775,76 @@ ds_render::Material Render::CreateMaterialFromMaterialResource(
                                    sceneMatrices);
     m_renderer->BindConstantBuffer(material.GetProgram(), "Object",
                                    objectMatrices);
+
+    return material;
+}
+
+ds_render::Material
+Render::CreateMaterialFromMaterialResource(MaterialResourceHandle handle)
+{
+    ds_render::Material material;
+
+    // Get the material resource
+    const MaterialResource *materialResource =
+        m_materialResourceManager.GetMaterialResource(handle);
+
+    if (materialResource != nullptr)
+    {
+        // Create shader program
+        std::unique_ptr<ShaderResource> shaderResource =
+            m_factory.CreateResource<ShaderResource>(
+                materialResource->GetShaderResourceFilePath());
+
+        // Load each shader
+        std::vector<ds_render::ShaderHandle> shaders;
+        std::vector<ds_render::ShaderType> shaderTypes =
+            shaderResource->GetShaderTypes();
+        for (auto shaderType : shaderTypes)
+        {
+            const std::string &shaderSource =
+                shaderResource->GetShaderSource(shaderType);
+
+            // Append shader to list
+            shaders.push_back(m_renderer->CreateShaderObject(
+                shaderType, shaderSource.size(), shaderSource.c_str()));
+        }
+        // Compile shaders into shader program
+        ds_render::ProgramHandle shaderProgram =
+            m_renderer->CreateProgram(shaders);
+
+        // Set shader program of material
+        material.SetProgram(shaderProgram);
+
+        // Create each texture and add to material
+        std::vector<std::string> textureSamplerNames =
+            materialResource->GetTextureSamplerNames();
+        for (auto samplerName : textureSamplerNames)
+        {
+            // Create texture from texture resource
+            // const std::string &textureResourceFilePath =
+            //     materialResource->GetTextureResourceFilePath(samplerName);
+            std::string textureResourceFilePath =
+                materialResource->GetSamplerTextureResourceFilePath(
+                    samplerName);
+
+            TextureResourceHandle textureResourceHandle;
+            m_textureResourceManager.LoadTextureResourceFromFile(
+                textureResourceFilePath, &textureResourceHandle);
+
+            ds_render::TextureHandle textureHandle;
+            m_textureManager.GetTextureForResourceHandle(textureResourceHandle,
+                                                         &textureHandle);
+
+            // Change this to take texture handle
+            material.AddTexture(samplerName, textureHandle);
+        }
+
+        // Bind constant buffers to program
+        m_renderer->BindConstantBuffer(material.GetProgram(), "Scene",
+                                       m_sceneMatrices);
+        m_renderer->BindConstantBuffer(material.GetProgram(), "Object",
+                                       m_objectMatrices);
+    }
 
     return material;
 }
@@ -1347,14 +1861,10 @@ void Render::RenderScene(float deltaTime)
         Instance cameraComponent =
             m_cameraComponentManager.GetInstanceForEntity(m_activeCameraEntity);
 
-        const ds_math::Matrix4 &translation =
+        const ds_math::Matrix4 &worldTransform =
             m_transformComponentManager.GetWorldTransform(cameraTransform);
-        const ds_math::Matrix4 &orientation =
-            ds_math::Matrix4::CreateFromQuaternion(
-                m_cameraComponentManager.GetOrientation(cameraComponent));
-        // Get transform matrix of camera, invert it to find view matrix
         const ds_math::Matrix4 &viewMatrix =
-            ds_math::Matrix4::Inverse(translation * orientation);
+            ds_math::Matrix4::Inverse(worldTransform);
 
         // Get projection matrix of camera
         const ds_math::Matrix4 &projectionMatrix =
@@ -1380,37 +1890,59 @@ void Render::RenderScene(float deltaTime)
             for (unsigned int iSubMesh = 0;
                  iSubMesh < m_skybox.GetMesh().GetNumSubMeshes(); ++iSubMesh)
             {
+                // Get material handle
+                ds_render::MaterialHandle materialHandle =
+                    m_skybox.GetMesh().GetSubMesh(iSubMesh).materialHandle;
+
                 // Get material
-                ds_render::Material material =
-                    m_skybox.GetMesh().GetSubMesh(iSubMesh).material;
+                const ds_render::Material *material =
+                    m_materialManager.GetMaterial(materialHandle);
 
-                // Set shader program
-                m_renderer->SetProgram(material.GetProgram());
-
-                // For each texture in material, bind it to shader
-                for (auto samplerTexture : material.GetTextures())
+                if (material != nullptr)
                 {
-                    m_renderer->BindTextureToSampler(
-                        material.GetProgram(), samplerTexture.first,
-                        samplerTexture.second.GetSamplerType(),
-                        samplerTexture.second.GetTextureHandle());
-                }
+                    // Set shader program
+                    m_renderer->SetProgram(material->GetProgram());
 
-                // Draw the mesh
-                m_renderer->DrawVertices(
-                    m_skybox.GetMesh().GetVertexBuffer(),
-                    ds_render::PrimitiveType::Triangles,
-                    m_skybox.GetMesh().GetSubMesh(iSubMesh).startingIndex,
-                    m_skybox.GetMesh().GetSubMesh(iSubMesh).numIndices);
+                    // For each texture in material, bind it to shader
+                    for (auto shaderTexture : material->GetTextures())
+                    {
+                        ds_render::Texture *texture =
+                            m_textureManager.GetTexture(
+                                shaderTexture.textureHandle);
 
-                // For each texture in material, unbind
-                for (auto samplerTexture : material.GetTextures())
-                {
-                    m_renderer->UnbindTextureFromSampler(
-                        samplerTexture.second.GetSamplerType(),
-                        samplerTexture.second.GetTextureHandle());
+                        if (texture != nullptr)
+                        {
+                            m_renderer->BindTextureToSampler(
+                                material->GetProgram(),
+                                shaderTexture.samplerName, texture->textureType,
+                                texture->renderTextureHandle);
+                        }
+                    }
+
+                    // Draw the mesh
+                    m_renderer->DrawVertices(
+                        m_skybox.GetMesh().GetVertexBuffer(),
+                        ds_render::PrimitiveType::Triangles,
+                        m_skybox.GetMesh().GetSubMesh(iSubMesh).startingIndex,
+                        m_skybox.GetMesh().GetSubMesh(iSubMesh).numIndices);
+
+                    // For each texture in material, unbind
+                    for (auto shaderTexture : material->GetTextures())
+                    {
+                        ds_render::Texture *texture =
+                            m_textureManager.GetTexture(
+                                shaderTexture.textureHandle);
+
+                        if (texture != nullptr)
+                        {
+                            m_renderer->UnbindTextureFromSampler(
+                                texture->textureType,
+                                texture->renderTextureHandle);
+                        }
+                    }
                 }
             }
+
             // Re-enable depth writing
             m_renderer->SetDepthWriting(true);
         }
@@ -1433,12 +1965,14 @@ void Render::RenderScene(float deltaTime)
             // If has transform instance
             if (transformInstance.IsValid())
             {
+                ds_math::Matrix4 worldTransform =
+                    m_transformComponentManager.GetWorldTransform(
+                        transformInstance);
                 // Update object constant buffer with world transform of this
                 // transform instance
-                m_objectBufferDescrip.InsertMemberData(
-                    "Object.modelMatrix", sizeof(ds_math::Matrix4),
-                    &m_transformComponentManager.GetWorldTransform(
-                        transformInstance));
+                m_objectBufferDescrip.InsertMemberData("Object.modelMatrix",
+                                                       sizeof(ds_math::Matrix4),
+                                                       &worldTransform[0][0]);
 
                 // First, get mesh resource that holds skeleton/animation data
                 MeshResource *meshResource =
@@ -1465,35 +1999,56 @@ void Render::RenderScene(float deltaTime)
             for (unsigned int iSubMesh = 0; iSubMesh < mesh.GetNumSubMeshes();
                  ++iSubMesh)
             {
+                // Get material handle
+                ds_render::MaterialHandle materialHandle =
+                    mesh.GetSubMesh(iSubMesh).materialHandle;
+
                 // Get material
-                ds_render::Material material =
-                    mesh.GetSubMesh(iSubMesh).material;
+                const ds_render::Material *material =
+                    m_materialManager.GetMaterial(materialHandle);
 
-                // Set shader program
-                m_renderer->SetProgram(material.GetProgram());
-
-                // For each texture in material, bind it to shader
-                for (auto samplerTexture : material.GetTextures())
+                if (material != nullptr)
                 {
-                    m_renderer->BindTextureToSampler(
-                        material.GetProgram(), samplerTexture.first,
-                        samplerTexture.second.GetSamplerType(),
-                        samplerTexture.second.GetTextureHandle());
-                }
+                    // Set shader program
+                    m_renderer->SetProgram(material->GetProgram());
 
-                // Draw the mesh
-                m_renderer->DrawVerticesIndexed(
-                    mesh.GetVertexBuffer(), mesh.GetIndexBuffer(),
-                    ds_render::PrimitiveType::Triangles,
-                    mesh.GetSubMesh(iSubMesh).startingIndex,
-                    mesh.GetSubMesh(iSubMesh).numIndices);
+                    // For each texture in material, bind it to shader
+                    for (auto shaderTexture : material->GetTextures())
+                    {
+                        ds_render::Texture *texture =
+                            m_textureManager.GetTexture(
+                                shaderTexture.textureHandle);
 
-                // For each texture in material, unbind
-                for (auto samplerTexture : material.GetTextures())
-                {
-                    m_renderer->UnbindTextureFromSampler(
-                        samplerTexture.second.GetSamplerType(),
-                        samplerTexture.second.GetTextureHandle());
+                        if (texture != nullptr)
+                        {
+                            m_renderer->BindTextureToSampler(
+                                material->GetProgram(),
+                                shaderTexture.samplerName, texture->textureType,
+                                texture->renderTextureHandle);
+                        }
+                    }
+
+                    // Draw the mesh
+                    m_renderer->DrawVerticesIndexed(
+                        mesh.GetVertexBuffer(), mesh.GetIndexBuffer(),
+                        ds_render::PrimitiveType::Triangles,
+                        mesh.GetSubMesh(iSubMesh).startingIndex,
+                        mesh.GetSubMesh(iSubMesh).numIndices);
+
+                    // For each texture in material, unbind
+                    for (auto shaderTexture : material->GetTextures())
+                    {
+                        ds_render::Texture *texture =
+                            m_textureManager.GetTexture(
+                                shaderTexture.textureHandle);
+
+                        if (texture != nullptr)
+                        {
+                            m_renderer->UnbindTextureFromSampler(
+                                texture->textureType,
+                                texture->renderTextureHandle);
+                        }
+                    }
                 }
             }
         }
