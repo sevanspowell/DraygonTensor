@@ -21,12 +21,17 @@ extern ds::ScriptBindingSet LoadRenderScriptBindings();
 namespace ds
 {
 // Static member definitions
-TextureResourceManager Render::m_textureResourceManager;
 std::unique_ptr<ds_render::IRenderer> Render::m_renderer;
+TextureResourceManager Render::m_textureResourceManager;
 Render::TextureManager Render::m_textureManager;
+MaterialResourceManager Render::m_materialResourceManager;
+Render::MaterialManager Render::m_materialManager;
+ResourceFactory Render::m_factory;
+ds_render::ConstantBufferHandle Render::m_sceneMatrices;
+ds_render::ConstantBufferHandle Render::m_objectMatrices;
 
 ds_render::Texture *
-Render::TextureManager::GetTexture(TextureHandle textureHandle)
+Render::TextureManager::GetTexture(ds_render::TextureHandle textureHandle)
 {
     ds_render::Texture *texture = nullptr;
 
@@ -45,7 +50,7 @@ Render::TextureManager::GetTexture(TextureHandle textureHandle)
 }
 
 const ds_render::Texture *
-Render::TextureManager::GetTexture(TextureHandle textureHandle) const
+Render::TextureManager::GetTexture(ds_render::TextureHandle textureHandle) const
 {
     const ds_render::Texture *texture = nullptr;
 
@@ -64,7 +69,8 @@ Render::TextureManager::GetTexture(TextureHandle textureHandle) const
 }
 
 bool Render::TextureManager::GetTextureForResourceHandle(
-    TextureResourceHandle textureResourceHandle, TextureHandle *textureHandle)
+    TextureResourceHandle textureResourceHandle,
+    ds_render::TextureHandle *textureHandle)
 {
     bool result = false;
 
@@ -118,6 +124,110 @@ bool Render::TextureManager::GetTextureForResourceHandle(
 
         // If successful, return texture resource handle to caller
         *textureHandle = handle;
+
+        result = true;
+    }
+
+    return result;
+}
+
+ds_render::Material *
+Render::MaterialManager::GetMaterial(ds_render::MaterialHandle materialHandle)
+{
+    ds_render::Material *material = nullptr;
+
+    // Get managed material resource
+    ManagedMaterial *managedMaterial = nullptr;
+    bool result =
+        m_handleManager.Get(materialHandle, (void **)&managedMaterial);
+
+    // If successful
+    if (result == true)
+    {
+        // Get material resource from managed material
+        material = &(managedMaterial->material);
+    }
+
+    return material;
+}
+
+const ds_render::Material *Render::MaterialManager::GetMaterial(
+    ds_render::MaterialHandle materialHandle) const
+{
+    const ds_render::Material *material = nullptr;
+
+    // Get managed material resource
+    ManagedMaterial *managedMaterial = nullptr;
+    bool result =
+        m_handleManager.Get(materialHandle, (void **)&managedMaterial);
+
+    // If successful
+    if (result == true)
+    {
+        // Get material resource from managed material
+        material = &(managedMaterial->material);
+    }
+
+    return material;
+}
+
+bool Render::MaterialManager::GetMaterialForResourceHandle(
+    MaterialResourceHandle materialResourceHandle,
+    ds_render::MaterialHandle *materialHandle)
+{
+    bool result = false;
+
+    // Attempt to find material for the given resource handle
+    std::vector<ManagedMaterial>::const_iterator it = std::find_if(
+        m_materials.begin(), m_materials.end(),
+        [&](const ManagedMaterial &managedMaterial)
+        {
+            return managedMaterial.material.GetMaterialResourceHandle() ==
+                   materialResourceHandle;
+        });
+
+    // If found, return it
+    if (it != m_materials.end())
+    {
+        *materialHandle = it->handle;
+
+        result = true;
+    }
+    // If not found, create material for material resource
+    else
+    {
+        // Create material from material resource handle
+        ds_render::Material material =
+            CreateMaterialFromMaterialResource(materialResourceHandle);
+
+        ManagedMaterial managedMaterial;
+        managedMaterial.material = material;
+
+        // Add material to list
+        m_materials.push_back(managedMaterial);
+        // Location in vector of material we just added
+        size_t loc = m_materials.size() - 1;
+
+        // Add material to handle manager
+        Handle handle =
+            m_handleManager.Add((void *)&m_materials[loc],
+                                (uint32_t)HandleTypes::MaterialHandleType);
+        // Store handle with material resource
+        m_materials[loc].handle = handle;
+
+        // Because pushing adding an element to the vector might cause the
+        // vector to realloc, update the address of all managed material
+        // resource objects
+        for (unsigned int i = 0; i < m_materials.size(); ++i)
+        {
+            // Get handle
+            ds::Handle handle = m_materials[i].handle;
+            // Update with new memory address
+            m_handleManager.Update(handle, &m_materials[i]);
+        }
+
+        // If successful, return material resource handle to caller
+        *materialHandle = handle;
 
         result = true;
     }
@@ -1527,15 +1637,12 @@ ds_render::Material Render::CreateMaterialFromMaterialResource(
         m_textureResourceManager.LoadTextureResourceFromFile(
             textureResourceFilePath, &textureResourceHandle);
 
-        TextureHandle textureHandle;
+        ds_render::TextureHandle textureHandle;
         m_textureManager.GetTextureForResourceHandle(textureResourceHandle,
                                                      &textureHandle);
 
-        const ds_render::Texture *texture =
-            m_textureManager.GetTexture(textureHandle);
-
         // Change this to take texture handle
-        material.AddTexture(samplerName, *texture);
+        material.AddTexture(samplerName, textureHandle);
     }
 
     // Bind constant buffers to program
@@ -1543,6 +1650,76 @@ ds_render::Material Render::CreateMaterialFromMaterialResource(
                                    sceneMatrices);
     m_renderer->BindConstantBuffer(material.GetProgram(), "Object",
                                    objectMatrices);
+
+    return material;
+}
+
+ds_render::Material Render::CreateMaterialFromMaterialResource(
+    MaterialResourceHandle handle)
+{
+    ds_render::Material material;
+
+    // Get the material resource
+    const MaterialResource *materialResource =
+        m_materialResourceManager.GetMaterialResource(handle);
+
+    if (materialResource != nullptr)
+    {
+        // Create shader program
+        std::unique_ptr<ShaderResource> shaderResource =
+            m_factory.CreateResource<ShaderResource>(
+                materialResource->GetShaderResourceFilePath());
+
+        // Load each shader
+        std::vector<ds_render::ShaderHandle> shaders;
+        std::vector<ds_render::ShaderType> shaderTypes =
+            shaderResource->GetShaderTypes();
+        for (auto shaderType : shaderTypes)
+        {
+            const std::string &shaderSource =
+                shaderResource->GetShaderSource(shaderType);
+
+            // Append shader to list
+            shaders.push_back(m_renderer->CreateShaderObject(
+                shaderType, shaderSource.size(), shaderSource.c_str()));
+        }
+        // Compile shaders into shader program
+        ds_render::ProgramHandle shaderProgram =
+            m_renderer->CreateProgram(shaders);
+
+        // Set shader program of material
+        material.SetProgram(shaderProgram);
+
+        // Create each texture and add to material
+        std::vector<std::string> textureSamplerNames =
+            materialResource->GetTextureSamplerNames();
+        for (auto samplerName : textureSamplerNames)
+        {
+            // Create texture from texture resource
+            // const std::string &textureResourceFilePath =
+            //     materialResource->GetTextureResourceFilePath(samplerName);
+            std::string textureResourceFilePath =
+                materialResource->GetSamplerTextureResourceFilePath(
+                    samplerName);
+
+            TextureResourceHandle textureResourceHandle;
+            m_textureResourceManager.LoadTextureResourceFromFile(
+                textureResourceFilePath, &textureResourceHandle);
+
+            ds_render::TextureHandle textureHandle;
+            m_textureManager.GetTextureForResourceHandle(textureResourceHandle,
+                                                         &textureHandle);
+
+            // Change this to take texture handle
+            material.AddTexture(samplerName, textureHandle);
+        }
+
+        // Bind constant buffers to program
+        m_renderer->BindConstantBuffer(material.GetProgram(), "Scene",
+                                       m_sceneMatrices);
+        m_renderer->BindConstantBuffer(material.GetProgram(), "Object",
+                                       m_objectMatrices);
+    }
 
     return material;
 }
@@ -1598,10 +1775,15 @@ void Render::RenderScene(float deltaTime)
                 // For each texture in material, bind it to shader
                 for (auto shaderTexture : material.GetTextures())
                 {
-                    m_renderer->BindTextureToSampler(
-                        material.GetProgram(), shaderTexture.samplerName,
-                        shaderTexture.texture.textureType,
-                        shaderTexture.texture.renderTextureHandle);
+                    ds_render::Texture *texture = m_textureManager.GetTexture(
+                        shaderTexture.textureHandle);
+
+                    if (texture != nullptr)
+                    {
+                        m_renderer->BindTextureToSampler(
+                            material.GetProgram(), shaderTexture.samplerName,
+                            texture->textureType, texture->renderTextureHandle);
+                    }
                 }
 
                 // Draw the mesh
@@ -1614,9 +1796,14 @@ void Render::RenderScene(float deltaTime)
                 // For each texture in material, unbind
                 for (auto shaderTexture : material.GetTextures())
                 {
-                    m_renderer->UnbindTextureFromSampler(
-                        shaderTexture.texture.textureType,
-                        shaderTexture.texture.renderTextureHandle);
+                    ds_render::Texture *texture = m_textureManager.GetTexture(
+                        shaderTexture.textureHandle);
+
+                    if (texture != nullptr)
+                    {
+                        m_renderer->UnbindTextureFromSampler(
+                            texture->textureType, texture->renderTextureHandle);
+                    }
                 }
             }
             // Re-enable depth writing
@@ -1685,10 +1872,15 @@ void Render::RenderScene(float deltaTime)
                 // For each texture in material, bind it to shader
                 for (auto shaderTexture : material.GetTextures())
                 {
-                    m_renderer->BindTextureToSampler(
-                        material.GetProgram(), shaderTexture.samplerName,
-                        shaderTexture.texture.textureType,
-                        shaderTexture.texture.renderTextureHandle);
+                    ds_render::Texture *texture = m_textureManager.GetTexture(
+                        shaderTexture.textureHandle);
+
+                    if (texture != nullptr)
+                    {
+                        m_renderer->BindTextureToSampler(
+                            material.GetProgram(), shaderTexture.samplerName,
+                            texture->textureType, texture->renderTextureHandle);
+                    }
                 }
 
                 // Draw the mesh
@@ -1701,9 +1893,14 @@ void Render::RenderScene(float deltaTime)
                 // For each texture in material, unbind
                 for (auto shaderTexture : material.GetTextures())
                 {
-                    m_renderer->UnbindTextureFromSampler(
-                        shaderTexture.texture.textureType,
-                        shaderTexture.texture.renderTextureHandle);
+                    ds_render::Texture *texture = m_textureManager.GetTexture(
+                        shaderTexture.textureHandle);
+
+                    if (texture != nullptr)
+                    {
+                        m_renderer->UnbindTextureFromSampler(
+                            texture->textureType, texture->renderTextureHandle);
+                    }
                 }
             }
         }

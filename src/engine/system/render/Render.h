@@ -5,6 +5,7 @@
 #include "engine/common/HandleManager.h"
 #include "engine/resource/MeshResource.h"
 #include "engine/resource/ResourceFactory.h"
+#include "engine/resource/MaterialResourceManager.h"
 #include "engine/resource/TextureResourceManager.h"
 #include "engine/system/ISystem.h"
 #include "engine/system/render/ButtonComponentManager.h"
@@ -21,9 +22,6 @@
 
 namespace ds
 {
-/** Handle to texture object */
-typedef Handle TextureHandle;
-
 /**
  * The render system is responsible for rendering the world, it contains all
  * render specific data, including the render component data for each entity.
@@ -49,7 +47,7 @@ public:
          * @return                 ds_render::Texture *, pointer to texture or
          * nullptr.
          */
-        ds_render::Texture *GetTexture(TextureHandle textureHandle);
+        ds_render::Texture *GetTexture(ds_render::TextureHandle textureHandle);
 
         /**
          * Get the texture associated with the given texture handle.
@@ -61,7 +59,8 @@ public:
          * @return                 const ds_render::Texture *, pointer to
          * texture or nullptr.
          */
-        const ds_render::Texture *GetTexture(TextureHandle textureHandle) const;
+        const ds_render::Texture *
+        GetTexture(ds_render::TextureHandle textureHandle) const;
 
         /**
          * Get the handle to the texture associated with the given texture
@@ -81,18 +80,88 @@ public:
          */
         bool
         GetTextureForResourceHandle(TextureResourceHandle textureResourceHandle,
-                                    TextureHandle *textureHandle);
+                                    ds_render::TextureHandle *textureHandle);
 
     private:
         /** Store handle with managed texture object for update purposes */
         struct ManagedTexture
         {
-            TextureHandle handle;
+            ds_render::TextureHandle handle;
             ds_render::Texture texture;
         };
 
         /** Texture storage */
         std::vector<ManagedTexture> m_textures;
+        /** Handle manager */
+        HandleManager m_handleManager;
+    };
+
+    /**
+     * The material manager class manages access to and creation of material
+     * objects.
+     */
+    class MaterialManager
+    {
+    public:
+        /**
+         * Get the material associated with the given material handle.
+         *
+         * If no material associated with given handle, will return FALSE and
+         * memory at the address given will be set to nullptr.
+         *
+         * @param   materialHandle  MaterialHandle, material handle to get
+         * material
+         * associated with.
+         * @return                  ds_render::Material *, pointer to material
+         * or nullptr.
+         */
+        ds_render::Material *
+        GetMaterial(ds_render::MaterialHandle materialHandle);
+
+        /**
+         * Get the material associated with the given material handle.
+         *
+         * If no material associated with given handle, will return nullptr.
+         *
+         * @param   materialHandle  MaterialHandle, material handle to get
+         * material
+         * associated with.
+         * @return                 const ds_render::Material *, pointer to
+         * material or nullptr.
+         */
+        const ds_render::Material *
+        GetMaterial(ds_render::MaterialHandle materialHandle) const;
+
+        /**
+         * Get the handle to the material associated with the given material
+         * resource handle, if no material is associated with that material
+         * resource handle, one will be created and the caller will be given a
+         * handle to it.
+         *
+         * If the result is TRUE, the materialHandle pointer is updated with the
+         * material handle, otherwise it is not touched.
+         *
+         * @param   materialResourceHandle  MaterialResourceHandle, handle to
+         * material resource to get material for.
+         * @param   materialHandle          MaterialHandle *, address to put
+         * material handle if found.
+         * @return                         bool, TRUE if material was created or
+         * found for material resource handle, FALSE otherwise.
+         */
+        bool GetMaterialForResourceHandle(
+            MaterialResourceHandle materialResourceHandle,
+            ds_render::MaterialHandle *materialHandle);
+
+    private:
+        /** Store handle with managed material object for update purposes */
+        struct ManagedMaterial
+        {
+            ds_render::MaterialHandle handle;
+            ds_render::Material material;
+        };
+
+        /** Material storage */
+        std::vector<ManagedMaterial> m_materials;
         /** Handle manager */
         HandleManager m_handleManager;
     };
@@ -233,6 +302,16 @@ private:
         ds_render::ConstantBufferHandle objectMatrices);
 
     /**
+     * Create a Material object from a material resource handle.
+     *
+     * @param   handle  MaterialResourceHandle, material handle to create Material
+     * from.
+     * @return          ds_render::Material, material object created.
+     */
+    static ds_render::Material
+    CreateMaterialFromMaterialResource(MaterialResourceHandle handle);
+
+    /**
      * Create a render component for the given entity using the given component
      * data string.
      *
@@ -285,8 +364,6 @@ private:
     /** Messages generated and received by this system */
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
 
-    ResourceFactory m_factory;
-
     /** Renderer */
     static std::unique_ptr<ds_render::IRenderer> m_renderer;
 
@@ -301,8 +378,8 @@ private:
     ds_render::Material m_material;
     ds_render::ProgramHandle m_program;
 
-    ds_render::ConstantBufferHandle m_sceneMatrices;
-    ds_render::ConstantBufferHandle m_objectMatrices;
+    static ds_render::ConstantBufferHandle m_sceneMatrices;
+    static ds_render::ConstantBufferHandle m_objectMatrices;
     ds_render::ConstantBufferDescription m_sceneBufferDescrip;
     ds_render::ConstantBufferDescription m_objectBufferDescrip;
 
@@ -328,5 +405,12 @@ private:
     static TextureResourceManager m_textureResourceManager;
     /** Texture manager */
     static TextureManager m_textureManager;
+    /** Material resource Manager */
+    static MaterialResourceManager m_materialResourceManager;
+    /** Material manager */
+    static MaterialManager m_materialManager;
+
+    /** Resource factory */
+    static ResourceFactory m_factory;
 };
 }

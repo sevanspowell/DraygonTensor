@@ -8,51 +8,71 @@ bool TextureResourceManager::LoadTextureResourceFromFile(
 {
     bool result = false;
 
-    // Load texture resource from file
-    std::unique_ptr<IResource> resource =
-        TextureResource::CreateFromFile(filePath);
-
-    // If loaded successfully
-    if (resource != nullptr)
-    {
-        std::unique_ptr<TextureResource> textureResource =
-            std::unique_ptr<TextureResource>(
-                static_cast<TextureResource *>(resource.release()));
-
-        // If cast successfully
-        if (textureResource != nullptr)
+    // Have we already loaded a texture from that filepath?
+    std::vector<ManagedTextureResource>::const_iterator it = std::find_if(
+        m_textureResources.begin(), m_textureResources.end(),
+        [&](const ManagedTextureResource &managedTexture)
         {
-            // Begin construction of managed texture resource
-            ManagedTextureResource managedTextureResource;
-            managedTextureResource.textureResource =
-                *(textureResource.release());
+            return managedTexture.textureResource.GetResourceFilePath() ==
+                   filePath;
+        });
 
-            // Add texture resource to list
-            m_textureResources.push_back(managedTextureResource);
-            // Location in vector of texture resource we just added
-            size_t loc = m_textureResources.size() - 1;
+    // If so, return it
+    if (it != m_textureResources.end())
+    {
+        *textureResourceHandle = it->handle;
+        result = true;
+    }
+    // If not, load it
+    else
+    {
+        // Load texture resource from file
+        std::unique_ptr<IResource> resource =
+            TextureResource::CreateFromFile(filePath);
 
-            // Add texture resource to handle manager
-            Handle handle = m_handleManager.Add(
-                (void *)&m_textureResources[loc],
-                (uint32_t)HandleTypes::TextureResourceHandleType);
-            // Store handle with texture resource
-            m_textureResources[loc].handle = handle;
+        // If loaded successfully
+        if (resource != nullptr)
+        {
+            std::unique_ptr<TextureResource> textureResource =
+                std::unique_ptr<TextureResource>(
+                    static_cast<TextureResource *>(resource.release()));
 
-            // Because pushing adding an element to the vector might cause the
-            // vector to realloc, update the address of all managed texture
-            // resource objects
-            for (unsigned int i = 0; i < m_textureResources.size(); ++i)
+            // If cast successfully
+            if (textureResource != nullptr)
             {
-                // Get handle
-                ds::Handle handle = m_textureResources[i].handle;
-                // Update with new memory address
-                m_handleManager.Update(handle, &m_textureResources[i]);
-            }
+                // Begin construction of managed texture resource
+                ManagedTextureResource managedTextureResource;
+                managedTextureResource.textureResource =
+                    *(textureResource.release());
 
-            result = true;
-            // If successful, return texture resource handle to caller
-            *textureResourceHandle = handle;
+                // Add texture resource to list
+                m_textureResources.push_back(managedTextureResource);
+                // Location in vector of texture resource we just added
+                size_t loc = m_textureResources.size() - 1;
+
+                // Add texture resource to handle manager
+                Handle handle = m_handleManager.Add(
+                    (void *)&m_textureResources[loc],
+                    (uint32_t)HandleTypes::TextureResourceHandleType);
+                // Store handle with texture resource
+                m_textureResources[loc].handle = handle;
+
+                // Because pushing adding an element to the vector might cause
+                // the
+                // vector to realloc, update the address of all managed texture
+                // resource objects
+                for (unsigned int i = 0; i < m_textureResources.size(); ++i)
+                {
+                    // Get handle
+                    ds::Handle handle = m_textureResources[i].handle;
+                    // Update with new memory address
+                    m_handleManager.Update(handle, &m_textureResources[i]);
+                }
+
+                result = true;
+                // If successful, return texture resource handle to caller
+                *textureResourceHandle = handle;
+            }
         }
     }
 

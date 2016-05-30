@@ -21,6 +21,7 @@ set(ENGINE_INCLUDE_FILES
   message/MessageHelper.h
   resource/IResource.h
   resource/MaterialResource.h
+  resource/MaterialResourceManager.h
   resource/MeshResource.h
   resource/ResourceFactory.h
   resource/ResourceFactory.hpp
@@ -83,6 +84,7 @@ set(ENGINE_SRC_FILES
   message/MessageFactory.cpp
   message/MessageHelper.cpp
   resource/MaterialResource.cpp
+  resource/MaterialResourceManager.cpp
   resource/MeshResource.cpp
   resource/ShaderResource.cpp
   resource/TerrainResource.cpp
