@@ -342,10 +342,12 @@ void Physics::Update(float deltaTime)
         const btCollisionObject *objB = contactManifold->getBody1();
 
         // Get component instance for collision objects
-        Instance physA = m_physicsComponentManager.GetInstanceForCollisionObject(
-            (btRigidBody *)objA);
-        Instance physB = m_physicsComponentManager.GetInstanceForCollisionObject(
-            (btRigidBody *)objB);
+        Instance physA =
+            m_physicsComponentManager.GetInstanceForCollisionObject(
+                (btRigidBody *)objA);
+        Instance physB =
+            m_physicsComponentManager.GetInstanceForCollisionObject(
+                (btRigidBody *)objB);
         // Find entity for component instance
         Entity a = m_physicsComponentManager.GetEntityForInstance(physA);
         Entity b = m_physicsComponentManager.GetEntityForInstance(physB);
@@ -637,35 +639,15 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                             // If shape is not a ghost shape ('ghost' prefix)
                             if (dataShape.find("ghost") != 0)
                             {
-                                // Create rigid body
-                                btRigidBody *rigidBody =
-                                    CreateRigidBody(origin, shape, scale, mass);
-
-                                if (rigidBody != nullptr)
-                                {
-                                    // Add to physics component
-                                    m_physicsComponentManager
-                                        .SetCollisionObject(phys, rigidBody);
-
-                                    // Add rigidbody to world
-                                    m_dynamicsWorld->addRigidBody(rigidBody);
-                                }
+                                // Create rigid body and add to component
+                                // managers
+                                CreateRigidBody(phys, origin, shape, scale,
+                                                mass);
                             }
                             else
                             {
                                 // Create ghost object
-                                btRigidBody *ghostObject =
-                                    CreateGhostObject(origin, shape, scale);
-
-                                if (ghostObject != nullptr)
-                                {
-                                    // Add to physics component
-                                    m_physicsComponentManager
-                                        .SetCollisionObject(phys, ghostObject);
-
-                                    // Add ghost object to world
-                                    m_dynamicsWorld->addRigidBody(ghostObject);
-                                }
+                                CreateGhostObject(phys, origin, shape, scale);
                             }
                         }
                         else
@@ -723,34 +705,23 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                         if (terrainResource != nullptr)
                         {
                             // Create rigid body
-                            btRigidBody *rigidBody = CreateHeightMapRigidBody(
-                                origin, terrainResource, heightScale);
+                            CreateHeightMapRigidBody(
+                                phys, origin, terrainResource, heightScale);
 
-                            if (rigidBody != nullptr)
-                            {
-                                // Add rigid body to physics component
-                                m_physicsComponentManager.SetCollisionObject(
-                                    phys, rigidBody);
+                            // If successful, store terrain resource, get
+                            // handle to it
+                            ds_render::TerrainResourceHandle
+                                terrainResourceHandle =
+                                    (ds_render::TerrainResourceHandle)
+                                        m_handleManager.Add(
+                                            (void *)terrainResource, 0);
 
-                                // Add rigid body to world
-                                m_dynamicsWorld->addRigidBody(rigidBody);
-
-                                // If successful, store terrain resource, get
-                                // handle to it
-                                ds_render::TerrainResourceHandle
-                                    terrainResourceHandle =
-                                        (ds_render::TerrainResourceHandle)
-                                            m_handleManager.Add(
-                                                (void *)terrainResource, 0);
-
-                                // Associate terrain resource with entity
-                                Instance terrain =
-                                    m_terrainComponentManager
-                                        .CreateComponentForEntity(entity);
+                            // Associate terrain resource with entity
+                            Instance terrain =
                                 m_terrainComponentManager
-                                    .SetTerrainResourceHandle(
-                                        terrain, terrainResourceHandle);
-                            }
+                                    .CreateComponentForEntity(entity);
+                            m_terrainComponentManager.SetTerrainResourceHandle(
+                                terrain, terrainResourceHandle);
                         }
                         else
                         {
@@ -823,6 +794,66 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
 
             break;
         }
+        case ds_msg::MessageType::DestroyEntity:
+        {
+            std::cout << "Received destroy entity message" << std::endl;
+
+            ds_msg::DestroyEntity destroyEntityMsg;
+            (*messages) >> destroyEntityMsg;
+
+            Entity e = destroyEntityMsg.entity;
+
+            // Remove entity from all component managers
+
+            // Physics
+            // Get component instance for entity
+            Instance physics =
+                m_physicsComponentManager.GetInstanceForEntity(e);
+
+            // If valid, remove it from physics system
+            if (physics.IsValid())
+            {
+                // Remove collision object
+                btCollisionObject *obj =
+                    m_physicsComponentManager.GetCollisionObject(physics);
+                btRigidBody *body = btRigidBody::upcast(obj);
+                if (body && body->getMotionState())
+                {
+                    delete body->getMotionState();
+                }
+
+                m_dynamicsWorld->removeCollisionObject(obj);
+
+                // Remove collision shape
+                btCollisionShape *shape =
+                    m_physicsComponentManager.GetCollisionShape(physics);
+                m_collisionShapes.remove(shape);
+                delete shape;
+
+                // Remove from component manager
+                m_physicsComponentManager.RemoveInstance(physics);
+            }
+
+            // Transform
+            Instance transform =
+                m_transformComponentManager.GetInstanceForEntity(e);
+
+            if (transform.IsValid())
+            {
+                m_transformComponentManager.RemoveInstance(transform);
+            }
+
+            // Terrain
+            Instance terrain =
+                m_terrainComponentManager.GetInstanceForEntity(e);
+
+            if (terrain.IsValid())
+            {
+                m_terrainComponentManager.RemoveInstance(terrain);
+            }
+
+            break;
+        }
         default:
             messages->Extract(header.size);
             break;
@@ -830,10 +861,11 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
     }
 }
 
-btRigidBody *Physics::CreateRigidBody(const ds_math::Vector3 &origin,
-                                      StringIntern::StringId shape,
-                                      const ds_math::Vector3 &scale,
-                                      float mass)
+void Physics::CreateRigidBody(Instance phys,
+                              const ds_math::Vector3 &origin,
+                              StringIntern::StringId shape,
+                              const ds_math::Vector3 &scale,
+                              float mass)
 {
     btRigidBody *rigidBody = nullptr;
 
@@ -879,6 +911,15 @@ btRigidBody *Physics::CreateRigidBody(const ds_math::Vector3 &origin,
             bodyMass, bodyMotionState, colShape, localInertia);
 
         rigidBody = new btRigidBody(rbInfo);
+
+        // Add to physics component
+        m_physicsComponentManager.SetCollisionObject(phys, rigidBody);
+
+        // Add collision shape to physics component
+        m_physicsComponentManager.SetCollisionShape(phys, colShape);
+
+        // Add rigidbody to world
+        m_dynamicsWorld->addRigidBody(rigidBody);
     }
     else
     {
@@ -886,13 +927,12 @@ btRigidBody *Physics::CreateRigidBody(const ds_math::Vector3 &origin,
                      "shape type: "
                   << colShapeType << std::endl;
     }
-
-    return rigidBody;
 }
 
-btRigidBody *Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
-                                               TerrainResource *terrainResource,
-                                               float heightScale)
+void Physics::CreateHeightMapRigidBody(Instance phys,
+                                       const ds_math::Vector3 &origin,
+                                       TerrainResource *terrainResource,
+                                       float heightScale)
 {
     btRigidBody *rigidBody = nullptr;
 
@@ -941,62 +981,24 @@ btRigidBody *Physics::CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
                 bodyMass, bodyMotionState, colShape, localInertia);
 
             rigidBody = new btRigidBody(rbInfo);
+
+            // Add rigid body to physics component
+            m_physicsComponentManager.SetCollisionObject(phys, rigidBody);
+
+            // Add collision shape to physics component
+            m_physicsComponentManager.SetCollisionShape(phys, colShape);
+
+            // Add rigid body to world
+            m_dynamicsWorld->addRigidBody(rigidBody);
         }
     }
-
-    return rigidBody;
 }
 
-btRigidBody *Physics::CreateGhostObject(const ds_math::Vector3 &origin,
-                                        StringIntern::StringId shape,
-                                        const ds_math::Vector3 &scale)
+void Physics::CreateGhostObject(Instance phys,
+                                const ds_math::Vector3 &origin,
+                                StringIntern::StringId shape,
+                                const ds_math::Vector3 &scale)
 {
-    // btPairCachingGhostObject *ghostObject = new btPairCachingGhostObject();
-
-    // // Create transform
-    // btTransform objectTransform;
-    // objectTransform.setIdentity();
-    // objectTransform.setOrigin(btVector3(origin.x, origin.y, origin.z));
-
-    // // Create collision shape
-    // btCollisionShape *colShape = nullptr;
-    // std::string colShapeType = StringIntern::Instance().GetString(shape);
-    // if (colShapeType == "ghostBox")
-    // {
-    //     colShape = new btBoxShape(
-    //         btVector3(btScalar(scale.x), btScalar(scale.y),
-    //         btScalar(scale.z)));
-    //     // TODO Do we need this?
-    //     // m_collisionShapes.push_back(colShape);
-    // }
-    // else if (colShapeType == "ghostSphere")
-    // {
-    //     colShape = new btSphereShape(btScalar(scale.x));
-    //     // TODO Do we need this?
-    //     // m_collisionShapes.push_back(colShape);
-    // }
-
-    // if (colShape != nullptr)
-    // {
-    //     ghostObject->setCollisionShape(colShape);
-    //     ghostObject->setWorldTransform(objectTransform);
-    //     ghostObject->setCollisionFlags(
-    //         ghostObject->getCollisionFlags() |
-    //         btCollisionObject::CF_NO_CONTACT_RESPONSE);
-    //     m_dynamicsWorld->addCollisionObject(ghostObject);
-    // }
-    // // If fail
-    // else
-    // {
-    //     // Clean up memory
-    //     delete ghostObject;
-    //     ghostObject = nullptr;
-
-    //     std::cerr << "Physics::CreateRigidBody: Unhandled collision "
-    //                  "shape type: "
-    //               << colShapeType << std::endl;
-    // }
-
     // return ghostObject;
     btRigidBody *rigidBody = nullptr;
 
@@ -1046,6 +1048,15 @@ btRigidBody *Physics::CreateGhostObject(const ds_math::Vector3 &origin,
         // Make ghost
         rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() |
                                      btRigidBody::CF_NO_CONTACT_RESPONSE);
+
+        // Add collision object to physics component
+        m_physicsComponentManager.SetCollisionObject(phys, rigidBody);
+
+        // Add collision shape to physics component
+        m_physicsComponentManager.SetCollisionShape(phys, colShape);
+
+        // Add ghost object to world
+        m_dynamicsWorld->addRigidBody(rigidBody);
     }
     else
     {
@@ -1053,7 +1064,5 @@ btRigidBody *Physics::CreateGhostObject(const ds_math::Vector3 &origin,
                      "shape type: "
                   << colShapeType << std::endl;
     }
-
-    return rigidBody;
 }
 }

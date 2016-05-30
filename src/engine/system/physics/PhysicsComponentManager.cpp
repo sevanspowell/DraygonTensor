@@ -6,22 +6,41 @@ namespace ds
 {
 btCollisionObject *PhysicsComponentManager::GetCollisionObject(Instance i) const
 {
-    assert(
-        i.index >= 0 && i.index < GetNumInstances() &&
-        "PhysicsComponentManager::GetCollisionObject: tried to get invalid instance");
+    assert(i.index >= 0 && i.index < GetNumInstances() &&
+           "PhysicsComponentManager::GetCollisionObject: tried to get invalid "
+           "instance");
 
     return m_data.component[i.index].collisionObject;
 }
 
-void PhysicsComponentManager::SetCollisionObject(Instance i, btCollisionObject *collisionObject)
+void PhysicsComponentManager::SetCollisionObject(
+    Instance i, btCollisionObject *collisionObject)
 {
-    assert(
-        i.index >= 0 && i.index < GetNumInstances() &&
-        "PhysicsComponentManager::SetCollisionObject: tried to set invalid instance");
+    assert(i.index >= 0 && i.index < GetNumInstances() &&
+           "PhysicsComponentManager::SetCollisionObject: tried to set invalid "
+           "instance");
 
     m_data.component[i.index].collisionObject = collisionObject;
 }
 
+btCollisionShape *PhysicsComponentManager::GetCollisionShape(Instance i) const
+{
+    assert(i.index >= 0 && i.index < GetNumInstances() &&
+           "PhysicsComponentManager::GetCollisionShape: tried to get invalid "
+           "instance");
+
+    return m_data.component[i.index].collisionShape;
+}
+
+void PhysicsComponentManager::SetCollisionShape(
+    Instance i, btCollisionShape *collisionShape)
+{
+    assert(i.index >= 0 && i.index < GetNumInstances() &&
+           "PhysicsComponentManager::SetCollisionShape: tried to set invalid "
+           "instance");
+
+    m_data.component[i.index].collisionShape = collisionShape;
+}
 
 StringIntern::StringId PhysicsComponentManager::GetShape(Instance i) const
 {

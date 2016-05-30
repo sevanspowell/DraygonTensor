@@ -448,6 +448,17 @@ Entity Script::CreateGUIButton(float startX,
     return createButtonMsg.entity;
 }
 
+void Script::DestroyEntity(Entity entity)
+{
+    // Send destroy entity message
+    ds_msg::DestroyEntity destroyEntityMsg;
+    destroyEntityMsg.entity = entity;
+
+    ds_msg::AppendMessage(&m_messagesGenerated,
+                          ds_msg::MessageType::DestroyEntity,
+                          sizeof(ds_msg::DestroyEntity), &destroyEntityMsg);
+}
+
 void Script::ProcessEvents(ds_msg::MessageStream *messages)
 {
     while (messages->AvailableBytes() != 0)
@@ -575,6 +586,14 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
             m_toScriptMessages << collisionMsg;
 
             break;
+        }
+        case ds_msg::MessageType::DestroyEntity:
+        {
+            ds_msg::DestroyEntity destroyEntityMsg;
+            (*messages) >> destroyEntityMsg;
+
+            // Remove entity from entity manager
+            m_entityManager.Destroy(destroyEntityMsg.entity);
         }
         default:
             messages->Extract(header.size);

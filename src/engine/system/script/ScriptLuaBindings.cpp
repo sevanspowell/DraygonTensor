@@ -1092,6 +1092,50 @@ static int l_GetWorldOrientation(lua_State *L)
     return 1;
 }
 
+static int l_DestroyEntity(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expected = 1;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push script system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our script system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
+
+        if (entity != NULL)
+        {
+            // Send destroy entity message
+            scriptPtr->DestroyEntity(*entity);
+        }
+    }
+
+    // Entity argument
+    assert(lua_gettop(L) == 1);
+
+    return 0;
+}
+
 ds::ScriptBindingSet LoadScriptBindings()
 {
     ds::ScriptBindingSet scriptBindings;
@@ -1114,6 +1158,7 @@ ds::ScriptBindingSet LoadScriptBindings()
     scriptBindings.AddFunction("get_local_orientation", l_GetLocalOrientation);
     scriptBindings.AddFunction("set_local_orientation", l_SetLocalOrientation);
     scriptBindings.AddFunction("get_world_orientation", l_GetWorldOrientation);
+    scriptBindings.AddFunction("destroy_entity", l_DestroyEntity);
 
     return scriptBindings;
 }

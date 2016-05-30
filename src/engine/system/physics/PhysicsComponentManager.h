@@ -33,6 +33,23 @@ public:
     void SetCollisionObject(Instance i, btCollisionObject *collisionObject);
 
     /**
+     * Get the collision shape of the given component instance.
+     *
+     * @param   i  Instance, component instance to get rigid body of.
+     * @return     btCollisionShape *, collision shape.
+     */
+    btCollisionShape *GetCollisionShape(Instance i) const;
+
+    /**
+     * Set the collision shape of the given component instance.
+     *
+     * @param  i               Instance, component instance to set collision
+     * shape of.
+     * @param  collisionShape  btCollisionShape *, collision shape to set.
+     */
+    void SetCollisionShape(Instance i, btCollisionShape *collisionShape);
+
+    /**
      * Get the collision shape type of the given component instance.
      *
      * @param   i  Instance, component instance to get collision shape type of.

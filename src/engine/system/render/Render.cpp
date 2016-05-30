@@ -1224,6 +1224,51 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
             }
             break;
         }
+        case ds_msg::MessageType::DestroyEntity:
+        {
+            ds_msg::DestroyEntity destroyEntityMsg;
+            (*messages) >> destroyEntityMsg;
+
+            Entity e = destroyEntityMsg.entity;
+
+            // Remove entity from all component managers
+
+            // Render
+            // Get component instance for entity
+            Instance render = m_renderComponentManager.GetInstanceForEntity(e);
+
+            // If valid, remove it from component manager
+            if (render.IsValid())
+            {
+                m_renderComponentManager.RemoveInstance(render);
+            }
+
+            // Transform
+            Instance transform = m_transformComponentManager.GetInstanceForEntity(e);
+
+            if (transform.IsValid())
+            {
+                m_transformComponentManager.RemoveInstance(transform);
+            }
+
+            // Camera
+            Instance camera = m_cameraComponentManager.GetInstanceForEntity(e);
+
+            if (camera.IsValid())
+            {
+                m_cameraComponentManager.RemoveInstance(camera);
+            }
+
+            // Buttons 
+            Instance button = m_buttonComponentManager.GetInstanceForEntity(e);
+
+            if (button.IsValid())
+            {
+                m_buttonComponentManager.RemoveInstance(button);
+            }
+
+            break;
+        }
         default:
             messages->Extract(header.size);
             break;

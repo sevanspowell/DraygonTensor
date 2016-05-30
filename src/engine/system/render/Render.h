@@ -373,6 +373,8 @@ private:
     TransformComponentManager m_transformComponentManager;
     /** Camera component manager */
     ds_render::CameraComponentManager m_cameraComponentManager;
+    /** GUI-specific data */
+    ds_render::ButtonComponentManager m_buttonComponentManager;
 
     ds_render::Mesh m_mesh;
     ds_render::Material m_material;
@@ -397,9 +399,6 @@ private:
     /** Skybox */
     ds_render::Skybox m_skybox;
     bool m_hasSkybox;
-
-    /** GUI-specific data */
-    ds_render::ButtonComponentManager m_buttonComponentManager;
 
     /** Texture resource manager */
     static TextureResourceManager m_textureResourceManager;

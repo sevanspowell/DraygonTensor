@@ -68,51 +68,53 @@ public:
                            const ds_math::Vector3 &rayEnd);
 
 private:
+    /**
+     * Process messages in the given message stream.
+     *
+     * @param  ds_msg::MessageStream *, messages to process.
+     */
     void ProcessEvents(ds_msg::MessageStream *messages);
-    ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
 
     /**
-     * Create a Bullet rigid body from the given parameters.
+     * Create a Bullet rigid body from the given parameters and add it to the
+     * Physics system.
      *
-     * btRigidBody should be freed by user.
-     *
+     * @param   phys    Instance, physics instance to add rigid body to.
      * @param   origin  const ds_math::Vector3 &, origin of rigid body.
      * @param   shape   StringIntern::StringId, interned string that will give
      * string representing collision shape of rigidbody.
      * @param   scale   const ds_math::Vector3 &, scale of rigid body.
      * @param   mass    float, mass of the rigid body. 0 for a static rigid
      * body.
-     * @return          btRigidBody *, pointer to rigid body created or nullptr
-     * if failed.
      */
-    btRigidBody *CreateRigidBody(const ds_math::Vector3 &origin,
-                                 StringIntern::StringId shape,
-                                 const ds_math::Vector3 &scale,
-                                 float mass);
+    void CreateRigidBody(Instance phys,
+                         const ds_math::Vector3 &origin,
+                         StringIntern::StringId shape,
+                         const ds_math::Vector3 &scale,
+                         float mass);
 
     /**
      * Create a Bullet rigid body for a height map from the given
-     * TerrainResource, modify the terrain resource to be scaled by the given
+     * TerrainResource, modify the terrain resource to be scaled by the
+     * given
      * heightscale.
      *
-     * btRigidBody should be freed by user.
-     *
+     * @param   phys    Instance, physics instance to add rigid body to.
      * @param   origin           const ds_math::Vector3 &, origin of rigid
      *                           body.
-     * @param   terrainResource  TerrainResource *, pointer to terrain resource
+     * @param   terrainResource  TerrainResource *, pointer to terrain
+     * resource
      * to construct rigidbody from.
      * @param   heightScale      float, factor to scale terrain height by.
-     * @return                   btRigidBody *, pointer to rigid body created or
-     * nullptr if failed.
      */
-    btRigidBody *CreateHeightMapRigidBody(const ds_math::Vector3 &origin,
-                                          TerrainResource *terrainResource,
-                                          float heightScale);
+    void CreateHeightMapRigidBody(Instance phys,
+                                  const ds_math::Vector3 &origin,
+                                  TerrainResource *terrainResource,
+                                  float heightScale);
 
     /**
-     * Create a Bullet ghost object from the given parameters.
-     *
-     * btGhostObject should be freed by user.
+     * Create a Bullet ghost object from the given parameters and add it to the
+     * Physics system.
      *
      * @param   origin  const ds_math::Vector3 &, origin of ghost object.
      * @param   shape   StringIntern::StringId, interned string that will give
@@ -121,9 +123,10 @@ private:
      * @return          btRigidBody *, pointer to ghost object
      * created or nullptr if failed.
      */
-    btRigidBody *CreateGhostObject(const ds_math::Vector3 &origin,
-                                   StringIntern::StringId shape,
-                                   const ds_math::Vector3 &scale);
+    void CreateGhostObject(Instance phys,
+                           const ds_math::Vector3 &origin,
+                           StringIntern::StringId shape,
+                           const ds_math::Vector3 &scale);
 
     btDiscreteDynamicsWorld *m_dynamicsWorld;
     btSequentialImpulseConstraintSolver *m_solver;
@@ -147,5 +150,7 @@ private:
 
     /** Manage storage of terrain resources */
     ds::HandleManager m_handleManager;
+
+    ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
 };
 }

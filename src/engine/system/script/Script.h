@@ -280,6 +280,13 @@ public:
                            const std::string &pressedMaterialPath,
                            const std::string &hoverMaterialPath);
 
+    /**
+     * Destroy an entity.
+     *
+     * @param  entity  Entity, entity to destroy.
+     */
+    void DestroyEntity(Entity entity);
+
 private:
     /**
      * Process messages in the given message stream.

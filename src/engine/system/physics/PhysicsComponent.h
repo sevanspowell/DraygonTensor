@@ -21,5 +21,7 @@ struct PhysicsComponent
     float mass;
     // Bullet collision object
     btCollisionObject *collisionObject;
+    // Bullet collision shape
+    btCollisionShape *collisionShape;
 };
 }

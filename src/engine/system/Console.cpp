@@ -358,10 +358,22 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             // m_buffer << "Console out: Collision between entity A: "
             //          << collisionMsg.entityA.id
             //          << " and entity B: " << collisionMsg.entityB.id
-            //          << ". Point on A (world): " << collisionMsg.pointWorldOnA
-            //          << ", point on B (world): " << collisionMsg.pointWorldOnB
-            //          << ", normal on B (world): " << collisionMsg.normalWorldOnB
+            //          << ". Point on A (world): " <<
+            //          collisionMsg.pointWorldOnA
+            //          << ", point on B (world): " <<
+            //          collisionMsg.pointWorldOnB
+            //          << ", normal on B (world): " <<
+            //          collisionMsg.normalWorldOnB
             //          << std::endl;
+            break;
+        }
+        case ds_msg::MessageType::DestroyEntity:
+        {
+            ds_msg::DestroyEntity destroyEntityMsg;
+            (*messages) >> destroyEntityMsg;
+
+            m_buffer << "Console out: entity id: " << destroyEntityMsg.entity.id
+                     << " flagged for destruction." << std::endl;
             break;
         }
         default:
