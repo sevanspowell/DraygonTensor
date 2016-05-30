@@ -24,7 +24,7 @@ void Material::AddTexture(const std::string &samplerName,
     m_textures.push_back(shaderTexture);
 }
 
-const std::vector<Material::ShaderTexture> &Material::GetTextures()
+const std::vector<Material::ShaderTexture> &Material::GetTextures() const
 {
     return m_textures;
 }

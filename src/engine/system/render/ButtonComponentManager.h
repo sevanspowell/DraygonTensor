@@ -15,52 +15,53 @@ public:
      * Get the default material of the given component instance.
      *
      * @param   i  ds::Instance, component instance to get mesh of.
-     * @return     const Material &, default material of given component
+     * @return     MaterialHandle, handle to default material of given component
      * instance.
      */
-    const Material &GetDefaultMaterial(ds::Instance i) const;
+    MaterialHandle GetDefaultMaterialHandle(ds::Instance i) const;
 
     /**
      * Set the default material of the given component instance.
      *
      * @param   i  ds::Instance, component instance to set the material of.
-     * @param      const Material &, material to set.
+     * @param      MaterialHandle, handle to material to set.
      */
-    void SetDefaultMaterial(ds::Instance i, const Material &material);
+    void SetDefaultMaterialHandle(ds::Instance i,
+                                  MaterialHandle materialHandle);
 
     /**
      * Get the pressed material of the given component instance.
      *
      * @param   i  ds::Instance, component instance to get mesh of.
-     * @return     const Material &, pressed material of given component
+     * @return     MaterialHandle, handle to pressed material of given component
      * instance.
      */
-    const Material &GetPressedMaterial(ds::Instance i) const;
+    MaterialHandle GetPressedMaterialHandle(ds::Instance i) const;
 
     /**
      * Set the pressed material of the given component instance.
      *
      * @param   i  ds::Instance, component instance to set the material of.
-     * @param      const Material &, material to set.
+     * @param      const MaterialHandle &, handle to material to set.
      */
-    void SetPressedMaterial(ds::Instance i, const Material &material);
+    void SetPressedMaterialHandle(ds::Instance i, MaterialHandle materialHandle);
 
     /**
      * Get the hover material of the given component instance.
      *
      * @param   i  ds::Instance, component instance to get mesh of.
-     * @return     const Material &, hover material of given component
+     * @return     MaterialHandle, handle to hover material of given component
      * instance.
      */
-    const Material &GetHoverMaterial(ds::Instance i) const;
+    MaterialHandle GetHoverMaterialHandle(ds::Instance i) const;
 
     /**
      * Set the hover material of the given component instance.
      *
      * @param   i  ds::Instance, component instance to set the material of.
-     * @param      const Material &, material to set.
+     * @param      MaterialHandle, handle to material to set.
      */
-    void SetHoverMaterial(ds::Instance i, const Material &material);
+    void SetHoverMaterialHandle(ds::Instance i, MaterialHandle materialHandle);
 
     /**
      * Get the starting x co-ordinate of the given component instance.

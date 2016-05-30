@@ -56,7 +56,7 @@ public:
      * @return  const std::vector<ShaderTexture> &, list of sampler names and
      * their corresponding textures.
      */
-    const std::vector<ShaderTexture> &GetTextures();
+    const std::vector<ShaderTexture> &GetTextures() const;
 
     /**
      * Add a constant buffer to this material.

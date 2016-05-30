@@ -4,7 +4,7 @@
 
 namespace ds_render
 {
-const Material &ButtonComponentManager::GetDefaultMaterial(ds::Instance i) const
+MaterialHandle ButtonComponentManager::GetDefaultMaterialHandle(ds::Instance i) const
 {
     assert(i.index >= 0 && i.index < GetNumInstances() &&
            "ButtonComponentManager::GetDefaultMaterial: tried to get invalid "
@@ -13,17 +13,19 @@ const Material &ButtonComponentManager::GetDefaultMaterial(ds::Instance i) const
     return m_data.component[i.index].defaultMaterial;
 }
 
-void ButtonComponentManager::SetDefaultMaterial(ds::Instance i,
-                                                const Material &material)
+void ButtonComponentManager::SetDefaultMaterialHandle(
+    ds::Instance i, MaterialHandle materialHandle)
 {
     assert(i.index >= 0 && i.index < GetNumInstances() &&
            "ButtonComponentManager::SetDefaultMaterial: tried to set invalid "
            "instance");
 
-    m_data.component[i.index].defaultMaterial = material;
+    m_data.component[i.index].defaultMaterial = materialHandle;
 }
 
-const Material &ButtonComponentManager::GetPressedMaterial(ds::Instance i) const
+
+MaterialHandle
+ButtonComponentManager::GetPressedMaterialHandle(ds::Instance i) const
 {
     assert(i.index >= 0 && i.index < GetNumInstances() &&
            "ButtonComponentManager::GetPressedMaterial: tried to get invalid "
@@ -32,17 +34,18 @@ const Material &ButtonComponentManager::GetPressedMaterial(ds::Instance i) const
     return m_data.component[i.index].pressedMaterial;
 }
 
-void ButtonComponentManager::SetPressedMaterial(ds::Instance i,
-                                                const Material &material)
+void ButtonComponentManager::SetPressedMaterialHandle(
+    ds::Instance i, MaterialHandle materialHandle)
 {
     assert(i.index >= 0 && i.index < GetNumInstances() &&
            "ButtonComponentManager::SetPressedMaterial: tried to set invalid "
            "instance");
 
-    m_data.component[i.index].pressedMaterial = material;
+    m_data.component[i.index].pressedMaterial = materialHandle;
 }
 
-const Material &ButtonComponentManager::GetHoverMaterial(ds::Instance i) const
+MaterialHandle
+ButtonComponentManager::GetHoverMaterialHandle(ds::Instance i) const
 {
     assert(i.index >= 0 && i.index < GetNumInstances() &&
            "ButtonComponentManager::GetHoverMaterial: tried to get invalid "
@@ -51,14 +54,14 @@ const Material &ButtonComponentManager::GetHoverMaterial(ds::Instance i) const
     return m_data.component[i.index].hoverMaterial;
 }
 
-void ButtonComponentManager::SetHoverMaterial(ds::Instance i,
-                                              const Material &material)
+void ButtonComponentManager::SetHoverMaterialHandle(
+    ds::Instance i, MaterialHandle materialHandle)
 {
     assert(i.index >= 0 && i.index < GetNumInstances() &&
            "ButtonComponentManager::SetHoverMaterial: tried to set invalid "
            "instance");
 
-    m_data.component[i.index].hoverMaterial = material;
+    m_data.component[i.index].hoverMaterial = materialHandle;
 }
 
 float ButtonComponentManager::GetStartXCoordinate(ds::Instance i) const
