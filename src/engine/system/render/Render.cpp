@@ -959,7 +959,6 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
         {
             ds_msg::SetSkyboxMaterial setSkyboxMaterialMsg;
             (*messages) >> setSkyboxMaterialMsg;
-
             SetSkyboxMaterial(StringIntern::Instance().GetString(
                 setSkyboxMaterialMsg.skyboxMaterialPath));
             break;
@@ -1017,7 +1016,7 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                     &defaultMaterialResourceHandle) &&
                 m_materialResourceManager.LoadMaterialResourceFromFile(
                     pressedMaterialPathFull.str(),
-                    &hoverMaterialResourceHandle) &&
+                    &pressedMaterialResourceHandle) &&
                 m_materialResourceManager.LoadMaterialResourceFromFile(
                     hoverMaterialPathFull.str(),
                     &hoverMaterialResourceHandle) == true)
@@ -1246,7 +1245,8 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
             }
 
             // Transform
-            Instance transform = m_transformComponentManager.GetInstanceForEntity(e);
+            Instance transform =
+                m_transformComponentManager.GetInstanceForEntity(e);
 
             if (transform.IsValid())
             {
@@ -1261,7 +1261,7 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                 m_cameraComponentManager.RemoveInstance(camera);
             }
 
-            // Buttons 
+            // Buttons
             Instance button = m_buttonComponentManager.GetInstanceForEntity(e);
 
             if (button.IsValid())
