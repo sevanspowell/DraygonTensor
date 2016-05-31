@@ -14,35 +14,116 @@ CameraComponentManager::GetProjectionMatrix(ds::Instance i) const
     return m_data.component[i.index].projectionMatrix;
 }
 
-void CameraComponentManager::SetProjectionMatrix(
-    ds::Instance i, const ds_math::Matrix4 &projectionMatrix)
+float CameraComponentManager::GetVerticalFieldOfView(ds::Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
-           "CameraComponentManager::SetProjectionMatrix: tried to set invalid "
-           "instance");
+    assert(
+        i.index >= 0 && i.index < GetNumInstances() &&
+        "CameraComponentManager::GetVerticalFieldOfView: tried to get invalid "
+        "instance");
 
-    m_data.component[i.index].projectionMatrix = projectionMatrix;
+    return m_data.component[i.index].verticalFov;
 }
 
-const ds_math::Quaternion &
-CameraComponentManager::GetOrientation(ds::Instance i) const
+void CameraComponentManager::SetVerticalFieldOfView(ds::Instance i, float fov)
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
-           "CameraComponentManager::GetOrientation: tried to get invalid "
-           "instance");
+    assert(
+        i.index >= 0 && i.index < GetNumInstances() &&
+        "CameraComponentManager::SetVerticalFieldOfView: tried to set invalid "
+        "instance");
 
-    std::cout << "GetOrientation: " << m_data.component[i.index].orientation
-              << std::endl;
-    return m_data.component[i.index].orientation;
+    m_data.component[i.index].verticalFov = fov;
+
+    // Update projection matrix
+    m_data.component[i.index].projectionMatrix =
+        ds_math::Matrix4::CreatePerspectiveFieldOfView(
+            m_data.component[i.index].verticalFov,
+            m_data.component[i.index].aspectRatio,
+            m_data.component[i.index].nearZClip,
+            m_data.component[i.index].farZClip);
+
 }
 
-void CameraComponentManager::SetOrientation(
-    ds::Instance i, const ds_math::Quaternion &orientation)
+float CameraComponentManager::GetAspectRatio(ds::Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
-           "CameraComponentManager::SetOrientation: tried to set invalid "
-           "instance");
+    assert(
+        i.index >= 0 && i.index < GetNumInstances() &&
+        "CameraComponentManager::GetAspectRatio: tried to get invalid "
+        "instance");
 
-    m_data.component[i.index].orientation = orientation;
+    return m_data.component[i.index].aspectRatio;
+}
+
+void CameraComponentManager::SetAspectRatio(ds::Instance i, float aspectRatio)
+{
+    assert(
+        i.index >= 0 && i.index < GetNumInstances() &&
+        "CameraComponentManager::SetAspectRatio: tried to set invalid "
+        "instance");
+
+    m_data.component[i.index].aspectRatio = aspectRatio;
+
+    // Update projection matrix
+    m_data.component[i.index].projectionMatrix =
+        ds_math::Matrix4::CreatePerspectiveFieldOfView(
+            m_data.component[i.index].verticalFov,
+            m_data.component[i.index].aspectRatio,
+            m_data.component[i.index].nearZClip,
+            m_data.component[i.index].farZClip);
+}
+
+float CameraComponentManager::GetNearClippingPlane(ds::Instance i) const
+{
+    assert(
+        i.index >= 0 && i.index < GetNumInstances() &&
+        "CameraComponentManager::GetNearClippingPlane: tried to get invalid "
+        "instance");
+
+    return m_data.component[i.index].nearZClip;
+}
+
+void CameraComponentManager::SetNearClippingPlane(ds::Instance i, float dist)
+{
+    assert(
+        i.index >= 0 && i.index < GetNumInstances() &&
+        "CameraComponentManager::SetNearClippingPlane: tried to set invalid "
+        "instance");
+
+    m_data.component[i.index].nearZClip = dist;
+
+    // Update projection matrix
+    m_data.component[i.index].projectionMatrix =
+        ds_math::Matrix4::CreatePerspectiveFieldOfView(
+            m_data.component[i.index].verticalFov,
+            m_data.component[i.index].aspectRatio,
+            m_data.component[i.index].nearZClip,
+            m_data.component[i.index].farZClip);
+}
+
+float CameraComponentManager::GetFarClippingPlane(ds::Instance i) const
+{
+    assert(
+        i.index >= 0 && i.index < GetNumInstances() &&
+        "CameraComponentManager::GetFarClippingPlane: tried to get invalid "
+        "instance");
+
+    return m_data.component[i.index].farZClip;
+}
+
+void CameraComponentManager::SetFarClippingPlane(ds::Instance i, float dist)
+{
+    assert(
+        i.index >= 0 && i.index < GetNumInstances() &&
+        "CameraComponentManager::SetFarClippingPlane: tried to set invalid "
+        "instance");
+
+    m_data.component[i.index].farZClip = dist;
+
+    // Update projection matrix
+    m_data.component[i.index].projectionMatrix =
+        ds_math::Matrix4::CreatePerspectiveFieldOfView(
+            m_data.component[i.index].verticalFov,
+            m_data.component[i.index].aspectRatio,
+            m_data.component[i.index].nearZClip,
+            m_data.component[i.index].farZClip);
 }
 }

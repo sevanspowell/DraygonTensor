@@ -125,9 +125,11 @@ void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
 
         // Transform co-ordinates to our co-ordinate system
         ds_math::Vector4 pos = ds_math::Vector4(
-            event.motion.x / 800.0f, event.motion.y / 600.0f, 0.0f, 1.0f);
+            event.motion.x / (float)m_video.GetWindowWidth(),
+            event.motion.y / (float)m_video.GetWindowHeight(), 0.0f, 1.0f);
         ds_math::Vector4 relPos = ds_math::Vector4(
-            event.motion.xrel / 800.0f, event.motion.yrel / 600.0f, 0.0f, 1.0f);
+            event.motion.xrel / (float)m_video.GetWindowWidth(),
+            event.motion.yrel / (float)m_video.GetWindowHeight(), 0.0f, 1.0f);
 
 
         ds_math::Matrix4 scale =
@@ -166,7 +168,8 @@ void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
 
         // Transform co-ordinates to our co-ordinate system
         ds_math::Vector4 pos = ds_math::Vector4(
-            event.button.x / 800.0f, event.button.y / 600.0f, 0.0f, 1.0f);
+            event.button.x / (float)m_video.GetWindowWidth(),
+            event.button.y / (float)m_video.GetWindowHeight(), 0.0f, 1.0f);
 
         ds_math::Matrix4 scale =
             ds_math::Matrix4::CreateScaleMatrix(2.0f, 2.0f, 2.0f);
@@ -187,6 +190,23 @@ void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
         ds_msg::AppendMessage(&m_messagesGenerated,
                               ds_msg::MessageType::MouseButton,
                               sizeof(ds_msg::MouseButton), &mouseButtonEvent);
+        break;
+    }
+    case SDL_WINDOWEVENT:
+    {
+        switch (event.window.event)
+        {
+        case SDL_WINDOWEVENT_SIZE_CHANGED:
+            ds_msg::WindowResize windowResize;
+
+            windowResize.newWidth = event.window.data1;
+            windowResize.newHeight = event.window.data2;
+
+            ds_msg::AppendMessage(&m_messagesGenerated,
+                                  ds_msg::MessageType::WindowResize,
+                                  sizeof(ds_msg::WindowResize), &windowResize);
+            break;
+        }
         break;
     }
     case SDL_QUIT:
@@ -250,6 +270,14 @@ void Platform::ProcessEvents(ds_msg::MessageStream *messages)
             (*messages) >> setMouseLockMsg;
 
             m_video.SetMouseLock(setMouseLockMsg.enableMouseLock);
+
+            break;
+        case ds_msg::MessageType::WindowResize:
+            ds_msg::WindowResize windowResizeMsg;
+            (*messages) >> windowResizeMsg;
+
+            m_video.SetWindowWidth(windowResizeMsg.newWidth);
+            m_video.SetWindowHeight(windowResizeMsg.newHeight);
 
             break;
         default:

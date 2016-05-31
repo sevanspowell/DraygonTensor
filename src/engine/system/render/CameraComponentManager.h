@@ -21,30 +21,84 @@ public:
     const ds_math::Matrix4 &GetProjectionMatrix(ds::Instance i) const;
 
     /**
-     * Set the projection matrix of the given component instance.
+     * Get the vertical field of view of the given camera component instance.
      *
-     * @param  i                      ds::Instance, component instance to set
-     * projection matrix of.
-     * @param  projectionMatrix       const Material &, material to set.
+     * @param   i  ds::Instance, camera component instance to get the vertical
+     * field of view of.
+     * @return     float, vertical field of view of camera component.
      */
-    void SetProjectionMatrix(ds::Instance i,
-                             const ds_math::Matrix4 &projectionMatrix);
+    float GetVerticalFieldOfView(ds::Instance i) const;
 
     /**
-     * Get the orientation of the given camera component instance.
+     * Set the vertical field of view of the given camera component instance.
      *
-     * @param   i  ds::Instance, component instance to get orientation of.
-     * @return     const ds_math::Quaternion &, orientation.
+     * @param  i    ds::Instance, camera component instance to set the vertical
+     * field of view of.
+     * @param  fov  float, value for vertical field of view of camera to set.
      */
-    const ds_math::Quaternion &GetOrientation(ds::Instance i) const;
+    void SetVerticalFieldOfView(ds::Instance i, float fov);
 
     /**
-     * Set the orientation of the given camera component instance.
+     * Get the aspect ratio of the given camera component instance.
      *
-     * @param   i  ds::Instance, component instance to get orientation of.
-     * @param      const ds_math::Quaternion &, new orientation.
+     * @param   i  ds::Instance, camera component instance to get the aspect
+     * ratio of.
+     * @return     float, aspect ratio of camera component.
      */
-    void SetOrientation(ds::Instance i, const ds_math::Quaternion &orientation);
+    float GetAspectRatio(ds::Instance i) const;
+
+    /**
+     * Set the aspect ratio of the given camera component instance.
+     *
+     * @param  i            ds::Instance, camera component instance to set the
+     * aspect ratio of.
+     * @param  aspectRatio  float, value for aspect ratio of camera to set.
+     */
+    void SetAspectRatio(ds::Instance i, float aspectRatio);
+
+    /**
+     * Get the near clipping plane distance of the given camera component
+     * instance.
+     *
+     * @param   i  ds::Instance, camera component instance to get the near
+     * clipping plane distance of.
+     * @param      float, value of given camera component's near clipping plane
+     * distance.
+     */
+    float GetNearClippingPlane(ds::Instance i) const;
+
+    /**
+     * Set the near clipping plane distance of the given camera component
+     * instance.
+     *
+     * @param  i     ds::Instance, camera component instance to set the near
+     * clipping plane of.
+     * @param  dist  float, value for near clipping plane distance of camera to
+     * set.
+     */
+    void SetNearClippingPlane(ds::Instance i, float dist);
+
+    /**
+     * Get the far clipping plane distance of the given camera component
+     * instance.
+     *
+     * @param   i  ds::Instance, camera component instance to get the far
+     * clipping plane distance of.
+     * @param      float, value of given camera component's far clipping plane
+     * distance.
+     */
+    float GetFarClippingPlane(ds::Instance i) const;
+
+    /**
+     * Set the far clipping plane distance of the given camera component
+     * instance.
+     *
+     * @param  i     ds::Instance, camera component instance to set the far
+     * clipping plane of.
+     * @param  dist  float, value for far clipping plane distance of camera to
+     * set.
+     */
+    void SetFarClippingPlane(ds::Instance i, float dist);
 
 private:
 };

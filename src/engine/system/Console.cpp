@@ -460,6 +460,16 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             }
 
             break;
+        case ds_msg::MessageType::WindowResize:
+        {
+            ds_msg::WindowResize windowResizeMsg;
+            (*messages) >> windowResizeMsg;
+
+            m_buffer << "Console out: window resized to ("
+                     << windowResizeMsg.newWidth << ", "
+                     << windowResizeMsg.newHeight << ")" << std::endl;
+            break;
+        }
         default:
             // Always extract the payload
             messages->Extract(header.size);

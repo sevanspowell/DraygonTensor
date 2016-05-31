@@ -253,6 +253,9 @@ bool Render::Initialize(const Config &config)
 
     m_hasSkybox = false;
 
+    m_windowWidth = 1;
+    m_windowHeight = 1;
+
     return result;
 }
 
@@ -482,11 +485,7 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                     m_renderer = std::unique_ptr<ds_render::IRenderer>(
                         new ds_render::GLRenderer());
 
-                    // TODO: Handle resize messages to change this
-                    unsigned int viewportWidth = 800;
-                    unsigned int viewportHeight = 600;
-
-                    m_renderer->Init(viewportWidth, viewportHeight);
+                    m_renderer->Init(m_windowWidth, m_windowHeight);
 
                     // Need a program to get information about Scene and Object
                     // constant
@@ -541,8 +540,9 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                     m_viewMatrix = ds_math::Matrix4(1.0f);
                     m_projectionMatrix =
                         ds_math::Matrix4::CreatePerspectiveFieldOfView(
-                            ds_math::MathHelper::PI / 3.0f, 800.0f / 600.0f,
-                            0.1f, 100.0f);
+                            ds_math::MathHelper::PI / 3.0f,
+                            (float)m_windowWidth / (float)m_windowHeight, 0.1f,
+                            100.0f);
                     m_sceneBufferDescrip.InsertMemberData(
                         "Scene.viewMatrix", sizeof(ds_math::Matrix4),
                         &m_viewMatrix);
@@ -687,28 +687,36 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                         componentData.GetFloat("near_clip", &nearClip) &&
                         componentData.GetFloat("far_clip", &farClip))
                     {
-                        ds_math::Matrix4 projectionMatrix;
+                        // ds_math::Matrix4 projectionMatrix;
 
-                        if (projectionType == "perspective")
-                        {
-                            projectionMatrix =
-                                ds_math::Matrix4::CreatePerspectiveFieldOfView(
-                                    verticalFov, 800.0f / 600.0f, nearClip,
-                                    farClip);
-                        }
-                        else if (projectionType == "orthographic")
-                        {
-                            projectionMatrix =
-                                ds_math::Matrix4::CreateOrthographic(
-                                    800.0f, 600.0f, nearClip, farClip);
-                        }
+                        // if (projectionType == "perspective")
+                        // {
+                        //     projectionMatrix =
+                        //         ds_math::Matrix4::CreatePerspectiveFieldOfView(
+                        //             verticalFov, m_windowWidth /
+                        //             m_windowHeight,
+                        //             nearClip, farClip);
+                        // }
+                        // else if (projectionType == "orthographic")
+                        // {
+                        //     projectionMatrix =
+                        //         ds_math::Matrix4::CreateOrthographic(
+                        //             m_windowWidth, m_windowHeight, nearClip,
+                        //             farClip);
+                        // }
 
                         Entity e = createComponentMsg.entity;
                         Instance i =
                             m_cameraComponentManager.CreateComponentForEntity(
                                 e);
-                        m_cameraComponentManager.SetProjectionMatrix(
-                            i, projectionMatrix);
+                        m_cameraComponentManager.SetVerticalFieldOfView(
+                            i, verticalFov);
+                        m_cameraComponentManager.SetAspectRatio(
+                            i, m_windowWidth / (float)m_windowHeight);
+                        m_cameraComponentManager.SetNearClippingPlane(i,
+                                                                      nearClip);
+                        m_cameraComponentManager.SetFarClippingPlane(i,
+                                                                     farClip);
 
                         // Is any camera currently active?
                         if (m_cameraActive == false)
@@ -1413,6 +1421,30 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
             }
             break;
         }
+        case ds_msg::MessageType::WindowResize:
+            ds_msg::WindowResize windowResizeMsg;
+            (*messages) >> windowResizeMsg;
+
+            m_windowWidth = windowResizeMsg.newWidth;
+            m_windowHeight = windowResizeMsg.newHeight;
+
+            if (m_renderer != nullptr)
+            {
+                // Resize renderer viewport
+                m_renderer->ResizeViewport(m_windowWidth, m_windowHeight);
+
+                // Update all camera component aspect ratios
+                for (unsigned int i = 0;
+                     i < m_cameraComponentManager.GetNumInstances(); ++i)
+                {
+                    Instance camera = Instance::MakeInstance(i);
+
+                    m_cameraComponentManager.SetAspectRatio(
+                        camera, m_windowWidth / (float)m_windowHeight);
+                }
+            }
+
+            break;
         default:
             messages->Extract(header.size);
             break;

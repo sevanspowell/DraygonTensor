@@ -81,7 +81,9 @@ enum class MessageType
     // Set mouse lock on/off
     SetMouseLock,
     // Shutdown engine and all systems
-    Shutdown
+    Shutdown,
+    // On window resize
+    WindowResize
 };
 
 /**
@@ -310,5 +312,11 @@ struct PhysicsCollision
 struct SetMouseLock
 {
     bool enableMouseLock; // TRUE to enable mouse lock, FALSE to disable it
+};
+
+struct WindowResize
+{
+    int newWidth;  // New window width in pixels
+    int newHeight; // New window height in pixels
 };
 }

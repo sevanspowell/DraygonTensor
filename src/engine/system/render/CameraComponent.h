@@ -10,7 +10,13 @@ struct CameraComponent
     // View matrix is just inverse of associated transform matrix
     // ds_math::Matrix4 viewMatrix;
     ds_math::Matrix4 projectionMatrix;
-    // Orientation of camera
-    ds_math::Quaternion orientation;
+    // Vertical field of view
+    float verticalFov;
+    // Aspect ratio
+    float aspectRatio;
+    // Near z clip
+    float nearZClip;
+    // Far z clip
+    float farZClip;
 };
 }

@@ -380,5 +380,8 @@ private:
 
     /** Resource factory */
     static ResourceFactory m_factory;
+
+    /** Cached values for render window width and height */
+    unsigned int m_windowWidth, m_windowHeight;
 };
 }

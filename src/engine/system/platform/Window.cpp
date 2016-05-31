@@ -97,7 +97,8 @@ bool Window::CreateSDL2Window(unsigned int redBits,
 
     // Create window
     *window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED,
-                               SDL_WINDOWPOS_CENTERED, width, height, flags);
+                               SDL_WINDOWPOS_CENTERED, width, height,
+                               flags | SDL_WINDOW_RESIZABLE);
 
     if (window == nullptr)
     {
