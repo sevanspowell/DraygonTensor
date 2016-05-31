@@ -372,6 +372,13 @@ public:
      */
     void Quit();
 
+    /**
+     * Send a pause message to the engine and all it's systems.
+     *
+     * @param  shouldPause  bool, TRUE to pause, FALSE to unpause.
+     */
+    void SetPause(bool shouldPause);
+
 private:
     /**
      * Process messages in the given message stream.

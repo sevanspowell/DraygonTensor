@@ -582,6 +582,15 @@ void Script::Quit()
                           sizeof(ds_msg::QuitEvent), &quitEvent);
 }
 
+void Script::SetPause(bool shouldPause)
+{
+    ds_msg::PauseEvent pauseEvent;
+    pauseEvent.shouldPause = shouldPause;
+
+    ds_msg::AppendMessage(&m_messagesGenerated, ds_msg::MessageType::PauseEvent,
+                          sizeof(ds_msg::PauseEvent), &pauseEvent);
+}
+
 void Script::ProcessEvents(ds_msg::MessageStream *messages)
 {
     while (messages->AvailableBytes() != 0)

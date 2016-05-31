@@ -152,5 +152,8 @@ private:
     ds::HandleManager m_handleManager;
 
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
+
+    /** TRUE if paused, FALSE otherwise */
+    bool m_isPaused;
 };
 }

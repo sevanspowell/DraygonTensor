@@ -83,7 +83,9 @@ enum class MessageType
     // Shutdown engine and all systems
     Shutdown,
     // On window resize
-    WindowResize
+    WindowResize,
+    // On pause
+    PauseEvent
 };
 
 /**
@@ -318,5 +320,10 @@ struct WindowResize
 {
     int newWidth;  // New window width in pixels
     int newHeight; // New window height in pixels
+};
+
+struct PauseEvent
+{
+    bool shouldPause; // TRUE for pause, FALSE otherwise
 };
 }

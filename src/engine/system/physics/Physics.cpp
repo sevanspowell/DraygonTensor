@@ -56,6 +56,8 @@ bool Physics::Initialize(const Config &config)
     ds_msg::AppendMessage(&m_messagesGenerated, ds_msg::MessageType::SystemInit,
                           sizeof(ds_msg::SystemInit), &initMsg);
 
+    m_isPaused = false;
+
     return true;
 }
 
@@ -63,265 +65,282 @@ void Physics::Update(float deltaTime)
 {
     ProcessEvents(&m_messagesReceived);
 
-    // Move simulation forward
-    m_dynamicsWorld->stepSimulation(deltaTime, 10);
-
-    // Iterate thru physics components
-    for (unsigned int i = 0; i < m_physicsComponentManager.GetNumInstances();
-         ++i)
+    // Only update if not paused
+    if (m_isPaused == false)
     {
-        Instance phys = Instance::MakeInstance(i);
+        // Move simulation forward
+        m_dynamicsWorld->stepSimulation(deltaTime, 10);
 
-        // Get entity for instance
-        Entity entity = m_physicsComponentManager.GetEntityForInstance(phys);
-
-        // Check if this entity also has transform component
-        Instance transform =
-            m_transformComponentManager.GetInstanceForEntity(entity);
-
-        // If it does...
-        if (transform.IsValid())
+        // Iterate thru physics components
+        for (unsigned int i = 0;
+             i < m_physicsComponentManager.GetNumInstances(); ++i)
         {
-            // Get collision object
-            const btCollisionObject *colObject =
-                m_physicsComponentManager.GetCollisionObject(phys);
+            Instance phys = Instance::MakeInstance(i);
 
-            if (colObject != nullptr)
+            // Get entity for instance
+            Entity entity =
+                m_physicsComponentManager.GetEntityForInstance(phys);
+
+            // Check if this entity also has transform component
+            Instance transform =
+                m_transformComponentManager.GetInstanceForEntity(entity);
+
+            // If it does...
+            if (transform.IsValid())
             {
-                if (colObject->getInternalType() ==
-                    btCollisionObject::CollisionObjectTypes::CO_RIGID_BODY)
+                // Get collision object
+                const btCollisionObject *colObject =
+                    m_physicsComponentManager.GetCollisionObject(phys);
+
+                if (colObject != nullptr)
                 {
-                    // Downcast collision object to rigidbody
-                    const btRigidBody *rigidBody =
-                        (const btRigidBody *)colObject;
-
-                    // Get new transform
-                    btTransform bulletNewWorldTransform;
-                    if (rigidBody != nullptr)
+                    if (colObject->getInternalType() ==
+                        btCollisionObject::CollisionObjectTypes::CO_RIGID_BODY)
                     {
-                        if (rigidBody->getMotionState())
+                        // Downcast collision object to rigidbody
+                        const btRigidBody *rigidBody =
+                            (const btRigidBody *)colObject;
+
+                        // Get new transform
+                        btTransform bulletNewWorldTransform;
+                        if (rigidBody != nullptr)
                         {
-                            rigidBody->getMotionState()->getWorldTransform(
-                                bulletNewWorldTransform);
-                        }
-                        else
-                        {
-                            bulletNewWorldTransform =
-                                rigidBody->getWorldTransform();
-                        }
-
-                        // Get change in translation
-                        ds_math::Matrix4 newWorldTransform;
-                        bulletNewWorldTransform.getOpenGLMatrix(
-                            (btScalar *)&newWorldTransform.data[0][0]);
-                        ds_math::Vector3 newWorldTranslation = ds_math::Vector3(
-                            newWorldTransform[3].x, newWorldTransform[3].y,
-                            newWorldTransform[3].z);
-                        ds_math::Vector3 oldWorldTranslation =
-                            m_transformComponentManager.GetWorldTranslation(
-                                transform);
-                        ds_math::Vector3 changeInTranslation =
-                            newWorldTranslation - oldWorldTranslation;
-                        // Change local translation by change in translation
-                        ds_math::Vector3 currentLocalTranslation =
-                            m_transformComponentManager.GetLocalTranslation(
-                                transform);
-                        ds_msg::SetLocalTranslation setTranslationMsg;
-                        setTranslationMsg.entity = entity;
-                        setTranslationMsg.localTranslation =
-                            currentLocalTranslation + changeInTranslation;
-                        ds_msg::AppendMessage(
-                            &m_messagesGenerated,
-                            ds_msg::MessageType::SetLocalTranslation,
-                            sizeof(ds_msg::SetLocalTranslation),
-                            &setTranslationMsg);
-
-                        // Get change in orientation
-                        btQuaternion newWorldOrientationBullet =
-                            rigidBody->getOrientation();
-                        btQuaternionFloatData floatData;
-                        newWorldOrientationBullet.serializeFloat(floatData);
-                        ds_math::Quaternion newWorldOrientation =
-                            ds_math::Quaternion(
-                                floatData.m_floats[0], floatData.m_floats[1],
-                                floatData.m_floats[2], floatData.m_floats[3]);
-                        ds_math::Quaternion oldWorldOrientation =
-                            ds_math::Quaternion::Normalize(
-                                m_transformComponentManager.GetWorldOrientation(
-                                    transform));
-                        ds_math::Quaternion changeInOrientation =
-                            ds_math::Quaternion::Normalize(
-                                newWorldOrientation *
-                                ds_math::Quaternion::Invert(
-                                    oldWorldOrientation));
-                        // Change local orientation by change in orientation
-                        ds_math::Quaternion currentLocalOrientation =
-                            m_transformComponentManager.GetLocalOrientation(
-                                transform);
-                        ds_msg::SetLocalOrientation setOrientationMsg;
-                        setOrientationMsg.entity = entity;
-                        setOrientationMsg.localOrientation =
-                            ds_math::Quaternion::Normalize(
-                                changeInOrientation * currentLocalOrientation);
-                        ds_msg::AppendMessage(
-                            &m_messagesGenerated,
-                            ds_msg::MessageType::SetLocalOrientation,
-                            sizeof(ds_msg::SetLocalOrientation),
-                            &setOrientationMsg);
-
-                        // Get change in scale
-                        btVector3 newWorldScaleBullet =
-                            rigidBody->getCollisionShape()->getLocalScaling();
-                        ds_math::Vector3 newWorldScale =
-                            ds_math::Vector3(newWorldScaleBullet.getX(),
-                                             newWorldScaleBullet.getY(),
-                                             newWorldScaleBullet.getZ());
-                        ds_math::Vector3 oldWorldScale =
-                            m_transformComponentManager.GetWorldScale(
-                                transform);
-                        ds_math::Vector3 changeInScale =
-                            newWorldScale *
-                            ds_math::Vector3(1.0f / oldWorldScale.x,
-                                             1.0f / oldWorldScale.y,
-                                             1.0f / oldWorldScale.z);
-                        // Change local scale by change in scale
-                        ds_math::Vector3 currentLocalScale =
-                            m_transformComponentManager.GetLocalScale(
-                                transform);
-                        ds_msg::SetLocalScale setScaleMsg;
-                        setScaleMsg.entity = entity;
-                        setScaleMsg.localScale =
-                            currentLocalScale * changeInScale;
-                        ds_msg::AppendMessage(
-                            &m_messagesGenerated,
-                            ds_msg::MessageType::SetLocalScale,
-                            sizeof(ds_msg::SetLocalScale), &setScaleMsg);
-                    }
-
-                    // Iterate thru contact manifolds
-                    int numManifolds =
-                        m_dynamicsWorld->getDispatcher()->getNumManifolds();
-                    for (unsigned int j = 0; j < numManifolds; ++j)
-                    {
-                        // Get colliding bodies
-                        btPersistentManifold *contactManifold =
-                            m_dynamicsWorld->getDispatcher()
-                                ->getManifoldByIndexInternal(j);
-                        const btCollisionObject *objA =
-                            contactManifold->getBody0();
-                        const btCollisionObject *objB =
-                            contactManifold->getBody1();
-
-                        // Get component instance for collision objects
-                        Instance physA =
-                            m_physicsComponentManager
-                                .GetInstanceForCollisionObject(objA);
-                        Instance physB =
-                            m_physicsComponentManager
-                                .GetInstanceForCollisionObject(objB);
-                        // Find entity for component instance
-                        Entity a =
-                            m_physicsComponentManager.GetEntityForInstance(
-                                physA);
-                        Entity b =
-                            m_physicsComponentManager.GetEntityForInstance(
-                                physB);
-
-                        // Iterate thru contact points
-                        int numContacts = contactManifold->getNumContacts();
-                        for (int k = 0; k < numContacts; ++k)
-                        {
-                            // Get collision info
-                            btManifoldPoint &pt =
-                                contactManifold->getContactPoint(k);
-                            if (pt.getDistance() < 0.0f)
+                            if (rigidBody->getMotionState())
                             {
-                                const btVector3 &ptA = pt.getPositionWorldOnA();
-                                const btVector3 &ptB = pt.getPositionWorldOnB();
-                                const btVector3 &normalOnB =
-                                    pt.m_normalWorldOnB;
+                                rigidBody->getMotionState()->getWorldTransform(
+                                    bulletNewWorldTransform);
+                            }
+                            else
+                            {
+                                bulletNewWorldTransform =
+                                    rigidBody->getWorldTransform();
+                            }
 
-                                // Create collision message
-                                ds_msg::PhysicsCollision collisionMsg;
-                                collisionMsg.entityA = a;
-                                collisionMsg.entityB = b;
-                                collisionMsg.pointWorldOnA = ds_math::Vector3(
-                                    ptA.getX(), ptA.getY(), ptA.getZ());
-                                collisionMsg.pointWorldOnB = ds_math::Vector3(
-                                    ptB.getX(), ptB.getY(), ptB.getZ());
-                                collisionMsg.normalWorldOnB = ds_math::Vector3(
-                                    normalOnB.getX(), normalOnB.getY(),
-                                    normalOnB.getZ());
+                            // Get change in translation
+                            ds_math::Matrix4 newWorldTransform;
+                            bulletNewWorldTransform.getOpenGLMatrix(
+                                (btScalar *)&newWorldTransform.data[0][0]);
+                            ds_math::Vector3 newWorldTranslation =
+                                ds_math::Vector3(newWorldTransform[3].x,
+                                                 newWorldTransform[3].y,
+                                                 newWorldTransform[3].z);
+                            ds_math::Vector3 oldWorldTranslation =
+                                m_transformComponentManager.GetWorldTranslation(
+                                    transform);
+                            ds_math::Vector3 changeInTranslation =
+                                newWorldTranslation - oldWorldTranslation;
+                            // Change local translation by change in translation
+                            ds_math::Vector3 currentLocalTranslation =
+                                m_transformComponentManager.GetLocalTranslation(
+                                    transform);
+                            ds_msg::SetLocalTranslation setTranslationMsg;
+                            setTranslationMsg.entity = entity;
+                            setTranslationMsg.localTranslation =
+                                currentLocalTranslation + changeInTranslation;
+                            ds_msg::AppendMessage(
+                                &m_messagesGenerated,
+                                ds_msg::MessageType::SetLocalTranslation,
+                                sizeof(ds_msg::SetLocalTranslation),
+                                &setTranslationMsg);
 
-                                // Send it
-                                ds_msg::AppendMessage(
-                                    &m_messagesGenerated,
-                                    ds_msg::MessageType::PhysicsCollision,
-                                    sizeof(ds_msg::PhysicsCollision),
-                                    &collisionMsg);
+                            // Get change in orientation
+                            btQuaternion newWorldOrientationBullet =
+                                rigidBody->getOrientation();
+                            btQuaternionFloatData floatData;
+                            newWorldOrientationBullet.serializeFloat(floatData);
+                            ds_math::Quaternion newWorldOrientation =
+                                ds_math::Quaternion(floatData.m_floats[0],
+                                                    floatData.m_floats[1],
+                                                    floatData.m_floats[2],
+                                                    floatData.m_floats[3]);
+                            ds_math::Quaternion oldWorldOrientation =
+                                ds_math::Quaternion::Normalize(
+                                    m_transformComponentManager
+                                        .GetWorldOrientation(transform));
+                            ds_math::Quaternion changeInOrientation =
+                                ds_math::Quaternion::Normalize(
+                                    newWorldOrientation *
+                                    ds_math::Quaternion::Invert(
+                                        oldWorldOrientation));
+                            // Change local orientation by change in orientation
+                            ds_math::Quaternion currentLocalOrientation =
+                                m_transformComponentManager.GetLocalOrientation(
+                                    transform);
+                            ds_msg::SetLocalOrientation setOrientationMsg;
+                            setOrientationMsg.entity = entity;
+                            setOrientationMsg.localOrientation =
+                                ds_math::Quaternion::Normalize(
+                                    changeInOrientation *
+                                    currentLocalOrientation);
+                            ds_msg::AppendMessage(
+                                &m_messagesGenerated,
+                                ds_msg::MessageType::SetLocalOrientation,
+                                sizeof(ds_msg::SetLocalOrientation),
+                                &setOrientationMsg);
+
+                            // Get change in scale
+                            btVector3 newWorldScaleBullet =
+                                rigidBody->getCollisionShape()
+                                    ->getLocalScaling();
+                            ds_math::Vector3 newWorldScale =
+                                ds_math::Vector3(newWorldScaleBullet.getX(),
+                                                 newWorldScaleBullet.getY(),
+                                                 newWorldScaleBullet.getZ());
+                            ds_math::Vector3 oldWorldScale =
+                                m_transformComponentManager.GetWorldScale(
+                                    transform);
+                            ds_math::Vector3 changeInScale =
+                                newWorldScale *
+                                ds_math::Vector3(1.0f / oldWorldScale.x,
+                                                 1.0f / oldWorldScale.y,
+                                                 1.0f / oldWorldScale.z);
+                            // Change local scale by change in scale
+                            ds_math::Vector3 currentLocalScale =
+                                m_transformComponentManager.GetLocalScale(
+                                    transform);
+                            ds_msg::SetLocalScale setScaleMsg;
+                            setScaleMsg.entity = entity;
+                            setScaleMsg.localScale =
+                                currentLocalScale * changeInScale;
+                            ds_msg::AppendMessage(
+                                &m_messagesGenerated,
+                                ds_msg::MessageType::SetLocalScale,
+                                sizeof(ds_msg::SetLocalScale), &setScaleMsg);
+                        }
+
+                        // Iterate thru contact manifolds
+                        int numManifolds =
+                            m_dynamicsWorld->getDispatcher()->getNumManifolds();
+                        for (unsigned int j = 0; j < numManifolds; ++j)
+                        {
+                            // Get colliding bodies
+                            btPersistentManifold *contactManifold =
+                                m_dynamicsWorld->getDispatcher()
+                                    ->getManifoldByIndexInternal(j);
+                            const btCollisionObject *objA =
+                                contactManifold->getBody0();
+                            const btCollisionObject *objB =
+                                contactManifold->getBody1();
+
+                            // Get component instance for collision objects
+                            Instance physA =
+                                m_physicsComponentManager
+                                    .GetInstanceForCollisionObject(objA);
+                            Instance physB =
+                                m_physicsComponentManager
+                                    .GetInstanceForCollisionObject(objB);
+                            // Find entity for component instance
+                            Entity a =
+                                m_physicsComponentManager.GetEntityForInstance(
+                                    physA);
+                            Entity b =
+                                m_physicsComponentManager.GetEntityForInstance(
+                                    physB);
+
+                            // Iterate thru contact points
+                            int numContacts = contactManifold->getNumContacts();
+                            for (int k = 0; k < numContacts; ++k)
+                            {
+                                // Get collision info
+                                btManifoldPoint &pt =
+                                    contactManifold->getContactPoint(k);
+                                if (pt.getDistance() < 0.0f)
+                                {
+                                    const btVector3 &ptA =
+                                        pt.getPositionWorldOnA();
+                                    const btVector3 &ptB =
+                                        pt.getPositionWorldOnB();
+                                    const btVector3 &normalOnB =
+                                        pt.m_normalWorldOnB;
+
+                                    // Create collision message
+                                    ds_msg::PhysicsCollision collisionMsg;
+                                    collisionMsg.entityA = a;
+                                    collisionMsg.entityB = b;
+                                    collisionMsg.pointWorldOnA =
+                                        ds_math::Vector3(ptA.getX(), ptA.getY(),
+                                                         ptA.getZ());
+                                    collisionMsg.pointWorldOnB =
+                                        ds_math::Vector3(ptB.getX(), ptB.getY(),
+                                                         ptB.getZ());
+                                    collisionMsg.normalWorldOnB =
+                                        ds_math::Vector3(normalOnB.getX(),
+                                                         normalOnB.getY(),
+                                                         normalOnB.getZ());
+
+                                    // Send it
+                                    ds_msg::AppendMessage(
+                                        &m_messagesGenerated,
+                                        ds_msg::MessageType::PhysicsCollision,
+                                        sizeof(ds_msg::PhysicsCollision),
+                                        &collisionMsg);
+                                }
                             }
                         }
                     }
-                }
-                else if (colObject->getInternalType() ==
-                         btCollisionObject::CollisionObjectTypes::
-                             CO_GHOST_OBJECT)
-                {
-                    // Downcast collision object to ghost object
-                    btPairCachingGhostObject *ghostObject =
-                        (btPairCachingGhostObject *)colObject;
-
-                    std::cout << "We have a ghost object." << std::endl;
-
-                    btManifoldArray manifoldArray;
-                    btBroadphasePairArray &pairArray =
-                        ghostObject->getOverlappingPairCache()
-                            ->getOverlappingPairArray();
-                    int numPairs = pairArray.size();
-                    std::cout << "num pairs: " << numPairs << std::endl;
-
-                    for (int j = 0; j < numPairs; ++j)
+                    else if (colObject->getInternalType() ==
+                             btCollisionObject::CollisionObjectTypes::
+                                 CO_GHOST_OBJECT)
                     {
-                        manifoldArray.clear();
+                        // Downcast collision object to ghost object
+                        btPairCachingGhostObject *ghostObject =
+                            (btPairCachingGhostObject *)colObject;
 
-                        const btBroadphasePair &pair = pairArray[j];
+                        std::cout << "We have a ghost object." << std::endl;
 
-                        btBroadphasePair *collisionPair =
-                            m_dynamicsWorld->getPairCache()->findPair(
-                                pair.m_pProxy0, pair.m_pProxy1);
+                        btManifoldArray manifoldArray;
+                        btBroadphasePairArray &pairArray =
+                            ghostObject->getOverlappingPairCache()
+                                ->getOverlappingPairArray();
+                        int numPairs = pairArray.size();
+                        std::cout << "num pairs: " << numPairs << std::endl;
 
-                        if (!collisionPair)
+                        for (int j = 0; j < numPairs; ++j)
                         {
-                            std::cout << "No collision pair" << std::endl;
-                            continue;
-                        }
+                            manifoldArray.clear();
 
-                        if (collisionPair->m_algorithm)
-                        {
-                            std::cout << "Algorithm" << std::endl;
-                            collisionPair->m_algorithm->getAllContactManifolds(
-                                manifoldArray);
-                        }
+                            const btBroadphasePair &pair = pairArray[j];
 
-                        for (int k = 0; k < manifoldArray.size(); ++k)
-                        {
-                            std::cout << "Inner manifold" << std::endl;
-                            btPersistentManifold *manifold = manifoldArray[k];
+                            btBroadphasePair *collisionPair =
+                                m_dynamicsWorld->getPairCache()->findPair(
+                                    pair.m_pProxy0, pair.m_pProxy1);
 
-                            // bool isFirstBody =
-                            //     (manifold->getBody0() == ghostObject);
-
-                            // btScalar direction =
-                            //     isFirstBody ? btScalar(-1.0) : btScalar(1.0);
-
-                            for (int p = 0; p < manifold->getNumContacts(); ++p)
+                            if (!collisionPair)
                             {
-                                const btManifoldPoint &pt =
-                                    manifold->getContactPoint(p);
+                                std::cout << "No collision pair" << std::endl;
+                                continue;
+                            }
 
-                                if (pt.getDistance() < 0.0f)
+                            if (collisionPair->m_algorithm)
+                            {
+                                std::cout << "Algorithm" << std::endl;
+                                collisionPair->m_algorithm
+                                    ->getAllContactManifolds(manifoldArray);
+                            }
+
+                            for (int k = 0; k < manifoldArray.size(); ++k)
+                            {
+                                std::cout << "Inner manifold" << std::endl;
+                                btPersistentManifold *manifold =
+                                    manifoldArray[k];
+
+                                // bool isFirstBody =
+                                //     (manifold->getBody0() == ghostObject);
+
+                                // btScalar direction =
+                                //     isFirstBody ? btScalar(-1.0) :
+                                //     btScalar(1.0);
+
+                                for (int p = 0; p < manifold->getNumContacts();
+                                     ++p)
                                 {
-                                    std::cout << "Nyan" << std::endl;
+                                    const btManifoldPoint &pt =
+                                        manifold->getContactPoint(p);
+
+                                    if (pt.getDistance() < 0.0f)
+                                    {
+                                        std::cout << "Nyan" << std::endl;
+                                    }
                                 }
                             }
                         }
@@ -329,56 +348,57 @@ void Physics::Update(float deltaTime)
                 }
             }
         }
-    }
 
-    // Iterate thru manifolds
-    int numManifolds = m_dynamicsWorld->getDispatcher()->getNumManifolds();
-    for (unsigned int i = 0; i < numManifolds; ++i)
-    {
-        // Get colliding bodies
-        btPersistentManifold *contactManifold =
-            m_dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
-        const btCollisionObject *objA = contactManifold->getBody0();
-        const btCollisionObject *objB = contactManifold->getBody1();
-
-        // Get component instance for collision objects
-        Instance physA =
-            m_physicsComponentManager.GetInstanceForCollisionObject(
-                (btRigidBody *)objA);
-        Instance physB =
-            m_physicsComponentManager.GetInstanceForCollisionObject(
-                (btRigidBody *)objB);
-        // Find entity for component instance
-        Entity a = m_physicsComponentManager.GetEntityForInstance(physA);
-        Entity b = m_physicsComponentManager.GetEntityForInstance(physB);
-
-        // Iterate thru contact points
-        int numContacts = contactManifold->getNumContacts();
-        for (int j = 0; j < numContacts; ++j)
+        // Iterate thru manifolds
+        int numManifolds = m_dynamicsWorld->getDispatcher()->getNumManifolds();
+        for (unsigned int i = 0; i < numManifolds; ++i)
         {
-            // Get collision info
-            btManifoldPoint &pt = contactManifold->getContactPoint(j);
-            if (pt.getDistance() < 0.0f)
+            // Get colliding bodies
+            btPersistentManifold *contactManifold =
+                m_dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
+            const btCollisionObject *objA = contactManifold->getBody0();
+            const btCollisionObject *objB = contactManifold->getBody1();
+
+            // Get component instance for collision objects
+            Instance physA =
+                m_physicsComponentManager.GetInstanceForCollisionObject(
+                    (btRigidBody *)objA);
+            Instance physB =
+                m_physicsComponentManager.GetInstanceForCollisionObject(
+                    (btRigidBody *)objB);
+            // Find entity for component instance
+            Entity a = m_physicsComponentManager.GetEntityForInstance(physA);
+            Entity b = m_physicsComponentManager.GetEntityForInstance(physB);
+
+            // Iterate thru contact points
+            int numContacts = contactManifold->getNumContacts();
+            for (int j = 0; j < numContacts; ++j)
             {
-                const btVector3 &ptA = pt.getPositionWorldOnA();
-                const btVector3 &ptB = pt.getPositionWorldOnB();
-                const btVector3 &normalOnB = pt.m_normalWorldOnB;
+                // Get collision info
+                btManifoldPoint &pt = contactManifold->getContactPoint(j);
+                if (pt.getDistance() < 0.0f)
+                {
+                    const btVector3 &ptA = pt.getPositionWorldOnA();
+                    const btVector3 &ptB = pt.getPositionWorldOnB();
+                    const btVector3 &normalOnB = pt.m_normalWorldOnB;
 
-                // Create collision message
-                ds_msg::PhysicsCollision collisionMsg;
-                collisionMsg.entityA = a;
-                collisionMsg.entityB = b;
-                collisionMsg.pointWorldOnA =
-                    ds_math::Vector3(ptA.getX(), ptA.getY(), ptA.getZ());
-                collisionMsg.pointWorldOnB =
-                    ds_math::Vector3(ptB.getX(), ptB.getY(), ptB.getZ());
-                collisionMsg.normalWorldOnB = ds_math::Vector3(
-                    normalOnB.getX(), normalOnB.getY(), normalOnB.getZ());
+                    // Create collision message
+                    ds_msg::PhysicsCollision collisionMsg;
+                    collisionMsg.entityA = a;
+                    collisionMsg.entityB = b;
+                    collisionMsg.pointWorldOnA =
+                        ds_math::Vector3(ptA.getX(), ptA.getY(), ptA.getZ());
+                    collisionMsg.pointWorldOnB =
+                        ds_math::Vector3(ptB.getX(), ptB.getY(), ptB.getZ());
+                    collisionMsg.normalWorldOnB = ds_math::Vector3(
+                        normalOnB.getX(), normalOnB.getY(), normalOnB.getZ());
 
-                // Send it
-                ds_msg::AppendMessage(
-                    &m_messagesGenerated, ds_msg::MessageType::PhysicsCollision,
-                    sizeof(ds_msg::PhysicsCollision), &collisionMsg);
+                    // Send it
+                    ds_msg::AppendMessage(&m_messagesGenerated,
+                                          ds_msg::MessageType::PhysicsCollision,
+                                          sizeof(ds_msg::PhysicsCollision),
+                                          &collisionMsg);
+                }
             }
         }
     }
@@ -851,6 +871,15 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
             {
                 m_terrainComponentManager.RemoveInstance(terrain);
             }
+
+            break;
+        }
+        case ds_msg::MessageType::PauseEvent:
+        {
+            ds_msg::PauseEvent pauseMsg;
+            (*messages) >> pauseMsg;
+
+            m_isPaused = pauseMsg.shouldPause;
 
             break;
         }

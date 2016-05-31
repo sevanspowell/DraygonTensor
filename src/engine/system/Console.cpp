@@ -470,6 +470,21 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
                      << windowResizeMsg.newHeight << ")" << std::endl;
             break;
         }
+        case ds_msg::MessageType::PauseEvent:
+        {
+            ds_msg::PauseEvent pauseMsg;
+            (*messages) >> pauseMsg;
+
+            if (pauseMsg.shouldPause)
+            {
+                m_buffer << "Console out: Paused!" << std::endl;
+            }
+            else
+            {
+                m_buffer << "Console out: Unpaused!" << std::endl;
+            }
+            break;
+        }
         default:
             // Always extract the payload
             messages->Extract(header.size);
