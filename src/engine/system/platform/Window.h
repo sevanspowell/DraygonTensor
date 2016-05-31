@@ -71,6 +71,14 @@ public:
      */
     void SwapBuffers();
 
+    /**
+     * Enable or disable mouse locking in the window.
+     *
+     * @param  enableMouseLock  bool, TRUE to enable mouse locking, FALSE to
+     * disable it.
+     */
+    void SetMouseLock(bool enableMouseLock);
+
     /** The following properties should be set before the Create() member
      * function is called */
     // Width of the window in pixels

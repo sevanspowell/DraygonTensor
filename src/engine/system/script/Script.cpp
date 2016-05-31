@@ -564,6 +564,16 @@ void Script::SetMaterialParameterVector4(
         sizeof(ds_msg::SetMaterialParameterVector4), &setParameterMsg);
 }
 
+void Script::SetMouseLock(bool enableMouseLock)
+{
+    ds_msg::SetMouseLock setMouseLockMsg;
+    setMouseLockMsg.enableMouseLock = enableMouseLock;
+
+    ds_msg::AppendMessage(&m_messagesGenerated,
+                          ds_msg::MessageType::SetMouseLock,
+                          sizeof(ds_msg::SetMouseLock), &setMouseLockMsg);
+}
+
 void Script::ProcessEvents(ds_msg::MessageStream *messages)
 {
     while (messages->AvailableBytes() != 0)

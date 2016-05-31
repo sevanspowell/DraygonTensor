@@ -446,6 +446,20 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
                      << "' to value: " << setParameterMsg.data << std::endl;
             break;
         }
+        case ds_msg::MessageType::SetMouseLock:
+            ds_msg::SetMouseLock setMouseLockMsg;
+            (*messages) >> setMouseLockMsg;
+
+            if (setMouseLockMsg.enableMouseLock == true)
+            {
+                m_buffer << "Console out: Mouse lock enabled." << std::endl;
+            }
+            else
+            {
+                m_buffer << "Console out: Mouse lock disabled." << std::endl;
+            }
+
+            break;
         default:
             // Always extract the payload
             messages->Extract(header.size);

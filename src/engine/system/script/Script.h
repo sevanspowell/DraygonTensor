@@ -358,6 +358,14 @@ public:
                                 const std::string &materialParameterName,
                                 const ds_math::Vector4 &data);
 
+    /*
+     * Enable/disable mouse locking.
+     *
+     * @param  enableMouseLock  boolean, TRUE to enable mouse locking, FALSE
+     * otherwise.
+     */
+    void SetMouseLock(bool enableMouseLock);
+
 private:
     /**
      * Process messages in the given message stream.
