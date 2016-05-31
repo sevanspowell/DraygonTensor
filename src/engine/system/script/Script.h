@@ -366,6 +366,12 @@ public:
      */
     void SetMouseLock(bool enableMouseLock);
 
+    /**
+     * Send a quit message to the engine to cause it to shutdown all it's
+     * systems and exit the program.
+     */
+    void Quit();
+
 private:
     /**
      * Process messages in the given message stream.

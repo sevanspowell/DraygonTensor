@@ -79,7 +79,9 @@ enum class MessageType
     // On physics collision
     PhysicsCollision,
     // Set mouse lock on/off
-    SetMouseLock
+    SetMouseLock,
+    // Shutdown engine and all systems
+    Shutdown
 };
 
 /**

@@ -574,6 +574,14 @@ void Script::SetMouseLock(bool enableMouseLock)
                           sizeof(ds_msg::SetMouseLock), &setMouseLockMsg);
 }
 
+void Script::Quit()
+{
+    ds_msg::QuitEvent quitEvent;
+
+    ds_msg::AppendMessage(&m_messagesGenerated, ds_msg::MessageType::QuitEvent,
+                          sizeof(ds_msg::QuitEvent), &quitEvent);
+}
+
 void Script::ProcessEvents(ds_msg::MessageStream *messages)
 {
     while (messages->AvailableBytes() != 0)

@@ -1280,6 +1280,41 @@ static int l_SetMouseLock(lua_State *L)
     return 0;
 }
 
+static int l_Quit(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expected = 0;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push script system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our script system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        scriptPtr->Quit();
+    }
+
+    assert(lua_gettop(L) == 0);
+
+    return 0;
+}
+
 ds::ScriptBindingSet LoadScriptBindings()
 {
     ds::ScriptBindingSet scriptBindings;
@@ -1306,6 +1341,7 @@ ds::ScriptBindingSet LoadScriptBindings()
     scriptBindings.AddFunction("set_material_parameter",
                                l_SetMaterialParameter);
     scriptBindings.AddFunction("set_mouse_lock", l_SetMouseLock);
+    scriptBindings.AddFunction("quit", l_Quit);
 
     return scriptBindings;
 }
