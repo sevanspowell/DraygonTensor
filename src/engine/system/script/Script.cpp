@@ -594,6 +594,7 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
 
             // Remove entity from entity manager
             m_entityManager.Destroy(destroyEntityMsg.entity);
+			break;
         }
         default:
             messages->Extract(header.size);
