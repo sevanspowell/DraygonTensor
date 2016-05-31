@@ -689,9 +689,9 @@ static int l_GetWorldTranslation(lua_State *L)
             // Get world transform
             *worldTranslation = scriptPtr->GetWorldTranslation(*entity);
 
-            // Get Matrix4 metatable and put on top of stack
+            // Get Vector3 metatable and put on top of stack
             luaL_getmetatable(L, "Vector3");
-            // Set it as metatable of new user data (the Matrix4 result - second
+            // Set it as metatable of new user data (the Vector3 result - second
             // from top of stack)
             lua_setmetatable(L, -2);
         }
@@ -747,9 +747,9 @@ static int l_GetLocalScale(lua_State *L)
             // Get world scale
             *localScale = scriptPtr->GetLocalScale(*entity);
 
-            // Get Matrix4 metatable and put on top of stack
+            // Get Vector3 metatable and put on top of stack
             luaL_getmetatable(L, "Vector3");
-            // Set it as metatable of new user data (the Matrix4 result - second
+            // Set it as metatable of new user data (the Vector3 result - second
             // from top of stack)
             lua_setmetatable(L, -2);
         }
@@ -805,9 +805,9 @@ static int l_GetWorldScale(lua_State *L)
             // Get world scale
             *worldScale = scriptPtr->GetWorldScale(*entity);
 
-            // Get Matrix4 metatable and put on top of stack
+            // Get Vector3 metatable and put on top of stack
             luaL_getmetatable(L, "Vector3");
-            // Set it as metatable of new user data (the Matrix4 result - second
+            // Set it as metatable of new user data (the Vector3 result - second
             // from top of stack)
             lua_setmetatable(L, -2);
         }
@@ -864,9 +864,10 @@ static int l_GetLocalOrientation(lua_State *L)
             // Get local orientation
             *localScale = scriptPtr->GetLocalOrientation(*entity);
 
-            // Get Matrix4 metatable and put on top of stack
+            // Get Quaternion metatable and put on top of stack
             luaL_getmetatable(L, "Quaternion");
-            // Set it as metatable of new user data (the Matrix4 result - second
+            // Set it as metatable of new user data (the Quaternion result -
+            // second
             // from top of stack)
             lua_setmetatable(L, -2);
         }
@@ -1074,9 +1075,10 @@ static int l_GetWorldOrientation(lua_State *L)
             // Get world orientation
             *worldScale = scriptPtr->GetWorldOrientation(*entity);
 
-            // Get Matrix4 metatable and put on top of stack
+            // Get Quaternion metatable and put on top of stack
             luaL_getmetatable(L, "Quaternion");
-            // Set it as metatable of new user data (the Matrix4 result - second
+            // Set it as metatable of new user data (the Quaternion result -
+            // second
             // from top of stack)
             lua_setmetatable(L, -2);
         }
@@ -1136,6 +1138,102 @@ static int l_DestroyEntity(lua_State *L)
     return 0;
 }
 
+static int l_SetMaterialParameter(lua_State *L)
+{
+    int n = lua_gettop(L);
+    int expected = 4;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push render system pointer onto stack
+    lua_getglobal(L, "__Script");
+
+    // If first item on stack isn't user data (our input system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *scriptPtr = (ds::Script *)lua_touserdata(L, -1);
+        assert(scriptPtr != NULL);
+
+        // Pop user data off stack now that we are done with it
+        lua_pop(L, 1);
+
+        const char *materialResourceFilePath = NULL;
+        const char *materialParameterName = NULL;
+        const char *materialParameterType = NULL;
+
+        materialResourceFilePath = luaL_checkstring(L, 1);
+        materialParameterName = luaL_checkstring(L, 2);
+        materialParameterType = luaL_checkstring(L, 3);
+
+        if (materialResourceFilePath != NULL && materialParameterName != NULL &&
+            materialParameterType != NULL)
+        {
+            std::string type = std::string(materialParameterType);
+            if (type == "float")
+            {
+                // Get data
+                ds_math::scalar data = (ds_math::scalar)luaL_checknumber(L, 4);
+
+                scriptPtr->SetMaterialParameterFloat(materialResourceFilePath,
+                                                     materialParameterName,
+                                                     (float)data);
+            }
+            else if (type == "int")
+            {
+                ds_math::scalar data = (ds_math::scalar)luaL_checknumber(L, 4);
+
+                scriptPtr->SetMaterialParameterInt(
+                    materialResourceFilePath, materialParameterName, (int)data);
+            }
+            else if (type == "mat4")
+            {
+                ds_math::Matrix4 *data = NULL;
+                data = (ds_math::Matrix4 *)luaL_checkudata(L, 4, "Matrix4");
+
+                if (data != NULL)
+                {
+                    scriptPtr->SetMaterialParameterMatrix4(
+                        materialResourceFilePath, materialParameterName, *data);
+                }
+            }
+            else if (type == "vec3")
+            {
+                ds_math::Vector3 *data = NULL;
+                data = (ds_math::Vector3 *)luaL_checkudata(L, 4, "Vector3");
+
+                if (data != NULL)
+                {
+                    scriptPtr->SetMaterialParameterVector3(
+                        materialResourceFilePath, materialParameterName, *data);
+                }
+            }
+            else if (type == "vec4")
+            {
+                ds_math::Vector4 *data = NULL;
+                data = (ds_math::Vector4 *)luaL_checkudata(L, 4, "Vector4");
+
+                if (data != NULL)
+                {
+                    scriptPtr->SetMaterialParameterVector4(
+                        materialResourceFilePath, materialParameterName, *data);
+                }
+            }
+        }
+    }
+
+    // Four strings passed in
+    assert(lua_gettop(L) == 4);
+
+    return 0;
+}
+
 ds::ScriptBindingSet LoadScriptBindings()
 {
     ds::ScriptBindingSet scriptBindings;
@@ -1159,6 +1257,8 @@ ds::ScriptBindingSet LoadScriptBindings()
     scriptBindings.AddFunction("set_local_orientation", l_SetLocalOrientation);
     scriptBindings.AddFunction("get_world_orientation", l_GetWorldOrientation);
     scriptBindings.AddFunction("destroy_entity", l_DestroyEntity);
+    scriptBindings.AddFunction("set_material_parameter",
+                               l_SetMaterialParameter);
 
     return scriptBindings;
 }

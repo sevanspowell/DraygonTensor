@@ -376,6 +376,76 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
                      << " flagged for destruction." << std::endl;
             break;
         }
+        case ds_msg::MessageType::SetMaterialParameterFloat:
+        {
+            ds_msg::SetMaterialParameterFloat setParameterMsg;
+            (*messages) >> setParameterMsg;
+
+            m_buffer << "Console out: set float material parameter '"
+                     << StringIntern::Instance().GetString(
+                            setParameterMsg.parameter)
+                     << "' from material resource '"
+                     << StringIntern::Instance().GetString(
+                            setParameterMsg.materialResourceFilePath)
+                     << "' to value: " << setParameterMsg.data << std::endl;
+            break;
+        }
+        case ds_msg::MessageType::SetMaterialParameterInt:
+        {
+            ds_msg::SetMaterialParameterInt setParameterMsg;
+            (*messages) >> setParameterMsg;
+
+            m_buffer << "Console out: set int material parameter '"
+                     << StringIntern::Instance().GetString(
+                            setParameterMsg.parameter)
+                     << "' from material resource '"
+                     << StringIntern::Instance().GetString(
+                            setParameterMsg.materialResourceFilePath)
+                     << "' to value: " << setParameterMsg.data << std::endl;
+            break;
+        }
+        case ds_msg::MessageType::SetMaterialParameterMatrix4:
+        {
+            ds_msg::SetMaterialParameterMatrix4 setParameterMsg;
+            (*messages) >> setParameterMsg;
+
+            m_buffer << "Console out: set Matrix4 material parameter '"
+                     << StringIntern::Instance().GetString(
+                            setParameterMsg.parameter)
+                     << "' from material resource '"
+                     << StringIntern::Instance().GetString(
+                            setParameterMsg.materialResourceFilePath)
+                     << "' to value: " << setParameterMsg.data << std::endl;
+            break;
+        }
+        case ds_msg::MessageType::SetMaterialParameterVector4:
+        {
+            ds_msg::SetMaterialParameterVector4 setParameterMsg;
+            (*messages) >> setParameterMsg;
+
+            m_buffer << "Console out: set Vector4 material parameter '"
+                     << StringIntern::Instance().GetString(
+                            setParameterMsg.parameter)
+                     << "' from material resource '"
+                     << StringIntern::Instance().GetString(
+                            setParameterMsg.materialResourceFilePath)
+                     << "' to value: " << setParameterMsg.data << std::endl;
+            break;
+        }
+        case ds_msg::MessageType::SetMaterialParameterVector3:
+        {
+            ds_msg::SetMaterialParameterVector3 setParameterMsg;
+            (*messages) >> setParameterMsg;
+
+            m_buffer << "Console out: set Vector3 material parameter '"
+                     << StringIntern::Instance().GetString(
+                            setParameterMsg.parameter)
+                     << "' from material resource '"
+                     << StringIntern::Instance().GetString(
+                            setParameterMsg.materialResourceFilePath)
+                     << "' to value: " << setParameterMsg.data << std::endl;
+            break;
+        }
         default:
             // Always extract the payload
             messages->Extract(header.size);

@@ -3,6 +3,7 @@
 #include "engine/system/render/RenderCommon.h"
 #include "engine/system/render/VertexBufferDescription.h"
 #include "engine/system/render/ConstantBufferDescription.h"
+#include "engine/system/render/ShaderParameter.h"
 
 namespace ds_render
 {
@@ -319,6 +320,24 @@ public:
                                      PrimitiveType primitiveType,
                                      size_t startingIndex,
                                      size_t numIndices) = 0;
+
+    /**
+     * Update the value of the specified parameter in the given program.
+     *
+     * @param  programHandle  ProgramHandle, handle to program to update
+     * parameter of.
+     * @param  parameterName  const std::string &, name of program parameter to
+     * update.
+     * @param  parameterType  ShaderParameter::ShaderParameterType, data type of
+     * the parameter.
+     * @param  parameterData  const void *, program parameter data to update
+     * with.
+     */
+    virtual void
+    UpdateProgramParameter(ProgramHandle programHandle,
+                           const std::string &parameterName,
+                           ShaderParameter::ShaderParameterType parameterType,
+                           const void *parameterData) = 0;
 
 private:
 };

@@ -459,6 +459,111 @@ void Script::DestroyEntity(Entity entity)
                           sizeof(ds_msg::DestroyEntity), &destroyEntityMsg);
 }
 
+void Script::SetMaterialParameterFloat(
+    const std::string &materialResourceFilePath,
+    const std::string &materialParameterName,
+    float data)
+{
+    std::stringstream fullPath;
+    fullPath << "../assets/" << materialResourceFilePath;
+
+    // Send material parameter message
+    ds_msg::SetMaterialParameterFloat setParameterMsg;
+    setParameterMsg.materialResourceFilePath =
+        StringIntern::Instance().Intern(fullPath.str());
+    setParameterMsg.parameter =
+        StringIntern::Instance().Intern(materialParameterName);
+    setParameterMsg.data = data;
+
+    ds_msg::AppendMessage(
+        &m_messagesGenerated, ds_msg::MessageType::SetMaterialParameterFloat,
+        sizeof(ds_msg::SetMaterialParameterFloat), &setParameterMsg);
+}
+
+void Script::SetMaterialParameterInt(
+    const std::string &materialResourceFilePath,
+    const std::string &materialParameterName,
+    int data)
+{
+    std::stringstream fullPath;
+    fullPath << "../assets/" << materialResourceFilePath;
+
+    // Send material parameter message
+    ds_msg::SetMaterialParameterInt setParameterMsg;
+    setParameterMsg.materialResourceFilePath =
+        StringIntern::Instance().Intern(fullPath.str());
+    setParameterMsg.parameter =
+        StringIntern::Instance().Intern(materialParameterName);
+    setParameterMsg.data = data;
+
+    ds_msg::AppendMessage(
+        &m_messagesGenerated, ds_msg::MessageType::SetMaterialParameterInt,
+        sizeof(ds_msg::SetMaterialParameterInt), &setParameterMsg);
+}
+
+void Script::SetMaterialParameterMatrix4(
+    const std::string &materialResourceFilePath,
+    const std::string &materialParameterName,
+    const ds_math::Matrix4 &data)
+{
+    std::stringstream fullPath;
+    fullPath << "../assets/" << materialResourceFilePath;
+
+    // Send material parameter message
+    ds_msg::SetMaterialParameterMatrix4 setParameterMsg;
+    setParameterMsg.materialResourceFilePath =
+        StringIntern::Instance().Intern(fullPath.str());
+    setParameterMsg.parameter =
+        StringIntern::Instance().Intern(materialParameterName);
+    setParameterMsg.data = data;
+
+    ds_msg::AppendMessage(
+        &m_messagesGenerated, ds_msg::MessageType::SetMaterialParameterMatrix4,
+        sizeof(ds_msg::SetMaterialParameterMatrix4), &setParameterMsg);
+}
+
+void Script::SetMaterialParameterVector3(
+    const std::string &materialResourceFilePath,
+    const std::string &materialParameterName,
+    const ds_math::Vector3 &data)
+{
+    std::stringstream fullPath;
+    fullPath << "../assets/" << materialResourceFilePath;
+
+    // Send material parameter message
+    ds_msg::SetMaterialParameterVector3 setParameterMsg;
+    setParameterMsg.materialResourceFilePath =
+        StringIntern::Instance().Intern(fullPath.str());
+    setParameterMsg.parameter =
+        StringIntern::Instance().Intern(materialParameterName);
+    setParameterMsg.data = data;
+
+    ds_msg::AppendMessage(
+        &m_messagesGenerated, ds_msg::MessageType::SetMaterialParameterVector3,
+        sizeof(ds_msg::SetMaterialParameterVector3), &setParameterMsg);
+}
+
+void Script::SetMaterialParameterVector4(
+    const std::string &materialResourceFilePath,
+    const std::string &materialParameterName,
+    const ds_math::Vector4 &data)
+{
+    std::stringstream fullPath;
+    fullPath << "../assets/" << materialResourceFilePath;
+
+    // Send material parameter message
+    ds_msg::SetMaterialParameterVector4 setParameterMsg;
+    setParameterMsg.materialResourceFilePath =
+        StringIntern::Instance().Intern(fullPath.str());
+    setParameterMsg.parameter =
+        StringIntern::Instance().Intern(materialParameterName);
+    setParameterMsg.data = data;
+
+    ds_msg::AppendMessage(
+        &m_messagesGenerated, ds_msg::MessageType::SetMaterialParameterVector4,
+        sizeof(ds_msg::SetMaterialParameterVector4), &setParameterMsg);
+}
+
 void Script::ProcessEvents(ds_msg::MessageStream *messages)
 {
     while (messages->AvailableBytes() != 0)
@@ -594,6 +699,7 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
 
             // Remove entity from entity manager
             m_entityManager.Destroy(destroyEntityMsg.entity);
+            break;
         }
         default:
             messages->Extract(header.size);

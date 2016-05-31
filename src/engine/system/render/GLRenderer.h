@@ -311,6 +311,23 @@ public:
                                      size_t startingIndex,
                                      size_t numIndices);
 
+    /**
+     * Update the value of the specified parameter in the given program.
+     *
+     * @param  programHandle  ProgramHandle, handle to program to update
+     * parameter of.
+     * @param  parameterName  const std::string &, name of program parameter to
+     * update.
+     * @param  parameterType  ShaderParameter::ShaderParameterType, data type of
+     * the parameter.
+     * @param  parameterData  const void *, program parameter data to update
+     * with.
+     */
+    virtual void
+    UpdateProgramParameter(ProgramHandle programHandle,
+                           const std::string &parameterName,
+                           ShaderParameter::ShaderParameterType parameterType,
+                           const void *parameterData);
 private:
     /**
      * A GLuint can represent one of many different OpenGL objects,

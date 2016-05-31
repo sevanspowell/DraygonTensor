@@ -287,6 +287,77 @@ public:
      */
     void DestroyEntity(Entity entity);
 
+    /**
+     * Set a float parameter of a given material to a given value.
+     *
+     * @param  materialResourceFilePath  const std::string &, path to material
+     * resource of material to change parameter of.
+     * @param  materialParameterName     const std::string &, material parameter
+     * name.
+     * @param  data                      float, value to set parameter to.
+     */
+    void SetMaterialParameterFloat(const std::string &materialResourceFilePath,
+                                   const std::string &materialParameterName,
+                                   float data);
+
+    /**
+     * Set an int parameter of a given material to a given value.
+     *
+     * @param  materialResourceFilePath  const std::string &, path to material
+     * resource of material to change parameter of.
+     * @param  materialParameterName     const std::string &, material parameter
+     * name.
+     * @param  data                      int, value to set parameter to.
+     */
+    void SetMaterialParameterInt(const std::string &materialResourceFilePath,
+                                 const std::string &materialParameterName,
+                                 int data);
+
+    /**
+     * Set the mat4 parameter of a given material to a given value.
+     *
+     * @param  materialResourceFilePath  const std::string &, path to material
+     * resource of material to change parameter of.
+     * @param  materialParameterName     const std::string &, material parameter
+     * name.
+     * @param  data                      const ds_math::Matrix4 &, value to set
+     * parameter to.
+     */
+    void
+    SetMaterialParameterMatrix4(const std::string &materialResourceFilePath,
+                                const std::string &materialParameterName,
+                                const ds_math::Matrix4 &data);
+
+    /**
+     * Set the vec3 parameter of a given material to a given value.
+     *
+     * @param  materialResourceFilePath  const std::string &, path to material
+     * resource of material to change parameter of.
+     * @param  materialParameterName     const std::string &, material parameter
+     * name.
+     * @param  data                      const ds_math::Vector3 &, value to set
+     * parameter to.
+     */
+    void
+    SetMaterialParameterVector3(const std::string &materialResourceFilePath,
+                                const std::string &materialParameterName,
+                                const ds_math::Vector3 &data);
+
+    /**
+     * Set the vec4 parameter of a given material to a given value.
+     *
+     * @param  materialResourceFilePath  const std::string &, path to material
+     * resource of material to change parameter of.
+     * @param  materialParameterName     const std::string &, material parameter
+     * name.
+     * @param  data                      const ds_math::Vector4 &, value to set
+     * parameter to.
+     */
+    void
+    SetMaterialParameterVector4(const std::string &materialResourceFilePath,
+                                const std::string &materialParameterName,
+                                const ds_math::Vector4 &data);
+
 private:
     /**
      * Process messages in the given message stream.

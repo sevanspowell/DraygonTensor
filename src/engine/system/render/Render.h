@@ -246,18 +246,6 @@ private:
     void ProcessEvents(ds_msg::MessageStream *messages);
 
     /**
-     * Create a Texture object from a texture sampler type and a list of file
-     * paths that will be bound to that sampler. In the case of a cubemap
-     * sampler for example, 6 images should be provided.
-     *
-     * @param   textureResourceFilePath const std::vector<std::string> &, path
-     * to texture resource.
-     * @return                          ds_render::Texture, texture created.
-     */
-    ds_render::Texture CreateTextureFromTextureResource(
-        const std::string &textureResourceFilePath);
-
-    /**
      * Create a Texture object from a texture resource handle.
      *
      * @param   handle  TextureResourceHandle, texture handle to create Texture
@@ -281,25 +269,6 @@ private:
      * @return            ds_render::Mesh, mesh created.
      */
     ds_render::Mesh CreateMeshFromMeshResource(const std::string &filePath);
-
-    /**
-     * Create a Material object from a path to a material resource.
-     *
-     * Will attempt to bind Scene and Object constant buffers by default.
-     *
-     * @param   filePath        const std::string &, path to material resource.
-     * @param   sceneMatrices   ds_render::ConstantBufferHandle, handle to
-     * constant buffer containing scene matrix data.
-     * @param   objectMatrices  ds_render::ConstantBufferHandle, handle to
-     * constant buffer containing object matrix data.
-     * @return                  ds_render::Material, material created.
-     */
-    // ds_render::Material
-    // CreateMaterialFromMaterialResource(const std::string &filePath);
-    ds_render::Material CreateMaterialFromMaterialResource(
-        const std::string &filePath,
-        ds_render::ConstantBufferHandle sceneMatrices,
-        ds_render::ConstantBufferHandle objectMatrices);
 
     /**
      * Create a Material object from a material resource handle.

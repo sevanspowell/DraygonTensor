@@ -1244,7 +1244,8 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
             }
 
             // Transform
-            Instance transform = m_transformComponentManager.GetInstanceForEntity(e);
+            Instance transform =
+                m_transformComponentManager.GetInstanceForEntity(e);
 
             if (transform.IsValid())
             {
@@ -1259,7 +1260,7 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                 m_cameraComponentManager.RemoveInstance(camera);
             }
 
-            // Buttons 
+            // Buttons
             Instance button = m_buttonComponentManager.GetInstanceForEntity(e);
 
             if (button.IsValid())
@@ -1269,121 +1270,154 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 
             break;
         }
+        case ds_msg::MessageType::SetMaterialParameterFloat:
+        {
+            ds_msg::SetMaterialParameterFloat setParameterMsg;
+            (*messages) >> setParameterMsg;
+
+            // Get material resource handle for material path
+            MaterialResourceHandle materialResourceHandle;
+            if (m_materialResourceManager.LoadMaterialResourceFromFile(
+                    StringIntern::Instance().GetString(
+                        setParameterMsg.materialResourceFilePath),
+                    &materialResourceHandle) == true)
+            {
+                ds_render::MaterialHandle materialHandle;
+                if (m_materialManager.GetMaterialForResourceHandle(
+                        materialResourceHandle, &materialHandle) == true)
+                {
+                    ds_render::Material *material =
+                        m_materialManager.GetMaterial(materialHandle);
+
+                    material->SetMaterialParameterData(
+                        StringIntern::Instance().GetString(
+                            setParameterMsg.parameter),
+                        ds_render::ShaderParameter::ShaderParameterType::Float,
+                        &setParameterMsg.data);
+                }
+            }
+            break;
+        }
+        case ds_msg::MessageType::SetMaterialParameterInt:
+        {
+            ds_msg::SetMaterialParameterInt setParameterMsg;
+            (*messages) >> setParameterMsg;
+
+            // Get material resource handle for material path
+            MaterialResourceHandle materialResourceHandle;
+            if (m_materialResourceManager.LoadMaterialResourceFromFile(
+                    StringIntern::Instance().GetString(
+                        setParameterMsg.materialResourceFilePath),
+                    &materialResourceHandle) == true)
+            {
+                ds_render::MaterialHandle materialHandle;
+                if (m_materialManager.GetMaterialForResourceHandle(
+                        materialResourceHandle, &materialHandle) == true)
+                {
+                    ds_render::Material *material =
+                        m_materialManager.GetMaterial(materialHandle);
+
+                    material->SetMaterialParameterData(
+                        StringIntern::Instance().GetString(
+                            setParameterMsg.parameter),
+                        ds_render::ShaderParameter::ShaderParameterType::Int,
+                        &setParameterMsg.data);
+                }
+            }
+            break;
+        }
+        case ds_msg::MessageType::SetMaterialParameterMatrix4:
+        {
+            ds_msg::SetMaterialParameterMatrix4 setParameterMsg;
+            (*messages) >> setParameterMsg;
+
+            // Get material resource handle for material path
+            MaterialResourceHandle materialResourceHandle;
+            if (m_materialResourceManager.LoadMaterialResourceFromFile(
+                    StringIntern::Instance().GetString(
+                        setParameterMsg.materialResourceFilePath),
+                    &materialResourceHandle) == true)
+            {
+                ds_render::MaterialHandle materialHandle;
+                if (m_materialManager.GetMaterialForResourceHandle(
+                        materialResourceHandle, &materialHandle) == true)
+                {
+                    ds_render::Material *material =
+                        m_materialManager.GetMaterial(materialHandle);
+
+                    material->SetMaterialParameterData(
+                        StringIntern::Instance().GetString(
+                            setParameterMsg.parameter),
+                        ds_render::ShaderParameter::ShaderParameterType::
+                            Matrix4,
+                        &setParameterMsg.data);
+                }
+            }
+            break;
+        }
+        case ds_msg::MessageType::SetMaterialParameterVector4:
+        {
+            ds_msg::SetMaterialParameterVector4 setParameterMsg;
+            (*messages) >> setParameterMsg;
+
+            // Get material resource handle for material path
+            MaterialResourceHandle materialResourceHandle;
+            if (m_materialResourceManager.LoadMaterialResourceFromFile(
+                    StringIntern::Instance().GetString(
+                        setParameterMsg.materialResourceFilePath),
+                    &materialResourceHandle) == true)
+            {
+                ds_render::MaterialHandle materialHandle;
+                if (m_materialManager.GetMaterialForResourceHandle(
+                        materialResourceHandle, &materialHandle) == true)
+                {
+                    ds_render::Material *material =
+                        m_materialManager.GetMaterial(materialHandle);
+
+                    material->SetMaterialParameterData(
+                        StringIntern::Instance().GetString(
+                            setParameterMsg.parameter),
+                        ds_render::ShaderParameter::ShaderParameterType::
+                            Vector4,
+                        &setParameterMsg.data);
+                }
+            }
+            break;
+        }
+        case ds_msg::MessageType::SetMaterialParameterVector3:
+        {
+            ds_msg::SetMaterialParameterVector3 setParameterMsg;
+            (*messages) >> setParameterMsg;
+
+            // Get material resource handle for material path
+            MaterialResourceHandle materialResourceHandle;
+            if (m_materialResourceManager.LoadMaterialResourceFromFile(
+                    StringIntern::Instance().GetString(
+                        setParameterMsg.materialResourceFilePath),
+                    &materialResourceHandle) == true)
+            {
+                ds_render::MaterialHandle materialHandle;
+                if (m_materialManager.GetMaterialForResourceHandle(
+                        materialResourceHandle, &materialHandle) == true)
+                {
+                    ds_render::Material *material =
+                        m_materialManager.GetMaterial(materialHandle);
+
+                    material->SetMaterialParameterData(
+                        StringIntern::Instance().GetString(
+                            setParameterMsg.parameter),
+                        ds_render::ShaderParameter::ShaderParameterType::
+                            Vector3,
+                        &setParameterMsg.data);
+                }
+            }
+            break;
+        }
         default:
             messages->Extract(header.size);
             break;
         }
     }
-}
-
-ds_render::Texture Render::CreateTextureFromTextureResource(
-    const std::string &textureResourceFilePath)
-{
-    ds_render::Texture texture;
-
-    // Create texture resource and get handle to it
-    TextureResourceHandle handle;
-    m_textureResourceManager.LoadTextureResourceFromFile(
-        textureResourceFilePath, &handle);
-    // Get the texture resource
-    const TextureResource *textureResource =
-        m_textureResourceManager.GetTextureResource(handle);
-
-    // Use it to make the appropriate texture
-    switch (textureResource->GetTextureType())
-    {
-    case ds_render::TextureType::TwoDimensional:
-    {
-        assert(
-            textureResource->GetNumImages() == 1 &&
-            "Incorrect number of images for two-dimensional texture - need 1.");
-
-        ds_render::ImageFormat format;
-        switch (textureResource->GetComponentFlag(0))
-        {
-        case TextureResource::ComponentFlag::COMPONENT_FLAG_GREY:
-            format = ds_render::ImageFormat::R;
-            break;
-        case TextureResource::ComponentFlag::COMPONENT_FLAG_GREYALPHA:
-            format = ds_render::ImageFormat::RG;
-            break;
-        case TextureResource::ComponentFlag::COMPONENT_FLAG_RGB:
-            format = ds_render::ImageFormat::RGB;
-            break;
-        case TextureResource::ComponentFlag::COMPONENT_FLAG_RGBA:
-            format = ds_render::ImageFormat::RGBA;
-            break;
-        default:
-            assert(false && "Unsupported image component flag.");
-            format = ds_render::ImageFormat::RGBA;
-            break;
-        }
-
-        // Create texture
-        texture = ds_render::Texture(
-            handle, ds_render::TextureType::TwoDimensional,
-            m_renderer->Create2DTexture(
-                format, ds_render::RenderDataType::UnsignedByte,
-                ds_render::InternalImageFormat::RGBA8, true,
-                textureResource->GetWidthInPixels(0),
-                textureResource->GetHeightInPixels(0),
-                textureResource->GetImageData(0)));
-
-        break;
-    }
-    case ds_render::TextureType::Cubemap:
-    {
-        assert(textureResource->GetNumImages() == 6 &&
-               "Incorrect number of cubemap images provided - need 6.");
-
-        // Use format of first image for all images
-        ds_render::ImageFormat format;
-        switch (textureResource->GetComponentFlag(0))
-        {
-        case TextureResource::ComponentFlag::COMPONENT_FLAG_GREY:
-            format = ds_render::ImageFormat::R;
-            break;
-        case TextureResource::ComponentFlag::COMPONENT_FLAG_GREYALPHA:
-            format = ds_render::ImageFormat::RG;
-            break;
-        case TextureResource::ComponentFlag::COMPONENT_FLAG_RGB:
-            format = ds_render::ImageFormat::RGB;
-            break;
-        case TextureResource::ComponentFlag::COMPONENT_FLAG_RGBA:
-            format = ds_render::ImageFormat::RGBA;
-            break;
-        default:
-            assert(false && "Unsupported image component flag.");
-            format = ds_render::ImageFormat::RGBA;
-            break;
-        }
-
-        // Create texture
-        texture = ds_render::Texture(
-            handle, ds_render::TextureType::Cubemap,
-            m_renderer->CreateCubemapTexture(
-                format, ds_render::RenderDataType::UnsignedByte,
-                ds_render::InternalImageFormat::RGBA8,
-                textureResource->GetWidthInPixels(0), // Use width of first
-                // image for all resources
-                textureResource->GetHeightInPixels(0), // Use height of first
-                // image for all resources
-                textureResource->GetImageData(0),
-                textureResource->GetImageData(1),
-                textureResource->GetImageData(2),
-                textureResource->GetImageData(3),
-                textureResource->GetImageData(4),
-                textureResource->GetImageData(5)));
-        break;
-    }
-    default:
-    {
-        assert(false && "Unhandled sampler type for texture.");
-        break;
-    }
-    }
-
-    return texture;
 }
 
 ds_render::Texture
@@ -1710,73 +1744,6 @@ ds_render::Mesh Render::CreateMeshFromMeshResource(const std::string &filePath)
     return mesh;
 }
 
-ds_render::Material Render::CreateMaterialFromMaterialResource(
-    const std::string &filePath,
-    ds_render::ConstantBufferHandle sceneMatrices,
-    ds_render::ConstantBufferHandle objectMatrices)
-{
-    ds_render::Material material;
-
-    // Generate material resource
-    std::unique_ptr<MaterialResource> materialResource =
-        m_factory.CreateResource<MaterialResource>(filePath);
-
-    // Create shader program
-    std::unique_ptr<ShaderResource> shaderResource =
-        m_factory.CreateResource<ShaderResource>(
-            materialResource->GetShaderResourceFilePath());
-
-    // Load each shader
-    std::vector<ds_render::ShaderHandle> shaders;
-    std::vector<ds_render::ShaderType> shaderTypes =
-        shaderResource->GetShaderTypes();
-    for (auto shaderType : shaderTypes)
-    {
-        const std::string &shaderSource =
-            shaderResource->GetShaderSource(shaderType);
-
-        // Append shader to list
-        shaders.push_back(m_renderer->CreateShaderObject(
-            shaderType, shaderSource.size(), shaderSource.c_str()));
-    }
-    // Compile shaders into shader program
-    ds_render::ProgramHandle shaderProgram = m_renderer->CreateProgram(shaders);
-
-    // Set shader program of material
-    material.SetProgram(shaderProgram);
-
-    // Create each texture and add to material
-    std::vector<std::string> textureSamplerNames =
-        materialResource->GetTextureSamplerNames();
-    for (auto samplerName : textureSamplerNames)
-    {
-        // Create texture from texture resource
-        // const std::string &textureResourceFilePath =
-        //     materialResource->GetTextureResourceFilePath(samplerName);
-        std::string textureResourceFilePath =
-            materialResource->GetSamplerTextureResourceFilePath(samplerName);
-
-        TextureResourceHandle textureResourceHandle;
-        m_textureResourceManager.LoadTextureResourceFromFile(
-            textureResourceFilePath, &textureResourceHandle);
-
-        ds_render::TextureHandle textureHandle;
-        m_textureManager.GetTextureForResourceHandle(textureResourceHandle,
-                                                     &textureHandle);
-
-        // Change this to take texture handle
-        material.AddTexture(samplerName, textureHandle);
-    }
-
-    // Bind constant buffers to program
-    m_renderer->BindConstantBuffer(material.GetProgram(), "Scene",
-                                   sceneMatrices);
-    m_renderer->BindConstantBuffer(material.GetProgram(), "Object",
-                                   objectMatrices);
-
-    return material;
-}
-
 ds_render::Material
 Render::CreateMaterialFromMaterialResource(MaterialResourceHandle handle)
 {
@@ -1835,6 +1802,16 @@ Render::CreateMaterialFromMaterialResource(MaterialResourceHandle handle)
 
             // Change this to take texture handle
             material.AddTexture(samplerName, textureHandle);
+
+            // Set handle to material resource used to create this material
+            material.SetMaterialResourceHandle(handle);
+        }
+
+        // Load material parameters from material resource and add to material
+        for (const auto &materialParameter :
+             materialResource->GetMaterialParameters())
+        {
+            material.AddMaterialParameter(materialParameter);
         }
 
         // Bind constant buffers to program
@@ -2011,7 +1988,7 @@ void Render::RenderScene(float deltaTime)
                     m_renderer->SetProgram(material->GetProgram());
 
                     // For each texture in material, bind it to shader
-                    for (auto shaderTexture : material->GetTextures())
+                    for (const auto &shaderTexture : material->GetTextures())
                     {
                         ds_render::Texture *texture =
                             m_textureManager.GetTexture(
@@ -2024,6 +2001,16 @@ void Render::RenderScene(float deltaTime)
                                 shaderTexture.samplerName, texture->textureType,
                                 texture->renderTextureHandle);
                         }
+                    }
+
+                    // Bind each material parameter to shader program
+                    for (const auto &materialParameter :
+                         material->GetMaterialParameters())
+                    {
+                        m_renderer->UpdateProgramParameter(
+                            material->GetProgram(), materialParameter.GetName(),
+                            materialParameter.GetDataType(),
+                            materialParameter.GetData());
                     }
 
                     // Draw the mesh

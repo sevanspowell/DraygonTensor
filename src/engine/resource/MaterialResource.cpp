@@ -5,6 +5,8 @@
 #include "engine/Config.h"
 #include "engine/common/Common.h"
 #include "engine/resource/MaterialResource.h"
+#include "math/Matrix4.h"
+#include "math/Vector4.h"
 
 namespace ds
 {
@@ -35,156 +37,209 @@ MaterialResource::CreateFromFile(std::string filePath)
 
             static_cast<MaterialResource *>(materialResource.get())
                 ->SetShaderResourceFilePath(fullShaderPath.str());
-
-            // Get path to texture samplers to use
-            std::vector<std::string> textureKeys =
-                config.GetObjectKeys("textures");
-
-            // For each texture sampler, grab texture sampler details and add it
-            // to the material resource
-            for (auto key : textureKeys)
-            {
-                // Get path to sampler
-                std::stringstream samplerKey;
-                samplerKey << "textures"
-                           << "." << key;
-
-                // Key to texture field in config file
-                std::stringstream textureFieldKey;
-                textureFieldKey << samplerKey.str() << "."
-                                << "texture";
-
-                // Get path to texture resource file
-                std::string textureResourcePath;
-
-                if (config.GetString(textureFieldKey.str(),
-                                     &textureResourcePath))
-                {
-                    std::stringstream fullTextureResourcePath;
-                    fullTextureResourcePath << folder << textureResourcePath;
-
-                    // Create new texture sampler
-                    static_cast<MaterialResource *>(materialResource.get())
-                        ->AddTextureSampler(key, fullTextureResourcePath.str());
-                }
-            }
-
-            // Get and load uniform blocks
-            std::vector<std::string> uniformBlockKeys =
-                config.GetObjectKeys("uniforms");
-
-            // For each uniform block
-            for (auto uniformBlockName : uniformBlockKeys)
-            {
-                // Create uniform block
-                ds_render::UniformBlock uniformBlock;
-                uniformBlock.SetName(uniformBlockName);
-
-                // Get and load uniforms
-                std::stringstream uniformsConfigKey;
-                uniformsConfigKey << "uniforms"
-                                  << "." << uniformBlockName;
-
-                std::vector<std::string> uniformKeys =
-                    config.GetObjectKeys(uniformsConfigKey.str());
-
-                // For each uniform
-                for (auto uniformName : uniformKeys)
-                {
-                    // Create new uniform
-                    ds_render::Uniform uniform;
-                    // Was the uniform read in correctly?
-                    bool loadedCorrectly = false;
-
-                    // Set uniform name
-                    uniform.SetName(uniformName);
-
-                    // Get type (key)
-                    std::stringstream typeKey;
-                    typeKey << uniformsConfigKey.str() << "." << uniformName;
-
-                    // Should only be one key, the type
-                    std::vector<std::string> typeKeys =
-                        config.GetObjectKeys(typeKey.str());
-                    if (typeKeys.size() > 0)
-                    {
-                        // Type of the uniform: int, vec4, float etc.
-                        std::string type = typeKeys[0];
-
-                        // Switch on type
-                        if (type == "int")
-                        {
-                            // Set appropriate type
-                            uniform.SetDataType(
-                                ds_render::Uniform::UniformType::Int);
-
-                            std::stringstream dataKey;
-                            dataKey << typeKey.str() << "." << type;
-
-                            // Get uniform data
-                            int integer;
-                            if (config.GetInt(dataKey.str(), &integer))
-                            {
-                                uniform.SetUniformData(sizeof(int), &integer);
-                                loadedCorrectly = true;
-                            }
-                        }
-                        // TODO: Handle float, vec3, mat4, etc.
-                        else if (type == "vec4")
-                        {
-                            // Set appropriate type
-                            uniform.SetDataType(
-                                ds_render::Uniform::UniformType::Vec4);
-
-                            std::stringstream dataKey;
-                            dataKey << typeKey.str() << "." << type;
-
-                            // Get uniform data
-                            std::vector<float> vec4;
-                            config.GetFloatArray(dataKey.str(), &vec4);
-
-                            if (vec4.size() == 4)
-                            {
-                                uniform.SetUniformData(sizeof(float) * 4,
-                                                       &vec4[0]);
-                                loadedCorrectly = true;
-                            }
-                            else
-                            {
-                                std::cerr
-                                    << "MaterialResource::CreateFromFile: vec4 "
-                                       "'"
-                                    << dataKey.str() << "' must be of size 4! "
-                                    << "In material resource: " << filePath
-                                    << std::endl;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        std::cerr << "MaterialResource::CreateFromFile: could "
-                                     "not find "
-                                     "uniform data for uniform: "
-                                  << uniformName
-                                  << "in material resource: " << filePath
-                                  << std::endl;
-                    }
-
-                    if (loadedCorrectly == true)
-                    {
-                        uniformBlock.AddUniform(uniform);
-                    }
-                }
-
-                static_cast<MaterialResource *>(materialResource.get())
-                    ->AddUniformBlock(uniformBlock);
-            }
         }
         else
         {
             std::cerr << "MaterialResource::CreateFromFile: could not find "
                          "'shader' field in material resource: "
                       << filePath << std::endl;
+        }
+
+        // Get path to texture samplers to use
+        std::vector<std::string> textureKeys = config.GetObjectKeys("textures");
+
+        // For each texture sampler, grab texture sampler details and add it
+        // to the material resource
+        for (auto key : textureKeys)
+        {
+            // Get path to sampler
+            std::stringstream samplerKey;
+            samplerKey << "textures"
+                       << "." << key;
+
+            // Key to texture field in config file
+            std::stringstream textureFieldKey;
+            textureFieldKey << samplerKey.str() << "."
+                            << "texture";
+
+            // Get path to texture resource file
+            std::string textureResourcePath;
+
+            if (config.GetString(textureFieldKey.str(), &textureResourcePath))
+            {
+                std::stringstream fullTextureResourcePath;
+                fullTextureResourcePath << folder << textureResourcePath;
+
+                // Create new texture sampler
+                static_cast<MaterialResource *>(materialResource.get())
+                    ->AddTextureSampler(key, fullTextureResourcePath.str());
+            }
+        }
+
+        // Get and load shader parameters
+        std::vector<std::string> shaderParameters =
+            config.GetObjectKeys("parameters");
+
+        // For each parameter
+        for (auto parameterName : shaderParameters)
+        {
+            ds_render::ShaderParameter parameter;
+
+            // Did the parameter load correctly?
+            bool loadedCorrectly = false;
+
+            // Setup parameter name
+            parameter.SetName(parameterName);
+
+            std::stringstream parameterKey;
+            parameterKey << "parameters"
+                         << "." << parameterName;
+
+            // Get parameter data type -- should only be one key
+            std::vector<std::string> dataType =
+                config.GetObjectKeys(parameterKey.str());
+            if (dataType.size() > 0)
+            {
+                // Type of the shader parameter: float, int, mat4, vec3,
+                // vec4
+                std::string type = dataType[0];
+
+                // Get key to data
+                std::stringstream dataKey;
+                dataKey << parameterKey.str() << "." << type;
+
+                if (type == "float")
+                {
+                    // Set appropriate type
+                    parameter.SetDataType(
+                        ds_render::ShaderParameter::ShaderParameterType::Float);
+
+                    // Get parameter data
+                    float data;
+                    if (config.GetFloat(dataKey.str(), &data))
+                    {
+                        parameter.SetData(sizeof(float), &data);
+                        loadedCorrectly = true;
+                    }
+                }
+                else if (type == "int")
+                {
+                    // Set appropriate type
+                    parameter.SetDataType(
+                        ds_render::ShaderParameter::ShaderParameterType::Int);
+
+                    // Get parameter data
+                    int data;
+                    if (config.GetInt(dataKey.str(), &data))
+                    {
+                        parameter.SetData(sizeof(int), &data);
+                        loadedCorrectly = true;
+                    }
+                }
+                else if (type == "vec3")
+                {
+                    // Set appropriate type
+                    parameter.SetDataType(ds_render::ShaderParameter::
+                                              ShaderParameterType::Vector3);
+
+                    // Get parameter data
+                    std::vector<float> vec3;
+                    config.GetFloatArray(dataKey.str(), &vec3);
+
+                    if (vec3.size() == 3)
+                    {
+                        parameter.SetData(sizeof(float) * 3, &vec3[0]);
+                        loadedCorrectly = true;
+                        std::cout << parameter.GetName()
+                                  << " is a vec3 with value: "
+                                  << *((ds_math::Vector3 *)parameter.GetData())
+                                  << std::endl;
+                    }
+                    else
+                    {
+                        std::cerr << "MaterialResource::CreateFromFile: vec3 "
+                                     "'"
+                                  << dataKey.str() << "' must be of size 3! "
+                                  << "In material resource: " << filePath
+                                  << std::endl;
+                    }
+                }
+                else if (type == "vec4")
+                {
+                    // Set appropriate type
+                    parameter.SetDataType(ds_render::ShaderParameter::
+                                              ShaderParameterType::Vector4);
+
+                    // Get parameter data
+                    std::vector<float> vec4;
+                    config.GetFloatArray(dataKey.str(), &vec4);
+
+                    if (vec4.size() == 4)
+                    {
+                        parameter.SetData(sizeof(float) * 4, &vec4[0]);
+                        loadedCorrectly = true;
+                        std::cout << parameter.GetName()
+                                  << " is a vec4 with value: "
+                                  << *((ds_math::Vector4 *)parameter.GetData())
+                                  << std::endl;
+                    }
+                    else
+                    {
+                        std::cerr << "MaterialResource::CreateFromFile: vec4 "
+                                     "'"
+                                  << dataKey.str() << "' must be of size 4! "
+                                  << "In material resource: " << filePath
+                                  << std::endl;
+                    }
+                }
+                else if (type == "mat4")
+                {
+                    // Set appropriate type
+                    parameter.SetDataType(ds_render::ShaderParameter::
+                                              ShaderParameterType::Matrix4);
+
+                    // Get parameter data
+                    std::vector<float> mat4;
+                    config.GetFloatArray(dataKey.str(), &mat4);
+
+                    if (mat4.size() == 16)
+                    {
+                        parameter.SetData(sizeof(float) * 16, &mat4[0]);
+                        loadedCorrectly = true;
+                        std::cout << parameter.GetName()
+                                  << " is a mat4 with value: "
+                                  << *((ds_math::Matrix4 *)parameter.GetData())
+                                  << std::endl;
+                    }
+                    else
+                    {
+                        std::cerr << "MaterialResource::CreateFromFile: mat4 "
+                                     "'"
+                                  << dataKey.str() << "' must be of size 16! "
+                                  << "In material resource: " << filePath
+                                  << std::endl;
+                    }
+                }
+
+                if (loadedCorrectly)
+                {
+                    // Add parameter to material resource
+                    static_cast<MaterialResource *>(materialResource.get())
+                        ->AddMaterialParameter(parameter);
+                }
+                else
+                {
+                    std::cerr << "Material parameter '" << parameterName
+                              << "' failed to load from file correctly."
+                              << std::endl;
+                }
+            }
+            else
+            {
+                std::cout << "Material parameter '" << parameterName
+                          << "' in file: " << filePath << " needs a type."
+                          << std::endl;
+            }
         }
     }
     else
@@ -194,11 +249,7 @@ MaterialResource::CreateFromFile(std::string filePath)
                "resource file (json file): "
             << filePath << std::endl;
     }
-    // TODO: Parse file
 
-    // TODO: Create mesh resource
-
-    // Return resource (if any)
     return materialResource;
 }
 
@@ -236,8 +287,7 @@ std::vector<std::string> MaterialResource::GetTextureSamplerNames() const
 }
 
 void MaterialResource::AddTextureSampler(
-    const std::string &samplerName,
-    const std::string &textureResourceFilePath)
+    const std::string &samplerName, const std::string &textureResourceFilePath)
 {
     SamplerEntry entry;
     entry.textureResourceFilePath = textureResourceFilePath;
@@ -261,17 +311,29 @@ std::string MaterialResource::GetSamplerTextureResourceFilePath(
     return filePath;
 }
 
-void MaterialResource::AddUniformBlock(
-    const ds_render::UniformBlock &uniformBlock)
+const std::vector<ds_render::ShaderParameter> &
+MaterialResource::GetMaterialParameters() const
 {
-    m_uniformBlocks.push_back(uniformBlock);
+    return m_parameters;
 }
 
-const std::vector<ds_render::UniformBlock> &
-MaterialResource::GetUniformBlocks() const
+void MaterialResource::AddMaterialParameter(
+    const ds_render::ShaderParameter &parameter)
 {
-    return m_uniformBlocks;
+    m_parameters.push_back(parameter);
 }
+
+// void MaterialResource::AddUniformBlock(
+//     const ds_render::UniformBlock &uniformBlock)
+// {
+//     m_uniformBlocks.push_back(uniformBlock);
+// }
+
+// const std::vector<ds_render::UniformBlock> &
+// MaterialResource::GetUniformBlocks() const
+// {
+//     return m_uniformBlocks;
+// }
 
 // void MaterialResource::AddUniform(const ds_render::Uniform &uniform)
 // {

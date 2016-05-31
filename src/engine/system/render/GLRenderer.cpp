@@ -804,6 +804,53 @@ void GLRenderer::DrawVerticesIndexed(VertexBufferHandle buffer,
     UnbindVertexBuffer();
 }
 
+void GLRenderer::UpdateProgramParameter(
+    ProgramHandle programHandle,
+    const std::string &parameterName,
+    ShaderParameter::ShaderParameterType parameterType,
+    const void *parameterData)
+{
+    GLuint program;
+    if (GetOpenGLObject(programHandle, GLObjectType::ProgramObject, &program))
+    {
+        // TODO Update documentation to reflect that need to bind program
+        // glUseProgram(program);
+
+        GLint uniformLocation =
+            glGetUniformLocation(program, parameterName.c_str());
+
+        if (parameterData != nullptr)
+        {
+            switch (parameterType)
+            {
+            case ShaderParameter::ShaderParameterType::Float:
+                glUniform1f(uniformLocation, *((const GLfloat *)parameterData));
+                break;
+            case ShaderParameter::ShaderParameterType::Int:
+                glUniform1i(uniformLocation, *((const GLint *)parameterData));
+                break;
+            case ShaderParameter::ShaderParameterType::Matrix4:
+                glUniformMatrix4fv(uniformLocation, 1, GL_FALSE,
+                                   (const GLfloat *)parameterData);
+                break;
+            case ShaderParameter::ShaderParameterType::Vector3:
+                glUniform3fv(uniformLocation, 1, (const GLfloat *)parameterData);
+                break;
+            case ShaderParameter::ShaderParameterType::Vector4:
+                glUniform4fv(uniformLocation, 1, (const GLfloat *)parameterData);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+    else
+    {
+        std::cerr << "GLRenderer::SetProgram: Failed to set program."
+                  << std::endl;
+    }
+}
+
 ds::Handle GLRenderer::StoreOpenGLObject(GLuint glObject, GLObjectType type)
 {
     // Construct GLObject

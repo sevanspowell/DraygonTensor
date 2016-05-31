@@ -6,8 +6,8 @@
 #include <vector>
 
 #include "engine/resource/IResource.h"
-#include "engine/system/render/UniformBlock.h"
 #include "engine/system/render/RenderCommon.h"
+#include "engine/system/render/ShaderParameter.h"
 
 namespace ds
 {
@@ -89,18 +89,21 @@ public:
     GetSamplerTextureResourceFilePath(const std::string &samplerName) const;
 
     /**
-     * Add a uniform block to the material.
+     * Get the shader parameters associated with this material.
      *
-     * @param  uniformBlock  const ds_render::UniformBlock &, uniform block.
+     * @return  const std::vector<ds_render::ShaderParameter> &, shader
+     * parameters associated with this material.
      */
-    void AddUniformBlock(const ds_render::UniformBlock &uniformBlock);
+    const std::vector<ds_render::ShaderParameter> &
+    GetMaterialParameters() const;
 
     /**
-     * Get all uniform blocks associated with this material.
+     * Add a material parameter to this material resource.
      *
-     * @return const std::vector<ds_render::UniformBlock>
+     * @param  parameter  const ShaderParameter &, material parameter to add to
+     * this material resource.
      */
-    const std::vector<ds_render::UniformBlock> &GetUniformBlocks() const;
+    void AddMaterialParameter(const ds_render::ShaderParameter &parameter);
 
 private:
     /**
@@ -119,8 +122,8 @@ private:
     std::string m_shaderPath;
     /** Map texture sampler name to SamplerEntry */
     std::map<std::string, SamplerEntry> m_textureSamplers;
-    /** Uniform blocks */
-    std::vector<ds_render::UniformBlock> m_uniformBlocks;
+    /** Material parameters */
+    std::vector<ds_render::ShaderParameter> m_parameters;
     /** This resource's file path */
     std::string m_filePath;
 };
