@@ -129,6 +129,7 @@ void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
         ds_math::Vector4 relPos = ds_math::Vector4(
             event.motion.xrel / 800.0f, event.motion.yrel / 600.0f, 0.0f, 1.0f);
 
+
         ds_math::Matrix4 scale =
             ds_math::Matrix4::CreateScaleMatrix(2.0f, 2.0f, 2.0f);
         ds_math::Matrix4 translate =
