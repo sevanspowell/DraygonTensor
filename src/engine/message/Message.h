@@ -77,7 +77,9 @@ enum class MessageType
     // On reload all assets
     ReloadAll,
     // On physics collision
-    PhysicsCollision
+    PhysicsCollision,
+    // Set mouse lock on/off
+    SetMouseLock
 };
 
 /**
@@ -301,5 +303,10 @@ struct PhysicsCollision
         pointWorldOnB; // Collision point on object two in world space.
     ds_math::Vector3
         normalWorldOnB; // Collision normal in world space on object two.
+};
+
+struct SetMouseLock
+{
+    bool enableMouseLock; // TRUE to enable mouse lock, FALSE to disable it
 };
 }

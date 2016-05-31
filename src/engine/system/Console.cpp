@@ -358,12 +358,29 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             // m_buffer << "Console out: Collision between entity A: "
             //          << collisionMsg.entityA.id
             //          << " and entity B: " << collisionMsg.entityB.id
-            //          << ". Point on A (world): " << collisionMsg.pointWorldOnA
-            //          << ", point on B (world): " << collisionMsg.pointWorldOnB
-            //          << ", normal on B (world): " << collisionMsg.normalWorldOnB
+            //          << ". Point on A (world): " <<
+            //          collisionMsg.pointWorldOnA
+            //          << ", point on B (world): " <<
+            //          collisionMsg.pointWorldOnB
+            //          << ", normal on B (world): " <<
+            //          collisionMsg.normalWorldOnB
             //          << std::endl;
             break;
         }
+        case ds_msg::MessageType::SetMouseLock:
+            ds_msg::SetMouseLock setMouseLockMsg;
+            (*messages) >> setMouseLockMsg;
+
+            if (setMouseLockMsg.enableMouseLock == true)
+            {
+                m_buffer << "Console out: Mouse lock enabled." << std::endl;
+            }
+            else
+            {
+                m_buffer << "Console out: Mouse lock disabled." << std::endl;
+            }
+
+            break;
         default:
             // Always extract the payload
             messages->Extract(header.size);

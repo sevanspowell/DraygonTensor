@@ -92,6 +92,11 @@ void Video::Shutdown()
     m_window.Destroy();
 }
 
+void Video::SetMouseLock(bool enableMouseLock)
+{
+    m_window.SetMouseLock(enableMouseLock);
+}
+
 ds_msg::MessageStream Video::CollectMessages()
 {
     ds_msg::MessageStream tmp = m_messagesGenerated;

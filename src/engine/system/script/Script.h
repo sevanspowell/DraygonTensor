@@ -280,6 +280,14 @@ public:
                            const std::string &pressedMaterialPath,
                            const std::string &hoverMaterialPath);
 
+    /**
+     * Enable/disable mouse locking.
+     *
+     * @param  enableMouseLock  boolean, TRUE to enable mouse locking, FALSE
+     * otherwise.
+     */
+    void SetMouseLock(bool enableMouseLock);
+
 private:
     /**
      * Process messages in the given message stream.

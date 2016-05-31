@@ -70,7 +70,7 @@ bool Window::CreateSDL2Window(unsigned int redBits,
 
     if (lockMouse)
     {
-        // flags |= SDL_WINDOW_INPUT_GRABBED;
+        flags |= SDL_WINDOW_INPUT_GRABBED;
         SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1",
                                 SDL_HINT_OVERRIDE);
         if (SDL_SetRelativeMouseMode(SDL_TRUE) < 0)
@@ -136,5 +136,17 @@ bool Window::CreateSDL2Window(unsigned int redBits,
     std::cout << SDL_GetError() << std::endl;
 
     return result;
+}
+
+void Window::SetMouseLock(bool enableMouseLock)
+{
+    if (enableMouseLock == true)
+    {
+        SDL_SetRelativeMouseMode(SDL_TRUE);
+    }
+    else
+    {
+        SDL_SetRelativeMouseMode(SDL_FALSE);
+    }
 }
 }

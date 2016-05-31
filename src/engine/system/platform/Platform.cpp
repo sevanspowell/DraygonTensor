@@ -245,6 +245,13 @@ void Platform::ProcessEvents(ds_msg::MessageStream *messages)
 
             ToggleTextInput();
             break;
+        case ds_msg::MessageType::SetMouseLock:
+            ds_msg::SetMouseLock setMouseLockMsg;
+            (*messages) >> setMouseLockMsg;
+
+            m_video.SetMouseLock(setMouseLockMsg.enableMouseLock);
+
+            break;
         default:
             messages->Extract(header.size);
 
