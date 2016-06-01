@@ -487,6 +487,8 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 
                     m_renderer->Init(m_windowWidth, m_windowHeight);
 
+                    m_renderer->SetBlending(true);
+
                     // Need a program to get information about Scene and Object
                     // constant
                     // buffers, so create a "fake" one.
@@ -965,7 +967,6 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
         {
             ds_msg::SetSkyboxMaterial setSkyboxMaterialMsg;
             (*messages) >> setSkyboxMaterialMsg;
-
             SetSkyboxMaterial(StringIntern::Instance().GetString(
                 setSkyboxMaterialMsg.skyboxMaterialPath));
             break;
@@ -1023,7 +1024,7 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                     &defaultMaterialResourceHandle) &&
                 m_materialResourceManager.LoadMaterialResourceFromFile(
                     pressedMaterialPathFull.str(),
-                    &hoverMaterialResourceHandle) &&
+                    &pressedMaterialResourceHandle) &&
                 m_materialResourceManager.LoadMaterialResourceFromFile(
                     hoverMaterialPathFull.str(),
                     &hoverMaterialResourceHandle) == true)

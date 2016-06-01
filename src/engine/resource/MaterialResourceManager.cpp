@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "engine/resource/MaterialResourceManager.h"
 #include "engine/common/HandleCommon.h"
 

@@ -983,6 +983,223 @@ static int l_QuaternionFromAxisAngle(lua_State *L)
     return 1;
 }
 
+//===========================================================================================================================
+//===========================================================================================================================
+//===========================================================================================================================
+//===========================================================================================================================
+//===========================================================================================================================
+//===========================================================================================================================
+//===========================================================================================================================
+//===========================================================================================================================
+//===========================================================================================================================
+//===========================================================================================================================
+
+
+static int l_QuaternionGetX(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 1)
+    {
+        return luaL_error(L, "Got %d arguments, expected 1.", n);
+    }
+
+    ds_math::Quaternion *v = NULL;
+
+    v = (ds_math::Quaternion *)luaL_checkudata(L, 1, "Quaternion");
+
+    if (v != NULL)
+    {
+        lua_pushnumber(L, v->x);
+    }
+
+    // user data that called this method, x member value
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_QuaternionSetX(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Quaternion *v = NULL;
+
+    v = (ds_math::Quaternion *)luaL_checkudata(L, 1, "Quaternion");
+
+    if (v != NULL)
+    {
+        v->x = (ds_math::scalar)luaL_checknumber(L, 2);
+    }
+
+    // user data that called this method, x member value given
+    assert(lua_gettop(L) == 2);
+
+    return 0;
+}
+
+static int l_QuaternionGetY(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 1)
+    {
+        return luaL_error(L, "Got %d arguments, expected 1.", n);
+    }
+
+    ds_math::Quaternion *v = NULL;
+
+    v = (ds_math::Quaternion *)luaL_checkudata(L, 1, "Quaternion");
+
+    if (v != NULL)
+    {
+        lua_pushnumber(L, v->y);
+    }
+
+    // user data that called this method, x member value
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_QuaternionSetY(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Quaternion *v = NULL;
+
+    v = (ds_math::Quaternion *)luaL_checkudata(L, 1, "Quaternion");
+
+    if (v != NULL)
+    {
+        v->y = (ds_math::scalar)luaL_checknumber(L, 2);
+    }
+
+    // user data that called this method, x member value given
+    assert(lua_gettop(L) == 2);
+
+    return 0;
+}
+
+static int l_QuaternionGetZ(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 1)
+    {
+        return luaL_error(L, "Got %d arguments, expected 1.", n);
+    }
+
+    ds_math::Quaternion *v = NULL;
+
+    v = (ds_math::Quaternion *)luaL_checkudata(L, 1, "Quaternion");
+
+    if (v != NULL)
+    {
+        lua_pushnumber(L, v->z);
+    }
+
+    // user data that called this method, x member value
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_QuaternionSetZ(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Quaternion *v = NULL;
+
+    v = (ds_math::Quaternion *)luaL_checkudata(L, 1, "Quaternion");
+
+    if (v != NULL)
+    {
+        v->z = (ds_math::scalar)luaL_checknumber(L, 2);
+    }
+
+    // user data that called this method, x member value given
+    assert(lua_gettop(L) == 2);
+
+    return 0;
+}
+
+static int l_QuaternionGetW(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 1)
+    {
+        return luaL_error(L, "Got %d arguments, expected 1.", n);
+    }
+
+    ds_math::Quaternion *v = NULL;
+
+    v = (ds_math::Quaternion *)luaL_checkudata(L, 1, "Quaternion");
+
+    if (v != NULL)
+    {
+        lua_pushnumber(L, v->w);
+    }
+
+    // user data that called this method, x member value
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_QuaternionSetW(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    if (n != 2)
+    {
+        return luaL_error(L, "Got %d arguments, expected 2.", n);
+    }
+
+    ds_math::Quaternion *v = NULL;
+
+    v = (ds_math::Quaternion *)luaL_checkudata(L, 1, "Quaternion");
+
+    if (v != NULL)
+    {
+        v->w = (ds_math::scalar)luaL_checknumber(L, 2);
+    }
+
+    // user data that called this method, x member value given
+    assert(lua_gettop(L) == 2);
+
+    return 0;
+}
+
+
+//==============================================================================================================================
+//==============================================================================================================================
+//==============================================================================================================================
+//==============================================================================================================================
+//==============================================================================================================================
+//==============================================================================================================================
+//==============================================================================================================================
+//==============================================================================================================================
+//==============================================================================================================================
+//==============================================================================================================================
+//==============================================================================================================================
+
 static int l_Matrix4Ctor(lua_State *L)
 {
     // Get number of arguments provided
@@ -2015,10 +2232,17 @@ static const luaL_Reg vector4Special[] = {
     {"__call", l_Vector4Ctor}, {NULL, NULL},
 };
 
-static const luaL_Reg quaternionMethods[] = {
-    {"__tostring", l_QuaternionToString},
-    {"__mul", l_QuaternionMul},
-    {NULL, NULL}};
+static const luaL_Reg quaternionMethods[] = {{"__tostring", l_QuaternionToString},
+                                          {"__mul", l_QuaternionMul},
+                                          {"get_x", l_QuaternionGetX},
+                                          {"set_x", l_QuaternionSetX},
+                                          {"get_y", l_QuaternionGetY},
+                                          {"set_y", l_QuaternionSetY},
+                                          {"get_z", l_QuaternionGetZ},
+                                          {"set_z", l_QuaternionSetZ},
+                                          {"get_w", l_QuaternionGetW},
+                                          {"set_w", l_QuaternionSetW},
+                                          {NULL, NULL}};
 
 static const luaL_Reg quaternionFunctions[] = {
     {"new", l_QuaternionNew},
