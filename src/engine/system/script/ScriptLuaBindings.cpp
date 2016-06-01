@@ -256,6 +256,41 @@ static int l_GetNextMessage(lua_State *L)
 
                 break;
             }
+            case ds_msg::MessageType::KeyboardEvent:
+            {
+                ds_msg::KeyboardEvent keyboardEvent;
+                msg >> keyboardEvent;
+
+                // Create payload table
+                lua_pushliteral(L, "keyboard_event");
+                lua_setfield(L, -2, "type"); // table.type = keyboard_event
+
+                // Push key string
+                std::string keyString =
+                    ds_platform::Keyboard::PrintKey(keyboardEvent.key);
+                lua_pushlstring(L, keyString.c_str(), keyString.length());
+
+                // Set key field
+                lua_setfield(L, -2, "key"); // table.key = key string
+
+                // Push key state bool (true for pressed, false for released)
+                lua_pushboolean(
+                    L, keyboardEvent.state ==
+                               ds_platform::Keyboard::State::Key_Pressed
+                           ? true
+                           : false);
+                // Set state field
+                lua_setfield(L, -2,
+                             "state"); // table.state = keyboardEvent.state
+
+                // Push repeat bool
+                lua_pushboolean(L, keyboardEvent.repeat);
+                // Set repeat field
+                lua_setfield(L, -2,
+                             "repeat"); // table.repeat = keyboardEvent.repeat
+
+                break;
+            }
             default:
                 assert(false && "l_GetNextMessage should handle all received "
                                 "message types!");
@@ -1274,7 +1309,7 @@ static int l_SetMouseLock(lua_State *L)
         }
     }
 
-    // Boolean argument 
+    // Boolean argument
     assert(lua_gettop(L) == 1);
 
     return 0;
@@ -1355,7 +1390,7 @@ static int l_Pause(lua_State *L)
         }
     }
 
-    // Boolean argument 
+    // Boolean argument
     assert(lua_gettop(L) == 1);
 
     return 0;

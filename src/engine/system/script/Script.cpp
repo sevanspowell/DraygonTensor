@@ -728,6 +728,18 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
             m_entityManager.Destroy(destroyEntityMsg.entity);
             break;
         }
+        case ds_msg::MessageType::KeyboardEvent:
+        {
+            ds_msg::KeyboardEvent keyboardMsg;
+            (*messages) >> keyboardMsg;
+
+            // Insert header into messages to be sent to script
+            m_toScriptMessages << header;
+            // Insert payload into messages to be sent to script
+            m_toScriptMessages << keyboardMsg;
+
+            break;
+        }
         default:
             messages->Extract(header.size);
             break;
