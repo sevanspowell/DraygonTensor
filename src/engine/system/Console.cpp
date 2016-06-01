@@ -485,6 +485,16 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             }
             break;
         }
+        case ds_msg::MessageType::SetLinearVelocity:
+        {
+            ds_msg::SetLinearVelocity setVelocityMsg;
+            (*messages) >> setVelocityMsg;
+
+            m_buffer << "Console out: velocity of entity id "
+                      << setVelocityMsg.entity.id << " changed to "
+                      << setVelocityMsg.velocity << std::endl;
+            break;
+        }
         default:
             // Always extract the payload
             messages->Extract(header.size);

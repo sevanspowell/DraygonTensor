@@ -92,10 +92,109 @@ static int l_PerformRaycast(lua_State *L)
     return 1;
 }
 
+static int l_SetLinearVelocity(lua_State *L)
+{
+    // Expect start and end points for ray
+    int n = lua_gettop(L);
+    int expected = 2;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push render system pointer onto stack
+    lua_getglobal(L, "__Physics");
+
+    // If the first item on stack isn't user data (out physics system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Physics *physicsPtr = (ds::Physics *)lua_touserdata(L, -1);
+        assert(physicsPtr != NULL);
+
+        // Pop user data off stack now that we are done with it.
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+        ds_math::Vector3 *velocity = NULL;
+
+        entity = (ds::Entity *)lua_touserdata(L, 1);
+        velocity = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
+
+        if (entity != NULL && velocity != NULL)
+        {
+            physicsPtr->SetLinearVelocity(*entity, *velocity);
+        }
+    }
+
+    // Entity argument and velocity argument
+    assert(lua_gettop(L) == 2);
+
+    return 0;
+}
+
+static int l_GetLinearVelocity(lua_State *L)
+{
+    // Expect start and end points for ray
+    int n = lua_gettop(L);
+    int expected = 1;
+    if (n != expected)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
+    }
+
+    // Push render system pointer onto stack
+    lua_getglobal(L, "__Physics");
+
+    // If the first item on stack isn't user data (out physics system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Physics *physicsPtr = (ds::Physics *)lua_touserdata(L, -1);
+        assert(physicsPtr != NULL);
+
+        // Pop user data off stack now that we are done with it.
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+
+        entity = (ds::Entity *)lua_touserdata(L, 1);
+
+        if (entity != NULL)
+        {
+            // Allocate memory for Vector3
+            ds_math::Vector3 *v = (ds_math::Vector3 *)lua_newuserdata(
+                L, sizeof(ds_math::Vector3));
+
+            *v = physicsPtr->GetLinearVelocity(*entity);
+
+            // Get Vector3 metatable
+            luaL_getmetatable(L, "Vector3");
+            // Set it as metatable of new user data (the Vector3)
+            lua_setmetatable(L, -2);
+        }
+    }
+
+    // Entity argument and Vector3 result
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
 ds::ScriptBindingSet LoadPhysicsScriptBindings()
 {
     ds::ScriptBindingSet scriptBindings;
     scriptBindings.AddFunction("perform_raycast", l_PerformRaycast);
+    scriptBindings.AddFunction("set_linear_velocity", l_SetLinearVelocity);
+    scriptBindings.AddFunction("get_linear_velocity", l_GetLinearVelocity);
 
     return scriptBindings;
 }

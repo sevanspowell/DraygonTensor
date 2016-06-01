@@ -85,7 +85,9 @@ enum class MessageType
     // On window resize
     WindowResize,
     // On pause
-    PauseEvent
+    PauseEvent,
+    // Set the linear velocity of an entity
+    SetLinearVelocity
 };
 
 /**
@@ -325,5 +327,11 @@ struct WindowResize
 struct PauseEvent
 {
     bool shouldPause; // TRUE for pause, FALSE otherwise
+};
+
+struct SetLinearVelocity
+{
+    ds::Entity entity;         // Entity to set the linear velocity of
+    ds_math::Vector3 velocity; // Velocity to set
 };
 }

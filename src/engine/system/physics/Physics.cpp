@@ -516,6 +516,58 @@ Physics::Raycast Physics::PerformRaycast(const ds_math::Vector3 &rayStart,
     return result;
 }
 
+void Physics::SetLinearVelocity(Entity entity, const ds_math::Vector3 &velocity)
+{
+    // Get physics component of entity to set linear velocity of.
+    Instance phys = m_physicsComponentManager.GetInstanceForEntity(entity);
+
+    // If we have one
+    if (phys.IsValid())
+    {
+        // Get the rigid body for this message
+        btRigidBody *rigidBody =
+            (btRigidBody *)m_physicsComponentManager.GetCollisionObject(phys);
+
+        if (rigidBody != nullptr)
+        {
+            // btTransform worldTransform;
+            // rigidBody->getMotionState()->getWorldTransform(worldTransform);
+
+            rigidBody->setLinearVelocity(
+                btVector3(velocity.x, velocity.y, velocity.z));
+
+            // rigidBody->getMotionState()->setWorldTransform(worldTransform);
+            // rigidBody->setCenterOfMassTransform(worldTransform);
+        }
+    }
+}
+
+ds_math::Vector3 Physics::GetLinearVelocity(Entity entity) const
+{
+    ds_math::Vector3 linearVelocity = ds_math::Vector3(0.0f, 0.0f, 0.0f);
+
+    // Get physics component of entity to set linear velocity of.
+    Instance phys = m_physicsComponentManager.GetInstanceForEntity(entity);
+
+    // If we have one
+    if (phys.IsValid())
+    {
+        // Get the rigid body for this message
+        btRigidBody *rigidBody =
+            (btRigidBody *)m_physicsComponentManager.GetCollisionObject(phys);
+
+        if (rigidBody != nullptr)
+        {
+            btVector3 currentLinearVelocity = rigidBody->getLinearVelocity();
+            linearVelocity = ds_math::Vector3(currentLinearVelocity.getX(),
+                                              currentLinearVelocity.getY(),
+                                              currentLinearVelocity.getZ());
+        }
+    }
+
+    return linearVelocity;
+}
+
 void Physics::ProcessEvents(ds_msg::MessageStream *messages)
 {
     while (messages->AvailableBytes() != 0)
@@ -751,9 +803,41 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                         }
                     }
                 }
+                else if (componentType == "characterComponent")
+                {
+                    Instance phys =
+                        m_physicsComponentManager.CreateComponentForEntity(
+                            entity);
+                    m_physicsComponentManager.SetCollisionObject(phys, nullptr);
+                    m_physicsComponentManager.SetShape(
+                        phys, StringIntern::Instance().Intern("capsule"));
+                    m_physicsComponentManager.SetScale(
+                        phys, ds_math::Vector3(0.0f, 0.0f, 0.0f));
+                    m_physicsComponentManager.SetMass(phys, 3.0f);
+
+                    ds_math::Vector3 origin =
+                        ds_math::Vector3(0.0f, 0.0f, 0.0f);
+
+                    // If this entity also has the transform component, create
+                    // rigid body at transform location, else create it at 0, 0,
+                    // 0
+                    Instance transform =
+                        m_transformComponentManager.GetInstanceForEntity(
+                            entity);
+                    if (transform.IsValid())
+                    {
+                        ds_math::Vector4 temp =
+                            m_transformComponentManager.GetWorldTransform(
+                                transform)[3];
+                        origin = ds_math::Vector3(temp.x, temp.y, temp.z);
+                    }
+
+                    // Create rigid body
+                    CreatePlayerCapsule(phys, origin, 0.5f, 1.2f, 3.0f);
+                }
             }
+            break;
         }
-        break;
         case ds_msg::MessageType::SetLocalTranslation:
         {
             ds_msg::SetLocalTranslation setTranslationMsg;
@@ -771,7 +855,6 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                 m_transformComponentManager.SetLocalTranslation(
                     transform, setTranslationMsg.localTranslation);
             }
-
             break;
         }
         case ds_msg::MessageType::SetLocalOrientation:
@@ -883,6 +966,32 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
 
             break;
         }
+        case ds_msg::MessageType::SetLinearVelocity:
+        {
+            ds_msg::SetLinearVelocity setVelocityMsg;
+            (*messages) >> setVelocityMsg;
+
+            // Get physics component of entity to set linear velocity of.
+            Instance phys = m_physicsComponentManager.GetInstanceForEntity(
+                setVelocityMsg.entity);
+
+            if (phys.IsValid())
+            {
+                // Get the rigid body for this message
+                btRigidBody *rigidBody =
+                    (btRigidBody *)m_physicsComponentManager.GetCollisionObject(
+                        phys);
+
+                if (rigidBody != nullptr)
+                {
+                    ds_math::Vector3 linearVelocity = setVelocityMsg.velocity;
+                    rigidBody->setLinearVelocity(btVector3(
+                        linearVelocity.x, linearVelocity.y, linearVelocity.z));
+                }
+            }
+
+            break;
+        }
         default:
             messages->Extract(header.size);
             break;
@@ -910,16 +1019,16 @@ void Physics::CreateRigidBody(Instance phys,
     {
         colShape = new btBoxShape(
             btVector3(btScalar(scale.x), btScalar(scale.y), btScalar(scale.z)));
-        m_collisionShapes.push_back(colShape);
     }
     else if (colShapeType == "sphere")
     {
         colShape = new btSphereShape(btScalar(scale.x));
-        m_collisionShapes.push_back(colShape);
     }
 
     if (colShape != nullptr)
     {
+        m_collisionShapes.push_back(colShape);
+
         // Create rigid body
         btScalar bodyMass = btScalar(mass);
 
@@ -1092,6 +1201,68 @@ void Physics::CreateGhostObject(Instance phys,
         std::cerr << "Physics::CreateGhostObject: Unhandled collision "
                      "shape type: "
                   << colShapeType << std::endl;
+    }
+}
+
+void Physics::CreatePlayerCapsule(Instance phys,
+                                  const ds_math::Vector3 &origin,
+                                  float radius,
+                                  float height,
+                                  float mass)
+{
+    btRigidBody *rigidBody = nullptr;
+
+    // Create transform
+    btTransform bodyTransform;
+    bodyTransform.setIdentity();
+    bodyTransform.setOrigin(btVector3(origin.x, origin.y, origin.z));
+
+    // Create collision shape
+    btCollisionShape *colShape = nullptr;
+    colShape = new btCapsuleShape(btScalar(radius), btScalar(height));
+
+    if (colShape != nullptr)
+    {
+        m_collisionShapes.push_back(colShape);
+
+        // Create rigid body
+        btScalar bodyMass = btScalar(mass);
+
+        // Rigid body is dynamic if and only if mass is non-zero, otherwise
+        // static
+        bool isDynamic = (bodyMass != 0.0f);
+
+        btVector3 localInertia(0, 0, 0);
+        if (isDynamic)
+        {
+            colShape->calculateLocalInertia(mass, localInertia);
+        }
+
+        btDefaultMotionState *bodyMotionState =
+            new btDefaultMotionState(bodyTransform);
+        btRigidBody::btRigidBodyConstructionInfo rbInfo(
+            bodyMass, bodyMotionState, colShape, localInertia);
+        rbInfo.m_friction = 1.0f;
+
+        rigidBody = new btRigidBody(rbInfo);
+
+        rigidBody->setSleepingThresholds(0.0f, 0.0f);
+        rigidBody->setAngularFactor(0.0f);
+
+        // Add to physics component
+        m_physicsComponentManager.SetCollisionObject(phys, rigidBody);
+
+        // Add collision shape to physics component
+        m_physicsComponentManager.SetCollisionShape(phys, colShape);
+
+        // Add rigidbody to world
+        m_dynamicsWorld->addRigidBody(rigidBody);
+    }
+    else
+    {
+        std::cerr
+            << "Physics::CreatePlayerCapsule: Error creating collision shape."
+            << std::endl;
     }
 }
 }
