@@ -52,6 +52,19 @@ void GLRenderer::SetDepthWriting(bool enableDisableDepthWriting)
     }
 }
 
+void GLRenderer::SetBlending(bool enableBlending)
+{
+    if (enableBlending == true)
+    {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+    else
+    {
+        glDisable(GL_BLEND);
+    }
+}
+
 void GLRenderer::ClearBuffers(bool colour, bool depth, bool stencil)
 {
     GLbitfield clearBuffers = 0;
@@ -428,6 +441,7 @@ void GLRenderer::BindTextureToSampler(ProgramHandle programHandle,
                   << std::endl;
     }
 }
+
 
 void GLRenderer::UnbindTextureFromSampler(const TextureType &textureType,
                                           RenderTextureHandle textureHandle)

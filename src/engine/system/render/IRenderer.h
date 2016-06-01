@@ -61,6 +61,14 @@ public:
     virtual void SetDepthWriting(bool enableDisableDepthWriting) = 0;
 
     /**
+     * Enable or disable blending in the colour buffer.
+     *
+     * @param  enableBlending  bool, TRUE to enable colour buffer blending,
+     * FALSE to disable it.
+     */
+    virtual void SetBlending(bool enableBlending) = 0;
+
+    /**
      * Resize the viewport the renderer renders to.
      *
      * @param  newViewportWidth   unsigned int, new viewport width in pixels.

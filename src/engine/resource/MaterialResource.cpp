@@ -1,6 +1,7 @@
 #include <cassert>
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 
 #include "engine/Config.h"
 #include "engine/common/Common.h"
@@ -339,7 +340,7 @@ void MaterialResource::AddMaterialParameter(
 // {
 //     // Find a uniform with the same name
 //     std::vector<ds_render::Uniform>::iterator it =
-//         find_if(m_uniforms.begin(), m_uniforms.end(),
+//         (m_uniforms.begin(), m_uniforms.end(),
 //                 [&](const ds_render::Uniform &materialUniform)
 //                 {
 //                     if (materialUniform.GetName() == uniform.GetName())
