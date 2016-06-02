@@ -161,9 +161,9 @@ private:
      */
     void CreatePlayerCapsule(Instance phys,
                              const ds_math::Vector3 &origin,
-                                      float radius,
-                                      float height,
-                                      float mass);
+                             float radius,
+                             float height,
+                             float mass);
 
     btDiscreteDynamicsWorld *m_dynamicsWorld;
     btSequentialImpulseConstraintSolver *m_solver;

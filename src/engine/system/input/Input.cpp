@@ -73,6 +73,8 @@ bool Input::Initialize(const Config &config)
 void Input::Update(float deltaTime)
 {
     ProcessEvents(&m_messagesReceived);
+
+    m_messagesReceived.Clear();
 }
 
 void Input::Shutdown()

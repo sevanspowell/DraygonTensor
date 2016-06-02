@@ -264,6 +264,8 @@ void Render::Update(float deltaTime)
     m_timeInSeconds += deltaTime;
     ProcessEvents(&m_messagesReceived);
 
+    m_messagesReceived.Clear();
+
     // Make sure renderer has been created
     if (m_renderer != nullptr)
     {

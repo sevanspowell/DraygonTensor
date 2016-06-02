@@ -134,8 +134,6 @@ void Script::RegisterScriptBindings(const char *systemName, ISystem *systemPtr)
 Entity Script::SpawnPrefab(std::string prefabFile,
                            const ds_math::Vector3 &position)
 {
-    std::cout << "Prefab spawned: " << prefabFile << std::endl;
-
     // Create new Entity
     Entity entity = m_entityManager.Create();
 
@@ -164,8 +162,6 @@ Entity Script::SpawnPrefab(std::string prefabFile,
             createComponentMsg.entity = entity;
             createComponentMsg.componentType =
                 StringIntern::Instance().Intern(component);
-            std::cout << "Script: Component type: " << component << ": "
-                      << createComponentMsg.componentType << std::endl;
             createComponentMsg.componentData =
                 StringIntern::Instance().Intern(componentData);
 

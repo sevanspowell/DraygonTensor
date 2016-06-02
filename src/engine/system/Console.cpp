@@ -24,6 +24,8 @@ void Console::Update(float deltaTime)
 {
     ProcessEvents(&m_messagesReceived);
 
+    m_messagesReceived.Clear();
+
     // Flush console output
     Flush();
 
@@ -218,11 +220,11 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             (*messages) >> createComponentMsg;
 
             // Print console msg
-            m_buffer << "Console out: Component created: Entity: "
-                     << createComponentMsg.entity.id << " ComponentType: "
-                     << StringIntern::Instance().GetString(
-                            createComponentMsg.componentType)
-                     << std::endl;
+            // m_buffer << "Console out: Component created: Entity: "
+            //          << createComponentMsg.entity.id << " ComponentType: "
+            //          << StringIntern::Instance().GetString(
+            //                 createComponentMsg.componentType)
+            //          << std::endl;
             break;
         case ds_msg::MessageType::SetLocalTranslation:
         {
@@ -261,9 +263,9 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::SetAnimationIndex setAnimationMsg;
             (*messages) >> setAnimationMsg;
 
-            m_buffer << "Console out: animation of entity id "
-                     << setAnimationMsg.entity.id << " changed to index "
-                     << setAnimationMsg.animationIndex << std::endl;
+            // m_buffer << "Console out: animation of entity id "
+            //          << setAnimationMsg.entity.id << " changed to index "
+            //          << setAnimationMsg.animationIndex << std::endl;
             break;
         }
         case ds_msg::MessageType::SetSkyboxMaterial:
@@ -312,13 +314,13 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::CreatePanel createPanelMsg;
             (*messages) >> createPanelMsg;
 
-            m_buffer << "Console out: GUI panel created from ("
-                     << createPanelMsg.startX << ", " << createPanelMsg.startY
-                     << ") to (" << createPanelMsg.endX << ", "
-                     << createPanelMsg.endY << ") with material "
-                     << StringIntern::Instance().GetString(
-                            createPanelMsg.materialPath)
-                     << std::endl;
+            // m_buffer << "Console out: GUI panel created from ("
+            //          << createPanelMsg.startX << ", " << createPanelMsg.startY
+            //          << ") to (" << createPanelMsg.endX << ", "
+            //          << createPanelMsg.endY << ") with material "
+            //          << StringIntern::Instance().GetString(
+            //                 createPanelMsg.materialPath)
+            //          << std::endl;
             break;
         }
         case ds_msg::MessageType::CreateButton:
@@ -326,19 +328,19 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::CreateButton createButtonMsg;
             (*messages) >> createButtonMsg;
 
-            m_buffer << "Console out: GUI button created from ("
-                     << createButtonMsg.startX << ", " << createButtonMsg.startY
-                     << ") to (" << createButtonMsg.endX << ", "
-                     << createButtonMsg.endY << ") with materials: "
-                     << StringIntern::Instance().GetString(
-                            createButtonMsg.defaultMaterialPath)
-                     << ", "
-                     << StringIntern::Instance().GetString(
-                            createButtonMsg.pressedMaterialPath)
-                     << ", "
-                     << StringIntern::Instance().GetString(
-                            createButtonMsg.pressedMaterialPath)
-                     << std::endl;
+            // m_buffer << "Console out: GUI button created from ("
+            //          << createButtonMsg.startX << ", " << createButtonMsg.startY
+            //          << ") to (" << createButtonMsg.endX << ", "
+            //          << createButtonMsg.endY << ") with materials: "
+            //          << StringIntern::Instance().GetString(
+            //                 createButtonMsg.defaultMaterialPath)
+            //          << ", "
+            //          << StringIntern::Instance().GetString(
+            //                 createButtonMsg.pressedMaterialPath)
+            //          << ", "
+            //          << StringIntern::Instance().GetString(
+            //                 createButtonMsg.pressedMaterialPath)
+            //          << std::endl;
             break;
         }
         case ds_msg::MessageType::ButtonFired:
@@ -346,8 +348,8 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::ButtonFired buttonFireMsg;
             (*messages) >> buttonFireMsg;
 
-            m_buffer << "Console out: button entity id: "
-                     << buttonFireMsg.entity.id << " fired." << std::endl;
+            // m_buffer << "Console out: button entity id: "
+            //          << buttonFireMsg.entity.id << " fired." << std::endl;
             break;
         }
         case ds_msg::MessageType::PhysicsCollision:
@@ -372,8 +374,8 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::DestroyEntity destroyEntityMsg;
             (*messages) >> destroyEntityMsg;
 
-            m_buffer << "Console out: entity id: " << destroyEntityMsg.entity.id
-                     << " flagged for destruction." << std::endl;
+            // m_buffer << "Console out: entity id: " << destroyEntityMsg.entity.id
+            //          << " flagged for destruction." << std::endl;
             break;
         }
         case ds_msg::MessageType::SetMaterialParameterFloat:
@@ -381,13 +383,13 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::SetMaterialParameterFloat setParameterMsg;
             (*messages) >> setParameterMsg;
 
-            m_buffer << "Console out: set float material parameter '"
-                     << StringIntern::Instance().GetString(
-                            setParameterMsg.parameter)
-                     << "' from material resource '"
-                     << StringIntern::Instance().GetString(
-                            setParameterMsg.materialResourceFilePath)
-                     << "' to value: " << setParameterMsg.data << std::endl;
+            // m_buffer << "Console out: set float material parameter '"
+            //          << StringIntern::Instance().GetString(
+            //                 setParameterMsg.parameter)
+            //          << "' from material resource '"
+            //          << StringIntern::Instance().GetString(
+            //                 setParameterMsg.materialResourceFilePath)
+            //          << "' to value: " << setParameterMsg.data << std::endl;
             break;
         }
         case ds_msg::MessageType::SetMaterialParameterInt:
@@ -395,13 +397,13 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::SetMaterialParameterInt setParameterMsg;
             (*messages) >> setParameterMsg;
 
-            m_buffer << "Console out: set int material parameter '"
-                     << StringIntern::Instance().GetString(
-                            setParameterMsg.parameter)
-                     << "' from material resource '"
-                     << StringIntern::Instance().GetString(
-                            setParameterMsg.materialResourceFilePath)
-                     << "' to value: " << setParameterMsg.data << std::endl;
+            // m_buffer << "Console out: set int material parameter '"
+            //          << StringIntern::Instance().GetString(
+            //                 setParameterMsg.parameter)
+            //          << "' from material resource '"
+            //          << StringIntern::Instance().GetString(
+            //                 setParameterMsg.materialResourceFilePath)
+            //          << "' to value: " << setParameterMsg.data << std::endl;
             break;
         }
         case ds_msg::MessageType::SetMaterialParameterMatrix4:
@@ -409,13 +411,13 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::SetMaterialParameterMatrix4 setParameterMsg;
             (*messages) >> setParameterMsg;
 
-            m_buffer << "Console out: set Matrix4 material parameter '"
-                     << StringIntern::Instance().GetString(
-                            setParameterMsg.parameter)
-                     << "' from material resource '"
-                     << StringIntern::Instance().GetString(
-                            setParameterMsg.materialResourceFilePath)
-                     << "' to value: " << setParameterMsg.data << std::endl;
+            // m_buffer << "Console out: set Matrix4 material parameter '"
+            //          << StringIntern::Instance().GetString(
+            //                 setParameterMsg.parameter)
+            //          << "' from material resource '"
+            //          << StringIntern::Instance().GetString(
+            //                 setParameterMsg.materialResourceFilePath)
+            //          << "' to value: " << setParameterMsg.data << std::endl;
             break;
         }
         case ds_msg::MessageType::SetMaterialParameterVector4:
@@ -423,13 +425,13 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::SetMaterialParameterVector4 setParameterMsg;
             (*messages) >> setParameterMsg;
 
-            m_buffer << "Console out: set Vector4 material parameter '"
-                     << StringIntern::Instance().GetString(
-                            setParameterMsg.parameter)
-                     << "' from material resource '"
-                     << StringIntern::Instance().GetString(
-                            setParameterMsg.materialResourceFilePath)
-                     << "' to value: " << setParameterMsg.data << std::endl;
+            // m_buffer << "Console out: set Vector4 material parameter '"
+            //          << StringIntern::Instance().GetString(
+            //                 setParameterMsg.parameter)
+            //          << "' from material resource '"
+            //          << StringIntern::Instance().GetString(
+            //                 setParameterMsg.materialResourceFilePath)
+            //          << "' to value: " << setParameterMsg.data << std::endl;
             break;
         }
         case ds_msg::MessageType::SetMaterialParameterVector3:
@@ -437,13 +439,13 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::SetMaterialParameterVector3 setParameterMsg;
             (*messages) >> setParameterMsg;
 
-            m_buffer << "Console out: set Vector3 material parameter '"
-                     << StringIntern::Instance().GetString(
-                            setParameterMsg.parameter)
-                     << "' from material resource '"
-                     << StringIntern::Instance().GetString(
-                            setParameterMsg.materialResourceFilePath)
-                     << "' to value: " << setParameterMsg.data << std::endl;
+            // m_buffer << "Console out: set Vector3 material parameter '"
+            //          << StringIntern::Instance().GetString(
+            //                 setParameterMsg.parameter)
+            //          << "' from material resource '"
+            //          << StringIntern::Instance().GetString(
+            //                 setParameterMsg.materialResourceFilePath)
+            //          << "' to value: " << setParameterMsg.data << std::endl;
             break;
         }
         case ds_msg::MessageType::SetMouseLock:
@@ -490,9 +492,9 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::SetLinearVelocity setVelocityMsg;
             (*messages) >> setVelocityMsg;
 
-            m_buffer << "Console out: velocity of entity id "
-                      << setVelocityMsg.entity.id << " changed to "
-                      << setVelocityMsg.velocity << std::endl;
+            // m_buffer << "Console out: velocity of entity id "
+            //           << setVelocityMsg.entity.id << " changed to "
+            //           << setVelocityMsg.velocity << std::endl;
             break;
         }
         default:

@@ -65,6 +65,8 @@ void Physics::Update(float deltaTime)
 {
     ProcessEvents(&m_messagesReceived);
 
+    m_messagesReceived.Clear();
+
     // Only update if not paused
     if (m_isPaused == false)
     {
@@ -958,8 +960,6 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
         }
         case ds_msg::MessageType::DestroyEntity:
         {
-            std::cout << "Received destroy entity message" << std::endl;
-
             ds_msg::DestroyEntity destroyEntityMsg;
             (*messages) >> destroyEntityMsg;
 

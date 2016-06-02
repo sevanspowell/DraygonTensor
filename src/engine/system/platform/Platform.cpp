@@ -56,6 +56,8 @@ void Platform::Update(float deltaTime)
     // Process events
     ProcessEvents(&m_messagesReceived);
 
+    m_messagesReceived.Clear();
+
     m_video.Update();
 }
 
