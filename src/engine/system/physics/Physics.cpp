@@ -854,7 +854,37 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                 // Set translation of entity
                 m_transformComponentManager.SetLocalTranslation(
                     transform, setTranslationMsg.localTranslation);
+
+                // Get physics component instance of entity to move
+                Instance phys = m_physicsComponentManager.GetInstanceForEntity(
+                    setTranslationMsg.entity);
+
+                // If has physics component
+                if (phys.IsValid())
+                {
+                    // Get collision object from entity
+                    btCollisionObject *collisionObject =
+                        m_physicsComponentManager.GetCollisionObject(phys);
+
+                    if (collisionObject != nullptr)
+                    {
+                        btTransform t;
+
+                        t = collisionObject->getWorldTransform();
+
+                        ds_math::Vector3 worldTranslation =
+                            m_transformComponentManager.GetWorldTranslation(
+                                transform);
+
+                        t.setOrigin(btVector3(worldTranslation.x,
+                                              worldTranslation.y,
+                                              worldTranslation.z));
+
+                        collisionObject->setWorldTransform(t);
+                    }
+                }
             }
+
             break;
         }
         case ds_msg::MessageType::SetLocalOrientation:
@@ -873,6 +903,35 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                 // Set orientation of entity
                 m_transformComponentManager.SetLocalOrientation(
                     transform, setOrientationMsg.localOrientation);
+
+                // Get physics component instance of entity to move
+                Instance phys = m_physicsComponentManager.GetInstanceForEntity(
+                    setOrientationMsg.entity);
+
+                // If has physics component
+                if (phys.IsValid())
+                {
+                    // Get collision object from entity
+                    btCollisionObject *collisionObject =
+                        m_physicsComponentManager.GetCollisionObject(phys);
+
+                    if (collisionObject != nullptr)
+                    {
+                        btTransform t;
+
+                        t = collisionObject->getWorldTransform();
+
+                        ds_math::Quaternion worldOrientation =
+                            m_transformComponentManager.GetWorldOrientation(
+                                transform);
+
+                        t.setRotation(btQuaternion(
+                            worldOrientation.x, worldOrientation.y,
+                            worldOrientation.z, worldOrientation.w));
+
+                        collisionObject->setWorldTransform(t);
+                    }
+                }
             }
 
             break;
@@ -1260,9 +1319,9 @@ void Physics::CreatePlayerCapsule(Instance phys,
     }
     else
     {
-        std::cerr
-            << "Physics::CreatePlayerCapsule: Error creating collision shape."
-            << std::endl;
+        std::cerr << "Physics::CreatePlayerCapsule: Error creating "
+                     "collision shape."
+                  << std::endl;
     }
 }
 }
