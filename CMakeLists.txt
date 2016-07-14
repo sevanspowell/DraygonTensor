@@ -26,11 +26,20 @@ include_directories(${GTEST_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${GTEST_LIBRARIES})
 
 # Find Lua
-find_package(LUA REQUIRED)
-include_directories(${LUA_INCLUDE_DIR})
-set(LIBS ${LIBS} ${LUA_LIBRARIES})
+find_package(LuaJIT REQUIRED)
+include_directories(${LUAJIT_INCLUDE_DIR})
+set(LIBS ${LIBS} ${LUAJIT_LIBRARIES})
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+  # Required for luajit.
+  set(CMAKE_EXE_LINKER_FLAGS
+    "${CMAKE_EXE_LINKER_FLAGS} -pagezero_size 10000 -image_base 100000000")
+  set(CMAKE_SHARED_LINKER_FLAGS
+    "${CMAKE_SHARED_LINKER_FLAGS} -image_base 100000000")
+  set(CMAKE_MODULE_LINKER_FLAGS
+    "${CMAKE_MODULE_LINKER_FLAGS} -image_base 100000000")
+endif(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND CMAKE_SIZEOF_VOID_P EQUAL 8)
 if (WIN32)
-  list(APPEND REQUIRED_DLLS ${LUA_DIR}/lua53.dll)
+  list(APPEND REQUIRED_DLLS ${LUAJIT_DIR}/lib/lua51.dll)
 endif (WIN32)
 
 # Find RapidJson
@@ -61,6 +70,7 @@ endif (WIN32)
 # Find SFML
 find_package(SFML COMPONENTS audio REQUIRED)
 include_directories(${SFML_INCLUDE_DIR})
+message(${SFML_LIBRARIES})
 set (LIBS ${LIBS} ${SFML_LIBRARIES})
 if (WIN32)
 #	file(GLOB SFML_DLLS ${SFML_ROOT}/bin/*)

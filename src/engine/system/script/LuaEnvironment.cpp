@@ -51,7 +51,10 @@ bool LuaEnvironment::Init()
 
 void LuaEnvironment::Shutdown()
 {
-    lua_close(m_lua);
+    if (m_lua != nullptr)
+    {
+        lua_close(m_lua);
+    }
 }
 
 bool LuaEnvironment::ExecuteFile(const char *filePath)
@@ -145,7 +148,7 @@ void LuaEnvironment::CallLuaFunction(const char *funcName,
         }
 
         // Call lua function
-        if (lua_pcall(m_lua, argc, 0, 0) != LUA_OK)
+        if (lua_pcall(m_lua, argc, 0, 0) != 0)
         {
             // If error, print error
             std::cout << "Error: " << lua_tostring(m_lua, -1) << std::endl;
