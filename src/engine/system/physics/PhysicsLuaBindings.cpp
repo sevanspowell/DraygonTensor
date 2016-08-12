@@ -1,8 +1,12 @@
 #include "engine/system/physics/Physics.h"
 #include "math/Vector3.h"
 
+#define META_NAME "Physics"
+
 namespace ds_lua
 {
+const char *physicsSystemLuaName = META_NAME;
+
 static int l_PerformRaycast(lua_State *L)
 {
     // Expect start and end points for ray
@@ -14,7 +18,7 @@ static int l_PerformRaycast(lua_State *L)
     }
 
     // Push render system pointer onto stack
-    lua_getglobal(L, "__Physics");
+    lua_getglobal(L, "__" META_NAME);
 
     // If the first item on stack isn't user data (out physics system)
     if (!lua_isuserdata(L, -1))
@@ -103,7 +107,7 @@ static int l_SetLinearVelocity(lua_State *L)
     }
 
     // Push render system pointer onto stack
-    lua_getglobal(L, "__Physics");
+    lua_getglobal(L, "__" META_NAME);
 
     // If the first item on stack isn't user data (out physics system)
     if (!lua_isuserdata(L, -1))
@@ -148,7 +152,7 @@ static int l_GetLinearVelocity(lua_State *L)
     }
 
     // Push render system pointer onto stack
-    lua_getglobal(L, "__Physics");
+    lua_getglobal(L, "__" META_NAME);
 
     // If the first item on stack isn't user data (out physics system)
     if (!lua_isuserdata(L, -1))

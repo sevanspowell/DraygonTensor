@@ -76,6 +76,11 @@ public:
     virtual ds_msg::MessageStream CollectMessages();
 
     /**
+     * @copydoc ISystem::GetName()
+     */
+    virtual const char *GetName() const;
+
+    /**
      * Return script bindings required by script system.
      *
      * @return  ScriptBindingSet, the script bindings the script system wants to
@@ -433,5 +438,7 @@ private:
 
     // Keep track of transforms of entities
     TransformComponentManager m_transformManager;
+
+    bool m_isFirstUpdate;
 };
 }

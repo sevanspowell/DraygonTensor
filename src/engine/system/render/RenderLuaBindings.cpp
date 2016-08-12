@@ -1,7 +1,11 @@
 #include "engine/system/render/Render.h"
 
+#define META_NAME "Render"
+
 namespace ds_lua
 {
+const char *renderSystemLuaName = META_NAME;
+
 // static int l_GetCameraOrientation(lua_State *L)
 // {
 //     int n = lua_gettop(L);
@@ -12,7 +16,7 @@ namespace ds_lua
 //     }
 
 //     // Push render system pointer onto stack
-//     lua_getglobal(L, "__Render");
+//     lua_getglobal(L, "__" META_NAME);
 
 //     // If first item on stack isn't user data (our input system)
 //     if (!lua_isuserdata(L, -1))
@@ -69,7 +73,7 @@ namespace ds_lua
 //     }
 
 //     // Push render system pointer onto stack
-//     lua_getglobal(L, "__Render");
+//     lua_getglobal(L, "__" META_NAME);
 
 //     // If first item on stack isn't user data (our input system)
 //     if (!lua_isuserdata(L, -1))

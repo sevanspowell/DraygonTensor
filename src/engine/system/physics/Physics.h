@@ -34,6 +34,11 @@ public:
     virtual ds_msg::MessageStream CollectMessages();
 
     /**
+     * @copydoc ISystem::GetName()
+     */
+    virtual const char *GetName() const;
+
+    /**
      * Return required script bindings.
      *
      * @return  ScriptBindingSet, the script bindings the physics system wants

@@ -57,6 +57,11 @@ ds_msg::MessageStream Console::CollectMessages()
     return tmp;
 }
 
+const char *Console::GetName() const
+{
+    return "Console";
+}
+
 void Console::Flush()
 {
     std::cout << m_buffer.str();

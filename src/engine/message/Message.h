@@ -87,7 +87,12 @@ enum class MessageType
     // On pause
     PauseEvent,
     // Set the linear velocity of an entity
-    SetLinearVelocity
+    SetLinearVelocity,
+    // Particle manipulation
+    SetParticleMass,
+    SetParticleVelocity,
+    SetParticleAcceleration,
+    SetParticleDamping,
 };
 
 /**
@@ -333,5 +338,29 @@ struct SetLinearVelocity
 {
     ds::Entity entity;         // Entity to set the linear velocity of
     ds_math::Vector3 velocity; // Velocity to set
+};
+
+struct SetParticleMass
+{
+    ds::Entity entity; // Entity owning this particle
+    ds_math::scalar mass;       // Mass to set
+};
+
+struct SetParticleVelocity
+{
+    ds::Entity entity;         // Entity owning this particle
+    ds_math::Vector3 velocity; // Velocity to set
+};
+
+struct SetParticleAcceleration
+{
+    ds::Entity entity;             // Entity owning this particle
+    ds_math::Vector3 acceleration; // Acceleration to set
+};
+
+struct SetParticleDamping
+{
+    ds::Entity entity; // Entity owning this particle
+    ds_math::scalar damping;    // Damping to set
 };
 }

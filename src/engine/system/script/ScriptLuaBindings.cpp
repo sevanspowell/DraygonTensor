@@ -2,8 +2,12 @@
 #include "engine/common/StringIntern.h"
 #include "engine/system/script/Script.h"
 
+#define META_NAME "Script"
+
 namespace ds_lua
 {
+const char *scriptSystemLuaName = META_NAME;
+
 static int l_SpawnPrefab(lua_State *L)
 {
     // Get number of arguments provided
@@ -16,7 +20,7 @@ static int l_SpawnPrefab(lua_State *L)
     const char *prefabFile = luaL_checklstring(L, 1, NULL);
 
     // Push script system pointer to stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -71,7 +75,7 @@ static int l_IsNextMessage(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -107,7 +111,7 @@ static int l_GetNextMessage(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -316,7 +320,7 @@ static int l_GetWorldTransform(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -371,7 +375,7 @@ static int l_GetLocalTransform(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -429,7 +433,7 @@ static int l_SetEntityAnimationIndex(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -474,7 +478,7 @@ static int l_SetSkyboxMaterial(lua_State *L)
     }
 
     // Push render system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our input system)
     if (!lua_isuserdata(L, -1))
@@ -516,7 +520,7 @@ static int l_CreateGUIPanel(lua_State *L)
     }
 
     // Push render system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our input system)
     if (!lua_isuserdata(L, -1))
@@ -571,7 +575,7 @@ static int l_CreateGUIButton(lua_State *L)
     }
 
     // Push render system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our input system)
     if (!lua_isuserdata(L, -1))
@@ -635,7 +639,7 @@ static int l_GetLocalTranslation(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -694,7 +698,7 @@ static int l_GetWorldTranslation(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -753,7 +757,7 @@ static int l_GetLocalScale(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -811,7 +815,7 @@ static int l_GetWorldScale(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -869,7 +873,7 @@ static int l_GetLocalOrientation(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -929,7 +933,7 @@ static int l_SetLocalTranslation(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -979,7 +983,7 @@ static int l_SetLocalScale(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -1029,7 +1033,7 @@ static int l_SetLocalOrientation(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -1080,7 +1084,7 @@ static int l_GetWorldOrientation(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -1140,7 +1144,7 @@ static int l_DestroyEntity(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -1182,10 +1186,10 @@ static int l_SetMaterialParameter(lua_State *L)
         return luaL_error(L, "Got %d arguments, expected %d.", n, expected);
     }
 
-    // Push render system pointer onto stack
-    lua_getglobal(L, "__Script");
+    // Push script system pointer onto stack
+    lua_getglobal(L, "__" META_NAME);
 
-    // If first item on stack isn't user data (our input system)
+    // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
     {
         // Error
@@ -1280,7 +1284,7 @@ static int l_SetMouseLock(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -1326,7 +1330,7 @@ static int l_Quit(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))
@@ -1361,7 +1365,7 @@ static int l_Pause(lua_State *L)
     }
 
     // Push script system pointer onto stack
-    lua_getglobal(L, "__Script");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))

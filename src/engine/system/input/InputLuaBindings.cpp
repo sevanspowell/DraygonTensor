@@ -1,7 +1,11 @@
 #include "engine/system/input/Input.h"
 
+#define META_NAME "Input"
+
 namespace ds_lua
 {
+const char *inputSystemLuaName = META_NAME;
+
 static int l_GetMouseDeltaXY(lua_State *L)
 {
     // Get number of arguments provided
@@ -12,7 +16,7 @@ static int l_GetMouseDeltaXY(lua_State *L)
     }
 
     // Push input system pointer to stack
-    lua_getglobal(L, "__Input");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our input system)
     if (!lua_isuserdata(L, -1))
@@ -58,7 +62,7 @@ static int l_IsKeyPressed(lua_State *L)
     const char *key = luaL_checklstring(L, 1, NULL);
 
     // Push input system pointer to stack
-    lua_getglobal(L, "__Input");
+    lua_getglobal(L, "__" META_NAME);
 
     // If first item on stack isn't user data (our script system)
     if (!lua_isuserdata(L, -1))

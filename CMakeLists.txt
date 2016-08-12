@@ -30,7 +30,7 @@ find_package(LuaJIT REQUIRED)
 include_directories(${LUAJIT_INCLUDE_DIR})
 set(LIBS ${LIBS} ${LUAJIT_LIBRARIES})
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND CMAKE_SIZEOF_VOID_P EQUAL 8)
-  # Required for luajit.
+  # Required for LuaJIT and 64-bit OSX
   set(CMAKE_EXE_LINKER_FLAGS
     "${CMAKE_EXE_LINKER_FLAGS} -pagezero_size 10000 -image_base 100000000")
   set(CMAKE_SHARED_LINKER_FLAGS
