@@ -11,6 +11,8 @@
 namespace ds_lua
 {
 extern ds::ScriptBindingSet LoadPhysicsScriptBindings();
+
+extern const char *physicsSystemLuaName;
 }
 
 namespace ds
@@ -456,6 +458,11 @@ ds_msg::MessageStream Physics::CollectMessages()
     m_messagesGenerated.Clear();
 
     return tmp;
+}
+
+const char *Physics::GetName() const
+{
+    return ds_lua::physicsSystemLuaName;
 }
 
 ScriptBindingSet Physics::GetScriptBindings() const

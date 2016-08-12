@@ -1,3 +1,4 @@
+#include <iostream>
 #include <sstream>
 
 #include "engine/Config.h"
@@ -10,6 +11,8 @@ namespace ds_lua
 extern void LoadMathAPI(LuaEnvironment &luaEnv);
 
 extern ds::ScriptBindingSet LoadScriptBindings();
+
+extern const char *scriptSystemLuaName;
 }
 
 namespace ds
@@ -17,6 +20,7 @@ namespace ds
 Script::Script()
 {
     m_bootScriptLoaded = false;
+    m_isFirstUpdate = true;
 }
 
 bool Script::Initialize(const Config &config)
@@ -28,7 +32,7 @@ bool Script::Initialize(const Config &config)
     {
         // Load our Lua/C APIs
         ds_lua::LoadMathAPI(m_lua);
-        RegisterScriptBindingSet("Script", (ISystem *)this);
+        // RegisterScriptBindingSet("Script", (ISystem *)this);
         // Loop thru and load script bindings
         for (auto namePtr : m_registeredSystems)
         {
@@ -36,11 +40,12 @@ bool Script::Initialize(const Config &config)
         }
 
         // Register all systems with the lua environment as light userdata
-        m_lua.RegisterLightUserData("__Script", (void *)this);
+        // m_lua.RegisterLightUserData("__Script", (void *)this);
         for (auto namePtr : m_registeredSystems)
         {
             std::stringstream ss;
             ss << "__" << std::string(namePtr.first);
+            std::cout << ss.str().c_str() << std::endl;
             m_lua.RegisterLightUserData(ss.str().c_str(),
                                         (void *)namePtr.second);
         }
@@ -56,9 +61,6 @@ bool Script::Initialize(const Config &config)
             if (m_lua.ExecuteFile(bootScriptPath.c_str()))
             {
                 m_bootScriptLoaded = true;
-
-                // Call init function in boot script (no arguments)
-                m_lua.CallLuaFunction("init", 0);
 
                 result = true;
             }
@@ -85,6 +87,14 @@ bool Script::Initialize(const Config &config)
 
 void Script::Update(float deltaTime)
 {
+    if (m_bootScriptLoaded && m_isFirstUpdate)
+    {
+        // Call init function in boot script (no arguments)
+        m_lua.CallLuaFunction("init", 0);
+
+        m_isFirstUpdate = false;
+    }
+
     ProcessEvents(&m_messagesReceived);
 
     if (m_bootScriptLoaded)
@@ -118,6 +128,11 @@ ds_msg::MessageStream Script::CollectMessages()
     m_messagesGenerated.Clear();
 
     return tmp;
+}
+
+const char *Script::GetName() const
+{
+    return ds_lua::scriptSystemLuaName;
 }
 
 ScriptBindingSet Script::GetScriptBindings() const

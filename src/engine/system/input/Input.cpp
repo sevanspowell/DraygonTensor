@@ -8,6 +8,8 @@
 namespace ds_lua
 {
 extern ds::ScriptBindingSet LoadInputScriptBindings();
+
+extern const char *inputSystemLuaName;
 }
 
 namespace ds
@@ -93,6 +95,11 @@ ds_msg::MessageStream Input::CollectMessages()
     m_messagesGenerated.Clear();
 
     return tmp;
+}
+
+const char *Input::GetName() const
+{
+    return ds_lua::inputSystemLuaName;
 }
 
 ScriptBindingSet Input::GetScriptBindings() const

@@ -4,7 +4,9 @@ namespace ds
 {
 Engine::Engine()
 {
-    // Add platform system
+    m_script = new Script();
+    AddSystem(std::unique_ptr<ISystem>(m_script));
+
     m_platform = new Platform();
     AddSystem(std::unique_ptr<ISystem>(m_platform));
 }
@@ -43,19 +45,26 @@ bool Engine::AddSystem(std::unique_ptr<ISystem> system)
     std::shared_ptr<ISystem> sharedPtr =
         std::shared_ptr<ISystem>(std::move(system));
 
-    // Does the engine already have this system?
-    std::vector<std::shared_ptr<ISystem>>::const_iterator it =
-        std::find(m_systems.begin(), m_systems.end(), sharedPtr);
-
-    // If not, insert into engine
-    if (it == m_systems.end())
+    if (sharedPtr != nullptr)
     {
-        m_systems.insert(it, sharedPtr);
+        // Does the engine already have this system?
+        std::vector<std::shared_ptr<ISystem>>::const_iterator it =
+            std::find(m_systems.begin(), m_systems.end(), sharedPtr);
 
-        // Also insert into message bus
-        m_messageBus.AddSystem(std::weak_ptr<ISystem>(sharedPtr));
+        // If not, insert into engine
+        if (it == m_systems.end())
+        {
+            m_systems.insert(it, sharedPtr);
 
-        result = true;
+            // Also insert into message bus
+            m_messageBus.AddSystem(std::weak_ptr<ISystem>(sharedPtr));
+
+            // Register system script bindings
+            m_script->RegisterScriptBindings(sharedPtr->GetName(),
+                                             sharedPtr.get());
+
+            result = true;
+        }
     }
 
     return result;

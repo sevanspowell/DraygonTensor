@@ -82,6 +82,11 @@ ds_msg::MessageStream Platform::CollectMessages()
     return tmp;
 }
 
+const char *Platform::GetName() const
+{
+    return "Platform";
+}
+
 uint32_t Platform::GetTicks() const
 {
     return SDL_GetTicks();

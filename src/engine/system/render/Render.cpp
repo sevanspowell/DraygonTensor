@@ -16,6 +16,8 @@
 namespace ds_lua
 {
 extern ds::ScriptBindingSet LoadRenderScriptBindings();
+
+extern const char *renderSystemLuaName;
 }
 
 namespace ds
@@ -262,8 +264,8 @@ bool Render::Initialize(const Config &config)
 void Render::Update(float deltaTime)
 {
     m_timeInSeconds += deltaTime;
-    ProcessEvents(&m_messagesReceived);
 
+    ProcessEvents(&m_messagesReceived);
     m_messagesReceived.Clear();
 
     // Make sure renderer has been created
@@ -291,6 +293,11 @@ ds_msg::MessageStream Render::CollectMessages()
     m_messagesGenerated.Clear();
 
     return tmp;
+}
+
+const char *Render::GetName() const
+{
+    return ds_lua::renderSystemLuaName;
 }
 
 ScriptBindingSet Render::GetScriptBindings() const

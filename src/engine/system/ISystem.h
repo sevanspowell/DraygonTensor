@@ -73,6 +73,18 @@ public:
     virtual ds_msg::MessageStream CollectMessages() = 0;
 
     /**
+     * Get the name of the system. This name is used in the script system of the
+     * engine, a pointer to the system is placed in a Lua global with the name
+     * '__GetNameResult' (i.e. two underscores prepended to the result of this
+     * function).
+     *
+     * @post   Returned name is unique among systems added to the engine.
+     *
+     * @return   const char *, name string.
+     */
+    virtual const char *GetName() const = 0;
+
+    /**
      * Optionally return any required script bindings.
      *
      * @return  ScriptBindingSet, the script bindings the system wants to

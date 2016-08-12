@@ -59,6 +59,11 @@ public:
     virtual ds_msg::MessageStream CollectMessages();
 
     /**
+     * @copydoc ISystem::GetName()
+     */
+    virtual const char *GetName() const;
+
+    /**
      * Get the number of milliseconds since the platform has been initialized.
      *
      * @return  uint32_t, number of milliseconds since the platform has been

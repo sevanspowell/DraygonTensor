@@ -33,7 +33,7 @@ void MessageBus::CollectAllMessages()
         // Convert weak pointer to shared pointer temporarily
         std::shared_ptr<ISystem> systemPtr = system.lock();
 
-        if (systemPtr)
+        if (systemPtr != nullptr)
         {
             AppendStreamBuffer(&m_messageStoreTemp,
                                systemPtr->CollectMessages());

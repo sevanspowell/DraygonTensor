@@ -208,6 +208,11 @@ public:
     virtual ds_msg::MessageStream CollectMessages();
 
     /**
+     * @copydoc ISystem::GetName()
+     */
+    virtual const char *GetName() const;
+
+    /**
      * Return required script bindings.
      *
      * @return  ScriptBindingSet, the script bindings the render system wants to
@@ -273,7 +278,8 @@ private:
     /**
      * Create a Material object from a material resource handle.
      *
-     * @param   handle  MaterialResourceHandle, material handle to create Material
+     * @param   handle  MaterialResourceHandle, material handle to create
+     * Material
      * from.
      * @return          ds_render::Material, material object created.
      */
