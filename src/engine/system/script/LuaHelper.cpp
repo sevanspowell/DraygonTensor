@@ -186,21 +186,24 @@ void RegisterClass(lua_State *L,
     lua_settable(L, -3);  // metatable.__index = metatable
 
     // Fill metarray with member functions (methods)
-    luaL_setfuncs(L, methods, 0);
+    // luaL_setfuncs(L, methods, 0); // Lua 5.3
+    luaL_register(L, NULL, methods);
 
     // Pop off metarray
     lua_pop(L, 1);
 
     // Create static functions
     lua_newtable(L);
-    luaL_setfuncs(L, functions, 0);
+    // luaL_setfuncs(L, functions, 0); // Lua 5.3
+    luaL_register(L, NULL, functions);
     lua_pushvalue(L, -1); // Duplicate static functions table because set global
                           // pops table off stack.
     lua_setglobal(L, className); // Can now access static functions using only
                                  // class name i.e. Vec3.new
 
     lua_newtable(L);
-    luaL_setfuncs(L, special, 0);
+    // luaL_setfuncs(L, special, 0); // Lua 5.3
+    luaL_register(L, NULL, special);
     lua_setmetatable(L, -2); // Set special functions of static function table
 
     // Pop off static functions table

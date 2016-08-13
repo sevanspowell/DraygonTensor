@@ -5,6 +5,9 @@
 #include "engine/common/StringIntern.h"
 #include "engine/system/platform/GraphicsContext.h"
 #include "engine/system/platform/Keyboard.h"
+#include "engine/system/platform/Mouse.h"
+#include "math/Matrix4.h"
+#include "math/Vector3.h"
 
 namespace ds_msg
 {
@@ -42,7 +45,54 @@ enum class MessageType
     // On graphics context creation
     GraphicsContextCreated,
     // On component creation
-    CreateComponent
+    CreateComponent,
+    // Set local translation of an entity
+    SetLocalTranslation,
+    // Set local orientation of an entity
+    SetLocalOrientation,
+    // Set local scale of an entity
+    SetLocalScale,
+    // Set an entity's animation
+    SetAnimationIndex,
+    // Set skybox material
+    SetSkyboxMaterial,
+    // On mouse move event
+    MouseMotion,
+    // On mouse button click/release event
+    MouseButton,
+    // Create GUI panel message
+    CreatePanel,
+    // Create GUI button message
+    CreateButton,
+    // On button fire (button click)
+    ButtonFired,
+    // On set material parameter
+    SetMaterialParameterMatrix4,
+    SetMaterialParameterVector4,
+    SetMaterialParameterVector3,
+    SetMaterialParameterInt,
+    SetMaterialParameterFloat,
+    // On destroy entity
+    DestroyEntity,
+    // On reload all assets
+    ReloadAll,
+    // On physics collision
+    PhysicsCollision,
+    // Set mouse lock on/off
+    SetMouseLock,
+    // Shutdown engine and all systems
+    Shutdown,
+    // On window resize
+    WindowResize,
+    // On pause
+    PauseEvent,
+    // Set the linear velocity of an entity
+    SetLinearVelocity,
+    // Particle manipulation
+    SetParticleMass,
+    SetParticleVelocity,
+    SetParticleAcceleration,
+    SetParticleDamping,
 };
 
 /**
@@ -109,5 +159,208 @@ struct CreateComponent
     ds::StringIntern::StringId
         componentType; // Type of component to create  as a string
     ds::StringIntern::StringId componentData; // Component config string.
+};
+
+// struct SetLocalTransform
+// {
+//     ds::Entity entity;               // Entity to set local transform of
+//     ds_math::Matrix4 localTransform; // New local transform
+// };
+
+struct SetLocalTranslation
+{
+    ds::Entity entity;
+    ds_math::Vector3 localTranslation;
+};
+
+struct SetLocalOrientation
+{
+    ds::Entity entity;
+    ds_math::Quaternion localOrientation;
+};
+
+struct SetLocalScale
+{
+    ds::Entity entity;
+    ds_math::Vector3 localScale;
+};
+
+struct SetAnimationIndex
+{
+    ds::Entity entity;  // Entity to set the animation index of
+    int animationIndex; // New animation index
+};
+
+struct SetSkyboxMaterial
+{
+    ds::StringIntern::StringId skyboxMaterialPath; // Path to skybox material
+};
+
+struct MouseMotion
+{
+    ds_platform::Mouse::ButtonState button; // State of the mouse buttons
+    float x;            // x-coordinate of cursor, relative to window
+    float y;            // y-coordinate of cursor, relative to window
+    float xRel;         // relative motion of cursor in the x direction
+    float yRel;         // relative motion of cursor in the y direction
+    uint32_t timeStamp; // Time stamp of mouse motion event
+    uint32_t windowID;  // ID of window with focus (if any)
+};
+
+struct MouseButton
+{
+    ds_platform::Mouse::ButtonState button; // State of the mouse buttons
+    float x;        // x-coordinate of cursor, relative to window
+    float y;        // y-coordinate of cursor, relative to window
+    uint8_t clicks; // Number of clicks (1 for single-click, 2 for double-click,
+                    // etc.)
+    uint32_t timeStamp; // Time stamp of mouse motion event;
+    uint32_t windowID;  // ID of window with focus (if any)
+};
+
+struct CreatePanel
+{
+    ds::Entity entity;
+    float startX;
+    float startY;
+    float endX;
+    float endY;
+    ds::StringIntern::StringId materialPath;
+};
+
+struct CreateButton
+{
+    ds::Entity entity;
+    float startX;
+    float startY;
+    float endX;
+    float endY;
+    ds::StringIntern::StringId defaultMaterialPath;
+    ds::StringIntern::StringId pressedMaterialPath;
+    ds::StringIntern::StringId hoverMaterialPath;
+};
+
+struct ButtonFired
+{
+    ds::Entity entity;
+};
+
+struct SetMaterialParameterMatrix4
+{
+    ds::StringIntern::StringId materialResourceFilePath; // Path to material
+                                                         // resource file
+                                                         // containing material
+                                                         // to adjust parameter
+    ds::StringIntern::StringId parameter; // material parameter to change
+    ds_math::Matrix4 data; // data to change material parameter to
+};
+
+struct SetMaterialParameterVector4
+{
+    ds::StringIntern::StringId materialResourceFilePath; // Path to material
+                                                         // resource file
+                                                         // containing material
+                                                         // to adjust parameter
+    ds::StringIntern::StringId parameter; // material parameter to change
+    ds_math::Vector4 data; // data to change material parameter to
+};
+
+struct SetMaterialParameterVector3
+{
+    ds::StringIntern::StringId materialResourceFilePath; // Path to material
+                                                         // resource file
+                                                         // containing material
+                                                         // to adjust parameter
+    ds::StringIntern::StringId parameter; // material parameter to change
+    ds_math::Vector3 data; // data to change material parameter to
+};
+
+struct SetMaterialParameterInt
+{
+    ds::StringIntern::StringId materialResourceFilePath; // Path to material
+                                                         // resource file
+                                                         // containing material
+                                                         // to adjust parameter
+    ds::StringIntern::StringId
+        parameter; // data to change material parameter to
+    int data;      // data to change material parameter to
+};
+
+struct SetMaterialParameterFloat
+{
+    ds::StringIntern::StringId materialResourceFilePath; // Path to material
+                                                         // resource file
+                                                         // containing material
+                                                         // to adjust parameter
+    ds::StringIntern::StringId
+        parameter; // data to change material parameter to
+    float data;    // data to change material parameter to
+};
+
+struct DestroyEntity
+{
+    ds::Entity entity; // Entity to destroy
+};
+
+struct ReloadAll
+{
+};
+
+struct PhysicsCollision
+{
+    ds::Entity entityA; // Object one involved in collision.
+    ds::Entity entityB; // Object two involved in collision.
+    ds_math::Vector3
+        pointWorldOnA; // Collision point on object one in world space.
+    ds_math::Vector3
+        pointWorldOnB; // Collision point on object two in world space.
+    ds_math::Vector3
+        normalWorldOnB; // Collision normal in world space on object two.
+};
+
+struct SetMouseLock
+{
+    bool enableMouseLock; // TRUE to enable mouse lock, FALSE to disable it
+};
+
+struct WindowResize
+{
+    int newWidth;  // New window width in pixels
+    int newHeight; // New window height in pixels
+};
+
+struct PauseEvent
+{
+    bool shouldPause; // TRUE for pause, FALSE otherwise
+};
+
+struct SetLinearVelocity
+{
+    ds::Entity entity;         // Entity to set the linear velocity of
+    ds_math::Vector3 velocity; // Velocity to set
+};
+
+struct SetParticleMass
+{
+    ds::Entity entity; // Entity owning this particle
+    ds_math::scalar mass;       // Mass to set
+};
+
+struct SetParticleVelocity
+{
+    ds::Entity entity;         // Entity owning this particle
+    ds_math::Vector3 velocity; // Velocity to set
+};
+
+struct SetParticleAcceleration
+{
+    ds::Entity entity;             // Entity owning this particle
+    ds_math::Vector3 acceleration; // Acceleration to set
+};
+
+struct SetParticleDamping
+{
+    ds::Entity entity; // Entity owning this particle
+    ds_math::scalar damping;    // Damping to set
 };
 }

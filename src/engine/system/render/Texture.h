@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/resource/TextureResourceManager.h"
 #include "engine/system/render/RenderCommon.h"
 
 namespace ds_render
@@ -18,26 +19,22 @@ public:
     /**
      * Texture constructor.
      *
-     * @param  texture  TextureHandle, handle to renderer texture.
+     * @param  textureResourceHandle  TextureResourceHandle, handle to texture
+     * resource used to create this texture.
+     * @param  textureType            TextureType, type of sampler that should
+     * be used to sample from this texture.
+     * @param  renderTextureHandle    RenderTextureHandle, handle to renderer
+     * texture.
      */
-    Texture(TextureHandle texture);
+    Texture(ds::TextureResourceHandle textureResourceHandle,
+            TextureType textureType,
+            RenderTextureHandle renderTextureHandle);
 
-    /**
-     * Get handle to renderer texture.
-     *
-     * @return  TextureHandle, handle to renderer texture.
-     */
-    TextureHandle GetTextureHandle() const;
-
-    /**
-     * Set the handle to renderer texture.
-     *
-     * @param  textureHandle  TextureHandle, handle to renderer texture.
-     */
-    void SetTextureHandle(TextureHandle textureHandle);
-
-private:
+    /** Handle to texture resource used to create this texture */
+    ds::TextureResourceHandle textureResourceHandle;
+    /** Texture sampler type */
+    TextureType textureType;
     /** Handle to renderer texture */
-    TextureHandle m_texture;
+    RenderTextureHandle renderTextureHandle;
 };
 }

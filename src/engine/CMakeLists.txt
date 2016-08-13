@@ -21,19 +21,36 @@ set(ENGINE_INCLUDE_FILES
   message/MessageHelper.h
   resource/IResource.h
   resource/MaterialResource.h
+  resource/MaterialResourceManager.h
   resource/MeshResource.h
   resource/ResourceFactory.h
   resource/ResourceFactory.hpp
   resource/ShaderResource.h
-  resource/TextureResource.h
   resource/TerrainResource.h
+  resource/TextureResource.h
+  resource/TextureResourceManager.h
   system/Console.h
   system/input/Input.h
   system/input/InputContext.h
+
+  system/custom_physics/Particle.h
+  system/custom_physics/CustomPhysics.h
+  system/custom_physics/CustomPhysicsComponent.h
+  system/custom_physics/CustomPhysicsComponentManager.h
+  
+  system/physics/Physics.h
+  system/physics/PhysicsComponent.h
+  system/physics/PhysicsComponentManager.h
+
   system/platform/Keyboard.h
+  system/platform/Mouse.h
   system/platform/Platform.h
   system/platform/Video.h
   system/platform/Window.h
+  system/render/ButtonComponent.h
+  system/render/ButtonComponentManager.h
+  system/render/CameraComponent.h
+  system/render/CameraComponentManager.h
   system/render/ConstantBuffer.h
   system/render/ConstantBufferDescription.h
   system/render/GLRenderer.h
@@ -43,9 +60,12 @@ set(ENGINE_INCLUDE_FILES
   system/render/Render.h
   system/render/RenderComponent.h
   system/render/RenderComponentManager.h
+  system/render/ShaderParameter.h
+  system/render/Skybox.h
+  system/render/SubMesh.h
+  system/render/TerrainComponent.h
+  system/render/TerrainComponentManager.h
   system/render/Texture.h
-  system/render/Uniform.h
-  system/render/UniformBlock.h
   system/render/VertexBufferDescription.h
   system/scene/TransformComponent.h
   system/scene/TransformComponentManager.h
@@ -68,17 +88,31 @@ set(ENGINE_SRC_FILES
   message/MessageFactory.cpp
   message/MessageHelper.cpp
   resource/MaterialResource.cpp
+  resource/MaterialResourceManager.cpp
   resource/MeshResource.cpp
   resource/ShaderResource.cpp
-  resource/TextureResource.cpp
   resource/TerrainResource.cpp
+  resource/TextureResource.cpp
+  resource/TextureResourceManager.cpp
   system/Console.cpp
+
+  system/custom_physics/Particle.cpp
+  system/custom_physics/CustomPhysics.cpp
+  system/custom_physics/CustomPhysicsLuaBindings.cpp
+  system/custom_physics/CustomPhysicsComponentManager.cpp
+
   system/input/Input.cpp
   system/input/InputContext.cpp
+  system/input/InputLuaBindings.cpp
+  system/physics/Physics.cpp
+  system/physics/PhysicsLuaBindings.cpp
+  system/physics/PhysicsComponentManager.cpp
   system/platform/Keyboard.cpp
   system/platform/Platform.cpp
   system/platform/Video.cpp
   system/platform/Window.cpp
+  system/render/ButtonComponentManager.cpp
+  system/render/CameraComponentManager.cpp
   system/render/ConstantBuffer.cpp
   system/render/ConstantBufferDescription.cpp
   system/render/GLRenderer.cpp
@@ -86,10 +120,12 @@ set(ENGINE_SRC_FILES
   system/render/Mesh.cpp
   system/render/Render.cpp
   system/render/RenderComponentManager.cpp
+  system/render/RenderLuaBindings.cpp
+  system/render/ShaderParameter.cpp
+  system/render/Skybox.cpp
+  system/render/TerrainComponentManager.cpp
   system/render/Texture.cpp
   system/render/VertexBufferDescription.cpp
-  system/render/Uniform.cpp
-  system/render/UniformBlock.cpp
   system/scene/TransformComponentManager.cpp
   system/script/LuaEnvironment.cpp
   system/script/LuaHelper.cpp

@@ -3,6 +3,7 @@
 #include "engine/system/render/RenderCommon.h"
 #include "engine/system/render/VertexBufferDescription.h"
 #include "engine/system/render/ConstantBufferDescription.h"
+#include "engine/system/render/ShaderParameter.h"
 
 namespace ds_render
 {
@@ -50,6 +51,22 @@ public:
     virtual void ClearBuffers(bool colour = true,
                               bool depth = true,
                               bool stencil = true) = 0;
+
+    /**
+     * Enable or disable writing to the depth buffer.
+     *
+     * @param  enableDisableDepthMask  bool, TRUE to enable depth buffer
+     * writing, FALSE to disable it.
+     */
+    virtual void SetDepthWriting(bool enableDisableDepthWriting) = 0;
+
+    /**
+     * Enable or disable blending in the colour buffer.
+     *
+     * @param  enableBlending  bool, TRUE to enable colour buffer blending,
+     * FALSE to disable it.
+     */
+    virtual void SetBlending(bool enableBlending) = 0;
 
     /**
      * Resize the viewport the renderer renders to.
@@ -147,32 +164,71 @@ public:
      * @param  height           unsigend int, height of the image in pixels.
      * @param  data             const void *, pointer to image data.
      */
-    virtual TextureHandle Create2DTexture(ImageFormat format,
-                                          RenderDataType imageDataType,
-                                          InternalImageFormat internalFormat,
-                                          bool generateMipMaps,
-                                          unsigned int width,
-                                          unsigned int height,
-                                          const void *data) = 0;
+    virtual RenderTextureHandle
+    Create2DTexture(ImageFormat format,
+                    RenderDataType imageDataType,
+                    InternalImageFormat internalFormat,
+                    bool generateMipMaps,
+                    unsigned int width,
+                    unsigned int height,
+                    const void *data) = 0;
+
+    /**
+     * Create a cubemap texture.
+     *
+     * @param  format           ImageFormat, composition of each element in
+     * data. Number of colour components in the textures.
+     * @param  imageDataType    RenderDataType, data type of pixel data for all
+     * images.
+     * @param  internalFormat   InternalImageFormat, request the renderer to
+     * store the image data in a specific format.
+     * @param  width            unsigned int, width of all images in pixels.
+     * @param  height           unsigend int, height of all images in pixels.
+     * @param  dataFrontImage   const void *, pointer to front image data.
+     * @param  dataBackImage    const void *, pointer to back image data.
+     * @param  dataLeftImage    const void *, pointer to left image data.
+     * @param  dataRightImage   const void *, pointer to right image data.
+     * @param  dataTopImage     const void *, pointer to top image data.
+     * @param  dataBottomImage  const void *, pointer to bottom image data.
+     */
+    virtual RenderTextureHandle
+    CreateCubemapTexture(ImageFormat format,
+                         RenderDataType imageDataType,
+                         InternalImageFormat internalFormat,
+                         unsigned int width,
+                         unsigned int height,
+                         const void *dataFrontImage,
+                         const void *dataBackImage,
+                         const void *dataLeftImage,
+                         const void *dataRightImage,
+                         const void *dataTopImage,
+                         const void *dataBottomImage) = 0;
 
     /**
      * Bind a texture to a sampler in the shader.
      *
-     * @param  programHandle  ProgramHandle, shader program containing sampler.
-     * @param  samplerName    const std::string &, name of the sampler in the
+     * @param  programHandle  ProgramHandle, shader program containing
+     * sampler.
+     * @param  samplerName    const std::string &, name of the sampler in
+     * the
      * shader
-     * @param  textureHandle  TextureHandle, texture to bind to sampler.
+     * @param  textureHandle  RenderTextureHandle, texture to bind to sampler.
      */
     virtual void BindTextureToSampler(ProgramHandle programHandle,
                                       const std::string &samplerName,
-                                      TextureHandle textureHandle) = 0;
+                                      const TextureType &samplerType,
+                                      RenderTextureHandle textureHandle) = 0;
 
     /**
      * Unbind texture from sampler.
      *
-     * @param  textureHandle  TextureHandle, texture to unbind.
+     * @param  samplerType    const TextureType &, type of sampler to unbind
+     * texture from.
+     * @param  textureHandle  RenderTextureHandle, texture to unbind.
      */
-    virtual void UnbindTextureFromSampler(TextureHandle textureHandle) = 0;
+    virtual void
+    UnbindTextureFromSampler(const TextureType &samplerType,
+                             RenderTextureHandle textureHandle) = 0;
 
     /**
      * Memory layout of constant buffer in renderer may not match that of C/C++.
@@ -272,6 +328,24 @@ public:
                                      PrimitiveType primitiveType,
                                      size_t startingIndex,
                                      size_t numIndices) = 0;
+
+    /**
+     * Update the value of the specified parameter in the given program.
+     *
+     * @param  programHandle  ProgramHandle, handle to program to update
+     * parameter of.
+     * @param  parameterName  const std::string &, name of program parameter to
+     * update.
+     * @param  parameterType  ShaderParameter::ShaderParameterType, data type of
+     * the parameter.
+     * @param  parameterData  const void *, program parameter data to update
+     * with.
+     */
+    virtual void
+    UpdateProgramParameter(ProgramHandle programHandle,
+                           const std::string &parameterName,
+                           ShaderParameter::ShaderParameterType parameterType,
+                           const void *parameterData) = 0;
 
 private:
 };

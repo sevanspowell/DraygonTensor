@@ -1,7 +1,7 @@
 #pragma once
 
-
 #include <functional>
+#include <memory>
 #include <map>
 #include <typeindex>
 #include <typeinfo>

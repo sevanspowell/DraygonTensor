@@ -2,6 +2,15 @@
 
 namespace ds
 {
+Engine::Engine()
+{
+    m_script = new Script();
+    AddSystem(std::unique_ptr<ISystem>(m_script));
+
+    m_platform = new Platform();
+    AddSystem(std::unique_ptr<ISystem>(m_platform));
+}
+
 void Engine::Start()
 {
     if (Init())
@@ -10,7 +19,14 @@ void Engine::Start()
 
         while (m_running)
         {
-            Update(0.1f);
+            // Calculate deltaTime
+            static double prevSeconds =
+                ((Platform *)m_platform)->GetTicks() / 1000.0f;
+            double currSeconds = ((Platform *)m_platform)->GetTicks() / 1000.0f;
+            float deltaTime = (float)(currSeconds - prevSeconds);
+            prevSeconds = currSeconds;
+
+            Update(deltaTime);
         }
 
         Shutdown();
@@ -29,19 +45,26 @@ bool Engine::AddSystem(std::unique_ptr<ISystem> system)
     std::shared_ptr<ISystem> sharedPtr =
         std::shared_ptr<ISystem>(std::move(system));
 
-    // Does the engine already have this system?
-    std::vector<std::shared_ptr<ISystem>>::const_iterator it =
-        std::find(m_systems.begin(), m_systems.end(), sharedPtr);
-
-    // If not, insert into engine
-    if (it == m_systems.end())
+    if (sharedPtr != nullptr)
     {
-        m_systems.insert(it, sharedPtr);
+        // Does the engine already have this system?
+        std::vector<std::shared_ptr<ISystem>>::const_iterator it =
+            std::find(m_systems.begin(), m_systems.end(), sharedPtr);
 
-        // Also insert into message bus
-        m_messageBus.AddSystem(std::weak_ptr<ISystem>(sharedPtr));
+        // If not, insert into engine
+        if (it == m_systems.end())
+        {
+            m_systems.insert(it, sharedPtr);
 
-        result = true;
+            // Also insert into message bus
+            m_messageBus.AddSystem(std::weak_ptr<ISystem>(sharedPtr));
+
+            // Register system script bindings
+            m_script->RegisterScriptBindings(sharedPtr->GetName(),
+                                             sharedPtr.get());
+
+            result = true;
+        }
     }
 
     return result;
@@ -115,7 +138,7 @@ void Engine::Shutdown()
 
 void Engine::PostMessages(const ds_msg::MessageStream &messages)
 {
-    AppendStreamBuffer(m_messagesInternal, messages);
+    AppendStreamBuffer(&m_messagesInternal, messages);
 }
 
 ds_msg::MessageStream Engine::CollectMessages()

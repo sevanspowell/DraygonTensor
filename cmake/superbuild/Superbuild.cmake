@@ -22,16 +22,17 @@ else (NOT GTEST_FOUND)
 endif (NOT GTEST_FOUND)
 
 # Try to find Lua package
-set(LUA_DIR ${CMAKE_SOURCE_DIR}/../../external/Lua-5.3.2)
-find_package(LUA)
+# Look in LUAJIT_DIR
+set(LUAJIT_DIR ${CMAKE_SOURCE_DIR}/../../external/LuaJIT-2.0)
+find_package(LuaJIT)
 # If not found, download
-if (NOT LUA_FOUND)
-	message("Will download LUA...")
-	include(${CMAKE_SOURCE_DIR}/External-Lua.cmake)
-	list(APPEND DRUNKEN_SAILOR_ENGINE_DEPENDENCIES Lua)
-else (NOT LUA_FOUND)
-	set(LUA_DIR ${LUA_INCLUDE_DIR}/..)
-endif (NOT LUA_FOUND)
+if (NOT LUAJIT_FOUND)
+	message("Will download LuaJIT...")
+	include(${CMAKE_SOURCE_DIR}/External-LuaJIT.cmake)
+	list(APPEND DRUNKEN_SAILOR_ENGINE_DEPENDENCIES LuaJIT)
+else (NOT LUAJIT_FOUND)
+	set(LUA_DIR ${LUAJIT_INCLUDE_DIR}/../..)
+endif (NOT LUAJIT_FOUND)
 
 # Try to find SDL2 package
 set(SDL2DIR ${CMAKE_SOURCE_DIR}/../../external/SDL2-2.0.4)
@@ -126,7 +127,7 @@ ExternalProject_Add(
   INSTALL_DIR ${CMAKE_SOURCE_DIR}/../../bin
 	CMAKE_ARGS
     # Set variables for various packages to find
-		-DLUA_DIR:PATH=${LUA_DIR}
+		-DLUAJIT_DIR:PATH=${LUAJIT_DIR}
 		-DGTEST_ROOT:PATH=${GTEST_ROOT}
     -DSDL2DIR=${SDL2DIR}
     -DRAPIDJSON_INCLUDEDIR=${RAPIDJSON_INCLUDEDIR}
@@ -135,7 +136,6 @@ ExternalProject_Add(
     -DASSIMP_ROOT_DIR=${ASSIMP_ROOT_DIR}
     -DSTB_BASE_DIR=${STB_BASE_DIR}
     -DBULLET_ROOT=${BULLET_ROOT}
-
 		-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
 	)

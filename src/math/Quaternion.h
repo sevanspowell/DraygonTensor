@@ -22,7 +22,7 @@ public:
                scalar z = 0.0f,
                scalar w = 1.0f);
     /**
-     * Initialize quaternion with an axis and a fourth component.
+     * Initialize quaternion with a vector part and a fourth component.
      *
      * @param  vectorPart  Vector3, axis to initialize quaternion with.
      * @param  scalarPart  scalar, fourth component of quaternion.
@@ -147,6 +147,14 @@ public:
      * @return     Quaternion, inverted quaternion.
      */
     static Quaternion Invert(const Quaternion &q);
+    /**
+     * Create a quaternion from an axis/angle representation.
+     *
+     * @param   axis      const Vector3 &, axis part.
+     * @param   angleRad  scalar, angle part.
+     * @return            Quaternion, quaternion created.
+     */
+    static Quaternion CreateFromAxisAngle(const Vector3 &axis, scalar angleRad);
 
     scalar x, y, z, w;
 };

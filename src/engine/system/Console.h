@@ -58,6 +58,11 @@ public:
      */
     virtual ds_msg::MessageStream CollectMessages();
 
+    /**
+     * @copydoc ISystem::GetName()
+     */
+    virtual const char *GetName() const;
+
 private:
     /**
      * Flush the consoles output buffer to output.

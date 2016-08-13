@@ -5,6 +5,16 @@
 namespace ds_render
 {
 /**
+ * Possible texture types.
+ */
+enum class TextureType
+{
+    None,
+    TwoDimensional,
+    Cubemap
+};
+
+/**
  * Possible render data types.
  */
 enum class RenderDataType
@@ -33,7 +43,9 @@ enum class AttributeType
 {
     Position,
     Normal,
-    TextureCoordinate
+    TextureCoordinate,
+    BoneID,
+    BoneWeight
 };
 
 /** Shader source type */
@@ -79,7 +91,15 @@ typedef ds::Handle ShaderHandle;
 /** Handle to a shader program */
 typedef ds::Handle ProgramHandle;
 /** Handle to a texture */
-typedef ds::Handle TextureHandle;
+typedef ds::Handle RenderTextureHandle;
 /** Handle to constant buffer */
 typedef ds::Handle ConstantBufferHandle;
+/** Handle to mesh resource */
+typedef ds::Handle MeshResourceHandle;
+/** Handle to terrain resource */
+typedef ds::Handle TerrainResourceHandle;
+/** Handle to texture object */
+typedef ds::Handle TextureHandle;
+/** Handle to material object */
+typedef ds::Handle MaterialHandle;
 }

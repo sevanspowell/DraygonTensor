@@ -2,6 +2,7 @@
 
 #include "engine/entity/EntityManager.h"
 #include "engine/system/ISystem.h"
+#include "engine/system/scene/TransformComponentManager.h"
 #include "engine/system/script/LuaEnvironment.h"
 #include "math/Quaternion.h"
 #include "math/Vector3.h"
@@ -75,6 +76,11 @@ public:
     virtual ds_msg::MessageStream CollectMessages();
 
     /**
+     * @copydoc ISystem::GetName()
+     */
+    virtual const char *GetName() const;
+
+    /**
      * Return script bindings required by script system.
      *
      * @return  ScriptBindingSet, the script bindings the script system wants to
@@ -93,12 +99,119 @@ public:
     /**
      * Spawn a prefab in the world.
      *
-     * @param  prefabFile  std::string, path to prefab, relative to the assets
+     * @param   prefabFile  std::string, path to prefab, relative to the assets
      * directory.
-     * @param  position    const ds_math::Vector3, spawn prefab at this position
-     * with default orientation and scale.
+     * @param   position    const ds_math::Vector3, spawn prefab at this
+     * position with default orientation and scale.
+     * @return              Entity, entity id of prefab spawned.
      */
-    void SpawnPrefab(std::string prefabFile, const ds_math::Vector3 &position);
+    Entity SpawnPrefab(std::string prefabFile,
+                       const ds_math::Vector3 &position);
+
+    /**
+     * Get the world transform of an entity.
+     *
+     * @param   entity  Entity, entity to get world transform of.
+     * @return          ds_math::Matrix4, world transform of the given
+     * entity.
+     */
+    ds_math::Matrix4 GetWorldTransform(Entity entity) const;
+
+    /**
+     * Get the local transform of an entity.
+     *
+     * @param   entity  Entity, entity to get local transform of.
+     * @return          ds_math::Matrix4, local transform of the given entity.
+     */
+    ds_math::Matrix4 GetLocalTransform(Entity entity) const;
+
+    /**
+     * Get the world translation of an entity.
+     *
+     * @param   entity  Entity, entity to get world translation of.
+     * @return          ds_math::Vector3, world translation of the given
+     *                  entity.
+     */
+    ds_math::Vector3 GetWorldTranslation(Entity entity) const;
+
+    /**
+     * Get the local translation of an entity.
+     *
+     * @param   entity  Entity, entity to get local translation of.
+     * @return          ds_math::Vector3, local translation of the given
+     *                  entity.
+     */
+    ds_math::Vector3 GetLocalTranslation(Entity entity) const;
+
+    /**
+     * Set the local translation of an entity.
+     *
+     * @param  entity       Entity, entity to set the local translation of.
+     * @param  translation  const ds_math::Vector3 &, new translation to set.
+     */
+    void SetLocalTranslation(Entity entity,
+                             const ds_math::Vector3 &translation);
+
+    /**
+     * Get the world scale of an entity.
+     *
+     * @param   entity  Entity, entity to get the world scale of.
+     * @return          ds_math::Vector3, world scale of the given
+     *                  entity.
+     */
+    ds_math::Vector3 GetWorldScale(Entity entity) const;
+
+    /**
+     * Get the local scale of an entity.
+     *
+     * @param   entity  Entity, entity to get the local scale of.
+     * @return          ds_math::Vector3, local scale of the given
+     *                  entity.
+     */
+    ds_math::Vector3 GetLocalScale(Entity entity) const;
+
+    /**
+     * Set the local scale of an entity.
+     *
+     * @param  entity  Entity, entity to set the local scale of.
+     * @param  scale   const ds_math::Vector3 &, new scale to set.
+     */
+    void SetLocalScale(Entity entity, const ds_math::Vector3 &scale);
+
+    /**
+     * Get the world orientation of an entity.
+     *
+     * @param   entity  Entity, entity to get the world orientation of.
+     * @return          ds_math::Quaternion, world orientation of the
+     *                  given entity.
+     */
+    ds_math::Quaternion GetWorldOrientation(Entity entity) const;
+
+    /**
+     * Get the local orientation of an entity.
+     *
+     * @param   entity  Entity, entity to get the local orientation of.
+     * @return          ds_math::Quaternion, local orientation of the
+     *                  given entity.
+     */
+    ds_math::Quaternion GetLocalOrientation(Entity entity) const;
+
+    /**
+     * Set the local orientation of an entity.
+     *
+     * @param  entity       Entity, entity to set the local orientation of.
+     * @param  orientation  const ds_math::Quaternion &, orientatation to set.
+     */
+    void SetLocalOrientation(Entity entity,
+                             const ds_math::Quaternion &orientation);
+
+    /**
+     * Send a set animation index message.
+     *
+     * @param  entity          Entity, entity to set animation of.
+     * @param  animationIndex  int, animation index to set.
+     */
+    void SetAnimationIndex(Entity entity, int animationIndex);
 
     /**
      * Is a new message available for the external script?
@@ -116,6 +229,160 @@ public:
      * @return  ds_msg::MessageStream, next script message available.
      */
     ds_msg::MessageStream GetNextScriptMessage();
+
+    /**
+     * Rotate an entity to look at a target.
+     *
+     * @param  entity  Entity, entity to get to look at target.
+     * @param  target  const ds_math::Vector3 &, target to look at.
+     */
+    void LookAt(Entity entity, const ds_math::Vector3 &target);
+
+    /**
+     * Set the material of the skybox.
+     *
+     * @param  skyboxMaterialPath  const std::string &, path to skybox material
+     * to set.
+     */
+    void SetSkyboxMaterial(const std::string &skyboxMaterialPath);
+
+    /**
+     * Send a create GUI panel message.
+     *
+     * @param  startX        float, start x co-ordinate of the panel.
+     * @param  startY        float, start y co-ordinate of the panel.
+     * @param  endX          float, end x co-ordinate of the panel.
+     * @param  endY          float, end y co-ordinate of the panel.
+     * @param  materialPath  const std::string &, path to material to use to
+     * render the panel.
+     * @return               Entity, entity id of panel.
+     */
+    Entity CreateGUIPanel(float startX,
+                          float startY,
+                          float endX,
+                          float endY,
+                          const std::string &materialPath);
+
+    /**
+     * Send a create GUI button message.
+     *
+     * @param   startX               float, start x co-ordinate of the panel.
+     * @param   startY               float, start y co-ordinate of the panel.
+     * @param   endX                 float, end x co-ordinate of the panel.
+     * @param   endY                 float, end y co-ordinate of the panel.
+     * @param   defaultMaterialPath  const std::string &, path to material to
+     * use to render the button when not pressed or hovered over.
+     * @param   pressedMaterialPath  const std::string &, path to material to
+     * use to render the button when pressed.
+     * @param   hoverMaterialPath    const std::string &, path to material to
+     * use to render the button when hovered over.
+     */
+    Entity CreateGUIButton(float startX,
+                           float startY,
+                           float endX,
+                           float endY,
+                           const std::string &defaultMaterialPath,
+                           const std::string &pressedMaterialPath,
+                           const std::string &hoverMaterialPath);
+
+    /**
+     * Destroy an entity.
+     *
+     * @param  entity  Entity, entity to destroy.
+     */
+    void DestroyEntity(Entity entity);
+
+    /**
+     * Set a float parameter of a given material to a given value.
+     *
+     * @param  materialResourceFilePath  const std::string &, path to material
+     * resource of material to change parameter of.
+     * @param  materialParameterName     const std::string &, material parameter
+     * name.
+     * @param  data                      float, value to set parameter to.
+     */
+    void SetMaterialParameterFloat(const std::string &materialResourceFilePath,
+                                   const std::string &materialParameterName,
+                                   float data);
+
+    /**
+     * Set an int parameter of a given material to a given value.
+     *
+     * @param  materialResourceFilePath  const std::string &, path to material
+     * resource of material to change parameter of.
+     * @param  materialParameterName     const std::string &, material parameter
+     * name.
+     * @param  data                      int, value to set parameter to.
+     */
+    void SetMaterialParameterInt(const std::string &materialResourceFilePath,
+                                 const std::string &materialParameterName,
+                                 int data);
+
+    /**
+     * Set the mat4 parameter of a given material to a given value.
+     *
+     * @param  materialResourceFilePath  const std::string &, path to material
+     * resource of material to change parameter of.
+     * @param  materialParameterName     const std::string &, material parameter
+     * name.
+     * @param  data                      const ds_math::Matrix4 &, value to set
+     * parameter to.
+     */
+    void
+    SetMaterialParameterMatrix4(const std::string &materialResourceFilePath,
+                                const std::string &materialParameterName,
+                                const ds_math::Matrix4 &data);
+
+    /**
+     * Set the vec3 parameter of a given material to a given value.
+     *
+     * @param  materialResourceFilePath  const std::string &, path to material
+     * resource of material to change parameter of.
+     * @param  materialParameterName     const std::string &, material parameter
+     * name.
+     * @param  data                      const ds_math::Vector3 &, value to set
+     * parameter to.
+     */
+    void
+    SetMaterialParameterVector3(const std::string &materialResourceFilePath,
+                                const std::string &materialParameterName,
+                                const ds_math::Vector3 &data);
+
+    /**
+     * Set the vec4 parameter of a given material to a given value.
+     *
+     * @param  materialResourceFilePath  const std::string &, path to material
+     * resource of material to change parameter of.
+     * @param  materialParameterName     const std::string &, material parameter
+     * name.
+     * @param  data                      const ds_math::Vector4 &, value to set
+     * parameter to.
+     */
+    void
+    SetMaterialParameterVector4(const std::string &materialResourceFilePath,
+                                const std::string &materialParameterName,
+                                const ds_math::Vector4 &data);
+
+    /*
+     * Enable/disable mouse locking.
+     *
+     * @param  enableMouseLock  boolean, TRUE to enable mouse locking, FALSE
+     * otherwise.
+     */
+    void SetMouseLock(bool enableMouseLock);
+
+    /**
+     * Send a quit message to the engine to cause it to shutdown all it's
+     * systems and exit the program.
+     */
+    void Quit();
+
+    /**
+     * Send a pause message to the engine and all it's systems.
+     *
+     * @param  shouldPause  bool, TRUE to pause, FALSE to unpause.
+     */
+    void SetPause(bool shouldPause);
 
 private:
     /**
@@ -146,11 +413,11 @@ private:
      * component.
      * @returen              ds_msg::CreateComponent, create component message;
      */
-    ds_msg::CreateComponent BuildTransformComponentCreateMessage(
-        Entity entity,
-        const ds_math::Vector3 &position,
-        const ds_math::Quaternion &orientation,
-        const ds_math::Vector3 &scale);
+    ds_msg::CreateComponent
+    BuildTransformComponentCreateMessage(Entity entity,
+                                         const ds_math::Vector3 &position,
+                                         const ds_math::Quaternion &orientation,
+                                         const ds_math::Vector3 &scale);
 
     // Messaging
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
@@ -168,5 +435,10 @@ private:
 
     // Used to co-ordinate the creation of components in the system.
     EntityManager m_entityManager;
+
+    // Keep track of transforms of entities
+    TransformComponentManager m_transformManager;
+
+    bool m_isFirstUpdate;
 };
 }

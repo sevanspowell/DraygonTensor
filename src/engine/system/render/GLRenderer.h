@@ -38,6 +38,22 @@ public:
     virtual void SetClearColour(float r, float g, float b, float a);
 
     /**
+     * Enable or disable writing to the depth buffer.
+     *
+     * @param  enableDisableDepthMask  bool, TRUE to enable depth buffer
+     * writing, FALSE to disable it.
+     */
+    virtual void SetDepthWriting(bool enableDisableDepthWriting);
+
+    /**
+     * Enable or disable blending in the colour buffer.
+     *
+     * @param  enableBlending  bool, TRUE to enable colour buffer blending,
+     * FALSE to disable it.
+     */
+    virtual void SetBlending(bool enableBlending);
+
+    /**
      * Clear the colour, depth and/or stencil buffers of the renderer.
      *
      * Buffers passed a value of TRUE are cleared, buffers passed a value OF
@@ -145,7 +161,7 @@ public:
      * @param  height           unsigend int, height of the image in pixels.
      * @param  data             const void *, pointer to image data.
      */
-    virtual TextureHandle Create2DTexture(ImageFormat format,
+    virtual RenderTextureHandle Create2DTexture(ImageFormat format,
                                           RenderDataType imageDataType,
                                           InternalImageFormat internalFormat,
                                           bool generateMipMaps,
@@ -154,23 +170,60 @@ public:
                                           const void *data);
 
     /**
+     * Create a cubemap texture.
+     *
+     * @param  format           ImageFormat, composition of each element in
+     * data. Number of colour components in the textures.
+     * @param  imageDataType    RenderDataType, data type of pixel data for all
+     * images.
+     * @param  internalFormat   InternalImageFormat, request the renderer to
+     * store the image data in a specific format.
+     * @param  width            unsigned int, width of all images in pixels.
+     * @param  height           unsigend int, height of all images in pixels.
+     * @param  dataFrontImage   const void *, pointer to front image data.
+     * @param  dataBackImage    const void *, pointer to back image data.
+     * @param  dataLeftImage    const void *, pointer to left image data.
+     * @param  dataRightImage   const void *, pointer to right image data.
+     * @param  dataTopImage     const void *, pointer to top image data.
+     * @param  dataBottomImage  const void *, pointer to bottom image data.
+     */
+    virtual RenderTextureHandle
+    CreateCubemapTexture(ImageFormat format,
+                         RenderDataType imageDataType,
+                         InternalImageFormat internalFormat,
+                         unsigned int width,
+                         unsigned int height,
+                         const void *dataFrontImage,
+                         const void *dataBackImage,
+                         const void *dataLeftImage,
+                         const void *dataRightImage,
+                         const void *dataTopImage,
+                         const void *dataBottomImage);
+
+    /**
      * Bind a texture to a sampler in the shader.
      *
-     * @param  programHandle  ProgramHandle, shader program containing sampler.
-     * @param  samplerName    const std::string &, name of the sampler in the
+     * @param  programHandle  ProgramHandle, shader program containing
+     * sampler.
+     * @param  samplerName    const std::string &, name of the sampler in
+     * the
      * shader
-     * @param  textureHandle  TextureHandle, texture to bind to sampler.
+     * @param  textureHandle  RenderTextureHandle, texture to bind to sampler.
      */
     virtual void BindTextureToSampler(ProgramHandle programHandle,
                                       const std::string &samplerName,
-                                      TextureHandle textureHandle);
+                                      const TextureType &textureType,
+                                      RenderTextureHandle textureHandle);
 
     /**
      * Unbind texture from sampler.
      *
-     * @param  textureHandle  TextureHandle, texture to unbind.
+     * @param  textureType    const TextureType &, type of sampler to unbind
+     * texture from.
+     * @param  textureHandle  RenderTextureHandle, texture to unbind.
      */
-    virtual void UnbindTextureFromSampler(TextureHandle textureHandle);
+    virtual void UnbindTextureFromSampler(const TextureType &textureType,
+                                          RenderTextureHandle textureHandle);
 
     /**
      * Memory layout of constant buffer in renderer may not match that of C/C++.
@@ -216,10 +269,9 @@ public:
      * constant buffer to use to fill constant buffer data in given shader
      * program.
      */
-    virtual void
-    BindConstantBuffer(ProgramHandle programHandle,
-                       const std::string &constantBufferName,
-                       ConstantBufferHandle constantBufferHandle);
+    virtual void BindConstantBuffer(ProgramHandle programHandle,
+                                    const std::string &constantBufferName,
+                                    ConstantBufferHandle constantBufferHandle);
 
     /**
      * Update the data associated with the given constant buffer.
@@ -267,6 +319,23 @@ public:
                                      size_t startingIndex,
                                      size_t numIndices);
 
+    /**
+     * Update the value of the specified parameter in the given program.
+     *
+     * @param  programHandle  ProgramHandle, handle to program to update
+     * parameter of.
+     * @param  parameterName  const std::string &, name of program parameter to
+     * update.
+     * @param  parameterType  ShaderParameter::ShaderParameterType, data type of
+     * the parameter.
+     * @param  parameterData  const void *, program parameter data to update
+     * with.
+     */
+    virtual void
+    UpdateProgramParameter(ProgramHandle programHandle,
+                           const std::string &parameterName,
+                           ShaderParameter::ShaderParameterType parameterType,
+                           const void *parameterData);
 private:
     /**
      * A GLuint can represent one of many different OpenGL objects,
@@ -407,6 +476,15 @@ private:
     GLenum
     ToGLInternalImageFormat(InternalImageFormat internalImageFormat) const;
 
+    /**
+     * Convert an internal texture sampler type to an OpenGL-specific
+     * equivalent.
+     *
+     * @param   textureType  const TextureType &, internal texture sampler type.
+     * @return  GLenum, OpenGL internal image format.
+     */
+    GLenum ToGLTextureType(const TextureType &textureType) const;
+
     /** Handle manager used to manage the handles of all OpenGL objects we
      * create */
     ds::HandleManager m_handleManager;
@@ -417,7 +495,7 @@ private:
     std::vector<GLObject> m_openGLObjects;
 
     /** Texture slots used/available */
-    std::vector<TextureHandle> m_textureSlots;
+    std::vector<RenderTextureHandle> m_textureSlots;
 
     /** Uniform binding points used/available */
     std::vector<ConstantBufferHandle> m_constantBufferBindingPoints;

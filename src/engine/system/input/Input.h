@@ -76,12 +76,38 @@ public:
     virtual ds_msg::MessageStream CollectMessages();
 
     /**
+     * @copydoc ISystem::GetName()
+     */
+    virtual const char *GetName() const;
+
+    /**
      * Return required script bindings.
      *
      * @return  ScriptBindingSet, the script bindings the input system wants to
      * register with the Script system.
      */
     virtual ScriptBindingSet GetScriptBindings() const;
+
+    /**
+     * Return true if the given key name is pressed.
+     *
+     * @param   keyName  const std::string &, name of key.
+     * @return           bool, TRUE if key is pressed, FALSE otherwise.
+     */
+    bool IsKeyPressed(const std::string &keyName) const;
+
+    /**
+     * Get the amount the mouse has moved in the x and y directions since the
+     * last frame.
+     *
+     * Only works if Video.lockMouse is set to true in config.
+     *
+     * @param  xDelta  int *, where to store amount mouse has moved in x
+     * direction since last frame (pixels).
+     * @param  yDelta  int *, where to store amount mouse has moved in y
+     * direction since last frame (pixels).
+     */
+    void GetMouseDeltaXY(int *xDelta, int *yDelta) const;
 
 private:
     /**

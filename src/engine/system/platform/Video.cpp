@@ -1,4 +1,4 @@
-#include <algorithm> 
+#include <algorithm>
 
 #include <SDL2/SDL.h>
 
@@ -76,6 +76,15 @@ bool Video::Initialize(const ds::Config &config)
                                   ds_msg::MessageType::GraphicsContextCreated,
                                   sizeof(ds_msg::GraphicsContextCreated),
                                   &gfxContext);
+
+            // Tell everyone current size of the window
+            ds_msg::WindowResize windowResize;
+            windowResize.newWidth = m_window.width;
+            windowResize.newHeight = m_window.height;
+
+            ds_msg::AppendMessage(&m_messagesGenerated,
+                                  ds_msg::MessageType::WindowResize,
+                                  sizeof(ds_msg::WindowResize), &windowResize);
         }
     }
 
@@ -99,5 +108,30 @@ ds_msg::MessageStream Video::CollectMessages()
     m_messagesGenerated.Clear();
 
     return tmp;
+}
+
+void Video::SetMouseLock(bool enableMouseLock)
+{
+    m_window.SetMouseLock(enableMouseLock);
+}
+
+unsigned int Video::GetWindowWidth() const
+{
+    return m_window.width;
+}
+
+unsigned int Video::GetWindowHeight() const
+{
+    return m_window.height;
+}
+
+void Video::SetWindowWidth(unsigned int windowWidth)
+{
+    m_window.width = windowWidth;
+}
+
+void Video::SetWindowHeight(unsigned int windowHeight)
+{
+    m_window.height = windowHeight;
 }
 }

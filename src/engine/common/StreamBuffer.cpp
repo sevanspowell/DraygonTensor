@@ -52,6 +52,26 @@ bool StreamBuffer::Extract(size_t size, void *const dataOut)
     return result;
 }
 
+bool StreamBuffer::Peek(size_t size, void *const dataOut) const
+{
+    bool result = false;
+
+    size_t dataSize = size;
+
+    // Only extract data if there is enough data in the buffer
+    if (this->AvailableBytes() >= dataSize)
+    {
+        if (dataOut != nullptr)
+        {
+            memcpy(dataOut, &m_buffer[m_readPos], dataSize);
+        }
+
+        result = true;
+    }
+
+    return result;
+}
+
 size_t StreamBuffer::AvailableBytes() const
 {
     return m_buffer.size() - m_readPos;
@@ -67,7 +87,8 @@ const void *StreamBuffer::GetDataPtr() const
 {
     const void *ptr = nullptr;
 
-    // Only get data ptr if buffer size is greater than 0 and less than size of buffer
+    // Only get data ptr if buffer size is greater than 0 and less than size of
+    // buffer
     if (m_buffer.size() > 0 && m_readPos < m_buffer.size())
     {
         ptr = &m_buffer[m_readPos];
@@ -76,8 +97,8 @@ const void *StreamBuffer::GetDataPtr() const
     return ptr;
 }
 
-void AppendStreamBuffer(StreamBuffer &to, const StreamBuffer &from)
+void AppendStreamBuffer(StreamBuffer *to, const StreamBuffer &from)
 {
-    to.Insert(from.AvailableBytes(), from.GetDataPtr());
+    to->Insert(from.AvailableBytes(), from.GetDataPtr());
 }
 }

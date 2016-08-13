@@ -58,6 +58,19 @@ public:
      */
     virtual ds_msg::MessageStream CollectMessages();
 
+    /**
+     * @copydoc ISystem::GetName()
+     */
+    virtual const char *GetName() const;
+
+    /**
+     * Get the number of milliseconds since the platform has been initialized.
+     *
+     * @return  uint32_t, number of milliseconds since the platform has been
+     * initialized.
+     */
+    uint32_t GetTicks() const;
+
 private:
     /**
      * Translate an SDL2 event into a message and append it to the list of
@@ -97,6 +110,16 @@ private:
      * Toggle the receiving of text input events from the operating system.
      */
     void ToggleTextInput() const;
+
+    /**
+     * Convert an SDL2 mouse button state to an API-independent representation.
+     *
+     * @param   state  uint32_t, SDL2 mouse button state
+     * @return         ds_platform::Mouse::ButtonState, engine mouse button
+     * state representation.
+     */
+    ds_platform::Mouse::ButtonState
+    ConvertSDL2ButtonStateToButtonState(uint32_t state) const;
 
     ds_platform::Video m_video;
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;

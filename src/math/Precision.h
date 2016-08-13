@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cmath>
+#include <limits>
+
 namespace ds_math
 {
 /**
@@ -7,6 +10,16 @@ namespace ds_math
  * easily change the precision of math and physics calculations.
  */
 typedef float scalar;
+
+/**
+ * Maximum value of a scalar.
+ */
+const float SCALAR_MAX = std::numeric_limits<float>::max();
+
+/**
+ * Precision of the power operator
+ */
+#define scalarPow powf
 
 /**
  * How 'close' two floats need to be in order to be considered equal.

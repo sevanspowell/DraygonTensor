@@ -20,7 +20,7 @@ bool Platform::Initialize(const Config &config)
         result &= m_video.Initialize(config);
 
         // Grab events from video system and add them to messages generated
-        AppendStreamBuffer(m_messagesGenerated, m_video.CollectMessages());
+        AppendStreamBuffer(&m_messagesGenerated, m_video.CollectMessages());
 
         if (result == true)
         {
@@ -51,10 +51,12 @@ void Platform::Update(float deltaTime)
     }
 
     // Grab events from video system and add them to messages generated
-    AppendStreamBuffer(m_messagesGenerated, m_video.CollectMessages());
+    AppendStreamBuffer(&m_messagesGenerated, m_video.CollectMessages());
 
     // Process events
     ProcessEvents(&m_messagesReceived);
+
+    m_messagesReceived.Clear();
 
     m_video.Update();
 }
@@ -68,7 +70,7 @@ void Platform::Shutdown()
 
 void Platform::PostMessages(const ds_msg::MessageStream &messages)
 {
-    AppendStreamBuffer(m_messagesReceived, messages);
+    AppendStreamBuffer(&m_messagesReceived, messages);
 }
 
 ds_msg::MessageStream Platform::CollectMessages()
@@ -78,6 +80,16 @@ ds_msg::MessageStream Platform::CollectMessages()
     m_messagesGenerated.Clear();
 
     return tmp;
+}
+
+const char *Platform::GetName() const
+{
+    return "Platform";
+}
+
+uint32_t Platform::GetTicks() const
+{
+    return SDL_GetTicks();
 }
 
 void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
@@ -112,6 +124,98 @@ void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
                               ds_msg::MessageType::TextInput,
                               sizeof(ds_msg::TextInput), &textInput);
         break;
+    case SDL_MOUSEMOTION:
+    {
+        ds_msg::MouseMotion mouseMotionEvent;
+        mouseMotionEvent.button =
+            ConvertSDL2ButtonStateToButtonState(event.motion.state);
+
+        // Transform co-ordinates to our co-ordinate system
+        ds_math::Vector4 pos = ds_math::Vector4(
+            event.motion.x / (float)m_video.GetWindowWidth(),
+            event.motion.y / (float)m_video.GetWindowHeight(), 0.0f, 1.0f);
+        ds_math::Vector4 relPos = ds_math::Vector4(
+            event.motion.xrel / (float)m_video.GetWindowWidth(),
+            event.motion.yrel / (float)m_video.GetWindowHeight(), 0.0f, 1.0f);
+
+
+        ds_math::Matrix4 scale =
+            ds_math::Matrix4::CreateScaleMatrix(2.0f, 2.0f, 2.0f);
+        ds_math::Matrix4 translate =
+            ds_math::Matrix4::CreateTranslationMatrix(-1.0f, -1.0f, 0.0f);
+        ds_math::Matrix4 flip = ds_math::Matrix4(1.0f);
+        flip[1].y = -1.0f;
+
+        // Transform position
+        pos = flip * translate * scale * pos;
+
+        // Trnasform relative position
+        relPos = flip * translate * scale * relPos;
+
+        mouseMotionEvent.x = pos.x;
+        mouseMotionEvent.y = pos.y;
+        mouseMotionEvent.xRel = relPos.x;
+        mouseMotionEvent.yRel = relPos.y;
+        mouseMotionEvent.timeStamp = event.motion.timestamp;
+        mouseMotionEvent.windowID = event.motion.windowID;
+
+        ds_msg::AppendMessage(&m_messagesGenerated,
+                              ds_msg::MessageType::MouseMotion,
+                              sizeof(ds_msg::MouseMotion), &mouseMotionEvent);
+        break;
+    }
+    // Intentional fall-thru
+    case SDL_MOUSEBUTTONUP:
+    case SDL_MOUSEBUTTONDOWN:
+    {
+        ds_msg::MouseButton mouseButtonEvent;
+        // Set appropriate button states
+        mouseButtonEvent.button =
+            ConvertSDL2ButtonStateToButtonState(SDL_GetMouseState(NULL, NULL));
+
+        // Transform co-ordinates to our co-ordinate system
+        ds_math::Vector4 pos = ds_math::Vector4(
+            event.button.x / (float)m_video.GetWindowWidth(),
+            event.button.y / (float)m_video.GetWindowHeight(), 0.0f, 1.0f);
+
+        ds_math::Matrix4 scale =
+            ds_math::Matrix4::CreateScaleMatrix(2.0f, 2.0f, 2.0f);
+        ds_math::Matrix4 translate =
+            ds_math::Matrix4::CreateTranslationMatrix(-1.0f, -1.0f, 0.0f);
+        ds_math::Matrix4 flip = ds_math::Matrix4(1.0f);
+        flip[1].y = -1.0f;
+
+        // Transform position
+        pos = flip * translate * scale * pos;
+
+        mouseButtonEvent.x = pos.x;
+        mouseButtonEvent.y = pos.y;
+        mouseButtonEvent.timeStamp = event.button.timestamp;
+        mouseButtonEvent.windowID = event.button.windowID;
+        mouseButtonEvent.clicks = event.button.clicks;
+
+        ds_msg::AppendMessage(&m_messagesGenerated,
+                              ds_msg::MessageType::MouseButton,
+                              sizeof(ds_msg::MouseButton), &mouseButtonEvent);
+        break;
+    }
+    case SDL_WINDOWEVENT:
+    {
+        switch (event.window.event)
+        {
+        case SDL_WINDOWEVENT_SIZE_CHANGED:
+            ds_msg::WindowResize windowResize;
+
+            windowResize.newWidth = event.window.data1;
+            windowResize.newHeight = event.window.data2;
+
+            ds_msg::AppendMessage(&m_messagesGenerated,
+                                  ds_msg::MessageType::WindowResize,
+                                  sizeof(ds_msg::WindowResize), &windowResize);
+            break;
+        }
+        break;
+    }
     case SDL_QUIT:
         ds_msg::QuitEvent quitEvent;
 
@@ -168,6 +272,21 @@ void Platform::ProcessEvents(ds_msg::MessageStream *messages)
 
             ToggleTextInput();
             break;
+        case ds_msg::MessageType::SetMouseLock:
+            ds_msg::SetMouseLock setMouseLockMsg;
+            (*messages) >> setMouseLockMsg;
+
+            m_video.SetMouseLock(setMouseLockMsg.enableMouseLock);
+
+            break;
+        case ds_msg::MessageType::WindowResize:
+            ds_msg::WindowResize windowResizeMsg;
+            (*messages) >> windowResizeMsg;
+
+            m_video.SetWindowWidth(windowResizeMsg.newWidth);
+            m_video.SetWindowHeight(windowResizeMsg.newHeight);
+
+            break;
         default:
             messages->Extract(header.size);
 
@@ -186,5 +305,29 @@ void Platform::ToggleTextInput() const
     {
         SDL_StartTextInput();
     }
+}
+
+ds_platform::Mouse::ButtonState
+Platform::ConvertSDL2ButtonStateToButtonState(uint32_t state) const
+{
+    ds_platform::Mouse::ButtonState buttonState;
+    buttonState.left = false;
+    buttonState.middle = false;
+    buttonState.right = false;
+
+    if (state & SDL_BUTTON(SDL_BUTTON_LEFT))
+    {
+        buttonState.left = true;
+    }
+    if (state & SDL_BUTTON(SDL_BUTTON_MIDDLE))
+    {
+        buttonState.middle = true;
+    }
+    if (state & SDL_BUTTON(SDL_BUTTON_RIGHT))
+    {
+        buttonState.right = true;
+    }
+
+    return buttonState;
 }
 }

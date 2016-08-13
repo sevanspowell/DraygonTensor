@@ -137,7 +137,31 @@ scalar Quaternion::Dot(const Quaternion &q1, const Quaternion &q2)
 
 Quaternion Quaternion::Invert(const Quaternion &q)
 {
-    return (Quaternion(-q.x, -q.y, -q.z, -q.w));
+    // From
+    // https://bitbucket.org/sinbad/ogre/src/3cbd67467fab/OgreMain/src/OgreQuaternion.cpp?at=default&fileviewer=file-view-default
+    scalar norm = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
+    if (norm > 0.0)
+    {
+        scalar invNorm = 1.0f / norm;
+        return Quaternion(-q.x * invNorm, -q.y * invNorm, -q.z * invNorm,
+                          q.w * invNorm);
+    }
+    else
+    {
+        return Quaternion();
+    }
+}
+
+Quaternion Quaternion::CreateFromAxisAngle(const Vector3 &axis, scalar angleRad)
+{
+    Vector3 axisNormalized = Vector3::Normalize(axis);
+
+    axisNormalized *= sinf(angleRad / 2.0f);
+    float scal = cosf(angleRad / 2.0f);
+
+    Quaternion q = Quaternion(axisNormalized, scal);
+
+    return (Quaternion::Normalize(q));
 }
 
 Quaternion operator*(const Quaternion &q1, const Quaternion &q2)
