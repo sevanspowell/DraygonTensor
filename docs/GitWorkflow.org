@@ -6,14 +6,14 @@ Create a new branch:
 git branch <branch_name>
 #+END_SRC
 
-Create a new branch and switch to it:
-#+BEGIN_SRC shell 
-git checkout -b <branch_name>
-#+END_SRC
-
 Switch branches:
 #+BEGIN_SRC shell
 git checkout <branch_name>
+#+END_SRC
+
+Create a new branch and switch to it:
+#+BEGIN_SRC shell 
+git checkout -b <branch_name>
 #+END_SRC
 
 Add some changes to the staging area:
@@ -37,20 +37,32 @@ See modified files, staged files and your current branch (very useful - use ofte
 git status
 #+END_SRC
 
-** Make a fork of this repository
-** Get repo
-Clone the repo:
+** General Git workflow
+
+- Create a new branch for your new feature and move to it.
+
 #+BEGIN_SRC shell
-git clone https://github.com/samdelion/DraygonTensor.git
+git checkout -b lphipps_newFeature
 #+END_SRC
 
-** Setup local branches to track remote branches
+- Do some work...
+- Add your work to the staging area.
+
 #+BEGIN_SRC shell
-git branch develop origin/develop
-# Repeat for each branch you want to track locally
+git add file1 file2
 #+END_SRC
 
-OR grab all remote branches for local tracking:
+- Commit your work.
 #+BEGIN_SRC shell
-for b in `git branch -r | grep -v -- '->'`; do git branch --track ${b##origin/} $b; done
+git commit
 #+END_SRC
+
+- Push your work to your fork.
+
+#+BEGIN_SRC shell
+git push origin lphipps_newFeature
+#+END_SRC
+
+- Using the GitHub UI, submit a pull request against the **develop branch** on the master repo.
+
+- Assign at least two other group members as reviewers.
