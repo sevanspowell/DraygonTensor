@@ -367,5 +367,5 @@ class Channel;
 
 All code should be sufficiently well-documented using Doxygen-style comments. In
 addition to this, systems or larger bodies of code should be appropriately
-documentated in the [Programmer's Manual](https://github.com/Izabia/DrunkenSailorEngine/blob/master/docs/PROGRAMMERSMANUAL.md), this should include appropriate
+documentated in the [Programmer's Manual](https://github.com/samdelion/DraygonTensor/blob/master/docs/ProgrammersManual.md), this should include appropriate
 usage examples.
