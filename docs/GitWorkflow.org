@@ -1,38 +1,37 @@
 * Git workflow
 ** Git basics
 
-Create a new branch:
+- Create a new branch:
 #+BEGIN_SRC shell
 git branch <branch_name>
 #+END_SRC
 
-Switch branches:
+- Switch branches:
 #+BEGIN_SRC shell
 git checkout <branch_name>
 #+END_SRC
 
-Create a new branch and switch to it:
+- Create a new branch and switch to it:
 #+BEGIN_SRC shell 
 git checkout -b <branch_name>
 #+END_SRC
 
-Add some changes to the staging area:
+- Add some changes to the staging area:
 #+BEGIN_SRC shell
 git add <file_name(s)>
 #+END_SRC
 
-Commit changes in staging area (see git commit message conventions):
+- Commit changes in staging area (see git commit message conventions):
 #+BEGIN_SRC shell
 git commit
 #+END_SRC
 
-Push committed changes on your local branch to the <branch_name> on your repo:
-! Note, 90% of the time you'll want <branch_name> to match your current branch name ! 
+- Push committed changes on your local branch to the <branch_name> on your repo: ! Note, 90% of the time you'll want <branch_name> to match your current branch name ! 
 #+BEGIN_SRC shell
 git push origin <branch_name>
 #+END_SRC
 
-See modified files, staged files and your current branch (very useful - use often):
+- See modified files, staged files and your current branch (very useful - use often):
 #+BEGIN_SRC shell
 git status
 #+END_SRC
