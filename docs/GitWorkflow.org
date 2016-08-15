@@ -62,6 +62,6 @@ git commit
 git push origin lphipps_newFeature
 #+END_SRC
 
-- Using the GitHub UI, submit a pull request against the **develop branch** on the master repo.
+- Using the GitHub UI, submit a pull request against the *develop branch* on the master repo.
 
 - Assign at least two other group members as reviewers.
