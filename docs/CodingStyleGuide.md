@@ -5,6 +5,32 @@ available from [here](http://www.geeks3d.com/downloads/200811/idSoftware-Coding-
 
 Many of these guidelines are taken from the [C++ Core Guidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md). Please use them as reference.
 
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-generate-toc again -->
+**Table of Contents**
+
+- [Codestyle](#codestyle)
+    - [Indentation](#indentation)
+    - [Brace positioning](#brace-positioning)
+    - [Statement placement](#statement-placement)
+    - [General naming](#general-naming)
+    - [Function naming](#function-naming)
+    - [Variable naming](#variable-naming)
+    - [Typedef and struct naming](#typedef-and-struct-naming)
+    - [Floating point numbers](#floating-point-numbers)
+    - [Classes](#classes)
+    - [Interfaces](#interfaces)
+    - [Documenting / Commenting](#documenting--commenting)
+    - [Enumerators](#enumerators)
+    - [Include guards](#include-guards)
+    - [Namespaces](#namespaces)
+    - [Const usage](#const-usage)
+    - [File names](#file-names)
+    - [Templates](#templates)
+- [Writing Documentation](#writing-documentation)
+
+<!-- markdown-toc end -->
+
+
 # Codestyle
 
 ## Indentation
