@@ -9,7 +9,7 @@ bool MessageBus::AddSystem(std::weak_ptr<ISystem> system)
     bool result = false;
 
     // Does the message bus already have this system?
-    std::vector<std::weak_ptr<ISystem>>::const_iterator it =
+    std::vector<std::weak_ptr<ISystem>>::iterator it =
         std::find_if(m_systems.begin(), m_systems.end(),
                      [&](const std::weak_ptr<ISystem> &busSystem)
                      {

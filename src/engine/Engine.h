@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "engine/message/Message.h"
 #include "engine/message/MessageBus.h"

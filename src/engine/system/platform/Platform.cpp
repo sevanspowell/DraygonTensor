@@ -94,8 +94,6 @@ uint32_t Platform::GetTicks() const
 
 void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
 {
-    ds_msg::MessageHeader header;
-
     switch (event.type)
     {
     // Intential fall-through
@@ -116,9 +114,6 @@ void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
         textInput.stringId = StringIntern::Instance().Intern(event.text.text);
         textInput.timeStamp = event.text.timestamp;
         textInput.windowID = event.text.windowID;
-
-        header.type = ds_msg::MessageType::TextInput;
-        header.size = sizeof(ds_msg::TextInput);
 
         ds_msg::AppendMessage(&m_messagesGenerated,
                               ds_msg::MessageType::TextInput,

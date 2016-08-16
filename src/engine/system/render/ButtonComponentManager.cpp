@@ -6,7 +6,7 @@ namespace ds_render
 {
 MaterialHandle ButtonComponentManager::GetDefaultMaterialHandle(ds::Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "ButtonComponentManager::GetDefaultMaterial: tried to get invalid "
            "instance");
 
@@ -16,7 +16,7 @@ MaterialHandle ButtonComponentManager::GetDefaultMaterialHandle(ds::Instance i) 
 void ButtonComponentManager::SetDefaultMaterialHandle(
     ds::Instance i, MaterialHandle materialHandle)
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "ButtonComponentManager::SetDefaultMaterial: tried to set invalid "
            "instance");
 
@@ -27,7 +27,7 @@ void ButtonComponentManager::SetDefaultMaterialHandle(
 MaterialHandle
 ButtonComponentManager::GetPressedMaterialHandle(ds::Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "ButtonComponentManager::GetPressedMaterial: tried to get invalid "
            "instance");
 
@@ -37,7 +37,7 @@ ButtonComponentManager::GetPressedMaterialHandle(ds::Instance i) const
 void ButtonComponentManager::SetPressedMaterialHandle(
     ds::Instance i, MaterialHandle materialHandle)
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "ButtonComponentManager::SetPressedMaterial: tried to set invalid "
            "instance");
 
@@ -47,7 +47,7 @@ void ButtonComponentManager::SetPressedMaterialHandle(
 MaterialHandle
 ButtonComponentManager::GetHoverMaterialHandle(ds::Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "ButtonComponentManager::GetHoverMaterial: tried to get invalid "
            "instance");
 
@@ -57,7 +57,7 @@ ButtonComponentManager::GetHoverMaterialHandle(ds::Instance i) const
 void ButtonComponentManager::SetHoverMaterialHandle(
     ds::Instance i, MaterialHandle materialHandle)
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "ButtonComponentManager::SetHoverMaterial: tried to set invalid "
            "instance");
 
@@ -66,7 +66,7 @@ void ButtonComponentManager::SetHoverMaterialHandle(
 
 float ButtonComponentManager::GetStartXCoordinate(ds::Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "ButtonComponentManager::GetStartXCoordinate: tried to get invalid "
            "instance");
 
@@ -75,7 +75,7 @@ float ButtonComponentManager::GetStartXCoordinate(ds::Instance i) const
 
 void ButtonComponentManager::SetStartXCoordinate(ds::Instance i, float startX)
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "ButtonComponentManager::SetStartXCoordinate: tried to set invalid "
            "instance");
 
@@ -84,7 +84,7 @@ void ButtonComponentManager::SetStartXCoordinate(ds::Instance i, float startX)
 
 float ButtonComponentManager::GetStartYCoordinate(ds::Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "ButtonComponentManager::GetStartYCoordinate: tried to get invalid "
            "instance");
 
@@ -93,7 +93,7 @@ float ButtonComponentManager::GetStartYCoordinate(ds::Instance i) const
 
 void ButtonComponentManager::SetStartYCoordinate(ds::Instance i, float startY)
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "ButtonComponentManager::SetStartYCoordinate: tried to set invalid "
            "instance");
 
@@ -102,7 +102,7 @@ void ButtonComponentManager::SetStartYCoordinate(ds::Instance i, float startY)
 
 float ButtonComponentManager::GetEndXCoordinate(ds::Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "ButtonComponentManager::GetEndXCoordinate: tried to get invalid "
            "instance");
 
@@ -111,7 +111,7 @@ float ButtonComponentManager::GetEndXCoordinate(ds::Instance i) const
 
 void ButtonComponentManager::SetEndXCoordinate(ds::Instance i, float endX)
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "ButtonComponentManager::SetEndXCoordinate: tried to set invalid "
            "instance");
 
@@ -120,7 +120,7 @@ void ButtonComponentManager::SetEndXCoordinate(ds::Instance i, float endX)
 
 float ButtonComponentManager::GetEndYCoordinate(ds::Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "ButtonComponentManager::GetEndYCoordinate: tried to get invalid "
            "instance");
 
@@ -129,7 +129,7 @@ float ButtonComponentManager::GetEndYCoordinate(ds::Instance i) const
 
 void ButtonComponentManager::SetEndYCoordinate(ds::Instance i, float endY)
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "ButtonComponentManager::SetEndYCoordinate: tried to set invalid "
            "instance");
 

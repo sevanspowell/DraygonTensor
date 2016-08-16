@@ -7,7 +7,7 @@ namespace ds_render
 TerrainResourceHandle
 TerrainComponentManager::GetTerrainResourceHandle(ds::Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "TerrainComponentManager::GetTerrainResourceHandle: tried to get "
            "invalid instance");
 
@@ -17,7 +17,7 @@ TerrainComponentManager::GetTerrainResourceHandle(ds::Instance i) const
 void TerrainComponentManager::SetTerrainResourceHandle(
     ds::Instance i, TerrainResourceHandle terrainResourceHandle)
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "TerrainComponentManager::SetTerrainResourceHandle: tried to set "
            "invalid instance");
 

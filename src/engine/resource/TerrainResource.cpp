@@ -45,9 +45,9 @@ std::unique_ptr<IResource> TerrainResource::CreateFromFile(std::string filePath)
     // iterate through height and width to use each pixel
     // fill heights vector to be used for determining normals in next set of for
     // loops
-    for (int z = 0; z < height; z++)
+    for (unsigned int z = 0; z < height; z++)
     {
-        for (int x = 0; x < width; x++)
+        for (unsigned int x = 0; x < width; x++)
         {
             // get the color of the current pixel to be used to determine height
             // (lighter = higher)
@@ -187,7 +187,7 @@ void TerrainResource::CalculateNormals()
     // 3 vec3s for sideA and sideB of triangle and surface normal of triangle
     ds_math::Vector3 vecA, vecB, vecN;
 
-    for (int k = 0; k < m_terrain.m_indices.size(); k += 3)
+    for (unsigned int k = 0; k < m_terrain.m_indices.size(); k += 3)
     {
         p1 = m_terrain.m_vertices[m_terrain.m_indices[k]];
         p2 = m_terrain.m_vertices[m_terrain.m_indices[k + 1]];
@@ -214,7 +214,8 @@ void TerrainResource::CalculateNormals()
 
 void TerrainResource::CalculateTextureCoordinates()
 {
-    int incrementCount, i, j, uCount = 0, vCount = 0;
+    int incrementCount, uCount = 0, vCount = 0;
+    unsigned int i, j;
     float incrementValue, tempU = 0.0f, tempV = 1.0f;
 
     incrementValue = 1 / m_terrain.m_terrainWidth;

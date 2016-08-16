@@ -7,7 +7,7 @@ namespace ds_render
 const ds_math::Matrix4 &
 CameraComponentManager::GetProjectionMatrix(ds::Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "CameraComponentManager::GetProjectionMatrix: tried to get invalid "
            "instance");
 
@@ -17,7 +17,7 @@ CameraComponentManager::GetProjectionMatrix(ds::Instance i) const
 float CameraComponentManager::GetVerticalFieldOfView(ds::Instance i) const
 {
     assert(
-        i.index >= 0 && i.index < GetNumInstances() &&
+        i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
         "CameraComponentManager::GetVerticalFieldOfView: tried to get invalid "
         "instance");
 
@@ -27,7 +27,7 @@ float CameraComponentManager::GetVerticalFieldOfView(ds::Instance i) const
 void CameraComponentManager::SetVerticalFieldOfView(ds::Instance i, float fov)
 {
     assert(
-        i.index >= 0 && i.index < GetNumInstances() &&
+        i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
         "CameraComponentManager::SetVerticalFieldOfView: tried to set invalid "
         "instance");
 
@@ -46,7 +46,7 @@ void CameraComponentManager::SetVerticalFieldOfView(ds::Instance i, float fov)
 float CameraComponentManager::GetAspectRatio(ds::Instance i) const
 {
     assert(
-        i.index >= 0 && i.index < GetNumInstances() &&
+        i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
         "CameraComponentManager::GetAspectRatio: tried to get invalid "
         "instance");
 
@@ -56,7 +56,7 @@ float CameraComponentManager::GetAspectRatio(ds::Instance i) const
 void CameraComponentManager::SetAspectRatio(ds::Instance i, float aspectRatio)
 {
     assert(
-        i.index >= 0 && i.index < GetNumInstances() &&
+        i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
         "CameraComponentManager::SetAspectRatio: tried to set invalid "
         "instance");
 
@@ -74,7 +74,7 @@ void CameraComponentManager::SetAspectRatio(ds::Instance i, float aspectRatio)
 float CameraComponentManager::GetNearClippingPlane(ds::Instance i) const
 {
     assert(
-        i.index >= 0 && i.index < GetNumInstances() &&
+        i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
         "CameraComponentManager::GetNearClippingPlane: tried to get invalid "
         "instance");
 
@@ -84,7 +84,7 @@ float CameraComponentManager::GetNearClippingPlane(ds::Instance i) const
 void CameraComponentManager::SetNearClippingPlane(ds::Instance i, float dist)
 {
     assert(
-        i.index >= 0 && i.index < GetNumInstances() &&
+        i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
         "CameraComponentManager::SetNearClippingPlane: tried to set invalid "
         "instance");
 
@@ -102,7 +102,7 @@ void CameraComponentManager::SetNearClippingPlane(ds::Instance i, float dist)
 float CameraComponentManager::GetFarClippingPlane(ds::Instance i) const
 {
     assert(
-        i.index >= 0 && i.index < GetNumInstances() &&
+        i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
         "CameraComponentManager::GetFarClippingPlane: tried to get invalid "
         "instance");
 
@@ -112,7 +112,7 @@ float CameraComponentManager::GetFarClippingPlane(ds::Instance i) const
 void CameraComponentManager::SetFarClippingPlane(ds::Instance i, float dist)
 {
     assert(
-        i.index >= 0 && i.index < GetNumInstances() &&
+        i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
         "CameraComponentManager::SetFarClippingPlane: tried to set invalid "
         "instance");
 

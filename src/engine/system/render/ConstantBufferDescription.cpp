@@ -1,3 +1,4 @@
+#include <cstring>
 #include <iostream>
 
 #include "engine/system/render/ConstantBufferDescription.h"

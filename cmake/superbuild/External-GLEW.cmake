@@ -16,8 +16,8 @@ if (WIN32)
     )
 endif(WIN32)
 
-# If Unix-style (Linux and MacOSX)
-if (UNIX)
+# If Apple
+if (APPLE)
   ExternalProject_Add(GLEW
     URL "https://sourceforge.net/projects/glew/files/glew/1.13.0/glew-1.13.0.tgz/download"
     CONFIGURE_COMMAND
@@ -31,5 +31,17 @@ if (UNIX)
       COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/include <INSTALL_DIR>/include
     CMAKE_ARGS
       -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+    )
+endif (APPLE)
+
+# If Unix
+if (UNIX)
+  ExternalProject_Add(GLEW
+    URL "https://sourceforge.net/projects/glew/files/glew/1.13.0/glew-1.13.0.tgz/download"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND make GLEW_DEST=${GLEW_DIR}
+    BUILD_IN_SOURCE 1
+    INSTALL_COMMAND
+      make install GLEW_DEST=${GLEW_DIR}
     )
 endif (UNIX)

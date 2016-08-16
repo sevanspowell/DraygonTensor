@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "engine/Engine.h"
 
 namespace ds
@@ -48,7 +49,7 @@ bool Engine::AddSystem(std::unique_ptr<ISystem> system)
     if (sharedPtr != nullptr)
     {
         // Does the engine already have this system?
-        std::vector<std::shared_ptr<ISystem>>::const_iterator it =
+        std::vector<std::shared_ptr<ISystem>>::iterator it =
             std::find(m_systems.begin(), m_systems.end(), sharedPtr);
 
         // If not, insert into engine

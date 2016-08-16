@@ -21,8 +21,8 @@ endif (MSVC)
 set(REQUIRED_DLLS)
 
 # Find GTest
-find_package(GTEST REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
+find_package(GTest REQUIRED)
+include_directories(SYSTEM ${GTEST_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${GTEST_LIBRARIES})
 
 # Find Lua
@@ -73,17 +73,17 @@ include_directories(${SFML_INCLUDE_DIR})
 message(${SFML_LIBRARIES})
 set (LIBS ${LIBS} ${SFML_LIBRARIES})
 if (WIN32)
-#	file(GLOB SFML_DLLS ${SFML_ROOT}/bin/*)
-#	foreach(DLL ${SFML_DLLS})
-#		list(APPEND REQUIRED_DLLS ${DLL})
-#	endforeach(DLL ${SFML_DLLS})
+	file(GLOB SFML_DLLS ${SFML_ROOT}/bin/*)
+	foreach(DLL ${SFML_DLLS})
+		list(APPEND REQUIRED_DLLS ${DLL})
+	endforeach(DLL ${SFML_DLLS})
 	list (APPEND REQUIRED_DLLS ${SFML_ROOT}/bin/openal32.dll)
 	list (APPEND REQUIRED_DLLS ${SFML_ROOT}/bin/sfml-audio-d-2.dll)
 	list (APPEND REQUIRED_DLLS ${SFML_ROOT}/bin/sfml-system-d-2.dll)
 endif (WIN32)
 
 # Find STB
-find_package(stb REQUIRED)
+find_package(STB REQUIRED)
 include_directories(${STB_INCLUDE_DIR})
 
 # Find Assimp
@@ -93,10 +93,5 @@ set(LIBS ${LIBS} ${ASSIMP_LIBRARIES})
 if (WIN32)
   list(APPEND REQUIRED_DLLS ${ASSIMP_ROOT_DIR}/bin/assimp-${ASSIMP_MSVC_VERSION}-mt.dll)
 endif(WIN32)
-
-# Find Bullet
-find_package(Bullet REQUIRED)
-include_directories(${BULLET_INCLUDE_DIRS})
-set(LIBS ${LIBS} ${BULLET_LIBRARIES})
 
 subdirs(src test project)

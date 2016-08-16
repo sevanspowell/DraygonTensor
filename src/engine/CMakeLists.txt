@@ -37,10 +37,6 @@ set(ENGINE_INCLUDE_FILES
   system/custom_physics/CustomPhysics.h
   system/custom_physics/CustomPhysicsComponent.h
   system/custom_physics/CustomPhysicsComponentManager.h
-  
-  system/physics/Physics.h
-  system/physics/PhysicsComponent.h
-  system/physics/PhysicsComponentManager.h
 
   system/platform/Keyboard.h
   system/platform/Mouse.h
@@ -104,9 +100,7 @@ set(ENGINE_SRC_FILES
   system/input/Input.cpp
   system/input/InputContext.cpp
   system/input/InputLuaBindings.cpp
-  system/physics/Physics.cpp
-  system/physics/PhysicsLuaBindings.cpp
-  system/physics/PhysicsComponentManager.cpp
+
   system/platform/Keyboard.cpp
   system/platform/Platform.cpp
   system/platform/Video.cpp
