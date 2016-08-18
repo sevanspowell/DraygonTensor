@@ -12,4 +12,16 @@ if (UNIX)
 endif (UNIX)
 
 if (WIN32)
+  ExternalProject_Add(LuaJIT
+    URL "https://www.dropbox.com/s/e81864ppbh5xrle/LuaJIT-2.0.zip"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_DIR "${LUAJIT_DIR}"
+    INSTALL_COMMAND 
+        ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/lib <INSTALL_DIR>/lib 
+        COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/include <INSTALL_DIR>/include
+        COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/bin <INSTALL_DIR>/bin
+    CMAKE_ARGS
+    -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+    )
 endif (WIN32)

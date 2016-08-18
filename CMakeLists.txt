@@ -39,7 +39,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     "${CMAKE_MODULE_LINKER_FLAGS} -image_base 100000000")
 endif(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND CMAKE_SIZEOF_VOID_P EQUAL 8)
 if (WIN32)
-  list(APPEND REQUIRED_DLLS ${LUAJIT_DIR}/lib/lua51.dll)
+  list(APPEND REQUIRED_DLLS ${LUAJIT_DIR}/bin/lua51.dll)
 endif (WIN32)
 
 # Find RapidJson
@@ -93,10 +93,5 @@ set(LIBS ${LIBS} ${ASSIMP_LIBRARIES})
 if (WIN32)
   list(APPEND REQUIRED_DLLS ${ASSIMP_ROOT_DIR}/bin/assimp-${ASSIMP_MSVC_VERSION}-mt.dll)
 endif(WIN32)
-
-# Find Bullet
-find_package(Bullet REQUIRED)
-include_directories(${BULLET_INCLUDE_DIRS})
-set(LIBS ${LIBS} ${BULLET_LIBRARIES})
 
 subdirs(src test project)
