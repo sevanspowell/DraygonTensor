@@ -1,3 +1,4 @@
+#include <cstring>
 #include "engine/common/StreamBuffer.h"
 
 namespace ds_com

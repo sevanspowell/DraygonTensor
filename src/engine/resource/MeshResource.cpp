@@ -47,7 +47,7 @@ std::unique_ptr<IResource> MeshResource::CreateFromFile(std::string filePath)
     // If mesh loaded successfully
     else
     {
-        int meshCount = ourScene->mNumMeshes;
+        unsigned int meshCount = ourScene->mNumMeshes;
         meshResource->SetMeshCount(meshCount);
 
         if (meshCount > 0)
@@ -143,7 +143,7 @@ MeshResource::MeshResource()
 
 MeshResource::~MeshResource()
 {
-    for (int iMesh = 0; iMesh < m_meshCollection.size(); iMesh++)
+    for (unsigned int iMesh = 0; iMesh < m_meshCollection.size(); iMesh++)
     {
         m_meshCollection[iMesh].m_vertices.clear();
         m_meshCollection[iMesh].m_texCoords.clear();

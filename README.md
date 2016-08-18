@@ -1,22 +1,10 @@
-# DrunkenSailorEngine
+# DraygonTensor 
 
 [![Built with Spacemacs](https://cdn.rawgit.com/syl20bnr/spacemacs/442d025779da2f62fc86c2082703697714db6514/assets/spacemacs-badge.svg)](http://github.com/syl20bnr/spacemacs)
 
-<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-generate-toc again -->
-**Table of Contents**
+![Draygon](http://vignette4.wikia.nocookie.net/metroid/images/2/25/Draygon.jpg/revision/latest?cb=20131117053231)
 
-  - [Prerequisites](#prerequisites)
-      - [Windows](#windows)
-      - [OSX](#osx)
-      - [Linux](#linux)
-  - [Building](#building)
-      - [Visual Studio](#visual-studio)
-      - [Xcode](#xcode)
-      - [Makefile](#makefile)
-  - [Contributing](#contributing)
-
-<!-- markdown-toc end -->
-
+*The above image file is copyrighted by Nintendo or another organization. The individual who uploaded this work and first used it in an article, and later persons who place it into articles, assert that this qualifies as fair use of the material under United States copyright law.*
 
 ## Prerequisites 
 
@@ -39,48 +27,35 @@ The included build scripts assume that `cmake.exe` can be found in the path, edi
 - Git
 - SDL2-2.0.4 or greater
 
+## Getting the repo 
+
+- Make a fork of this repository
+
+- Clone your fork
+
+```
+git clone <your_fork_url>
+cd <your_fork_dir>
+```
+
+- Setup local branches to track remote branches
+
+```
+git branch develop origin/develop
+```
+
+- Repeat for each branch you want to track locally
+
+- OR grab all remote branches for local tracking:
+
+```
+for b in `git branch -r | grep -v -- '->'`; do git branch --track ${b##origin/} $b; done
+```
+
 ## Building
 
-### Visual Studio 
-  
-    git clone https://github.com/Izabia/DrunkenSailorEngine.git
-    cd bangbang
-    generate_project_debug.bat OR generate_project_release.bat
-
-The `generate_project_buildtype` batch scripts will create an out-of-source build, download all third-party libraries and generate project files for the bangbang code under build/. You can then use the `build_buildtype` scripts to configure and build the bangbang code exclusively or the `generate_project_buildtype` scripts to configure and build all third-party libraries as well as the bangbang code.
-
-OR
-
-    git clone https://github.com/Izabia/DrunkenSailorEngine.git
-    cd DrunkenSailorEngine
-    mkdir build\superbuild
-    cd build\superbuild
-    cmake.exe ..\..\cmake\superbuild -DCMAKE_BUILD_TYPE=<Debug OR Release>
-    cmake.exe --build ./ --config Debug OR build in VS
-
-### Xcode
-
-    git clone https://github.com/samdelion/DrunkenSailorEngine.git
-    cd DrunkenSailorEngine
-    mkdir -p build/superbuild
-    cd build/superbuild
-    cmake ../../cmake/superbuild -G Xcode -DCMAKE_BUILD_TYPE=Debug
-    cmake --build ./ --config Debug OR build in Xcode
-
-### Makefile 
-
-    git clone https://github.com/samdelion/DrunkenSailorEngine.git
-    cd DrunkenSailorEngine
-    mkdir -p build/superbuild
-    cd build/superbuild
-    cmake ../../cmake/superbuild
-    make
-
-If this series of build steps feels burdensome, consider writing a shell script.
-
-Also, please note that the first build may take upwards of 15 minutes as the dependencies are downloaded and built.
 
 ## Contributing
 
-Before contributing, consult the [contribution guidelines](https://github.com/Izabia/DrunkenSailorEngine/blob/develop/CONTRIBUTING.md).
+Before contributing, consult the [contribution guidelines](https://github.com/samdelion/DraygonTensor/blob/master/CONTRIBUTING.md).
     

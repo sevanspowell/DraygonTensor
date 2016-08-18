@@ -51,8 +51,8 @@ void CustomPhysics::Update(float deltaTime)
             }
 
             // Update local translation
-            ds_math::Vector3 currentLocalTranslation =
-                m_transformComponentManager.GetLocalTranslation(transform);
+            //ds_math::Vector3 currentLocalTranslation =
+            //    m_transformComponentManager.GetLocalTranslation(transform);
             ds_math::Vector3 newLocalTranslation = particle.getPosition();
 
             ds_msg::SetLocalTranslation setTranslationMsg;

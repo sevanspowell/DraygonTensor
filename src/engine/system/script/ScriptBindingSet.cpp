@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cassert>
+#include <cstring>
 
 #include "engine/system/script/ScriptBindingSet.h"
 

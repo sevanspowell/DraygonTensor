@@ -577,6 +577,6 @@ private:
     // Time accumulator (for animation)
     float m_animationTime;
     // Current animation to use
-    int m_currentAnimationIndex;
+    unsigned int m_currentAnimationIndex;
 };
 }

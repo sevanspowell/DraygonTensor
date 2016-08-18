@@ -11,7 +11,7 @@ find_package(Git REQUIRED)
 
 # Try to find GTest package
 set(GTEST_ROOT ${CMAKE_SOURCE_DIR}/../../external/GoogleTest)
-find_package(GTEST)
+find_package(GTest)
 # If not found, download
 if (NOT GTEST_FOUND)
 	message("Will download Google Test...")
@@ -87,7 +87,7 @@ endif (NOT SFML_FOUND)
 
 # Try to find stb
 set(STB_BASE_DIR ${CMAKE_SOURCE_DIR}/../../external/stb)
-find_package(stb)
+find_package(STB)
 if (NOT STB_FOUND)
   message("Will download stb..")
   include(${CMAKE_SOURCE_DIR}/External-STB.cmake)
@@ -124,7 +124,6 @@ ExternalProject_Add(
     -DSFML_ROOT=${SFML_ROOT}
     -DASSIMP_ROOT_DIR=${ASSIMP_ROOT_DIR}
     -DSTB_BASE_DIR=${STB_BASE_DIR}
-    -DBULLET_ROOT=${BULLET_ROOT}
 		-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
 	)

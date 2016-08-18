@@ -6,7 +6,7 @@ namespace ds_render
 {
 const Mesh &RenderComponentManager::GetMesh(ds::Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "RenderComponentManager::GetMesh: tried to get invalid instance");
 
     return m_data.component[i.index].mesh;
@@ -14,7 +14,7 @@ const Mesh &RenderComponentManager::GetMesh(ds::Instance i) const
 
 void RenderComponentManager::SetMesh(ds::Instance i, const Mesh &mesh)
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "RenderComponentManager::SetMesh: tried to set invalid instance");
 
     m_data.component[i.index].mesh = mesh;

@@ -21,7 +21,12 @@ read the following guidelines.
 
 ## General Contribution Guidelines
 
+### Coding standards
+
+From now on please read and abide by the [coding standards document](https://github.com/samdelion/DraygonTensor/blob/master/docs/CodingStandards.md). When working with old code, prefer to leave it in it's own style, rather than changing it to abide by the new coding standards (unless previously agreed upon by at least one team member).
+
 ### Git Workflow
+
 Use the [Feature Branch](https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow) Git workflow.
 
 ### Branches
@@ -37,8 +42,8 @@ reserved for submission-ready code and should be considered read-only.
 ### Pull-request
 
 All contributions should be submitted as a [pull request](https://yangsu.github.io/pull-request-tutorial/). To be considered, the
-pull request must conform to the [Codestyle Guidelines](https://github.com/Izabia/DrunkenSailorEngine/blob/master/docs/CODESTYLE.md) and should at least list
-``Izabia`` and ``samdelion`` as reviewers.
+pull request must conform to the [Codestyle Guidelines](https://github.com/samdelion/DraygonTensor/blob/master/docs/CodingStyleGuide.md) and should at least list
+two other group members as reviewers.
 
 ### Commit messages
 
@@ -176,6 +181,7 @@ To create a new unit test:
 that of the engine. For example, if testing `engine/lua/LuaAPI.h` create a file
 in the `src` directory called `engine/lua/LuaAPITestSuite.h`.
 - Add your test suite to the `src/main.cpp` file as an include directive:
+
 ```
 ...
 
@@ -183,11 +189,14 @@ in the `src` directory called `engine/lua/LuaAPITestSuite.h`.
 
 ...
 ```
+
 - Add your test suite to the `src/CMakeLists.txt` file:
+
 ```
 set(TEST_SUITE_INCLUDE_FILES
   engine/lua/LuaAPITestSuite.h
 )
 ```
+
 - Congratulations! Your test suite is now added to the list of test suites to be run.
 - To learn how to write unit tests, either look at unit tests already written or refer to the [Google Test Primer](https://github.com/google/googletest/blob/master/googletest/docs/Primer.md).

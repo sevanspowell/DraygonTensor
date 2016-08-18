@@ -30,6 +30,7 @@ Many of these guidelines are taken from the [C++ Core Guidelines](https://github
 
 <!-- markdown-toc end -->
 
+
 # Codestyle
 
 ## Indentation
@@ -66,7 +67,7 @@ else
 
 ## General naming
 
-Defined names use all uppercase characters. Multiple words are seperated by an
+Hash-defined names use all uppercase characters. Multiple words are seperated by an
 underscore.
 
 `#define SIDE_FRONT 0`
@@ -85,7 +86,7 @@ public:
 }
 ```
 
-In mult-word function names each other word starts with an uppercase.
+In multi-word function names each other word starts with an uppercase.
 
 ```
 void ThisFunctionDoesSomething(void);
@@ -102,23 +103,22 @@ and each successive word starts with an upper case.
 
 `float maxDistanceFromPlane;`
 
-Private class member variables should be prepended with a underscore: "_".
+Private class member variables should be prepended with a underscore: "m_".
 Otherwise they follow the same naming convention as variables.
 
 ```
 ...
 private:
-    float *_speed;
+    float *m_speed;
 ...
 ```
 
 ## Typedef and struct naming
 
-Typedef names use the same naming convention as classes, but always
-end with a "_t".
+Typedef names use the same naming convention as classes.
 
 ```
-typedef int Handle_t;
+typedef int Handle;
 ```
 
 Struct names use the same naming convention as classes.
@@ -127,7 +127,7 @@ Struct names use the same naming convention as classes.
 struct Render;
 ```
 
-Struct member variables do not have to be preceded by an "_".
+Struct member variables do not have to be preceded by an "m_".
 
 ```
 struct PlatformEvent
@@ -151,6 +151,7 @@ Instead of:
 float g = 1.0;
 ```
 
+Unless you specifically want a double.
 
 ## Classes
 
@@ -159,15 +160,15 @@ starts with an uppercase.
 
 `class Vec3;`
 
-Member variable names are given the prefix “_”, otherwise they follow normal 
+Member variable names are given the prefix “m_”, otherwise they follow normal 
 variable naming rules.
 
 ```
 class MyClass
 {
 private:
-    int     _myInt;
-    float   _myFloat;
+    int     m_myInt;
+    float   m_myFloat;
 };
 ```
 
@@ -180,27 +181,11 @@ class Vec3
 };
 ```
 
-Indent the names of class variables and class methods to form nice columns. The
-variable type or method return type is in the first column and the variable name
-or method name is in the second column.
-
-```
-class Vec3
-{
-public:
-    float            _x;
-    float            _y;
-    float            _z;
-    float            Length() const;
-    const float *    ToFloatPtr() const;
-};
-```
-
-The * of the pointer is in the first column because it improves readability 
-when considered part of the type. Be wary of listing multiple variables like this.
-The following code declares one float ptr (a) and one float (b), NOT two float ptrs.
+Be wary of listing multiple variables as in the following.
 
 `const float *a, b;`
+
+This code declares one float ptr (a) and one float (b), NOT two float ptrs.
 
 Public, private and protected qualifiers should be placed on the same indentation
 level as the class definition.
@@ -211,8 +196,8 @@ class MyClass
 public:
     void SomeFunc();
 private:
-        int   _myInt;
-        float _myFloat;
+    int   m_myInt;
+    float m_myFloat;
 protected:
     unsigned int m_stuff;
 };
@@ -242,11 +227,16 @@ Always use Doxygen-style comments to document public interfaces. Indent
 doxygen comments into nice columns. Leave a single space between the comment 
 line '*' and the first character of that line's comment.
 
+Make sure to use the @author tag somewhere.
+
 ```
 /**
  * Description
- * @param    paramName    int, param description
- * @return                int, return value description.
+ *
+ * @author  Samuel Evans-Powell
+ *
+ * @param   paramName   int, param description
+ * @return              int, return value description.
  */
 int MyFunction(int param);
 ```
@@ -343,24 +333,13 @@ several smaller classes.
 The file name should be the name of the class.
 
 Each class should have two files, one header file and one source file. Do not
-place implementation into the header file.
+place implementation into the header file unless specifically required (templates, inline functions).
 
 ```
 class Triangle;
 
 Triangle.h
 Triangle.cpp
-```
-
-If the class is a templated class, place the implementation into another header
-file with the suffix ".hpp".
-
-```
-template <typename T>
-class Octree;
-
-Octree.h
-Octree.hpp
 ```
 
 ## Templates
@@ -388,5 +367,5 @@ class Channel;
 
 All code should be sufficiently well-documented using Doxygen-style comments. In
 addition to this, systems or larger bodies of code should be appropriately
-documentated in the [Programmer's Manual](https://github.com/Izabia/DrunkenSailorEngine/blob/master/docs/PROGRAMMERSMANUAL.md), this should include appropriate
+documentated in the [Programmer's Manual](https://github.com/samdelion/DraygonTensor/blob/master/docs/ProgrammersManual.md), this should include appropriate
 usage examples.

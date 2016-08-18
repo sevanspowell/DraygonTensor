@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 
 #include "engine/system/render/GLRenderer.h"

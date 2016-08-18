@@ -50,7 +50,7 @@ Instance TransformComponentManager::CreateComponentForEntityFromConfig(
 
 ds_math::Matrix4 TransformComponentManager::GetLocalTransform(Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "TransformComponentManager::GetLocalTransform tried to get invalid "
            "instance");
 
@@ -66,7 +66,7 @@ const ds_math::Vector3 &
 TransformComponentManager::GetLocalTranslation(Instance i) const
 {
     assert(
-        i.index >= 0 && i.index < GetNumInstances() &&
+        i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
         "TransformComponentManager::GetLocalTranslation tried to get invalid "
         "instance");
 
@@ -77,7 +77,7 @@ const ds_math::Vector3 &
 TransformComponentManager::GetLocalScale(Instance i) const
 {
     assert(
-           i.index >= 0 && i.index < GetNumInstances() &&
+           i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "TransformComponentManager::GetLocalScale tried to get invalid "
            "instance");
 
@@ -88,7 +88,7 @@ const ds_math::Quaternion &
 TransformComponentManager::GetLocalOrientation(Instance i) const
 {
     assert(
-           i.index >= 0 && i.index < GetNumInstances() &&
+           i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "TransformComponentManager::GetLocalOrientation tried to get invalid "
            "instance");
 
@@ -97,7 +97,7 @@ TransformComponentManager::GetLocalOrientation(Instance i) const
 
 ds_math::Matrix4 TransformComponentManager::GetWorldTransform(Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "TransformComponentManager::GetWorldTransform tried to get invalid "
            "instance");
 
@@ -113,7 +113,7 @@ ds_math::Matrix4 TransformComponentManager::GetWorldTransform(Instance i) const
 void TransformComponentManager::SetLocalTranslation(
     Instance i, const ds_math::Vector3 &translation)
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "TransformComponentManager::SetLocalTranslation: tried to set "
            "invalid instance.");
 
@@ -157,7 +157,7 @@ void TransformComponentManager::UpdateWorldTranslation(
 void TransformComponentManager::SetLocalScale(Instance i,
                                               const ds_math::Vector3 &scale)
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "TransformComponentManager::SetLocalScale: tried to set "
            "invalid instance.");
 
@@ -201,7 +201,7 @@ void TransformComponentManager::UpdateWorldScale(
 void TransformComponentManager::SetLocalOrientation(
     Instance i, const ds_math::Quaternion &orientation)
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "TransformComponentManager::SetLocalOrientation: tried to set "
            "invalid instance.");
 
@@ -269,7 +269,7 @@ const ds_math::Vector3 &
 TransformComponentManager::GetWorldTranslation(Instance i) const
 {
     assert(
-        i.index >= 0 && i.index < GetNumInstances() &&
+        i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
         "TransformComponentManager::GetWorldTranslation: tried to get invalid "
         "instance");
 
@@ -279,7 +279,7 @@ TransformComponentManager::GetWorldTranslation(Instance i) const
 const ds_math::Vector3 &
 TransformComponentManager::GetWorldScale(Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "TransformComponentManager::GetWorldScale: tried to get invalid "
            "instance");
 
@@ -290,7 +290,7 @@ const ds_math::Quaternion &
 TransformComponentManager::GetWorldOrientation(Instance i) const
 {
     assert(
-        i.index >= 0 && i.index < GetNumInstances() &&
+        i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
         "TransformComponentManager::GetWorldOrientation: tried to get invalid "
         "instance");
 
@@ -301,7 +301,7 @@ TransformComponentManager::GetWorldOrientation(Instance i) const
 const Instance &TransformComponentManager::GetParent(Instance i) const
 {
     assert(
-        i.index >= 0 && i.index < GetNumInstances() &&
+        i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
         "TransformComponentManager::GetParent tried to get invalid instance");
 
     return m_data.component[i.index].parent;
@@ -310,7 +310,7 @@ const Instance &TransformComponentManager::GetParent(Instance i) const
 void TransformComponentManager::SetParent(Instance i, Instance parent)
 {
     assert(
-        i.index >= 0 && i.index < GetNumInstances() &&
+        i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
         "TransformComponentManager::SetParent tried to set invalid instance");
 
     // Set child's parent
@@ -354,7 +354,7 @@ void TransformComponentManager::SetParent(Instance i, Instance parent)
 
 const Instance &TransformComponentManager::GetFirstChild(Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "TransformComponentManager::GetFirstChild tried to get invalid "
            "instance");
 
@@ -363,7 +363,7 @@ const Instance &TransformComponentManager::GetFirstChild(Instance i) const
 
 const Instance &TransformComponentManager::GetNextSibling(Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "TransformComponentManager::GetNextSibling tried to get invalid "
            "instance");
 
@@ -372,7 +372,7 @@ const Instance &TransformComponentManager::GetNextSibling(Instance i) const
 
 const Instance &TransformComponentManager::GetPrevSibling(Instance i) const
 {
-    assert(i.index >= 0 && i.index < GetNumInstances() &&
+    assert(i.index >= 0 && (unsigned int)i.index < GetNumInstances() &&
            "TransformComponentManager::GetPrevSibling tried to get invalid "
            "instance");
 
