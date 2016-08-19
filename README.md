@@ -54,8 +54,26 @@ for b in `git branch -r | grep -v -- '->'`; do git branch --track ${b##origin/} 
 
 ## Building
 
+### Windows:
+Execute one of the `generate_project_*.bat` files in the root directory
+
+### Other:
+From root directory:
+```
+mkdir build
+cd build
+mkdir superbuild
+cd superbuild
+cmake ../../cmake/superbuild -DCMAKE_BUILD_TYPE=Debug -G<Generator of your choice>
+cmake --build ./ --config Debug
+```
+
+In both cases can delete build folder and repeat to do a clean build.
 
 ## Contributing
 
 Before contributing, consult the [contribution guidelines](https://github.com/samdelion/DraygonTensor/blob/master/CONTRIBUTING.md).
     
+## API
+
+API can be found [here](https://samdelion.github.io/DraygonTensor-api/).
