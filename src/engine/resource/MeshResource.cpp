@@ -563,8 +563,7 @@ void MeshResource::BoneTransform(float deltaTime,
             transforms->size() == MeshResource::MAX_BONES &&
             "MeshResource::BoneTransform: Incorrect size of transforms array.");
 
-        if (m_currentAnimationIndex >= 0 &&
-            m_currentAnimationIndex < m_scene->mNumAnimations)
+        if (m_currentAnimationIndex < m_scene->mNumAnimations)
         {
             ds_math::Matrix4 identity = ds_math::Matrix4(1.0f);
 

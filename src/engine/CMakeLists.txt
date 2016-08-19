@@ -33,11 +33,6 @@ set(ENGINE_INCLUDE_FILES
   system/input/Input.h
   system/input/InputContext.h
 
-  system/custom_physics/Particle.h
-  system/custom_physics/CustomPhysics.h
-  system/custom_physics/CustomPhysicsComponent.h
-  system/custom_physics/CustomPhysicsComponentManager.h
-
   system/platform/Keyboard.h
   system/platform/Mouse.h
   system/platform/Platform.h
@@ -91,11 +86,6 @@ set(ENGINE_SRC_FILES
   resource/TextureResource.cpp
   resource/TextureResourceManager.cpp
   system/Console.cpp
-
-  system/custom_physics/Particle.cpp
-  system/custom_physics/CustomPhysics.cpp
-  system/custom_physics/CustomPhysicsLuaBindings.cpp
-  system/custom_physics/CustomPhysicsComponentManager.cpp
 
   system/input/Input.cpp
   system/input/InputContext.cpp

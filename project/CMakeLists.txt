@@ -1,4 +1,5 @@
 subdirs(
+#    ballistic
     empty
     example
 )
