@@ -185,4 +185,9 @@ void LuaEnvironment::RegisterClass(const char *className,
 {
     ds_lua::RegisterClass(m_lua, className, methods, functions, special);
 }
+
+lua_State *LuaEnvironment::GetState()
+{
+    return m_lua;
+}
 }

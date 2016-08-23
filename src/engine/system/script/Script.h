@@ -81,12 +81,9 @@ public:
     virtual const char *GetName() const;
 
     /**
-     * Return script bindings required by script system.
-     *
-     * @return  ScriptBindingSet, the script bindings the script system wants to
-     * register.
+     * @copydoc ISystem::RegisterScriptBindings(lua_State *L)
      */
-    virtual ScriptBindingSet GetScriptBindings() const;
+    virtual void RegisterScriptBindings(lua_State *L);
 
     /**
      * Register another system's script bindings.
@@ -94,7 +91,7 @@ public:
      * @param  systemName  const char *, name of the registering system.
      * @param  systemPtr   ISystem *, pointer to registering system.
      */
-    void RegisterScriptBindings(const char *systemName, ISystem *systemPtr);
+    void RegisterForScriptBinding(const char *systemName, ISystem *systemPtr);
 
     /**
      * Spawn a prefab in the world.
@@ -391,15 +388,6 @@ private:
      * @param  ds_msg::MessageStream *, messages to process.
      */
     void ProcessEvents(ds_msg::MessageStream *messages);
-
-    /**
-     * Register the script bindings of a particular system.
-     *
-     * @param  systemName  const char *, name of the registering system.
-     * @param  systemPtr  ISystem *, pointer to system to register script
-     * bindings of.
-     */
-    void RegisterScriptBindingSet(const char *systemName, ISystem *systemPtr);
 
     /**
      * Build a create transfrom component message.

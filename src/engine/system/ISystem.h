@@ -1,5 +1,7 @@
 #pragma once
 
+#include "LuaBridge.h"
+
 #include "engine/Config.h"
 #include "engine/message/Message.h"
 #include "engine/system/script/ScriptBindingSet.h"
@@ -85,14 +87,14 @@ public:
     virtual const char *GetName() const = 0;
 
     /**
-     * Optionally return any required script bindings.
+     * Optionally register any script bindings with the Engine.
      *
-     * @return  ScriptBindingSet, the script bindings the system wants to
-     * register with the Script system.
+     * @param   L   lua_State *, lua environment to register script bindings
+     * with.
      */
-    virtual ScriptBindingSet GetScriptBindings() const
+    virtual void RegisterScriptBindings(lua_State *L)
     {
-        return ScriptBindingSet();
+        
     }
 };
 }
