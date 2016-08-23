@@ -799,7 +799,7 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                             textureCoordinates =
                                 terrainResource->GetTextureCoordinatesVector();
 
-                        for (const struct TerrainResource::TextureCoordinates
+                        for (const TerrainResource::TextureCoordinates
                                  &texCoord : textureCoordinates)
                         {
                             vertexBufferStore << texCoord.u;

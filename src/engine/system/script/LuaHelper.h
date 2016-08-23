@@ -1,9 +1,18 @@
 #pragma once
 
 extern "C" {
-#include "lua.h"
-#include "lauxlib.h"
-#include "lualib.h"
+#define LUA_COMPAT_5_1
+#define LUA_COMPAT_5_2
+
+#ifdef DS_LUAJIT_WORKAROUND
+#	include "luajit-2.0/lua.h"
+#	include "luajit-2.0/lauxlib.h"
+#	include "luajit-2.0/lualib.h"
+#else
+#	include "lua.h"
+#	include "lauxlib.h"
+#	include "lualib.h"
+#endif
 }
 
 namespace ds_lua
