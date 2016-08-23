@@ -61,7 +61,7 @@ bool Engine::AddSystem(std::unique_ptr<ISystem> system)
             m_messageBus.AddSystem(std::weak_ptr<ISystem>(sharedPtr));
 
             // Register system script bindings
-            m_script->RegisterScriptBindings(sharedPtr->GetName(),
+            m_script->RegisterForScriptBinding(sharedPtr->GetName(),
                                              sharedPtr.get());
 
             result = true;

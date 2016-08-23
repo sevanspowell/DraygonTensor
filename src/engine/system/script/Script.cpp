@@ -36,19 +36,20 @@ bool Script::Initialize(const Config &config)
         // Loop thru and load script bindings
         for (auto namePtr : m_registeredSystems)
         {
-            RegisterScriptBindingSet(namePtr.first, namePtr.second);
+            assert(namePtr.second != nullptr);
+            namePtr.second->RegisterScriptBindings(m_lua.GetState());
         }
 
         // Register all systems with the lua environment as light userdata
         // m_lua.RegisterLightUserData("__Script", (void *)this);
-        for (auto namePtr : m_registeredSystems)
-        {
-            std::stringstream ss;
-            ss << "__" << std::string(namePtr.first);
-            std::cout << ss.str().c_str() << std::endl;
-            m_lua.RegisterLightUserData(ss.str().c_str(),
-                                        (void *)namePtr.second);
-        }
+        // for (auto namePtr : m_registeredSystems)
+        // {
+        //     std::stringstream ss;
+        //     ss << std::string(namePtr.first);
+        //     std::cout << ss.str().c_str() << std::endl;
+        //     m_lua.RegisterLightUserData(ss.str().c_str(),
+        //                                 (void *)namePtr.second);
+        // }
 
         std::string bootScriptPath;
 
@@ -135,12 +136,21 @@ const char *Script::GetName() const
     return ds_lua::scriptSystemLuaName;
 }
 
-ScriptBindingSet Script::GetScriptBindings() const
+void Script::RegisterScriptBindings(lua_State *L)
 {
-    return ds_lua::LoadScriptBindings();
+    luabridge::getGlobalNamespace(L)
+        .beginClass<Script>("Script")
+        .addFunction("GetName", &Script::GetName)
+        .endClass();
+
+    luabridge::push(L, (Script *)this);
+    lua_setglobal(L, "Script");
+
+
 }
 
-void Script::RegisterScriptBindings(const char *systemName, ISystem *systemPtr)
+void Script::RegisterForScriptBinding(const char *systemName,
+                                      ISystem *systemPtr)
 {
     m_registeredSystems.push_back(
         std::pair<const char *, ISystem *>(systemName, systemPtr));
@@ -755,55 +765,6 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
             messages->Extract(header.size);
             break;
         }
-    }
-}
-
-void Script::RegisterScriptBindingSet(const char *systemName,
-                                      ISystem *systemPtr)
-{
-    if (systemPtr != nullptr)
-    {
-        ScriptBindingSet scriptBindings = systemPtr->GetScriptBindings();
-
-        // Allocate enough memory for methods and functions plus one extra for
-        // NULL terminator
-        luaL_Reg *methods = new luaL_Reg[scriptBindings.GetNumMethods() + 1];
-        luaL_Reg *functions =
-            new luaL_Reg[scriptBindings.GetNumFunctions() + 1];
-        // No special functions in a ScriptBindingSet
-        luaL_Reg special[] = {{NULL, NULL}};
-
-        // Fill methods table
-        for (unsigned int i = 0; i < scriptBindings.GetNumMethods(); ++i)
-        {
-            const std::pair<const char *, SCRIPT_FN> &methodPair =
-                scriptBindings.GetMethodPair(i);
-
-            methods[i].name = methodPair.first;
-            methods[i].func = methodPair.second;
-        }
-        // Null-terminate methods table
-        methods[scriptBindings.GetNumMethods()].name = NULL;
-        methods[scriptBindings.GetNumMethods()].func = NULL;
-
-        // Fill functions table
-        for (unsigned int i = 0; i < scriptBindings.GetNumFunctions(); ++i)
-        {
-            const std::pair<const char *, SCRIPT_FN> &functionPair =
-                scriptBindings.GetFunctionPair(i);
-
-            functions[i].name = functionPair.first;
-            functions[i].func = functionPair.second;
-        }
-        // Null-terminate functions table
-        functions[scriptBindings.GetNumFunctions()].name = NULL;
-        functions[scriptBindings.GetNumFunctions()].func = NULL;
-
-        m_lua.RegisterClass(systemName, methods, functions, special);
-
-        // Free method & function arrays
-        delete[] methods;
-        delete[] functions;
     }
 }
 
