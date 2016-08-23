@@ -1,10 +1,6 @@
 #pragma once
 
-extern "C" {
-#include "lua.h"
-#include "lauxlib.h"
-#include "lualib.h"
-}
+#include "engine/system/script/LuaHeaders.h"
 
 namespace ds_lua
 {

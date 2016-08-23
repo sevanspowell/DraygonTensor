@@ -1,10 +1,9 @@
 #pragma once
 
-#include "LuaBridge.h"
-
 #include "engine/Config.h"
 #include "engine/message/Message.h"
 #include "engine/system/script/ScriptBindingSet.h"
+#include "engine/system/script/LuaHeaders.h"
 
 namespace ds
 {

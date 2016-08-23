@@ -46,7 +46,7 @@ Entity ComponentManager<T>::GetEntityForInstance(Instance i) const
 
     const int index = i.index;
 
-    if (index < GetNumInstances() && index >= 0)
+    if ((unsigned)index < GetNumInstances() && index >= 0)
     {
         e = m_data.entity[index];
     }
@@ -79,7 +79,7 @@ bool ComponentManager<T>::RemoveInstance(Instance i)
     const unsigned int lastIndex = GetNumInstances() - 1;
 
     // Make sure we are trying to delete a valid instance
-    if (index < GetNumInstances() && index >= 0)
+    if ((unsigned)index < GetNumInstances() && index >= 0)
     {
         // Get the entity at the index to destroy
         Entity entityToDestroy = m_data.entity[index];
