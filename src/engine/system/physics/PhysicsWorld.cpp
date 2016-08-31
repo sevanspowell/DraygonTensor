@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "engine/system/physics/PhysicsWorld.h"
 
 namespace ds_phys
