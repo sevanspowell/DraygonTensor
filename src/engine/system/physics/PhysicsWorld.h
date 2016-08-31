@@ -59,6 +59,7 @@ public:
     void removeForceGenerator(RigidBody *rigidBody,
                               IForceGenerator *forceGenerator);
 
+    // TODO Not public
     std::vector<RigidBody *> m_rigidBodies;
 private:
     // Use Bullet to generate contacts
