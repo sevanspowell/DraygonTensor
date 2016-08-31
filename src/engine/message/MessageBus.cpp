@@ -28,10 +28,11 @@ bool MessageBus::AddSystem(std::weak_ptr<ISystem> system)
 
 void MessageBus::CollectAllMessages()
 {
-    for (auto &system : m_systems)
+    // TODO: REMOVE HACK !!
+    for (auto it = m_systems.rbegin(); it != m_systems.rend(); ++it)
     {
         // Convert weak pointer to shared pointer temporarily
-        std::shared_ptr<ISystem> systemPtr = system.lock();
+        std::shared_ptr<ISystem> systemPtr = it->lock();
 
         if (systemPtr != nullptr)
         {

@@ -62,6 +62,9 @@ bool Script::Initialize(const Config &config)
             {
                 m_bootScriptLoaded = true;
 
+                // Call preinit function in boot script (no arguments)
+                m_lua.CallLuaFunction("preinit", 0);
+
                 result = true;
             }
         }
