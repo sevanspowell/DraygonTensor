@@ -5,3 +5,6 @@ build/
 external/
 .#*
 *~
+.cproject
+.project
+.settings/
