@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <sstream>
 
 #include "engine/system/physics/Physics.h"
@@ -297,7 +298,7 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
 
         std::cout << "collisionShapes:" << std::endl;
         // Create each collision shape
-        for_each(
+        std::for_each(
             collisionShapeKeys.begin(), collisionShapeKeys.end(),
             [&](const std::string &key)
             {

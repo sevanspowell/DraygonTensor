@@ -59,7 +59,7 @@ void ForceRegistry::clear()
 
 void ForceRegistry::updateForces(ds_math::scalar duration)
 {
-    for_each(m_registrations.begin(), m_registrations.end(),
+    std::for_each(m_registrations.begin(), m_registrations.end(),
              [&](const ForceRegistration &reg)
              {
                  reg.fg->updateForce(reg.body, duration);

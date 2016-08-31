@@ -29,7 +29,7 @@ PhysicsWorld::~PhysicsWorld()
 void PhysicsWorld::startFrame()
 {
     // Remove all forces from accumulators in each rigidbody
-    for_each(m_rigidBodies.begin(), m_rigidBodies.end(),
+    std::for_each(m_rigidBodies.begin(), m_rigidBodies.end(),
              [](RigidBody *rigidBody)
              {
                  if (rigidBody != nullptr)
@@ -46,7 +46,7 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
     m_forceRegistry.updateForces(duration);
 
     // Integrate rigid bodies
-    for_each(m_rigidBodies.begin(), m_rigidBodies.end(),
+    std::for_each(m_rigidBodies.begin(), m_rigidBodies.end(),
              [&](RigidBody *rigidBody)
              {
                  if (rigidBody != nullptr)
