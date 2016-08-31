@@ -17,6 +17,10 @@ public:
 
     void setPosition(const ds_math::Vector3 &position);
 
+    bool getAwake();
+
+    void setAwake();
+
 protected:
     ds_math::Vector3 m_position;
 

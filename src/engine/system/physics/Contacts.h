@@ -150,6 +150,7 @@ protected:
 	 * Calculates the impulse required to resolve the contact, assuming there is not friction.
 	 * @param inverseInertiaTensor Each inertia tensor for the rigid bodies.
 	 * @return The required impulse
+	 * @bug inverseInertiaTensor should be a Matrix3, but we don't have that.
 	 */
 	ds_math::Vector3 calculateFrictionlessImpulse(ds_math::Matrix4* inverseInertiaTensor);
 
@@ -157,6 +158,7 @@ protected:
 	 * Calculates the impulse required to resolve the contact, assuming there is friction.
 	 * @param inverseInertiaTensor Each inertia tensor for the rigid bodies.
 	 * @return The required impulse
+	 * @bug inverseInertiaTensor should be a Matrix3, but we don't have that.
 	 */
 	ds_math::Vector3 calculateFrictionImpulse(ds_math::Matrix4* inverseInertialTensor);
 };

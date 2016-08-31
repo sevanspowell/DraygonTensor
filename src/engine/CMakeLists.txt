@@ -103,6 +103,7 @@ set(ENGINE_SRC_FILES
   system/physics/PhysicsLuaBindings.cpp
   system/physics/ForceGenerator.cpp
   system/physics/RigidBody.cpp
+  system/physics/Contacts.cpp
 
   system/platform/Keyboard.cpp
   system/platform/Platform.cpp
