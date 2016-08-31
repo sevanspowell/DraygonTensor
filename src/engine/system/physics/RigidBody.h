@@ -8,17 +8,7 @@ namespace ds_phys
 class RigidBody
 {
 public:
-    void integrate(ds_math::scalar duration);
-
-    void clearAccumulators();
-
-    ds_math::Vector3 getPosition() const;
-
-    void setPosition(const ds_math::Vector3 &position);
-    
-    ////////////////////////////////////////////////////////////////////////////////////////////// BEGIN COPY PASTE
-    
-    
+     
      /**
          * @name Constructor and Destructor
          *
