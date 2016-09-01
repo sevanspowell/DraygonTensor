@@ -645,7 +645,7 @@ static int l_Vector3MatrixTransform(lua_State *L)
         ds_math::Vector3 *transformedV =
             (ds_math::Vector3 *)lua_newuserdata(L, sizeof(ds_math::Vector3));
 
-        *transformedV = ds_math::Vector3::Transform(*v, *m);
+        *transformedV = ds_math::Matrix4::Transform(*m, *v);
 
         // Get Vector3 metatable and put on top of stack
         luaL_getmetatable(L, "Vector3");

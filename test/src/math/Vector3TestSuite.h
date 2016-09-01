@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "math/Vector3.h"
+#include "math/Vector4.h"
 
 TEST(Vector3, TestDefaultConstructor)
 {
@@ -36,6 +37,20 @@ TEST(Vector3, TestCopyConstructor)
     EXPECT_EQ(vec1.x, vec2.x);
     EXPECT_EQ(vec1.y, vec2.y);
     EXPECT_EQ(vec1.z, vec2.z);
+}
+
+TEST(Vector3, TestVector4Constructor)
+{
+    float x = 1.34f;
+    float y = -10e6;
+    float z = 10e-8;
+    float w = 13e-1;
+
+    ds_math::Vector3 vec = ds_math::Vector3(ds_math::Vector4(x, y, z, w));
+
+    EXPECT_EQ(x, vec.x);
+    EXPECT_EQ(y, vec.y);
+    EXPECT_EQ(z, vec.z);
 }
 
 TEST(Vector3, TestIndexOperator)
@@ -208,6 +223,17 @@ TEST(Vector3, TestInvert)
     EXPECT_EQ(-x, vec.x);
     EXPECT_EQ(-y, vec.y);
     EXPECT_EQ(-z, vec.z);
+}
+
+TEST(Vector3, TestClear)
+{
+    ds_math::Vector3 v(0.01f, -2.0f, 12.3e3f);
+
+    v.Clear();
+
+    EXPECT_EQ((ds_math::scalar)0.0, v.x);
+    EXPECT_EQ((ds_math::scalar)0.0, v.y);
+    EXPECT_EQ((ds_math::scalar)0.0, v.z);
 }
 
 TEST(Vector3, TestDotProduct)

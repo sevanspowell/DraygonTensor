@@ -2,6 +2,7 @@ include_directories(.)
 
 set(MATH_INCLUDE_FILES
   MathHelper.h
+  Matrix3.h
   Matrix4.h
   Precision.h
   Quaternion.h
@@ -11,6 +12,7 @@ set(MATH_INCLUDE_FILES
 
 set(MATH_SRC_FILES
   MathHelper.cpp
+  Matrix3.cpp
   Matrix4.cpp
   Quaternion.cpp
   Vector3.cpp
