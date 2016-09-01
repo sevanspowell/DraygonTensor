@@ -134,6 +134,16 @@ calculateTransformMatrix(ds_math::Matrix4 &transformMatrix,
 
 /// Functions declared in header.
 
+RigidBody::RigidBody()
+    : m_inverseMass((ds_math::scalar)0.0),
+      m_linearDamping((ds_math::scalar)0.6),
+      m_angularDamping((ds_math::scalar)0.7),
+      m_motion((ds_math::scalar)0.0),
+      m_isAwake(true),
+      m_canSleep(true)
+{
+}
+
 void RigidBody::integrate(ds_math::scalar duration)
 {
     if (!m_isAwake)
@@ -213,6 +223,7 @@ void RigidBody::calculateDerivedData()
 void RigidBody::setMass(const ds_math::scalar mass)
 {
     assert(mass != 0);
+
     m_inverseMass = ((ds_math::scalar)1.0) / mass;
 }
 
@@ -240,7 +251,7 @@ ds_math::scalar RigidBody::getInverseMass() const
 
 bool RigidBody::hasFiniteMass() const
 {
-    return m_inverseMass >= 0.0f;
+    return m_inverseMass > 0.0f;
 }
 
 void RigidBody::setInertiaTensor(const ds_math::Matrix3 &inertiaTensor)

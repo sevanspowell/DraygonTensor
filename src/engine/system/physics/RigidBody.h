@@ -39,17 +39,8 @@ namespace ds_phys
 class RigidBody
 {
 public:
-    /**
-        * @name Constructor and Destructor
-        *
-        * There are no data members in the rigid body class that are
-        * created on the heap. So all data storage is handled
-        * automatically.
-        */
-    /*@{*/
 
-    /*@}*/
-
+    RigidBody();
 
     /**
      * @name Integration and Simulation Functions
