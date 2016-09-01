@@ -27,8 +27,6 @@ void Physics::AddForceGenerator(Entity entity)
 {
     Instance phys = m_physicsComponentManager.GetInstanceForEntity(entity);
 
-    std::cout << "Here: " << phys.index << std::endl;
-
     if (phys.IsValid())
     {
         ds_phys::RigidBody *body = m_physicsComponentManager.GetRigidBody(phys);

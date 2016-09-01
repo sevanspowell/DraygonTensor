@@ -19,7 +19,7 @@ const float SCALAR_MAX = std::numeric_limits<float>::max();
 /**
  * Precision of the power operator
  */
-#define scalarPow powf
+#define SCALAR_POW powf
 
 /**
  * How 'close' two floats need to be in order to be considered equal.

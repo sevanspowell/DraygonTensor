@@ -116,6 +116,18 @@ void Quaternion::Invert()
     *this = Quaternion::Invert(*this);
 }
 
+void Quaternion::AddScaledVector(const Vector3 &vec, scalar scale)
+{
+    Quaternion q(vec.x * scale, vec.y * scale, vec.z * scale, (scalar)0.0);
+
+    q = q * (*this);
+
+    this->x += q.x * ((scalar)0.5);
+    this->y += q.y * ((scalar)0.5);
+    this->z += q.z * ((scalar)0.5);
+    this->w += q.w * ((scalar)0.5);
+}
+
 scalar Quaternion::Magnitude(const Quaternion &q)
 {
     return sqrt(Quaternion::Dot(q, q));
