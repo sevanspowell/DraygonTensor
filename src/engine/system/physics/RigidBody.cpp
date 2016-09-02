@@ -136,8 +136,8 @@ calculateTransformMatrix(ds_math::Matrix4 &transformMatrix,
 
 RigidBody::RigidBody()
     : m_inverseMass((ds_math::scalar)0.0),
-      m_linearDamping((ds_math::scalar)0.6),
-      m_angularDamping((ds_math::scalar)0.7),
+      m_linearDamping((ds_math::scalar)0.95),
+      m_angularDamping((ds_math::scalar)0.8),
       m_motion((ds_math::scalar)0.0),
       m_isAwake(true),
       m_canSleep(true)
@@ -619,12 +619,20 @@ void RigidBody::addForceAtBodyPoint(const ds_math::Vector3 &force,
 void RigidBody::addForceAtPoint(const ds_math::Vector3 &force,
                                 const ds_math::Vector3 &point)
 {
+    std::cout << "Called" << std::endl;
     // Convert to coordinates relative to center of mass.
     ds_math::Vector3 pt = point;
     pt -= m_position;
 
+    std::cout << "forceAccum before: " << m_forceAccum << std::endl;
+    std::cout << "torqueAccum before: " << m_torqueAccum << std::endl;
+    std::cout << "point: " << pt << std::endl;
+
     m_forceAccum += force;
     m_torqueAccum += ds_math::Vector3::Cross(pt, force);
+
+    std::cout << "forceAccum: " << m_forceAccum << std::endl;
+    std::cout << "torqueAccum: " << m_torqueAccum << std::endl;
 
     m_isAwake = true;
 }
