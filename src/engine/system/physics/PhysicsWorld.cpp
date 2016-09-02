@@ -32,14 +32,14 @@ void PhysicsWorld::startFrame()
 {
     // Remove all forces from accumulators in each rigidbody
     std::for_each(m_rigidBodies.begin(), m_rigidBodies.end(),
-             [](RigidBody *rigidBody)
-             {
-                 if (rigidBody != nullptr)
-                 {
-                     rigidBody->clearAccumulators();
-                     rigidBody->calculateDerivedData();
-                 }
-             });
+                  [](RigidBody *rigidBody)
+                  {
+                      if (rigidBody != nullptr)
+                      {
+                          rigidBody->clearAccumulators();
+                          rigidBody->calculateDerivedData();
+                      }
+                  });
 }
 
 void PhysicsWorld::stepSimulation(ds_math::scalar duration)
@@ -49,13 +49,13 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
 
     // Integrate rigid bodies
     std::for_each(m_rigidBodies.begin(), m_rigidBodies.end(),
-             [&](RigidBody *rigidBody)
-             {
-                 if (rigidBody != nullptr)
-                 {
-                     rigidBody->integrate(duration);
-                 }
-             });
+                  [&](RigidBody *rigidBody)
+                  {
+                      if (rigidBody != nullptr)
+                      {
+                          rigidBody->integrate(duration);
+                      }
+                  });
 
     // Generate contacts
     // m_collisionWorld->performDiscreteCollisionDetection();
@@ -83,14 +83,14 @@ void PhysicsWorld::removeRigidBody(RigidBody *rigidBody)
     }
 }
 
-void PhysicsWorld::addForceGenerator(RigidBody *rigidBody,
-                                     IForceGenerator *forceGenerator)
+void PhysicsWorld::addForceGenerator(
+    RigidBody *rigidBody, std::shared_ptr<IForceGenerator> forceGenerator)
 {
     m_forceRegistry.add(rigidBody, forceGenerator);
 }
 
-void PhysicsWorld::removeForceGenerator(RigidBody *rigidBody,
-                                        IForceGenerator *forceGenerator)
+void PhysicsWorld::removeForceGenerator(
+    RigidBody *rigidBody, std::shared_ptr<IForceGenerator> forceGenerator)
 {
     m_forceRegistry.remove(rigidBody, forceGenerator);
 }

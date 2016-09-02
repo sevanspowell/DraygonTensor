@@ -54,12 +54,13 @@ public:
     void removeRigidBody(RigidBody *rigidBody);
 
     void addForceGenerator(RigidBody *rigidBody,
-                           IForceGenerator *forceGenerator);
+                           std::shared_ptr<IForceGenerator> forceGenerator);
 
     void removeForceGenerator(RigidBody *rigidBody,
-                              IForceGenerator *forceGenerator);
+                              std::shared_ptr<IForceGenerator> forceGenerator);
 
     std::vector<RigidBody *> m_rigidBodies;
+
 private:
     // Use Bullet to generate contacts
     // btCollisionDispatcher *m_dispatcher;

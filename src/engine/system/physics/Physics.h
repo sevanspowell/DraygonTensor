@@ -28,6 +28,8 @@ public:
 
     void AddForceGenerator(Entity entity);
 
+    void SetGravity(const ds_math::Vector3 &gravity);
+
 private:
     void ProcessEvents(ds_msg::MessageStream *messages);
 
@@ -47,8 +49,8 @@ private:
 
     ds_phys::PhysicsWorld m_physicsWorld;
 
-    // TODO: Temporary!
-    ds_phys::Gravity m_fg;
+    std::shared_ptr<ds_phys::Gravity> m_gravityFg;
+    // ds_phys::ImpulseGenerator *m_impulseFg;
     ds_phys::RigidBody m_body;
 };
 }

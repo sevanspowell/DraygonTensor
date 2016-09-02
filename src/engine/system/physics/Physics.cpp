@@ -15,7 +15,8 @@ namespace ds
 {
 // TODO: Update these values for m_physicsWorld constructor
 Physics::Physics()
-    : m_physicsWorld(0, 0), m_fg(ds_phys::Gravity(ds_math::Vector3(0.0f, -9.8f, 0.0f)))
+    : m_physicsWorld(0, 0),
+      m_gravityFg(new ds_phys::Gravity(ds_math::Vector3(0.0f, -9.8f, 0.0f)))
 {
 }
 
@@ -24,30 +25,52 @@ bool Physics::Initialize(const Config &config)
     return true;
 }
 
-void Physics::AddForceGenerator(Entity entity)
+void Physics::SetGravity(const ds_math::Vector3 &gravity)
 {
-    Instance phys = m_physicsComponentManager.GetInstanceForEntity(entity);
-
-    if (phys.IsValid())
-    {
-        ds_phys::RigidBody *body = m_physicsComponentManager.GetRigidBody(phys);
-
-        assert(body != nullptr);
-
-        m_physicsWorld.addForceGenerator(body, &m_fg);
-    }
+    m_gravityFg->setGravity(gravity);
 }
 
+void Physics::AddForceGenerator(Entity entity)
+{
+    // Instance phys = m_physicsComponentManager.GetInstanceForEntity(entity);
+
+    // if (phys.IsValid())
+    // {
+    //     ds_phys::RigidBody *body =
+    //     m_physicsComponentManager.GetRigidBody(phys);
+
+    //     assert(body != nullptr);
+
+    //     m_physicsWorld.addForceGenerator(body, &m_gravityFg);
+    // }
+}
+
+static bool first = true;
 void Physics::Update(float deltaTime)
 {
     ProcessEvents(&m_messagesReceived);
 
-    m_physicsWorld.startFrame();
+    if (m_physicsWorld.m_rigidBodies.size() == 1 && first)
+    {
+        // m_physicsWorld.addForceGenerator(m_physicsWorld.m_rigidBodies[0],
+        //                                  &m_impulseFg);
+        // m_impulseFg.addImpulseAtPoint(ds_math::Vector3(-5.0f, 0.0f, 0.0f),
+        //                               ds_math::Vector3(0.0f, 0.0f, -10.0f));
+        // m_physicsWorld.m_rigidBodies[0]->addForceAtPoint(
+        //     ds_math::Vector3(-5.0f, 0, 0.0f), ds_math::Vector3(0, 0, -20));
 
-    m_physicsWorld.stepSimulation(deltaTime);
+        first = false;
+    }
 
-    // std::cout << m_physicsWorld.m_rigidBodies[0]->getPosition() << std::endl;
-    UpdateComponents();
+
+    if (deltaTime > 0.0f)
+    {
+        m_physicsWorld.startFrame();
+
+        m_physicsWorld.stepSimulation(deltaTime);
+
+        UpdateComponents();
+    }
 
     m_messagesReceived.Clear();
 }
@@ -68,7 +91,7 @@ void Physics::UpdateComponents()
 
         assert(body != nullptr);
 
-        std::cout << body->getPosition() << std::endl;
+        std::cout << "pos: " << body->getPosition() << std::endl;
 
         ds_msg::SetLocalTranslation setTranslationMsg;
         setTranslationMsg.entity = entity;
@@ -78,6 +101,17 @@ void Physics::UpdateComponents()
         ds_msg::AppendMessage(
             &m_messagesGenerated, ds_msg::MessageType::SetLocalTranslation,
             sizeof(ds_msg::SetLocalTranslation), &setTranslationMsg);
+
+        std::cout << "orientation: " << body->getOrientation() << std::endl;
+
+        ds_msg::SetLocalOrientation setOrientationMsg;
+        setOrientationMsg.entity = entity;
+        setOrientationMsg.localOrientation = body->getOrientation();
+
+        // Send message telling transform component to update
+        ds_msg::AppendMessage(
+            &m_messagesGenerated, ds_msg::MessageType::SetLocalOrientation,
+            sizeof(ds_msg::SetLocalOrientation), &setOrientationMsg);
     }
 }
 
@@ -170,6 +204,26 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
 
             break;
         }
+        case ds_msg::MessageType::SetLocalOrientation:
+        {
+            ds_msg::SetLocalOrientation setOrientationMsg;
+            (*messages) >> setOrientationMsg;
+
+            // Get component instance of entity to orient
+            Instance transform =
+                m_transformComponentManager.GetInstanceForEntity(
+                    setOrientationMsg.entity);
+
+            // If has transform component
+            if (transform.IsValid())
+            {
+                // Set orientation of entity
+                m_transformComponentManager.SetLocalOrientation(
+                    transform, setOrientationMsg.localOrientation);
+            }
+
+            break;
+        }
         default:
         {
             // Extract message to prevent corrupting message stream
@@ -205,6 +259,7 @@ void Physics::CreateTransformComponent(Entity entity,
 
             // Update position
             rigidBody->setPosition(origin);
+            rigidBody->calculateDerivedData();
         }
     }
 }
@@ -377,7 +432,11 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
             ds_math::Vector3 origin = ds_math::Vector3(temp.x, temp.y, temp.z);
 
             body->setPosition(origin);
+            body->calculateDerivedData();
         }
+
+        // Add gravity to every body
+        m_physicsWorld.addForceGenerator(body, m_gravityFg);
 
         // Add rigid body component to world
         m_physicsWorld.addRigidBody(body);
