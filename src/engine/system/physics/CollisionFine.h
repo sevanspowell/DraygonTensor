@@ -4,6 +4,24 @@
 #include <math/Precision.h>
 #include <math/Vector3.h>
 #include <engine/system/physics/RigidBody.h>
+#include <engine/system/physics/Contacts.h>
+
+/*
+
+Must compelte Contacts.cpp Contacts.h before
+the problems in CollisionFine.cpp can be resolved
+as a lot of the data types are defined in contacts
+
+//some problems
+
+    getAxisVector not ds_math::Matrix4
+    replace () with []
+    getTransform not ds_phys::RigidBody
+    
+    normalise not ds_math::Vector3
+    transform not ds_math::Matrix4
+
+*/
 
 namespace ds_phys
 {
@@ -45,7 +63,7 @@ public:
     */
     ds_math::Vector3 getAxis(unsigned index) const
     {
-        return transform.getAxisVector(index);
+        return transform.getAxisVector[index];
     }
 
     /**

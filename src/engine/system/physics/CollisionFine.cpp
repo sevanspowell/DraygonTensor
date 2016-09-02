@@ -7,7 +7,6 @@
 
 using namespace ds_phys
 
-
 void CollisionPrimitive::calculateInternals()
 {
     transform = body->getTransform() * offset;
@@ -17,6 +16,7 @@ bool IntersectionTests::sphereAndHalfSpace(
     const CollisionSphere &sphere,
     const CollisionPlane &plane)
 {
+
     // // Find the distance from the origin
     // real ballDistance =
     //     plane.direction *
@@ -35,7 +35,7 @@ bool IntersectionTests::sphereAndSphere(
     // Vector3 midline = one.getAxis(3) - two.getAxis(3);
 
     // // See if it is large enough.
-    // return midline.squareMagnitude() <
+    // return ds_math::Vector3::Dot(midline, midline) < 
     //     (one.radius+two.radius)*(one.radius+two.radius);
 }
 
@@ -45,9 +45,9 @@ static inline real transformToAxis(
     )
 {
     return
-        box.halfSize.x * real_abs(axis * box.getAxis(0)) +
-        box.halfSize.y * real_abs(axis * box.getAxis(1)) +
-        box.halfSize.z * real_abs(axis * box.getAxis(2));
+        box.halfSize.x * fabs(ds_math::Vector3::Dot(axis, box.getAxis(0))) +
+        box.halfSize.y * fabs(ds_math::Vector3::Dot(axis, box.getAxis(1))) +
+        box.halfSize.z * fabs(ds_math::Vector3::Dot(axis, box.getAxis(2)));
 }
 
 /**
@@ -68,7 +68,7 @@ static inline bool overlapOnAxis(
     ds_math::scalar twoProject = transformToAxis(two, axis);
 
     // Project this onto the axis
-    ds_math::scalar distance = real_abs(toCentre * axis);
+    ds_math::scalar distance = fabs(ds_math::Vector3::Dot(toCentre, axis));
 
     // Check for overlap
     return (distance < oneProject + twoProject);
@@ -107,7 +107,7 @@ bool IntersectionTests::boxAndBox(
     //     TEST_OVERLAP(one.getAxis(2) % two.getAxis(0)) &&
     //     TEST_OVERLAP(one.getAxis(2) % two.getAxis(1)) &&
     //     TEST_OVERLAP(one.getAxis(2) % two.getAxis(2))
-    );
+    //);
 }
 #undef TEST_OVERLAP
 
@@ -209,7 +209,7 @@ unsigned CollisionDetector::sphereAndSphere(
     const CollisionSphere &two,
     CollisionData *data
     )
-// {
+    {
 //     // Make sure we have contacts
 //     if (data->contactsLeft <= 0) return 0;
 
@@ -264,7 +264,7 @@ static inline real penetrationOnAxis(
     ds_math::scalar twoProject = transformToAxis(two, axis);
 
     // Project this onto the axis
-    ds_math::scalar distance = real_abs(toCentre * axis);
+    ds_math::scalar distance = fabs(ds_math::Vector3::Dot(toCentre, axis));
 
     // Return the overlap (i.e. positive indicates
     // overlap, negative indicates separation).
@@ -285,7 +285,7 @@ static inline bool tryAxis(
     )
 {
     // Make sure we have a normalized axis, and don't check almost parallel axes
-    if (axis.squareMagnitude() < 0.0001) return true;
+    if (ds_math::Vector3::Dot(axis, axis) < 0.0001) return true;
     axis.normalise();
 
     real penetration = penetrationOnAxis(one, two, axis, toCentre);
@@ -304,7 +304,7 @@ void fillPointFaceBoxBox(
     const ds_math::Vector3 &toCentre,
     CollisionData *data,
     unsigned best,
-    real pen
+    ds_math::scalar pen
     )
 {
     // // This method is called when we know that a vertex from
@@ -353,8 +353,8 @@ static inline Vector3 contactPoint(
     ds_math::scalar dpStaOne, dpStaTwo, dpOneTwo, smOne, smTwo;
     ds_math::scalar denom, mua, mub;
 
-    smOne = dOne.squareMagnitude();
-    smTwo = dTwo.squareMagnitude();
+    smOne = ds_math::Vector3::Dot(dOne, dOne);
+    smTwo = ds_math::Vector3::Dot(dOne, dOne); 
     dpOneTwo = dTwo * dOne;
 
     toSt = pOne - pTwo;
@@ -364,7 +364,7 @@ static inline Vector3 contactPoint(
     denom = smOne * smTwo - dpOneTwo * dpOneTwo;
 
     // Zero denominator indicates parrallel lines
-    if (real_abs(denom) < 0.0001f) {
+    if (fabs(denom) < 0.0001f) {
         return useOne?pOne:pTwo;
     }
 
@@ -536,11 +536,11 @@ unsigned CollisionDetector::boxAndPoint(
 
     // // Check each axis, looking for the axis on which the
     // // penetration is least deep.
-    // ds_math::scalar min_depth = box.halfSize.x - real_abs(relPt.x);
+    // ds_math::scalar min_depth = box.halfSize.x - fabs(relPt.x);
     // if (min_depth < 0) return 0;
     // normal = box.getAxis(0) * ((relPt.x < 0)?-1:1);
 
-    // ds_math::scalar depth = box.halfSize.y - real_abs(relPt.y);
+    // ds_math::scalar depth = box.halfSize.y - fabs(relPt.y);
     // if (depth < 0) return 0;
     // else if (depth < min_depth)
     // {
@@ -548,7 +548,7 @@ unsigned CollisionDetector::boxAndPoint(
     //     normal = box.getAxis(1) * ((relPt.y < 0)?-1:1);
     // }
 
-    // depth = box.halfSize.z - real_abs(relPt.z);
+    // depth = box.halfSize.z - fabs(relPt.z);
     // if (depth < 0) return 0;
     // else if (depth < min_depth)
     // {
@@ -583,9 +583,9 @@ unsigned CollisionDetector::boxAndSphere(
     // ds_math::Vector3 relCentre = box.transform.transformInverse(centre);
 
     // // Early out check to see if we can exclude the contact
-    // if (real_abs(relCentre.x) - sphere.radius > box.halfSize.x ||
-    //     real_abs(relCentre.y) - sphere.radius > box.halfSize.y ||
-    //     real_abs(relCentre.z) - sphere.radius > box.halfSize.z)
+    // if (fabs(relCentre.x) - sphere.radius > box.halfSize.x ||
+    //     fabs(relCentre.y) - sphere.radius > box.halfSize.y ||
+    //     fabs(relCentre.z) - sphere.radius > box.halfSize.z)
     // {
     //     return 0;
     // }
@@ -610,7 +610,7 @@ unsigned CollisionDetector::boxAndSphere(
     // closestPt.z = dist;
 
     // // Check we're in contact
-    // dist = (closestPt - relCentre).squareMagnitude();
+    // dist = ds_math::Vector3::Dot((closestPt - relCentre), (closestPt - relCentre));
     // if (dist > sphere.radius * sphere.radius) return 0;
 
     // // Compile the contact
@@ -657,7 +657,7 @@ unsigned CollisionDetector::boxAndHalfSpace(
 
         // Calculate the position of each vertex
         ds_math::Vector3 vertexPos(mults[i][0], mults[i][1], mults[i][2]);
-        vertexPos.componentProductUpdate(box.halfSize);
+        vertexPos *= box.halfSize; // was componentProductUpdate
         vertexPos = box.transform.transform(vertexPos);
 
         // Calculate the distance from the plane

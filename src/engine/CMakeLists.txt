@@ -38,6 +38,7 @@ set(ENGINE_INCLUDE_FILES
   system/physics/PhysicsComponentManager.h
   system/physics/ForceGenerator.h
   system/physics/RigidBody.h
+  system/physics/CollisionFine.h
 
   system/platform/Keyboard.h
   system/platform/Mouse.h
@@ -104,6 +105,7 @@ set(ENGINE_SRC_FILES
   system/physics/ForceGenerator.cpp
   system/physics/RigidBody.cpp
   system/physics/Contacts.cpp
+  system/physics/CollisionFine.cpp
 
   system/platform/Keyboard.cpp
   system/platform/Platform.cpp
