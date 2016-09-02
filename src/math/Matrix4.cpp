@@ -236,6 +236,40 @@ Matrix4 Matrix4::Inverse(const Matrix4 &mat)
     return (inv);
 }
 
+Vector3 Matrix4::Transform(const Matrix4 &mat, const Vector3 &vec)
+{
+    return Vector3(mat * Vector4(vec, 1.0f));
+}
+
+Vector4 Matrix4::Transform(const Matrix4 &mat, const Vector4 &vec)
+{
+    return mat * vec;
+}
+
+Vector3 Matrix4::TransformInverse(const Matrix4 &mat, const Vector3 &vec)
+{
+    return Vector3(Matrix4::Inverse(mat) * Vector4(vec, 1.0f));
+}
+
+Vector4 Matrix4::TransformInverse(const Matrix4 &mat, const Vector4 &vec)
+{
+    return Matrix4::Inverse(mat) * vec;
+}
+
+Vector3 Matrix4::TransformDirection(const Matrix4 &mat, const Vector3 &vec)
+{
+    return Vector3(vec.x * mat[0][0] + vec.y * mat[0][1] + vec.z * mat[0][2],
+                   vec.x * mat[1][0] + vec.y * mat[1][1] + vec.z * mat[1][2],
+                   vec.x * mat[2][0] + vec.y * mat[2][1] + vec.z * mat[2][2]);
+}
+
+Vector3 Matrix4::TransformInverseDirection(const Matrix4 &mat,
+                                           const Vector3 &vec)
+{
+    return Vector3(vec.x * mat[0][0] + vec.y * mat[1][0] + vec.z * mat[2][0],
+                   vec.x * mat[0][1] + vec.y * mat[1][1] + vec.z * mat[2][1],
+                   vec.x * mat[0][2] + vec.y * mat[1][2] + vec.z * mat[2][2]);
+}
 
 Matrix4 Matrix4::CreateOrthographic(scalar width,
                                     scalar height,

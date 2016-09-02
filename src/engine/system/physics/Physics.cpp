@@ -14,7 +14,8 @@ extern const char *physicsSystemLuaName;
 namespace ds
 {
 // TODO: Update these values for m_physicsWorld constructor
-Physics::Physics() : m_physicsWorld(0, 0), m_fg(ds_phys::GoDown(0.3))
+Physics::Physics()
+    : m_physicsWorld(0, 0), m_fg(ds_phys::Gravity(ds_math::Vector3(0.0f, -9.8f, 0.0f)))
 {
 }
 
@@ -26,8 +27,6 @@ bool Physics::Initialize(const Config &config)
 void Physics::AddForceGenerator(Entity entity)
 {
     Instance phys = m_physicsComponentManager.GetInstanceForEntity(entity);
-
-    std::cout << "Here: " << phys.index << std::endl;
 
     if (phys.IsValid())
     {
@@ -356,6 +355,9 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
 
         // Create rigid body component
         ds_phys::RigidBody *body = new ds_phys::RigidBody();
+
+        body->setMass(1.0f);
+
         Instance phys =
             m_physicsComponentManager.CreateComponentForEntity(entity);
         m_physicsComponentManager.SetRigidBody(phys, body);

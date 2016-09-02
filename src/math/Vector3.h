@@ -8,6 +8,7 @@ namespace ds_math
 {
 class Matrix4;
 class Quaternion;
+class Vector4;
 /**
  *  Vector-3 class.
  */
@@ -28,6 +29,15 @@ public:
      * @param  other  const Vector3 &, Vector3 to copy.
      */
     Vector3(const Vector3 &other);
+    /**
+     * Construct a Vector3 from a Vector4.
+     *
+     * Simply constructs a Vector3 from the x, y, z components of the given
+     * Vector4.
+     *
+     * @param  other  const Vector4 &, Vector4 to 'convert' to Vector3.
+     */
+    Vector3(const Vector4 &other);
 
     /**
      * Copy assignment operator.
@@ -128,11 +138,15 @@ public:
      */
     void Normalize();
     /**
-     * Return the inverse of the given vector.
+     * Invert this given vector.
      *
      * Change the sign of each component of the vector.
      */
     void Invert();
+    /**
+     * Set all the components of this vector to 0.
+     */
+    void Clear();
 
     /**
      * Find the dot product of the two given vectors.
@@ -177,15 +191,6 @@ public:
      * @return       Vector3, inverted vector.
      */
     static Vector3 Invert(const Vector3 &vec);
-    /**
-     * Transform a Vector3 by a matrix.
-     *
-     * Note: Matrix * vector (pre-multiplied)
-     *
-     * @param  vec     const Vector3 &, vector to transform.
-     * @param  matrix  const Matrix4 &, matrix to use as transform.
-     */
-    static Vector3 Transform(const Vector3 &vec, const Matrix4 &matrix);
     /**
      * Get a quaternion representing the rotation from the first provided vector
      * to the second.

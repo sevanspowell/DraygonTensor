@@ -235,6 +235,18 @@ TEST(Vector4, TestInvert)
     EXPECT_EQ(-w, vec.w);
 }
 
+TEST(Vector4, TestClear)
+{
+    ds_math::Vector4 v(0.01f, -2.0f, 12.3e3f, -0.0f);
+
+    v.Clear();
+
+    EXPECT_EQ((ds_math::scalar)0.0, v.x);
+    EXPECT_EQ((ds_math::scalar)0.0, v.y);
+    EXPECT_EQ((ds_math::scalar)0.0, v.z);
+    EXPECT_EQ((ds_math::scalar)0.0, v.w);
+}
+
 TEST(Vector4, TestDotProduct)
 {
     ds_math::Vector4 vec1 = ds_math::Vector4(3.0f, 1.0f, -23.03f, 1.0f);

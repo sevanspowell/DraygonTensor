@@ -28,11 +28,11 @@ public:
      *
      * Creates a Matrix4 from another Matrix4.
      *
-     * @param  other  const Matrix &, matrix to clone.
+     * @param  other  const Matrix4 &, matrix to clone.
      */
     Matrix4(const Matrix4 &other);
     /**
-     * Construct a matrix from four column vector.
+     * Construct a matrix from four column vectors.
      *
      * @param  col0  const Vector4 &, column 0 of the matrix.
      * @param  col1  const Vector4 &, column 1 of the matrix.
@@ -190,6 +190,68 @@ public:
      * @return       Matrix4, matrix inverse.
      */
     static Matrix4 Inverse(const Matrix4 &mat);
+    /**
+     * Transform the given vector by the given matrix.
+     *
+     * @param  mat  const Matrix4 &, matrix to transform vector by.
+     * @param  vec  const Vector3 &, vector to transform.
+     * @return      Vector3, transformed vector.
+     */
+    static Vector3 Transform(const Matrix4 &mat, const Vector3 &vec);
+    /**
+     * Transform the given vector by the given matrix.
+     *
+     * @param  mat  const Matrix4 &, matrix to transform vector by.
+     * @param  vec  const Vector4 &, vector to transform.
+     * @return      Vector4, transformed vector.
+     */
+    static Vector4 Transform(const Matrix4 &mat, const Vector4 &vec);
+    /**
+     * Transform the given vector by the inverse of the given matrix.
+     *
+     * @param  mat  const Matrix4 &, matrix to invert and transform vector by.
+     * @param  vec  const Vector3 &, vector to transform.
+     * @return      Vector3, transformed vector.
+     */
+    static Vector3 TransformInverse(const Matrix4 &mat, const Vector3 &vec);
+    /**
+     * Transform the given vector by the inverse of the given matrix.
+     *
+     * @param  mat  const Matrix4 &, matrix to invert and transform vector by.
+     * @param  vec  const Vector4 &, vector to transform.
+     * @return      Vector4, transformed vector.
+     */
+    static Vector4 TransformInverse(const Matrix4 &mat, const Vector4 &vec);
+    /**
+     * Transform the given direction vector by the given matrix.
+     *
+     * @note When a driection is converted between frames of reference, there is no translation required.
+     *
+     * @param  mat  const Matrix4 &, matrix to transform direction vector by.
+     * @param  vec  const Vector3 &, vector direction to transform.
+     * @return      Vector3, resulting vector.
+     */
+    static Vector3 TransformDirection(const Matrix4 &mat, const Vector3 &vec);
+    /**
+     * Transform the given direction vector by the transformational inverse of
+     * this matrix.
+     *
+     * @note This function relies on the fact that the inverse of a pure
+     * rotation matrix is its transpose. If the matrix is not a scale and shear
+     * free transform matrix, then this function will not give the correct
+     * result.
+     *
+     * @note When a direction is converted between frames of reference, there is
+     * no translation required.
+     *
+     * @author Ian Millington (https://github.com/idmillington/cyclone-physics/blob/fd0cf4956fd83ebf9e2e75421dfbf9f5cdac49fa/include/cyclone/core.h)
+     *
+     * @param  mat  const Matrix4 &, matrix to transform direction vector by.
+     * @param  vec  const Vector3 &, vector direction to transform.
+     * @return      Vector3, resulting vector.
+     */
+    static Vector3 TransformInverseDirection(const Matrix4 &mat,
+                                             const Vector3 &vec);
 
     /**
      * Create an orthogonal projection matrix.
@@ -344,7 +406,7 @@ Matrix4 operator*(scalar factor, const Matrix4 &mat);
  *
  * @param   out  std::ostream &, output stream to output to.
  * @param   vec  const Matrix4 &, vector to output.
- * @return       std::ostream &, output stream outputted to.
+ * @return       std::ostream &, output stream outputed to.
  */
 std::ostream &operator<<(std::ostream &out, const Matrix4 &mat);
 }

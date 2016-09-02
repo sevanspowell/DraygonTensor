@@ -17,6 +17,11 @@ Vector3::Vector3(const Vector3 &other) : x(other.x), y(other.y), z(other.z)
 {
 }
 
+Vector3::Vector3(const Vector4 &other) : x(other.x), y(other.y), z(other.z)
+{
+    
+}
+
 const Vector3 &Vector3::operator=(const Vector3 &other)
 {
     x = other.x;
@@ -122,6 +127,13 @@ void Vector3::Invert()
     *this = Vector3::Invert(*this);
 }
 
+void Vector3::Clear()
+{
+    this->x = (scalar)0.0;
+    this->y = (scalar)0.0;
+    this->z = (scalar)0.0;
+}
+
 scalar Vector3::Dot(const Vector3 &v1, const Vector3 &v2)
 {
     return ((v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z));
@@ -151,16 +163,6 @@ Vector3 Vector3::Normalize(const Vector3 &vec)
 Vector3 Vector3::Invert(const Vector3 &vec)
 {
     return (vec * -1);
-}
-
-Vector3 Vector3::Transform(const Vector3 &vec, const Matrix4 &matrix)
-{
-    Vector4 v = Vector4(vec.x, vec.y, vec.z, 1.0);
-
-    // Transform vector
-    v = matrix * v;
-
-    return (Vector3(v.x, v.y, v.z));
 }
 
 Quaternion Vector3::GetRotationFromTo(const Vector3 &vec1, const Vector3 &vec2)

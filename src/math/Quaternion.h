@@ -115,6 +115,13 @@ public:
      * Invert quaternion.
      */
     void Invert();
+    /**
+     * Adds the given vector to this quaternion, scaled by the given amount.
+     *
+     * @param  vector  const Vector3 &, vector to scale and add to this quaternion.
+     * @param  scale   scalar, scale factor to scale vector by.
+     */
+    void AddScaledVector(const Vector3 &vector, scalar scale);
 
     /**
      * Return the magnitude of the quaternion.

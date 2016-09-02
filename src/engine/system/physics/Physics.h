@@ -48,7 +48,7 @@ private:
     ds_phys::PhysicsWorld m_physicsWorld;
 
     // TODO: Temporary!
-    ds_phys::GoDown m_fg;
+    ds_phys::Gravity m_fg;
     ds_phys::RigidBody m_body;
 };
 }
