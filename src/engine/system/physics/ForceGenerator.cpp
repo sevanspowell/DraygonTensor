@@ -54,6 +54,16 @@ bool Gravity::isDone() const
     return false;
 }
 
+void Gravity::setGravity(const ds_math::Vector3 &gravity)
+{
+    m_gravity = gravity;
+}
+
+const ds_math::Vector3 &Gravity::getGravity() const
+{
+    return m_gravity;
+}
+
 ImpulseGenerator::ImpulseGenerator() : m_isDone(false)
 {
 }
@@ -61,7 +71,21 @@ ImpulseGenerator::ImpulseGenerator() : m_isDone(false)
 void ImpulseGenerator::updateForce(RigidBody *body, ds_math::scalar duration)
 {
     // Apply impulse
-    body->addForceAtPoint(m_impulse.force, m_impulse.point);
+    switch (m_impulse.coordinateSpace)
+    {
+    case PointCoordinateSpace::None:
+        body->addForce(m_impulse.force);
+        break;
+    case PointCoordinateSpace::World:
+        body->addForceAtPoint(m_impulse.force, m_impulse.point);
+        break;
+    case PointCoordinateSpace::Local:
+        body->addForceAtBodyPoint(m_impulse.force, m_impulse.point);
+        break;
+    default:
+        body->addForce(m_impulse.force);
+        break;
+    }
 
     // Now that force has been applied, done
     m_isDone = true;
@@ -72,58 +96,40 @@ bool ImpulseGenerator::isDone() const
     return m_isDone;
 }
 
-void ImpulseGenerator::addImpulse(RigidBody *body,
-                                  const ds_math::Vector3 &force)
+void ImpulseGenerator::addImpulse(const ds_math::Vector3 &force)
 {
-    assert(body != nullptr);
-
     ImpulseInfo info;
+    info.coordinateSpace = PointCoordinateSpace::None;
     info.force = force;
     info.point = ds_math::Vector3(0.0f, 0.0f, 0.0f);
 
-    ImpulseRegistration registration;
-    registration.body = body;
-    registration.impulse = info;
-
-    m_impulses.push_back(registration);
+    m_impulse = info;
 }
 
-void ImpulseGenerator::addImpulseAtPoint(RigidBody *body,
-                                         const ds_math::Vector3 &force,
+void ImpulseGenerator::addImpulseAtPoint(const ds_math::Vector3 &force,
                                          const ds_math::Vector3 &point)
 {
-    assert(body != nullptr);
-
     ImpulseInfo info;
+    info.coordinateSpace = PointCoordinateSpace::World;
     info.force = force;
     info.point = point;
 
-    ImpulseRegistration registration;
-    registration.body = body;
-    registration.impulse = info;
-
-    m_impulses.push_back(registration);
+    m_impulse = info;
 }
 
-void ImpulseGenerator::addImpulseAtBodyPoint(RigidBody *body,
-                                             const ds_math::Vector3 &force,
+void ImpulseGenerator::addImpulseAtBodyPoint(const ds_math::Vector3 &force,
                                              const ds_math::Vector3 &point)
 {
-    assert(body != nullptr);
-
     ImpulseInfo info;
+    info.coordinateSpace = PointCoordinateSpace::Local;
     info.force = force;
-    info.point = body->getPointInWorldSpace(point);
-    std::cout << "point in world space: " << info.point << std::endl;
+    info.point = point;
 
-    ImpulseRegistration registration;
-    registration.body = body;
-    registration.impulse = info;
-
-    m_impulses.push_back(registration);
+    m_impulse = info;
 }
 
-void ForceRegistry::add(RigidBody *body, IForceGenerator *fg)
+void ForceRegistry::add(RigidBody *body,
+                        const std::shared_ptr<IForceGenerator> &fg)
 {
     ForceRegistration reg;
     reg.body = body;
@@ -132,7 +138,8 @@ void ForceRegistry::add(RigidBody *body, IForceGenerator *fg)
     m_registrations.push_back(reg);
 }
 
-void ForceRegistry::remove(RigidBody *body, IForceGenerator *fg)
+void ForceRegistry::remove(RigidBody *body,
+                           const std::shared_ptr<IForceGenerator> &fg)
 {
     ForceRegistration reg;
     reg.body = body;

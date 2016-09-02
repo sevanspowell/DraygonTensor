@@ -88,6 +88,24 @@ public:
      */
     virtual bool isDone() const;
 
+    /**
+     * Set the direction and magnitude of gravity for this force generator.
+     *
+     * @param   gravity   const ds_math::Vector3 &, gravity vector to apply to
+     * all rigid bodies registered with this force generator.
+     *
+     * @param   gravity   const ds_math::Vector3 &, gravity vector to apply.
+     */
+    void setGravity(const ds_math::Vector3 &gravity);
+
+    /**
+     * Get the direction and magnitude of gravity for this force generator.
+     *
+     * @return   const ds_math::Vector3 &, gravity vector this force generator
+     * uses.
+     */
+    const ds_math::Vector3 &getGravity() const;
+
 private:
     /// Acceleration due to gravity
     ds_math::Vector3 m_gravity;
@@ -121,25 +139,22 @@ public:
      * force is applied to the centre of mass of the rigid body. The force is
      * expressed in world coordinates.
      *
-     * @param   body    RigidBody *, rigid body to add force to.
      * @param   force   const ds_math::Vector3 &, force to apply to the rigid
      * body (epxressed in world-space coordinates).
      */
-    void addImpulse(RigidBody *body, const ds_math::Vector3 &force);
+    void addImpulse(const ds_math::Vector3 &force);
 
     /**
      * Apply a force to the given rigid body for a single frame (impulse) at the
      * given point in world-space. The force is also expressed in world-space
      * coordinates.
      *
-     * @param   body    RigidBody *, rigid body to add force to.
      * @param   force   const ds_math::Vector3 &, force to apply to the rigid
      * body (epxressed in world-space coordinates).
      * @param   point   const ds_math::Vector3 &, point (in world-space
      * coordinates) to apply the force.
      */
-    void addImpulseAtPoint(RigidBody *body,
-                           const ds_math::Vector3 &force,
+    void addImpulseAtPoint(const ds_math::Vector3 &force,
                            const ds_math::Vector3 &point);
 
     /**
@@ -147,22 +162,29 @@ public:
      * given point relative to the rigid bodys coordinate space. The direction
      * of the force is given in world coordinated.
      *
-     * @param   body    RigidBody *, rigid body to add force to.
      * @param   force   const ds_math::Vector3 &, force to apply to the rigid
      * body (epxressed in world-space coordinates).
      * @param   point   const ds_math::Vector3 &, point (relative to the rigid
      * bodys coordinate space) to apply the force.
      */
-    void addImpulseAtBodyPoint(RigidBody *body,
-                               const ds_math::Vector3 &force,
+    void addImpulseAtBodyPoint(const ds_math::Vector3 &force,
                                const ds_math::Vector3 &point);
 
 private:
+    enum class PointCoordinateSpace
+    {
+        None,
+        World,
+        Local 
+    };
+
     struct ImpulseInfo
     {
+        /** Coordinate space of point */
+        PointCoordinateSpace coordinateSpace;
         /** Forces in world space coordinates */
         ds_math::Vector3 force;
-        /** Points in world space coordinates */
+        /** Where to apply force */
         ds_math::Vector3 point;
     };
 
