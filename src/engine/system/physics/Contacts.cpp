@@ -1,5 +1,9 @@
 #include <engine/system/physics/Contacts.h>
 #include <algorithm>
+#include <memory.h>
+#include <assert.h>
+#include <cstdlib>
+#include <cstdio>
 
 using namespace ds_phys;
 using namespace ds_math;
