@@ -27,6 +27,7 @@
  */
 #pragma once
 
+#include <map>
 #include <vector>
 
 #include "math/Precision.h"
@@ -52,6 +53,73 @@ public:
 private:
     /// Acceleration due to gravity
     ds_math::Vector3 m_gravity;
+};
+
+class ImpulseGenerator : public IForceGenerator
+{
+public:
+    /**
+     * @copydoc IForceGenerator
+     */
+    virtual void updateForce(RigidBody *body, ds_math::scalar duration);
+
+    /**
+     * Apply a force to the given rigidbody for a single frame (impulse). The
+     * force is applied to the centre of mass of the rigid body. The force is
+     * expressed in world coordinates.
+     *
+     * @param   body    RigidBody *, rigid body to add force to.
+     * @param   force   const ds_math::Vector3 &, force to apply to the rigid
+     * body (epxressed in world-space coordinates).
+     */
+    void addImpulse(RigidBody *body, const ds_math::Vector3 &force);
+
+    /**
+     * Apply a force to the given rigid body for a single frame (impulse) at the
+     * given point in world-space. The force is also expressed in world-space
+     * coordinates.
+     *
+     * @param   body    RigidBody *, rigid body to add force to.
+     * @param   force   const ds_math::Vector3 &, force to apply to the rigid
+     * body (epxressed in world-space coordinates).
+     * @param   point   const ds_math::Vector3 &, point (in world-space
+     * coordinates) to apply the force.
+     */
+    void addImpulseAtPoint(RigidBody *body,
+                           const ds_math::Vector3 &force,
+                           const ds_math::Vector3 &point);
+
+    /**
+     * Apply a force to the given rigid body for a single frame (impulse) at the
+     * given point relative to the rigid bodys coordinate space. The direction
+     * of the force is given in world coordinated.
+     *
+     * @param   body    RigidBody *, rigid body to add force to.
+     * @param   force   const ds_math::Vector3 &, force to apply to the rigid
+     * body (epxressed in world-space coordinates).
+     * @param   point   const ds_math::Vector3 &, point (relative to the rigid
+     * bodys coordinate space) to apply the force.
+     */
+    void addImpulseAtBodyPoint(RigidBody *body,
+                               const ds_math::Vector3 &force,
+                               const ds_math::Vector3 &point);
+
+private:
+    struct ImpulseInfo
+    {
+        /** Forces in world space coordinates */
+        ds_math::Vector3 force;
+        /** Points in world space coordinates */
+        ds_math::Vector3 point;
+    };
+
+    struct ImpulseRegistration
+    {
+        RigidBody *body;
+        ImpulseInfo impulse;
+    };
+
+    std::vector<ImpulseRegistration> m_impulses;
 };
 
 class ForceRegistry

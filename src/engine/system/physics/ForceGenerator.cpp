@@ -25,6 +25,7 @@
  * @author Ian Millington
  * @author Samuel Evans-Powell (modified)
  */
+#include <cassert>
 #include <algorithm>
 
 #include "math/Vector3.h"
@@ -44,11 +45,84 @@ void Gravity::updateForce(RigidBody *body, ds_math::scalar duration)
     if (body->hasFiniteMass())
     {
         // Apply mass-scaled force to body
-        body->addForce(m_gravity * body->getMass());
+        // body->addForce(m_gravity * body->getMass());
         std::cout << "vel: " << body->getVelocity() << std::endl;
         std::cout << "accel: " << body->getAcceleration() << std::endl;
-        std::cout << "lf. accel: " << body->getLastFrameAcceleration() << std::endl;
+        std::cout << "lf. accel: " << body->getLastFrameAcceleration()
+                  << std::endl;
     }
+}
+
+void ImpulseGenerator::updateForce(RigidBody *body, ds_math::scalar duration)
+{
+    // Apply all impulses to all rigid bodies on first updateForce() call, then
+    // clear all impulses so they aren't applied again this frame.
+
+    // For each impulse registration
+    std::for_each(m_impulses.begin(), m_impulses.end(),
+                  [](const ImpulseRegistration &registration)
+                  {
+                      // Apply force (note: force and point must be in world
+                      // coordinates)
+                      registration.body->addForceAtPoint(
+                          registration.impulse.force,
+                          registration.impulse.point);
+                  });
+
+    // Clear all impulses so they aren't applied in subsequent calls to
+    // updateForce this frame.
+    m_impulses.clear();
+}
+
+void ImpulseGenerator::addImpulse(RigidBody *body,
+                                  const ds_math::Vector3 &force)
+{
+    assert(body != nullptr);
+
+    ImpulseInfo info;
+    info.force = force;
+    info.point = ds_math::Vector3(0.0f, 0.0f, 0.0f);
+
+    ImpulseRegistration registration;
+    registration.body = body;
+    registration.impulse = info;
+
+    m_impulses.push_back(registration);
+}
+
+void ImpulseGenerator::addImpulseAtPoint(RigidBody *body,
+                                         const ds_math::Vector3 &force,
+                                         const ds_math::Vector3 &point)
+{
+    assert(body != nullptr);
+
+    ImpulseInfo info;
+    info.force = force;
+    info.point = point;
+
+    ImpulseRegistration registration;
+    registration.body = body;
+    registration.impulse = info;
+
+    m_impulses.push_back(registration);
+}
+
+void ImpulseGenerator::addImpulseAtBodyPoint(RigidBody *body,
+                                             const ds_math::Vector3 &force,
+                                             const ds_math::Vector3 &point)
+{
+    assert(body != nullptr);
+
+    ImpulseInfo info;
+    info.force = force;
+    info.point = body->getPointInWorldSpace(point);
+    std::cout << "point in world space: " << info.point << std::endl;
+
+    ImpulseRegistration registration;
+    registration.body = body;
+    registration.impulse = info;
+
+    m_impulses.push_back(registration);
 }
 
 void ForceRegistry::add(RigidBody *body, IForceGenerator *fg)
@@ -95,9 +169,9 @@ void ForceRegistry::clear()
 void ForceRegistry::updateForces(ds_math::scalar duration)
 {
     std::for_each(m_registrations.begin(), m_registrations.end(),
-             [&](const ForceRegistration &reg)
-             {
-                 reg.fg->updateForce(reg.body, duration);
-             });
+                  [&](const ForceRegistration &reg)
+                  {
+                      reg.fg->updateForce(reg.body, duration);
+                  });
 }
 }
