@@ -45,12 +45,18 @@ void Gravity::updateForce(RigidBody *body, ds_math::scalar duration)
     if (body->hasFiniteMass())
     {
         // Apply mass-scaled force to body
-        // body->addForce(m_gravity * body->getMass());
-        std::cout << "vel: " << body->getVelocity() << std::endl;
-        std::cout << "accel: " << body->getAcceleration() << std::endl;
-        std::cout << "lf. accel: " << body->getLastFrameAcceleration()
-                  << std::endl;
+        body->addForce(m_gravity * body->getMass());
     }
+}
+
+void Gravity::setGravity(const ds_math::Vector3 &gravity)
+{
+    m_gravity = gravity;
+}
+
+const ds_math::Vector3 &Gravity::getGravity() const
+{
+    return m_gravity;
 }
 
 void ImpulseGenerator::updateForce(RigidBody *body, ds_math::scalar duration)
@@ -81,7 +87,7 @@ void ImpulseGenerator::addImpulse(RigidBody *body,
 
     ImpulseInfo info;
     info.force = force;
-    info.point = ds_math::Vector3(0.0f, 0.0f, 0.0f);
+    info.point = body->getPointInWorldSpace(ds_math::Vector3(0.0f, 0.0f, 0.0f));
 
     ImpulseRegistration registration;
     registration.body = body;
