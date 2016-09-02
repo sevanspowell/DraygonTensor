@@ -40,28 +40,81 @@ namespace ds_phys
 class IForceGenerator
 {
 public:
+    /**
+     * Update the force applied to the given rigid body.
+     *
+     * @param   body       RigidBody *, body to apply forces to.
+     * @param   duration   ds_math::scalar, time between frames.
+     */
     virtual void updateForce(RigidBody *body, ds_math::scalar duration) = 0;
+
+    /**
+     * Returns true if the force generator has finished applying forces, false
+     * otherwise.
+     *
+     * Note: this is used to determine if the force generator can be removed
+     * from the ForceRegistry.
+     *
+     * @return   bool, true if force generator has finished applying forces and
+     * false otherwise.
+     */
+    virtual bool isDone() const = 0;
 };
 
+/**
+ * Apply a gravitational force to a rigid body.
+ */
 class Gravity : public IForceGenerator
 {
 public:
+    /**
+     * Constructor.
+     *
+     * @param   gravity   const ds_math::Vector3 &, gravity vector to use.
+     */
     Gravity(const ds_math::Vector3 &gravity);
 
+    /**
+     * Applies gravity force to the given rigid body.
+     *
+     * @copydoc IForceGenerator::updateForce
+     */
     virtual void updateForce(RigidBody *body, ds_math::scalar duration);
+
+    /**
+     * In this case, always returns false.
+     *
+     * @copydoc IForceGenerator::isDone
+     */
+    virtual bool isDone() const;
 
 private:
     /// Acceleration due to gravity
     ds_math::Vector3 m_gravity;
 };
 
+/**
+ * Used to apply a force to a rigid body for a single frame.
+ */
 class ImpulseGenerator : public IForceGenerator
 {
 public:
     /**
-     * @copydoc IForceGenerator
+     * Default constructor;
+     */
+    ImpulseGenerator();
+
+    /**
+     * Applies a force to the given rigid body for one frame.
+     *
+     * @copydoc IForceGenerator::updateForce
      */
     virtual void updateForce(RigidBody *body, ds_math::scalar duration);
+
+    /**
+     * @copydoc IForceGenerator::isDone
+     */
+    virtual bool isDone() const;
 
     /**
      * Apply a force to the given rigidbody for a single frame (impulse). The
@@ -113,31 +166,46 @@ private:
         ds_math::Vector3 point;
     };
 
-    struct ImpulseRegistration
-    {
-        RigidBody *body;
-        ImpulseInfo impulse;
-    };
+    ImpulseInfo m_impulse;
 
-    std::vector<ImpulseRegistration> m_impulses;
+    bool m_isDone;
 };
 
 class ForceRegistry
 {
 public:
-    void add(RigidBody *body, IForceGenerator *fg);
+    void add(RigidBody *body, const std::shared_ptr<IForceGenerator> &fg);
 
-    void remove(RigidBody *body, IForceGenerator *fg);
+    void remove(RigidBody *body, const std::shared_ptr<IForceGenerator> &fg);
 
+    /**
+     * Removes all rigid body and force generator registrations from the force
+     * registry.
+     *
+     * Note: Does not free any memory!
+     */
     void clear();
 
+    /**
+     * Allows each registered force generator to apply forces to its paired
+     * rigid body. Also removes force generators that are no longer applying
+     * forces.
+     *
+     * @param   duration   scalar, time since last frame.
+     */
     void updateForces(ds_math::scalar duration);
 
 protected:
+    /**
+     * Remove unused force generators from the force registry. A force generator
+     * is considered unused if it's isDone() method returns true.
+     */
+    void removeUnused();
+
     struct ForceRegistration
     {
         RigidBody *body;
-        IForceGenerator *fg;
+        std::shared_ptr<IForceGenerator> fg;
     };
 
     typedef std::vector<ForceRegistration> Registry;

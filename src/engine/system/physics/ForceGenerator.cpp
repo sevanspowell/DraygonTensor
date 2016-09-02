@@ -45,33 +45,31 @@ void Gravity::updateForce(RigidBody *body, ds_math::scalar duration)
     if (body->hasFiniteMass())
     {
         // Apply mass-scaled force to body
-        // body->addForce(m_gravity * body->getMass());
-        std::cout << "vel: " << body->getVelocity() << std::endl;
-        std::cout << "accel: " << body->getAcceleration() << std::endl;
-        std::cout << "lf. accel: " << body->getLastFrameAcceleration()
-                  << std::endl;
+        body->addForce(m_gravity * body->getMass());
     }
+}
+
+bool Gravity::isDone() const
+{
+    return false;
+}
+
+ImpulseGenerator::ImpulseGenerator() : m_isDone(false)
+{
 }
 
 void ImpulseGenerator::updateForce(RigidBody *body, ds_math::scalar duration)
 {
-    // Apply all impulses to all rigid bodies on first updateForce() call, then
-    // clear all impulses so they aren't applied again this frame.
+    // Apply impulse
+    body->addForceAtPoint(m_impulse.force, m_impulse.point);
 
-    // For each impulse registration
-    std::for_each(m_impulses.begin(), m_impulses.end(),
-                  [](const ImpulseRegistration &registration)
-                  {
-                      // Apply force (note: force and point must be in world
-                      // coordinates)
-                      registration.body->addForceAtPoint(
-                          registration.impulse.force,
-                          registration.impulse.point);
-                  });
+    // Now that force has been applied, done
+    m_isDone = true;
+}
 
-    // Clear all impulses so they aren't applied in subsequent calls to
-    // updateForce this frame.
-    m_impulses.clear();
+bool ImpulseGenerator::isDone() const
+{
+    return m_isDone;
 }
 
 void ImpulseGenerator::addImpulse(RigidBody *body,
@@ -166,8 +164,26 @@ void ForceRegistry::clear()
     m_registrations.clear();
 }
 
+void ForceRegistry::removeUnused()
+{
+    for (unsigned int i = 0; i < m_registrations.size(); ++i)
+    {
+        if (m_registrations[i].fg->isDone())
+        {
+            // Swap this element with last to prevent holes
+            m_registrations[i] = m_registrations[m_registrations.size() - 1];
+            // Remove last element (which has now been copied)
+            m_registrations.pop_back();
+        }
+    }
+}
+
 void ForceRegistry::updateForces(ds_math::scalar duration)
 {
+    // Clear unused force registrations
+    removeUnused();
+
+    // For each force registration
     std::for_each(m_registrations.begin(), m_registrations.end(),
                   [&](const ForceRegistration &reg)
                   {
