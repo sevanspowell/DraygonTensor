@@ -63,7 +63,7 @@ public:
     */
     ds_math::Vector3 getAxis(unsigned index) const
     {
-        return transform.getAxisVector[index];
+        return transform[index];
     }
 
     /**

@@ -286,7 +286,7 @@ static inline bool tryAxis(
 {
     // Make sure we have a normalized axis, and don't check almost parallel axes
     if (ds_math::Vector3::Dot(axis, axis) < 0.0001) return true;
-    axis.normalise();
+    axis.Normalize();
 
     real penetration = penetrationOnAxis(one, two, axis, toCentre);
 
@@ -658,7 +658,8 @@ unsigned CollisionDetector::boxAndHalfSpace(
         // Calculate the position of each vertex
         ds_math::Vector3 vertexPos(mults[i][0], mults[i][1], mults[i][2]);
         vertexPos *= box.halfSize; // was componentProductUpdate
-        vertexPos = box.transform.transform(vertexPos);
+        //vertexPos = box.transform.transform(vertexPos);
+        vertexPos = ds_math::Matrix4::Transform(box.transform, vertexPos);
 
         // Calculate the distance from the plane
         ds_math::scalar vertexDistance = vertexPos * plane.direction;
