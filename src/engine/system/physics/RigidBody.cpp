@@ -113,7 +113,7 @@ calculateTransformMatrix(ds_math::Matrix4 &transformMatrix,
         2 * orientation.x * orientation.y - 2 * orientation.w * orientation.z;
     transformMatrix.data[2][0] =
         2 * orientation.x * orientation.z + 2 * orientation.w * orientation.y;
-    transformMatrix.data[0][0] = position.x;
+    transformMatrix.data[3][0] = position.x;
 
     transformMatrix.data[0][1] =
         2 * orientation.x * orientation.y + 2 * orientation.w * orientation.z;
