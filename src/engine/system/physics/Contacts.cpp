@@ -73,13 +73,55 @@ void Contact::calculateDesiredDeltaVelocity(ds_math::scalar duration) {
 }
 
 ds_math::Vector3 Contact::calculateLocalVelocity(unsigned bodyIndex, ds_math::scalar duration) {
-	///@todo Implement
-	return Vector3();
+	RigidBody* cBody = body[bodyIndex];
+
+	// Cache transform transpose.
+	Matrix3 transformTranspose = Matrix3::Transpose(contactToWorld);
+
+	// Work out the velocity in world space
+	Vector3 vel = cBody->getVelocity() + Vector3::Cross(cBody->getRotation(), relativeContactPosition[bodyIndex]);
+
+	// Workout velocity in local-space
+	Vector3 contactVel = transformTranspose * vel;
+
+	// Workout local acceration
+	Vector3 accVel = transformTranspose * (cBody->getLastFrameAcceleration() * duration);
+
+	// Cancel normal axis acceleration
+	accVel.x = 0;
+
+	// Apply acceleration to the velocity
+	contactVel += accVel;
+
+	return contactVel;
 }
 
 void Contact::calculateContactBasis() {
-	///@todo Implement
+	Vector3 contactTan[2];
 
+	if (abs(contactNormal.x) > abs(contactNormal.y)) {
+		scalar s = 1.0/sqrt(contactNormal.z*contactNormal.z + contactNormal.x*contactNormal.x);
+		contactTan[0].x =  contactNormal.z*s;
+		contactTan[0].y = 0;
+		contactTan[0].z = -contactNormal.x*s;
+
+		contactTan[1].x = contactNormal.y*contactTan[0].x;
+		contactTan[1].y = contactNormal.z*contactTan[0].x - contactNormal.x*contactTan[0].z;
+		contactTan[1].z = -contactNormal.y*contactTan[0].x;
+	} else {
+		scalar s = 1.0/sqrt(contactNormal.z*contactNormal.z + contactNormal.x*contactNormal.x);
+		contactTan[0].x = 0;
+		contactTan[0].y = -contactNormal.z*s;
+		contactTan[0].z = contactNormal.y*s;
+
+		contactTan[1].x = contactNormal.y*contactTan[0].z - contactNormal.z*contactTan[0].y;
+		contactTan[1].y = -contactNormal.y*contactTan[0].z;
+		contactTan[1].z = contactNormal.y*contactTan[0].y;
+	}
+
+	contactToWorld[0] = contactNormal;
+	contactToWorld[1] = contactTan[0];
+	contactToWorld[2] = contactTan[1];
 }
 
 void Contact::applyImpulse(const ds_math::Vector3& impulse, RigidBody* body, ds_math::Vector3* velocityChange, ds_math::Vector3* rotationChange) {
@@ -97,12 +139,12 @@ void Contact::applyPositionChange(ds_math::Vector3 linearChange[2], ds_math::Vec
 
 }
 
-ds_math::Vector3 Contact::calculateFrictionlessImpulse(ds_math::Matrix4* inverseInertiaTensor) {
+ds_math::Vector3 Contact::calculateFrictionlessImpulse(ds_math::Matrix3* inverseInertiaTensor) {
 	///@todo Implement
 	return Vector3();
 }
 
-ds_math::Vector3 Contact::calculateFrictionImpulse(ds_math::Matrix4* inverseInertialTensor) {
+ds_math::Vector3 Contact::calculateFrictionImpulse(ds_math::Matrix3* inverseInertialTensor) {
 	///@todo Implement
 	return Vector3();
 }

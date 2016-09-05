@@ -63,7 +63,7 @@ protected:
 	 * The matrix that maps the contact-space to the world-space.
 	 * @bug Should be a Matrix3, but we don't have that.
 	 */
-	ds_math::Matrix4 contactToWorld;
+	ds_math::Matrix3 contactToWorld;
 
 	/**
 	 * The closing velocity of the collision.
@@ -101,7 +101,7 @@ protected:
 
 	/**
 	 * Calculates the desired change in velocity for the contact resolution.
-	 * @param duration The diration of the collision.
+	 * @param duration The direction of the collision.
 	 */
 	void calculateDesiredDeltaVelocity(ds_math::scalar duration);
 
@@ -150,17 +150,15 @@ protected:
 	 * Calculates the impulse required to resolve the contact, assuming there is not friction.
 	 * @param inverseInertiaTensor Each inertia tensor for the rigid bodies.
 	 * @return The required impulse
-	 * @bug inverseInertiaTensor should be a Matrix3, but we don't have that.
 	 */
-	ds_math::Vector3 calculateFrictionlessImpulse(ds_math::Matrix4* inverseInertiaTensor);
+	ds_math::Vector3 calculateFrictionlessImpulse(ds_math::Matrix3* inverseInertiaTensor);
 
 	/**
 	 * Calculates the impulse required to resolve the contact, assuming there is friction.
 	 * @param inverseInertiaTensor Each inertia tensor for the rigid bodies.
 	 * @return The required impulse
-	 * @bug inverseInertiaTensor should be a Matrix3, but we don't have that.
 	 */
-	ds_math::Vector3 calculateFrictionImpulse(ds_math::Matrix4* inverseInertialTensor);
+	ds_math::Vector3 calculateFrictionImpulse(ds_math::Matrix3* inverseInertialTensor);
 };
 
 class ContactResolver

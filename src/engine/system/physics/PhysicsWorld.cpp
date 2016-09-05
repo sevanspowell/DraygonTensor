@@ -72,7 +72,7 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
     std::cout << m_box.getTransform() << std::endl;
     std::cout << m_plane.getTransform() << std::endl;
     std::cout << "---- Contacts generated -----" << std::endl;
-    for (int i = 0; i < got; ++i)
+    for (unsigned i = 0; i < got; ++i)
     {
         std::cout << m_contacts[i].contactPoint << std::endl;
     }
