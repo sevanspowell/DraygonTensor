@@ -674,13 +674,13 @@ unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,
             // distance and add the vertex location.
             std::cout << "vt - po: " << vertexDistance - plane.offset
                       << std::endl;
-            // @todo TODO Should this be 0.5f? 
+            // @todo TODO Should this be 0.5f? (Doesn't seem to matter afaik)
             contact->contactPoint =
                 vertexPos +
                 1.0f * (plane.direction *
                         (std::abs(vertexDistance - plane.offset)));
             contact->contactNormal = plane.direction;
-            contact->penetration = plane.offset - vertexDistance;
+            contact->penetration = std::abs(plane.offset - vertexDistance);
 
             // Write the appropriate data
             contact->setBodyData(box.body, NULL, data->friction,

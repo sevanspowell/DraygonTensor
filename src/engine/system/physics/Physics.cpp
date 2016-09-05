@@ -71,14 +71,27 @@ void Physics::UpdateComponents()
 
         std::cout << body->getPosition() << std::endl;
 
-        ds_msg::SetLocalTranslation setTranslationMsg;
-        setTranslationMsg.entity = entity;
-        setTranslationMsg.localTranslation = body->getPosition();
+        {
+			ds_msg::SetLocalTranslation setTranslationMsg;
+			setTranslationMsg.entity = entity;
+			setTranslationMsg.localTranslation = body->getPosition();
 
-        // Send message telling transform component to update
-        ds_msg::AppendMessage(
-            &m_messagesGenerated, ds_msg::MessageType::SetLocalTranslation,
-            sizeof(ds_msg::SetLocalTranslation), &setTranslationMsg);
+			// Send message telling transform component to update
+			ds_msg::AppendMessage(
+				&m_messagesGenerated, ds_msg::MessageType::SetLocalTranslation,
+				sizeof(ds_msg::SetLocalTranslation), &setTranslationMsg);
+    	}
+
+        {
+        	ds_msg::SetLocalOrientation setLocalOrientation;
+			setLocalOrientation.entity = entity;
+			setLocalOrientation.localOrientation = body->getOrientation();
+
+			// Send message telling transform component to update
+			ds_msg::AppendMessage(
+				&m_messagesGenerated, ds_msg::MessageType::SetLocalOrientation,
+				sizeof(ds_msg::SetLocalOrientation), &setLocalOrientation);
+        }
     }
 }
 
@@ -167,6 +180,26 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                 // Set translation of entity
                 m_transformComponentManager.SetLocalTranslation(
                     transform, setTranslationMsg.localTranslation);
+            }
+
+            break;
+        }
+        case ds_msg::MessageType::SetLocalOrientation:
+        {
+            ds_msg::SetLocalOrientation setLocalOrientation;
+            (*messages) >> setLocalOrientation;
+
+            // Get component instance of entity to move
+            Instance transform =
+                m_transformComponentManager.GetInstanceForEntity(
+                		setLocalOrientation.entity);
+
+            // If has transform component
+            if (transform.IsValid())
+            {
+                // Set translation of entity
+                m_transformComponentManager.SetLocalOrientation(
+                    transform, setLocalOrientation.localOrientation);
             }
 
             break;

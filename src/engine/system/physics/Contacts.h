@@ -57,7 +57,7 @@ public:
 	 * @param restitution The restitution coefficient
 	 */
 	void setBodyData(RigidBody* rb1, RigidBody* rb2, ds_math::scalar friction, ds_math::scalar restitution);
-protected:
+protected: public:
 
 	/**
 	 * The matrix that maps the contact-space to the world-space.
@@ -95,7 +95,7 @@ protected:
 	void swapBodies();
 
 	/**
-	 * Ensures that both objects are awake, given that atlease one of the bodies already is.
+	 * Ensures that both objects are awake, given that atleast one of the bodies already is.
 	 */
 	void matchAwakeState();
 
