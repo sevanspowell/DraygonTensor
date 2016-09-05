@@ -13,9 +13,9 @@ PhysicsWorld::PhysicsWorld(unsigned int maxContacts, unsigned int iterations)
     //                                         m_collisionConfiguration);
     m_collisionData.contactArray = m_contacts;
 
-    m_box.halfSize = ds_math::Vector3(1, 1, 1);
+    m_box.halfSize = ds_math::Vector3(0.5, 0.5, 0.5);
     m_plane.direction = ds_math::Vector3(0, 1, 0);
-    m_plane.offset = -1.0f;
+    m_plane.offset = 0.0f;
 }
 
 PhysicsWorld::~PhysicsWorld()
@@ -71,7 +71,7 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
     std::cout << m_box.getTransform() << std::endl;
     std::cout << m_plane.getTransform() << std::endl;
     std::cout << "---- Contacts generated -----" << std::endl;
-    for (int i = 0; i < got; ++i)
+    for (unsigned i = 0; i < got; ++i)
     {
         std::cout << m_contacts[i].contactPoint << std::endl;
     }

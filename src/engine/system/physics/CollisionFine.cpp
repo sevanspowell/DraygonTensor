@@ -654,11 +654,16 @@ unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,
         ds_math::Vector3 vertexPos(mults[i][0], mults[i][1], mults[i][2]);
         vertexPos = vertexPos * box.halfSize; // was componentProductUpdate
         // vertexPos = box.transform.transform(vertexPos);
-        vertexPos = ds_math::Matrix4::Transform(box.transform, vertexPos);
+		ds_math::Matrix4 tmp;
+		tmp[3] = box.transform[3];
+        vertexPos = ds_math::Matrix4::Transform(tmp, vertexPos);
+
+
 
         // Calculate the distance from the plane
         ds_math::scalar vertexDistance =
             ds_math::Vector3::Dot(vertexPos, plane.direction);
+
 
         // Compare this to the plane's distance
         if (vertexDistance <= plane.offset)
@@ -668,8 +673,8 @@ unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,
             // The contact point is halfway between the vertex and the
             // plane - we multiply the direction by half the separation
             // distance and add the vertex location.
-            contact->contactPoint = plane.direction;
-            contact->contactPoint *= (vertexDistance - plane.offset);
+            contact->contactPoint = plane.direction * (vertexDistance - plane.offset);
+
             contact->contactPoint += vertexPos;
             contact->contactNormal = plane.direction;
             contact->penetration = plane.offset - vertexDistance;

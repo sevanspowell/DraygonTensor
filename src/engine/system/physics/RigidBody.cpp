@@ -28,6 +28,7 @@
  * @author Luke Phipps
  */
 #include <cassert>
+#include <cstring>
 
 #include "engine/system/physics/PhysicsCore.h"
 #include "engine/system/physics/RigidBody.h"
