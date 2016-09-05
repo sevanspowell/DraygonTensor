@@ -17,7 +17,7 @@ as a lot of the data types are defined in contacts
     getAxisVector not ds_math::Matrix4
     replace () with []
     getTransform not ds_phys::RigidBody
-    
+
     normalise not ds_math::Vector3
     transform not ds_math::Matrix4
 
@@ -26,13 +26,13 @@ as a lot of the data types are defined in contacts
 namespace ds_phys
 {
 
-//forward declaration of CollisionPrimitive friends
+// forward declaration of CollisionPrimitive friends
 class IntersectionTests;
 class CollisionDetector;
 
 class CollisionPrimitive
 {
-    
+
 public:
     /**
     * This class exists to help the collision detector
@@ -45,7 +45,7 @@ public:
     /**
     * The rigid body that is represented by this primitive.
     */
-    RigidBody * body;
+    RigidBody *body;
 
     /**
     * The offset of this primitive from the given rigid body.
@@ -56,7 +56,7 @@ public:
     * Calculates the internals for the primitive.
     */
     void calculateInternals();
-    
+
     /**
     * This is a convenience function to allow access to the
     * axis vectors in the transform for this primitive.
@@ -72,11 +72,11 @@ public:
     * (orientation + position) of the rigid body to which it is
     * attached.
     */
-    const ds_math::Matrix4& getTransform() const
+    const ds_math::Matrix4 &getTransform() const
     {
-     return transform;
+        return transform;
     }
-    
+
 protected:
     /**
     * The resultant transform of the primitive. This is
@@ -84,9 +84,9 @@ protected:
     * with the transform of the rigid body.
     */
     ds_math::Matrix4 transform;
-    
 
-};//end class CollisionPrimitive
+
+}; // end class CollisionPrimitive
 
 class CollisionBox : public CollisionPrimitive
 {
@@ -95,23 +95,41 @@ public:
     * Holds the half-sizes of the box along each of its local axes.
     */
     ds_math::Vector3 halfSize;
-};//end class CollisionBox
+}; // end class CollisionBox
+
+class CollisionSphere : public CollisionPrimitive
+{
+public:
+    /**
+     * Radius of the sphere.
+     */
+    ds_math::scalar radius;
+};
+
+class CollisionPlane : public CollisionPrimitive
+{
+public:
+    /**
+     * Plane normal.
+     */
+    ds_math::Vector3 direction;
+
+    /**
+     * Distance of the plane from the origin.
+     */
+    ds_math::scalar offset;
+};
 
 class IntersectionTests
 {
 public:
+    static bool sphereAndHalfSpace(const CollisionSphere &sphere,
+                                   const CollisionPlane &plane);
 
-    static bool sphereAndHalfSpace(
-    const CollisionSphere &sphere,
-    const CollisionPlane &plane);
+    static bool sphereAndSphere(const CollisionSphere &one,
+                                const CollisionSphere &two);
 
-    static bool sphereAndSphere(
-        const CollisionSphere &one,
-        const CollisionSphere &two);
-
-    static bool boxAndBox(
-        const CollisionBox &one,
-        const CollisionBox &two);
+    static bool boxAndBox(const CollisionBox &one, const CollisionBox &two);
 
     /**
     * Does an intersection test on an arbitrarily aligned box and a
@@ -125,13 +143,12 @@ public:
     * offset of the limiting plane from the origin, along the given
     * direction.
     */
-    static bool boxAndHalfSpace(
-        const CollisionBox &box,
-        const CollisionPlane &plane);
-    
-    
-};//end IntersectionTests
-    
+    static bool boxAndHalfSpace(const CollisionBox &box,
+                                const CollisionPlane &plane);
+
+
+}; // end IntersectionTests
+
 
 /**
     * A helper structure that contains information for the detector to use
@@ -213,53 +230,38 @@ struct CollisionData
 class CollisionDetector
 {
 public:
+    static unsigned sphereAndHalfSpace(const CollisionSphere &sphere,
+                                       const CollisionPlane &plane,
+                                       CollisionData *data);
 
-    static unsigned sphereAndHalfSpace(
-        const CollisionSphere &sphere,
-        const CollisionPlane &plane,
-        CollisionData *data
-        );
+    static unsigned sphereAndTruePlane(const CollisionSphere &sphere,
+                                       const CollisionPlane &plane,
+                                       CollisionData *data);
 
-    static unsigned sphereAndTruePlane(
-        const CollisionSphere &sphere,
-        const CollisionPlane &plane,
-        CollisionData *data
-        );
-
-    static unsigned sphereAndSphere(
-        const CollisionSphere &one,
-        const CollisionSphere &two,
-        CollisionData *data
-        );
+    static unsigned sphereAndSphere(const CollisionSphere &one,
+                                    const CollisionSphere &two,
+                                    CollisionData *data);
 
     /**
         * Does a collision test on a collision box and a plane representing
         * a half-space (i.e. the normal of the plane
         * points out of the half-space).
         */
-    static unsigned boxAndHalfSpace(
-        const CollisionBox &box,
-        const CollisionPlane &plane,
-        CollisionData *data
-        );
+    static unsigned boxAndHalfSpace(const CollisionBox &box,
+                                    const CollisionPlane &plane,
+                                    CollisionData *data);
 
-    static unsigned boxAndBox(
-        const CollisionBox &one,
-        const CollisionBox &two,
-        CollisionData *data
-        );
+    static unsigned boxAndBox(const CollisionBox &one,
+                              const CollisionBox &two,
+                              CollisionData *data);
 
-    static unsigned boxAndPoint(
-        const CollisionBox &box,
-        const Vector3 &point,
-        CollisionData *data
-        );
+    static unsigned boxAndPoint(const CollisionBox &box,
+                                const ds_math::Vector3 &point,
+                                CollisionData *data);
 
-    static unsigned boxAndSphere(
-        const CollisionBox &box,
-        const CollisionSphere &sphere,
-        CollisionData *data
-        );
-};//end CollisionDetector
-    
-}//end namespace
+    static unsigned boxAndSphere(const CollisionBox &box,
+                                 const CollisionSphere &sphere,
+                                 CollisionData *data);
+}; // end CollisionDetector
+
+} // end namespace

@@ -42,7 +42,7 @@ void Contact::calculateDesiredDeltaVelocity(ds_math::scalar duration) {
 	Vector3 contactTangent[2];
 
 	// Check which axis is closer to the z
-	if (abs(contactNormal.x) > abs(contactNormal.y)) {
+	if (std::abs(contactNormal.x) > std::abs(contactNormal.y)) {
 
         // Scaling factor to ensure the results are normalised
         const scalar s = 1.0f/sqrt(contactNormal.z*contactNormal.z + contactNormal.x*contactNormal.x);
