@@ -51,50 +51,50 @@ static inline void transformInertiaTensor(ds_math::Matrix3 &iitWorld,
                                           const ds_math::Matrix4 &rotmat)
 {
     ds_math::scalar t4 = rotmat.data[0][0] * iitBody.data[0][0] +
-                         rotmat.data[0][1] * iitBody.data[1][0] +
-                         rotmat.data[0][2] * iitBody.data[2][0];
-    ds_math::scalar t9 = rotmat.data[0][0] * iitBody.data[0][1] +
-                         rotmat.data[0][1] * iitBody.data[1][1] +
-                         rotmat.data[0][2] * iitBody.data[2][1];
-    ds_math::scalar t14 = rotmat.data[0][0] * iitBody.data[0][2] +
-                          rotmat.data[0][1] * iitBody.data[1][2] +
-                          rotmat.data[0][2] * iitBody.data[2][2];
-    ds_math::scalar t28 = rotmat.data[1][0] * iitBody.data[0][0] +
-                          rotmat.data[1][1] * iitBody.data[1][0] +
-                          rotmat.data[1][2] * iitBody.data[2][0];
-    ds_math::scalar t33 = rotmat.data[1][0] * iitBody.data[0][1] +
+                         rotmat.data[1][0] * iitBody.data[0][1] +
+                         rotmat.data[2][0] * iitBody.data[0][2];
+    ds_math::scalar t9 = rotmat.data[0][0] * iitBody.data[1][0] +
+                         rotmat.data[1][0] * iitBody.data[1][1] +
+                         rotmat.data[2][0] * iitBody.data[1][2];
+    ds_math::scalar t14 = rotmat.data[0][0] * iitBody.data[2][0] +
+                          rotmat.data[1][0] * iitBody.data[2][1] +
+                          rotmat.data[2][0] * iitBody.data[2][2];
+    ds_math::scalar t28 = rotmat.data[0][1] * iitBody.data[0][0] +
+                          rotmat.data[1][1] * iitBody.data[0][1] +
+                          rotmat.data[2][1] * iitBody.data[0][2];
+    ds_math::scalar t33 = rotmat.data[0][1] * iitBody.data[1][0] +
                           rotmat.data[1][1] * iitBody.data[1][1] +
-                          rotmat.data[1][2] * iitBody.data[2][1];
-    ds_math::scalar t38 = rotmat.data[1][0] * iitBody.data[0][2] +
-                          rotmat.data[1][1] * iitBody.data[1][2] +
-                          rotmat.data[1][2] * iitBody.data[2][2];
-    ds_math::scalar t52 = rotmat.data[2][0] * iitBody.data[0][0] +
-                          rotmat.data[2][1] * iitBody.data[1][0] +
-                          rotmat.data[2][2] * iitBody.data[2][0];
-    ds_math::scalar t57 = rotmat.data[2][0] * iitBody.data[0][1] +
-                          rotmat.data[2][1] * iitBody.data[1][1] +
-                          rotmat.data[2][2] * iitBody.data[2][1];
-    ds_math::scalar t62 = rotmat.data[2][0] * iitBody.data[0][2] +
-                          rotmat.data[2][1] * iitBody.data[1][2] +
+                          rotmat.data[2][1] * iitBody.data[1][2];
+    ds_math::scalar t38 = rotmat.data[0][1] * iitBody.data[2][0] +
+                          rotmat.data[1][1] * iitBody.data[2][1] +
+                          rotmat.data[2][1] * iitBody.data[2][2];
+    ds_math::scalar t52 = rotmat.data[0][2] * iitBody.data[0][0] +
+                          rotmat.data[1][2] * iitBody.data[0][1] +
+                          rotmat.data[2][2] * iitBody.data[0][2];
+    ds_math::scalar t57 = rotmat.data[0][2] * iitBody.data[1][0] +
+                          rotmat.data[1][2] * iitBody.data[1][1] +
+                          rotmat.data[2][2] * iitBody.data[1][2];
+    ds_math::scalar t62 = rotmat.data[0][2] * iitBody.data[2][0] +
+                          rotmat.data[1][2] * iitBody.data[2][1] +
                           rotmat.data[2][2] * iitBody.data[2][2];
 
-    iitWorld.data[0][0] = t4 * rotmat.data[0][0] + t9 * rotmat.data[0][1] +
-                          t14 * rotmat.data[0][2];
-    iitWorld.data[0][1] = t4 * rotmat.data[1][0] + t9 * rotmat.data[1][1] +
-                          t14 * rotmat.data[1][2];
-    iitWorld.data[0][2] = t4 * rotmat.data[2][0] + t9 * rotmat.data[2][1] +
+    iitWorld.data[0][0] = t4 * rotmat.data[0][0] + t9 * rotmat.data[1][0] +
+                          t14 * rotmat.data[2][0];
+    iitWorld.data[0][1] = t4 * rotmat.data[0][1] + t9 * rotmat.data[1][1] +
+                          t14 * rotmat.data[2][1];
+    iitWorld.data[0][2] = t4 * rotmat.data[0][2] + t9 * rotmat.data[1][2] +
                           t14 * rotmat.data[2][2];
-    iitWorld.data[1][0] = t28 * rotmat.data[0][0] + t33 * rotmat.data[0][1] +
-                          t38 * rotmat.data[0][2];
-    iitWorld.data[1][1] = t28 * rotmat.data[1][0] + t33 * rotmat.data[1][1] +
-                          t38 * rotmat.data[1][2];
-    iitWorld.data[1][2] = t28 * rotmat.data[2][0] + t33 * rotmat.data[2][1] +
+    iitWorld.data[1][0] = t28 * rotmat.data[0][0] + t33 * rotmat.data[1][0] +
+                          t38 * rotmat.data[2][0];
+    iitWorld.data[1][1] = t28 * rotmat.data[0][1] + t33 * rotmat.data[1][1] +
+                          t38 * rotmat.data[2][1];
+    iitWorld.data[1][2] = t28 * rotmat.data[0][2] + t33 * rotmat.data[1][2] +
                           t38 * rotmat.data[2][2];
-    iitWorld.data[2][0] = t52 * rotmat.data[0][0] + t57 * rotmat.data[0][1] +
-                          t62 * rotmat.data[0][2];
-    iitWorld.data[2][1] = t52 * rotmat.data[1][0] + t57 * rotmat.data[1][1] +
-                          t62 * rotmat.data[1][2];
-    iitWorld.data[2][2] = t52 * rotmat.data[2][0] + t57 * rotmat.data[2][1] +
+    iitWorld.data[2][0] = t52 * rotmat.data[0][0] + t57 * rotmat.data[1][0] +
+                          t62 * rotmat.data[2][0];
+    iitWorld.data[2][1] = t52 * rotmat.data[0][1] + t57 * rotmat.data[1][1] +
+                          t62 * rotmat.data[2][1];
+    iitWorld.data[2][2] = t52 * rotmat.data[0][2] + t57 * rotmat.data[1][2] +
                           t62 * rotmat.data[2][2];
 }
 
@@ -109,27 +109,27 @@ calculateTransformMatrix(ds_math::Matrix4 &transformMatrix,
 {
     transformMatrix.data[0][0] = 1 - 2 * orientation.y * orientation.y -
                                  2 * orientation.z * orientation.z;
-    transformMatrix.data[0][1] =
-        2 * orientation.x * orientation.y - 2 * orientation.w * orientation.z;
-    transformMatrix.data[0][2] =
-        2 * orientation.x * orientation.z + 2 * orientation.w * orientation.y;
-    transformMatrix.data[0][3] = position.x;
-
     transformMatrix.data[1][0] =
+        2 * orientation.x * orientation.y - 2 * orientation.w * orientation.z;
+    transformMatrix.data[2][0] =
+        2 * orientation.x * orientation.z + 2 * orientation.w * orientation.y;
+    transformMatrix.data[0][0] = position.x;
+
+    transformMatrix.data[0][1] =
         2 * orientation.x * orientation.y + 2 * orientation.w * orientation.z;
     transformMatrix.data[1][1] = 1 - 2 * orientation.x * orientation.x -
                                  2 * orientation.z * orientation.z;
-    transformMatrix.data[1][2] =
-        2 * orientation.y * orientation.z - 2 * orientation.w * orientation.x;
-    transformMatrix.data[1][3] = position.y;
-
-    transformMatrix.data[2][0] =
-        2 * orientation.x * orientation.z - 2 * orientation.w * orientation.y;
     transformMatrix.data[2][1] =
+        2 * orientation.y * orientation.z - 2 * orientation.w * orientation.x;
+    transformMatrix.data[3][1] = position.y;
+
+    transformMatrix.data[0][2] =
+        2 * orientation.x * orientation.z - 2 * orientation.w * orientation.y;
+    transformMatrix.data[1][2] =
         2 * orientation.y * orientation.z + 2 * orientation.w * orientation.x;
     transformMatrix.data[2][2] = 1 - 2 * orientation.x * orientation.x -
                                  2 * orientation.y * orientation.y;
-    transformMatrix.data[2][3] = position.z;
+    transformMatrix.data[3][2] = position.z;
 }
 
 /// Functions declared in header.
@@ -619,20 +619,12 @@ void RigidBody::addForceAtBodyPoint(const ds_math::Vector3 &force,
 void RigidBody::addForceAtPoint(const ds_math::Vector3 &force,
                                 const ds_math::Vector3 &point)
 {
-    std::cout << "Called" << std::endl;
     // Convert to coordinates relative to center of mass.
     ds_math::Vector3 pt = point;
     pt -= m_position;
 
-    std::cout << "forceAccum before: " << m_forceAccum << std::endl;
-    std::cout << "torqueAccum before: " << m_torqueAccum << std::endl;
-    std::cout << "point: " << pt << std::endl;
-
     m_forceAccum += force;
     m_torqueAccum += ds_math::Vector3::Cross(pt, force);
-
-    std::cout << "forceAccum: " << m_forceAccum << std::endl;
-    std::cout << "torqueAccum: " << m_torqueAccum << std::endl;
 
     m_isAwake = true;
 }
