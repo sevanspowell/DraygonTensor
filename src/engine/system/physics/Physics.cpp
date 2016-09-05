@@ -15,7 +15,8 @@ namespace ds
 {
 // TODO: Update these values for m_physicsWorld constructor
 Physics::Physics()
-    : m_physicsWorld(0, 0), m_fg(ds_phys::Gravity(ds_math::Vector3(0.0f, -9.8f, 0.0f)))
+    : m_physicsWorld(0, 0),
+      m_fg(ds_phys::Gravity(ds_math::Vector3(0.0f, -9.8f, 0.0f)))
 {
 }
 
@@ -357,6 +358,7 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
         ds_phys::RigidBody *body = new ds_phys::RigidBody();
 
         body->setMass(1.0f);
+        m_physicsWorld.m_box.body = body;
 
         Instance phys =
             m_physicsComponentManager.CreateComponentForEntity(entity);

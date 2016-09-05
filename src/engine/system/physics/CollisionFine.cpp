@@ -9,7 +9,12 @@ using namespace ds_phys;
 
 void CollisionPrimitive::calculateInternals()
 {
-    transform = body->getTransform() * offset;
+    std::cout << "Called" << std::endl;
+    if (body != nullptr)
+    {
+        std::cout << "Called 2" << std::endl;
+        transform = body->getTransform() * offset;
+    }
 }
 
 bool IntersectionTests::sphereAndHalfSpace(const CollisionSphere &sphere,
@@ -268,12 +273,14 @@ unsigned CollisionDetector::sphereAndSphere(const CollisionSphere &one,
 //                            ds_math::scalar &smallestPenetration,
 //                            unsigned &smallestCase)
 // {
-//     // Make sure we have a normalized axis, and don't check almost parallel axes
+//     // Make sure we have a normalized axis, and don't check almost parallel
+//     axes
 //     if (ds_math::Vector3::Dot(axis, axis) < 0.0001)
 //         return true;
 //     axis.Normalize();
 
-//     ds_math::scalar penetration = penetrationOnAxis(one, two, axis, toCentre);
+//     ds_math::scalar penetration = penetrationOnAxis(one, two, axis,
+//     toCentre);
 
 //     if (penetration < 0)
 //         return false;

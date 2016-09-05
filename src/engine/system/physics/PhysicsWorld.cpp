@@ -11,6 +11,11 @@ PhysicsWorld::PhysicsWorld(unsigned int maxContacts, unsigned int iterations)
     // m_broadPhase = new btDbvtBroadphase();
     // m_collisionWorld = new btCollisionWorld(m_dispatcher, m_broadphase,
     //                                         m_collisionConfiguration);
+    m_collisionData.contactArray = m_contacts;
+
+    m_box.halfSize = ds_math::Vector3(1, 1, 1);
+    m_plane.direction = ds_math::Vector3(0, 1, 0);
+    m_plane.offset = -1.0f;
 }
 
 PhysicsWorld::~PhysicsWorld()
@@ -32,14 +37,14 @@ void PhysicsWorld::startFrame()
 {
     // Remove all forces from accumulators in each rigidbody
     std::for_each(m_rigidBodies.begin(), m_rigidBodies.end(),
-             [](RigidBody *rigidBody)
-             {
-                 if (rigidBody != nullptr)
-                 {
-                     rigidBody->clearAccumulators();
-                     rigidBody->calculateDerivedData();
-                 }
-             });
+                  [](RigidBody *rigidBody)
+                  {
+                      if (rigidBody != nullptr)
+                      {
+                          rigidBody->clearAccumulators();
+                          rigidBody->calculateDerivedData();
+                      }
+                  });
 }
 
 void PhysicsWorld::stepSimulation(ds_math::scalar duration)
@@ -49,16 +54,28 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
 
     // Integrate rigid bodies
     std::for_each(m_rigidBodies.begin(), m_rigidBodies.end(),
-             [&](RigidBody *rigidBody)
-             {
-                 if (rigidBody != nullptr)
-                 {
-                     rigidBody->integrate(duration);
-                 }
-             });
+                  [&](RigidBody *rigidBody)
+                  {
+                      if (rigidBody != nullptr)
+                      {
+                          rigidBody->integrate(duration);
+                      }
+                  });
 
     // Generate contacts
     // m_collisionWorld->performDiscreteCollisionDetection();
+    m_box.calculateInternals();
+    m_plane.calculateInternals();
+    unsigned int got = generateContacts();
+    std::cout << got << std::endl;
+    std::cout << m_box.getTransform() << std::endl;
+    std::cout << m_plane.getTransform() << std::endl;
+    std::cout << "---- Contacts generated -----" << std::endl;
+    for (int i = 0; i < got; ++i)
+    {
+        std::cout << m_contacts[i].contactPoint << std::endl;
+    }
+    std::cout << "---- -----" << std::endl;
 
     // Resolve contacts
     // TODO: pass in generated contacts
@@ -93,5 +110,22 @@ void PhysicsWorld::removeForceGenerator(RigidBody *rigidBody,
                                         IForceGenerator *forceGenerator)
 {
     m_forceRegistry.remove(rigidBody, forceGenerator);
+}
+
+unsigned int PhysicsWorld::generateContacts()
+{
+    m_collisionData.reset(PhysicsWorld::MAX_CONTACTS);
+    m_collisionData.friction = (ds_math::scalar)0.9;
+    m_collisionData.restitution = (ds_math::scalar)0.6;
+    m_collisionData.tolerance = (ds_math::scalar)0.1;
+
+    if (!m_collisionData.hasMoreContacts())
+    {
+        return m_collisionData.contactCount;
+    }
+
+    CollisionDetector::boxAndHalfSpace(m_box, m_plane, &m_collisionData);
+
+    return m_collisionData.contactCount;
 }
 }

@@ -34,6 +34,7 @@
 #include "engine/system/physics/RigidBody.h"
 #include "engine/system/physics/ForceGenerator.h"
 #include "engine/system/physics/Contacts.h"
+#include "engine/system/physics/CollisionFine.h"
 
 namespace ds_phys
 {
@@ -61,17 +62,30 @@ public:
 
     // TODO Not public
     std::vector<RigidBody *> m_rigidBodies;
+
+    CollisionBox m_box;
+    CollisionPlane m_plane;
+
 private:
+
     // Use Bullet to generate contacts
     // btCollisionDispatcher *m_dispatcher;
     // btCollisionWorld *m_collisionWorld;
     // btDefaultCollisionConfiguration *m_collisionConfiguration;
     // btBroadphasInterface *m_broadPhase;
+    // std::vector<CollisionPrimitive *> m_collisionBodies;
+
+    /** Holds the maximum number of contacts. */
+    const static unsigned MAX_CONTACTS = 256;
+
+    /** Holds the array of contacts. */
+    Contact m_contacts[MAX_CONTACTS];
+
+    /** Collision generation structure */
+    CollisionData m_collisionData;
 
     // Use own physics to resolve them
-    ContactResolver m_contactResolver;
-
-    // TODO: Use std::list instead?
+    // ContactResolver m_contactResolver;
 
     ForceRegistry m_forceRegistry;
 };
