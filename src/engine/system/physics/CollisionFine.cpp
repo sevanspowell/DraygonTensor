@@ -7,6 +7,10 @@
 
 using namespace ds_phys;
 
+CollisionPrimitive::CollisionPrimitive() : body(nullptr)
+{
+}
+
 void CollisionPrimitive::calculateInternals()
 {
     std::cout << "Called" << std::endl;

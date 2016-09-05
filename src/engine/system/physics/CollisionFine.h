@@ -52,6 +52,8 @@ public:
     */
     ds_math::Matrix4 offset;
 
+    CollisionPrimitive();
+
     /**
     * Calculates the internals for the primitive.
     */
