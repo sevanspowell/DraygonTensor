@@ -348,6 +348,11 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
                                 dataOffset[0], dataOffset[1], dataOffset[2]);
 
                             std::cout << "offset: " << offset << std::endl;
+
+                            if (dataType == "box")
+                            {
+                                // ds_phys::CollisionBox
+                            }
                         }
                     }
                 }

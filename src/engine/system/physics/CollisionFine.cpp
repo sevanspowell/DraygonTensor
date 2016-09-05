@@ -13,10 +13,8 @@ CollisionPrimitive::CollisionPrimitive() : body(nullptr)
 
 void CollisionPrimitive::calculateInternals()
 {
-    std::cout << "Called" << std::endl;
     if (body != nullptr)
     {
-        std::cout << "Called 2" << std::endl;
         transform = body->getTransform() * offset;
     }
 }
@@ -626,6 +624,10 @@ unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,
                                             const CollisionPlane &plane,
                                             CollisionData *data)
 {
+    std::cout << "box - halfSize: " << box.halfSize << std::endl;
+    std::cout << "box - transform: " << box.getTransform()[3] << std::endl;
+    std::cout << "plane - direction: " << plane.direction << std::endl;
+    std::cout << "plane - offset: " << plane.offset << std::endl;
     // Make sure we have contacts
     if (data->contactsLeft <= 0)
         return 0;
@@ -653,12 +655,14 @@ unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,
         // Calculate the position of each vertex
         ds_math::Vector3 vertexPos(mults[i][0], mults[i][1], mults[i][2]);
         vertexPos = vertexPos * box.halfSize; // was componentProductUpdate
-        // vertexPos = box.transform.transform(vertexPos);
         vertexPos = ds_math::Matrix4::Transform(box.transform, vertexPos);
 
         // Calculate the distance from the plane
         ds_math::scalar vertexDistance =
             ds_math::Vector3::Dot(vertexPos, plane.direction);
+
+        std::cout << "vertexPos: " << vertexPos << std::endl;
+        std::cout << "vDist: " << vertexDistance << std::endl;
 
         // Compare this to the plane's distance
         if (vertexDistance <= plane.offset)
@@ -668,9 +672,13 @@ unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,
             // The contact point is halfway between the vertex and the
             // plane - we multiply the direction by half the separation
             // distance and add the vertex location.
-            contact->contactPoint = plane.direction;
-            contact->contactPoint *= (vertexDistance - plane.offset);
-            contact->contactPoint += vertexPos;
+            std::cout << "vt - po: " << vertexDistance - plane.offset
+                      << std::endl;
+            // @todo TODO Should this be 0.5f? 
+            contact->contactPoint =
+                vertexPos +
+                1.0f * (plane.direction *
+                        (std::abs(vertexDistance - plane.offset)));
             contact->contactNormal = plane.direction;
             contact->penetration = plane.offset - vertexDistance;
 

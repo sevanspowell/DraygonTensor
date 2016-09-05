@@ -13,9 +13,10 @@ PhysicsWorld::PhysicsWorld(unsigned int maxContacts, unsigned int iterations)
     //                                         m_collisionConfiguration);
     m_collisionData.contactArray = m_contacts;
 
-    m_box.halfSize = ds_math::Vector3(1, 1, 1);
-    m_plane.direction = ds_math::Vector3(0, 1, 0);
-    m_plane.offset = -1.0f;
+    m_box.halfSize = ds_math::Vector3(1.0f, 1.0f, 1.0f);
+    m_plane.body = nullptr;
+    m_plane.direction = ds_math::Vector3::Normalize(ds_math::Vector3(1, 1, 0));
+    m_plane.offset = 0.0f;
 }
 
 PhysicsWorld::~PhysicsWorld()
