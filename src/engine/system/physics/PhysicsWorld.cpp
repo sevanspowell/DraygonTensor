@@ -67,29 +67,13 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
     // m_collisionWorld->performDiscreteCollisionDetection();
     m_box.calculateInternals();
     m_plane.calculateInternals();
-    unsigned int got = generateContacts();
-    std::cout << got << std::endl;
-    std::cout << m_box.getTransform() << std::endl;
-    std::cout << m_plane.getTransform() << std::endl;
-    std::cout << "---- Contacts generated -----" << std::endl;
+    unsigned int usedContacts = generateContacts();
 
-    int largest = 0;
-    for (unsigned i = 0; i < got; ++i)
+    if (usedContacts > 0)
     {
-        std::cout << m_contacts[i].contactPoint << m_contacts[i].penetration << std::endl;
-
-        if (m_contacts[largest].penetration < m_contacts[i].penetration) largest = i;
+        m_contactResolver.setIterations(usedContacts * 2);
+        m_contactResolver.resolveContacts(m_contacts, usedContacts, duration);
     }
-
-    if (got > 0) {
-        ds_math::Vector3 linearChange[2];
-        ds_math::Vector3 angularChange[2];
-
-		m_contacts[largest].matchAwakeState();
-		m_contacts[largest].calculateInternals(duration);
-		m_contacts[largest].applyPositionChange(linearChange, angularChange, m_contacts[largest].penetration);
-    }
-    std::cout << "---- -----" << std::endl;
 
     // Resolve contacts
     // TODO: pass in generated contacts
