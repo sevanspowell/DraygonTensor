@@ -71,8 +71,8 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
 
     if (usedContacts > 0)
     {
-        m_contactResolver.setIterations(usedContacts * 2);
-        m_contactResolver.resolveContacts(m_contacts, usedContacts, duration);
+        // m_contactResolver.setIterations(usedContacts * 2);
+        // m_contactResolver.resolveContacts(m_contacts, usedContacts, duration);
     }
 
     // Resolve contacts
