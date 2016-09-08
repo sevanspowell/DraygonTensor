@@ -15,7 +15,7 @@ PhysicsWorld::PhysicsWorld(unsigned int maxContacts, unsigned int iterations)
 
     m_box.halfSize = ds_math::Vector3(0.5f, 0.5f, 0.5f);
     m_plane.body = nullptr;
-    m_plane.direction = ds_math::Vector3::Normalize(ds_math::Vector3(1, 1, 0));
+    m_plane.direction = ds_math::Vector3::Normalize(ds_math::Vector3(0, 1, 0));
     m_plane.offset = 0.0f;
 }
 
@@ -76,7 +76,7 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
     int largest = 0;
     for (unsigned i = 0; i < got; ++i)
     {
-        std::cout << m_contacts[i].contactPoint << m_contacts[i].penetration << std::endl;
+        std::cout << m_contacts[i].contactPoint << " Pen: " << m_contacts[i].penetration << std::endl;
 
         if (m_contacts[largest].penetration < m_contacts[i].penetration) largest = i;
     }
@@ -85,9 +85,13 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
         ds_math::Vector3 linearChange[2];
         ds_math::Vector3 angularChange[2];
 
+        ds_math::Vector3 linearVelChange[2];
+        ds_math::Vector3 angularVelChange[2];
+
 		m_contacts[largest].matchAwakeState();
 		m_contacts[largest].calculateInternals(duration);
 		m_contacts[largest].applyPositionChange(linearChange, angularChange, m_contacts[largest].penetration);
+		m_contacts[largest].applyVelocityChange(linearVelChange, angularVelChange);
     }
     std::cout << "---- -----" << std::endl;
 

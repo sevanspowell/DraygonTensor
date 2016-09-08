@@ -16,7 +16,7 @@ namespace ds
 // TODO: Update these values for m_physicsWorld constructor
 Physics::Physics()
     : m_physicsWorld(0, 0),
-      m_fg(ds_phys::Gravity(ds_math::Vector3(0.0f, -9.8f, 0.0f)))
+      m_fg(ds_phys::Gravity(ds_math::Vector3(0.0f, -5.0f, 0.0f)))
 {
 }
 

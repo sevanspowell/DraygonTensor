@@ -633,10 +633,10 @@ unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,
         return 0;
 
     // Check for intersection
-    if (!IntersectionTests::boxAndHalfSpace(box, plane))
-    {
-        return 0;
-    }
+    //if (!IntersectionTests::boxAndHalfSpace(box, plane))
+    //{
+    //    return 0;
+    //}
 
     // We have an intersection, so find the intersection points. We can make
     // do with only checking vertices. If the box is resting on a plane
@@ -656,6 +656,7 @@ unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,
         ds_math::Vector3 vertexPos(mults[i][0], mults[i][1], mults[i][2]);
         vertexPos = vertexPos * box.halfSize; // was componentProductUpdate
         vertexPos = ds_math::Matrix4::Transform(box.transform, vertexPos);
+
 
         // Calculate the distance from the plane
         ds_math::scalar vertexDistance =
@@ -680,7 +681,7 @@ unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,
                 1.0f * (plane.direction *
                         (std::abs(vertexDistance - plane.offset)));
             contact->contactNormal = plane.direction;
-            contact->penetration = std::abs(plane.offset - vertexDistance);
+            contact->penetration = (plane.offset - vertexDistance);
 
             // Write the appropriate data
             contact->setBodyData(box.body, NULL, data->friction,

@@ -119,14 +119,14 @@ void Contact::calculateContactBasis() {
 		contactTan[1].y = contactNormal.z*contactTan[0].x - contactNormal.x*contactTan[0].z;
 		contactTan[1].z = -contactNormal.y*contactTan[0].x;
 	} else {
-		scalar s = 1.0/sqrt(contactNormal.z*contactNormal.z + contactNormal.x*contactNormal.x);
+		scalar s = 1.0/sqrt(contactNormal.z*contactNormal.z + contactNormal.y*contactNormal.y);
 		contactTan[0].x = 0;
 		contactTan[0].y = -contactNormal.z*s;
 		contactTan[0].z = contactNormal.y*s;
 
 		contactTan[1].x = contactNormal.y*contactTan[0].z - contactNormal.z*contactTan[0].y;
 		contactTan[1].y = -contactNormal.y*contactTan[0].z;
-		contactTan[1].z = contactNormal.y*contactTan[0].y;
+		contactTan[1].z = contactNormal.x*contactTan[0].y;
 	}
 
 	contactToWorld[0] = contactNormal;
@@ -139,9 +139,12 @@ static void applyImpulseToBody(RigidBody* body, const Vector3& relContactPos, co
 	if (body) {
 		Vector3 impulsiveTorque = Vector3::Cross(relContactPos, impulse);
 
-		rotChange = inverseInertiaTensor[0] * impulsiveTorque;
-		velChange.Clear();
-		velChange += (impulse * body->getInverseMass());
+		rotChange = inverseInertiaTensor * impulsiveTorque;
+		velChange = (impulse * body->getInverseMass());
+
+		std::cout << "APPLIED TORQUE: " << impulsiveTorque << std::endl;
+		std::cout << "APPLIED VELOCITY: " << velChange << std::endl;
+		std::cout << "APPLIED ROTATION: " << rotChange << std::endl;
 
 		body->addVelocity(velChange);
 		body->addRotation(rotChange);
@@ -164,6 +167,7 @@ void Contact::applyVelocityChange(ds_math::Vector3 velocityChange[2], ds_math::V
 	if (body[1]) body[0]->getInverseInertiaTensorWorld(&inverseInertiaTensor[1]);
 
 	Vector3 impulse = contactToWorld * ((friction == 0.0) ? calculateFrictionlessImpulse(inverseInertiaTensor) : calculateFrictionImpulse(inverseInertiaTensor));
+	//std::cout << "contactToWorld: " << contactToWorld << std::endl;
 
 	// Apply calculated impulse
 	applyImpulseToBody(body[0], relativeContactPosition[0], impulse, inverseInertiaTensor[0], velocityChange[0], rotationChange[0]);
@@ -179,6 +183,9 @@ static void calculateFrictionlessInertia(RigidBody* body, const Matrix3& iiTenso
 
 		// Calculate linear inertia (It's just the inverseMass)
 		linearInertia = body->getInverseMass();
+	} else {
+		angularInertia = 0;
+		linearInertia = 0;
 	}
 }
 
@@ -268,16 +275,34 @@ void Contact::applyPositionChange(ds_math::Vector3 linearChange[2], ds_math::Vec
 		applyLinearMoveToBody(body[i], contactNormal, linearChange[i]);
 		applyAngularMoveToBody(body[i], angularChange[i]);
 		if (!body[i]->getAwake()) body[i]->calculateDerivedData();
-	}
 
+		//@todo TODO TEMPORARY CODE
+		body[i]->setVelocity(0,0,0);
+	}
 }
 
 ds_math::Vector3 Contact::calculateFrictionlessImpulse(ds_math::Matrix3* inverseInertiaTensor) {
-	///@todo Implement
-	return Vector3();
+	scalar deltaVel = 0;
+	scalar angularVel[2];
+	scalar linearVel[2];
+	for(unsigned i = 0; i < 2; i++) {
+		calculateFrictionlessInertia(body[i], inverseInertiaTensor[i], relativeContactPosition[i], contactNormal[i], angularVel[i], linearVel[i]);
+		std::cout << "AVel-corr: " << angularVel[i] << " | LVel-corr: " << linearVel[i] << std::endl;
+		deltaVel += angularVel[i] + linearVel[i];
+	}
+
+	if (deltaVel == 0) {
+		return Vector3(0, 0, 0);
+	} else {
+		return Vector3(desiredDeltaVelocity/deltaVel, 0, 0);
+	}
 }
 
 ds_math::Vector3 Contact::calculateFrictionImpulse(ds_math::Matrix3* inverseInertialTensor) {
-	///@todo Implement
+	//Vector3 impulseContact;
+
+	//scalar inverseMass = body[0]->getInverseMass();
+	//Matrix3 impulseToTorque;
+
 	return Vector3();
 }
