@@ -15,6 +15,7 @@ from bpy.types import Operator
 import os.path
 
 tab = "  "
+luatab = "    "
 
 def getAssetRelativePath(path):
     assetdirname = "assets/"
@@ -92,7 +93,13 @@ def writePrefab(obj, folderpath, meshpath, materialpath):
     
     return getAssetRelativePath(prefabpath)
 
-def writeAll(context, folderpath):
+def writeAll(context, folderpath, levelpath):
+
+    levelout = open(levelpath, 'w')
+    levelname = os.path.splitext(os.path.split(levelpath)[1])[0]
+    levelout.write("function " + levelname + "()\n")
+
+    
     scene = bpy.context.scene
     for obj in scene.objects: 
         if (obj.type == 'MESH'):
@@ -101,7 +108,13 @@ def writeAll(context, folderpath):
             relmaterialpath = writeObjectMaterial(obj, folderpath, reltexturepath)
             relmeshpath = writeObjectMesh(obj, folderpath)
             relprefabpath = writePrefab(obj, folderpath, relmeshpath, relmaterialpath)
+            
+            position = "Vector3(" + str(obj.location.x) + ", " + str(obj.location.y) + ", " + str(obj.location.z) + ")"
+            #scale = "Vector3(" + str(obj.scale.x) + ", " + str(obj.scale.y) + ", " + str(obj.scale.z) + ")"
+            levelout.write(luatab + "Script.spawn_prefab(\"" + os.path.splitext(relprefabpath)[0] + "\", " + position + ")\n")
 
+    levelout.write("end")
+        
     return {'FINISHED'}
 
 class ExportDraygonTensorLua(bpy.types.Operator, ExportHelper):
@@ -110,7 +123,7 @@ class ExportDraygonTensorLua(bpy.types.Operator, ExportHelper):
 
     # Select folder, not file
     use_filter_folder = True
-    filename_ext = ".world"
+    filename_ext = ".lua"
     
     # Filter everything that isn't a folder
     filter_glob = StringProperty(
@@ -122,7 +135,9 @@ class ExportDraygonTensorLua(bpy.types.Operator, ExportHelper):
         folderpath = os.path.dirname(self.filepath)
         print(folderpath)
         
-        return writeAll(context, folderpath)
+        bpy.ops.object.mode_set(mode='OBJECT')
+        
+        return writeAll(context, folderpath, self.filepath)
 
 def menu_func(self, context):
     self.layout.operator(ExportDraygonTensor.bl_idname, text="Draygon Tensor (.world)")
