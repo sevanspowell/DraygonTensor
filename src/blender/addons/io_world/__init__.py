@@ -23,13 +23,19 @@ def getAssetRelativePath(path):
     return path[path.find(assetdirname) + len(assetdirname):]
 
 def writeObjectTexture(obj, folderpath):
+    import shutil
     texturepath = folderpath + "/" + obj.active_material.active_texture.name + ".texture"
     
+    # Make a copy of the source image and save it in the assets directory
+    img = obj.active_material.active_texture.image
+    newimgpath = folderpath + "/" + img.name
+    shutil.copyfile(bpy.path.abspath(img.filepath), newimgpath)
+
     out = open(texturepath, 'w')
     out.write("{\n")
     out.write(tab + "\"type\": \"2D\",\n")
     out.write(tab + "\"images\": {\n")
-    out.write(tab + tab + "\"0\": \"" + getAssetRelativePath(obj.active_material.active_texture.image.filepath) + "\"\n")
+    out.write(tab + tab + "\"0\": \"" + getAssetRelativePath(newimgpath) + "\"\n")
     out.write(tab + "}\n")
     out.write("}")
     out.write("\n")
