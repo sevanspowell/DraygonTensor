@@ -411,14 +411,14 @@ void ContactResolver::resolveContacts(Contact *contactArray,
 {
     if (numContacts != 0)
     {
-        // Prepare the contacts for processing
-        prepareContacts(contacts, numContacts, duration);
+        // // Prepare the contacts for processing
+        // prepareContacts(contacts, numContacts, duration);
 
-        // Resolve the interpenetration problems with the contacts
-        adjustPositions(contacts, numContacts, duration);
+        // // Resolve the interpenetration problems with the contacts
+        // adjustPositions(contacts, numContacts, duration);
 
-        // Resolve the velocity problems with the contacts.
-        adjustVelocities(contacts, numContacts, duration);
+        // // Resolve the velocity problems with the contacts.
+        // adjustVelocities(contacts, numContacts, duration);
     }
 }
 
@@ -427,6 +427,6 @@ void ContactResolver::prepareContacts(Contact *contactArray,
                                       ds_math::scalar duration)
 {
     // Generate contact velocity and axis information
-    Contact *lastContact = contacts + numContacts;
+    // Contact *lastContact = contacts + numContacts;
     // for (Contact *contact = contacts; contact)
 }
