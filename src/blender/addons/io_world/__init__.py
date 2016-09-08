@@ -14,24 +14,6 @@ from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
 import os.path
 
-# def writeObjectMaterial(context, obj, out):
-#     out.write("{\n")
-#     shader = obj.active_material["shader"]
-#     out.write("\t" + "\"shader\": " + "\"" + shader + "\",\n")
-#     out.write("\t" + "\"textures\": " + "{\n")
-#     texBindingPointName = "fred"
-#     out.write("\t\t" + "\"" + texBindingPointName + "\": {\n")
-#     textureName = "bob.texture"
-#     out.write("\t\t\t" + "\"texture\": " + "\"" + textureName + "\"" + "\n")
-#     out.write("\t\t" + "}\n")
-#     out.write("\t" + "},\n")
-#     texturePath = obj.active_material.active_texture.image.filepath
-#     # Make asset path relative to assets directory
-#     assetDirName = "assets/"
-#     relTexturePath = texturePath[(texturePath.find(assetDirName) + len(assetDirName)):]
-#     out.write("\t" + "diffuseTexture = " + "\"" + relTexturePath + "\",\n")
-#     out.write("\n}")
-
 tab = "  "
 
 def getAssetRelativePath(path):
@@ -111,11 +93,6 @@ def writePrefab(obj, folderpath, meshpath, materialpath):
     return getAssetRelativePath(prefabpath)
 
 def writeAll(context, folderpath):
-    # out = open(filepath, 'w')
-    
-    # # Find last '/' character
-    # assetDir = filepath[]
-    
     scene = bpy.context.scene
     for obj in scene.objects: 
         if (obj.type == 'MESH'):
@@ -124,9 +101,7 @@ def writeAll(context, folderpath):
             relmaterialpath = writeObjectMaterial(obj, folderpath, reltexturepath)
             relmeshpath = writeObjectMesh(obj, folderpath)
             relprefabpath = writePrefab(obj, folderpath, relmeshpath, relmaterialpath)
-    
-    # out.close()
-    
+
     return {'FINISHED'}
 
 class ExportDraygonTensorLua(bpy.types.Operator, ExportHelper):
@@ -148,60 +123,6 @@ class ExportDraygonTensorLua(bpy.types.Operator, ExportHelper):
         print(folderpath)
         
         return writeAll(context, folderpath)
-        # return writeAll(context, self.filepath)
-        # out = open(self.filepath, 'w')
-
-        # # Begin world description
-        # out.write("{\n")
-        # out.write("\"world\": [\n")
-        # scene = bpy.context.scene
-        # for obj in scene.objects:
-        #     if (obj.type == 'MESH'):
-        #         # if object name contains a period, replace with _
-        #         # as lua names can't contain periods
-        #         obj.name = obj.name.replace(".", "")
-
-
-        #         out.write("\t" + obj.name + " = {\n")
-        #         out.write("\t\t" + "prefab = " + "\"\",\n")
-        #         out.write("\t\t" + "overrides = {\n")
-
-        #         out.write("\t\t\t" + "RenderComponent = {\n")
-
-        #         meshPath = obj["meshPath"]
-        #         out.write("\t\t\t\t" + "mesh = " + "\"" + meshPath + "\",\n")
-
-        #         texturePath = obj.active_material.active_texture.image.filepath
-        #         # Make asset path relative to assets directory
-        #         relTexturePath = texturePath[texturePath.find("textures"):]
-        #         out.write("\t\t\t\t" + "diffuseTexture = " + "\"" + relTexturePath + "\",\n")
-
-        #         shader = obj.active_material["shader"]
-        #         out.write("\t\t\t\t" + "shader = " + "\"" + shader + "\",\n")
-        #         out.write("\t\t\t},\n")
-
-        #         out.write("\t\t\t" + "TransformComponent = {\n")
-        #         out.write("\t\t\t\t" + "position = {" +
-        #                   # Swap Y and Z co-ordinates and invert Z
-        #                   #  - Blender Z = up
-        #                   #  - OpenGL -Z = forward
-        #                   str(obj.location.x) + ", " +
-        #                   str(obj.location.z) + ", " +
-        #                   str(-obj.location.y) + "},\n")
-        #         out.write("\t\t\t\t" + "scale = {" +
-        #                   str(obj.scale.x) + ", " +
-        #                   str(obj.scale.y) + ", " +
-        #                   str(obj.scale.z) + "},\n")
-        #         out.write("\t\t\t" + "},\n")
-        #         out.write("\t\t" + "}\n")
-        #         out.write("\t},\n")
-
-        # # Finish scene description
-        # out.write("]\n")
-        # out.write("}")
-
-        # out.close()
-        # return {'FINISHED'}
 
 def menu_func(self, context):
     self.layout.operator(ExportDraygonTensor.bl_idname, text="Draygon Tensor (.world)")
