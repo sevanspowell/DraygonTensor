@@ -143,7 +143,7 @@ def writeAll(context, folderpath, levelpath):
     for obj in scene.objects: 
         if (obj.type == 'MESH'):
             # Skip collision shapes
-            if ("is_col_shape" in obj and obj.is_col_shape == True):
+            if ("rigid_body_is_col_shape" in obj and obj.rigid_body_is_col_shape == True):
                 continue
             # Paths are relative to nearest asset/ dir
             reltexturepath = writeObjectTexture(obj, folderpath)

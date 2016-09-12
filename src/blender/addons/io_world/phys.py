@@ -65,7 +65,7 @@ def createCollisionBox(obj, name):
         colbox = bpy.context.active_object
         colbox.name = name      
         colbox.parent = obj
-        colbox.is_col_shape = True
+        colbox.rigid_body_is_col_shape = True
         
         return colbox
 
@@ -163,18 +163,58 @@ class PHYSICS_OT_remove_rigid_body_collision_shape(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class PHYSICS_PT_rigid_body_dynamics(bpy.types.Panel):
+    bl_label = "Game Rigid Body Dynamics"
+    bl_idname = "PHYSICS_PT_game_rigid_body_dynamics"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "physics"
+    bl_default_closed = True
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        return (obj and obj.rigid_body and
+                obj.rigid_body.type == 'ACTIVE' and
+                (not context.scene.render.use_game_engine))
+
+    def draw(self, context):
+        layout = self.layout
+
+        ob = context.object
+        rb = ob.rigid_body
+
+        row = layout.row()
+        row.prop(ob, "rigid_body_use_inv_mass", text="Use Inverse Mass?")
+        row = layout.row()
+        if ob.rigid_body_use_inv_mass == True:
+            row.prop(ob, "rigid_body_inv_mass", text="Inverse Mass")
+        else:
+            row.prop(rb, "mass", text="Mass")
+        row = layout.row()
+        row.prop(ob, "rigid_body_use_inv_inertia_tensor", text="Use Inverse Inertia Tensor?")
+        
+        #row.prop(ob, "rigid_body_inertia_tensor", text="Inertia Tensor")
+
+
 def register():
     bpy.utils.register_module(__name__)
 
     bpy.types.Object.rigid_body_collision_shapes = CollectionProperty(type=CollisionShapes)
     bpy.types.Object.rigid_body_collision_shapes_index = IntProperty()
-    bpy.types.Object.is_col_shape = BoolProperty(default=False)
+    bpy.types.Object.rigid_body_is_col_shape = BoolProperty(default=False)
+    bpy.types.Object.rigid_body_use_inv_mass = BoolProperty(default=False)
+    bpy.types.Object.rigid_body_use_inv_inertia_tensor = BoolProperty(default=False)
+    bpy.types.Object.rigid_body_inv_mass = FloatProperty(default=0.0, min=0.0)
 
 def unregister():
     bpy.utils.unregister_module(__name__)
     del bpy.types.Object.rigid_body_collision_shapes
     del bpy.types.Object.rigid_body_collision_shapes_index
-    del bpy.types.Object.is_col_shape
+    del bpy.types.Object.rigid_body_is_col_shape
+    del bpy.types.Object.rigid_body_use_inv_mass
+    del bpy.types.Object.rigid_body_use_inv_inertia_tensor
+    del bpy.types.Object.rigid_body_inv_mass
 
 if __name__ == "__main__":
     register()
