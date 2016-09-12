@@ -115,9 +115,11 @@ void Contact::calculateContactBasis() {
 		contactTan[0].y = 0;
 		contactTan[0].z = -contactNormal.x*s;
 
-		contactTan[1].x = contactNormal.y*contactTan[0].x;
+		contactTan[1].x = contactNormal.y*contactTan[0].z; // Changed from x to z, saw on another branch of project and makes sense.
 		contactTan[1].y = contactNormal.z*contactTan[0].x - contactNormal.x*contactTan[0].z;
 		contactTan[1].z = -contactNormal.y*contactTan[0].x;
+
+		std::cout << "Hello" << std::endl;
 	} else {
 		scalar s = 1.0/sqrt(contactNormal.z*contactNormal.z + contactNormal.y*contactNormal.y);
 		contactTan[0].x = 0;
@@ -287,7 +289,6 @@ ds_math::Vector3 Contact::calculateFrictionlessImpulse(ds_math::Matrix3* inverse
 	scalar linearVel[2];
 	for(unsigned i = 0; i < 2; i++) {
 		calculateFrictionlessInertia(body[i], inverseInertiaTensor[i], relativeContactPosition[i], contactNormal[i], angularVel[i], linearVel[i]);
-		std::cout << "AVel-corr: " << angularVel[i] << " | LVel-corr: " << linearVel[i] << std::endl;
 		deltaVel += angularVel[i] + linearVel[i];
 	}
 
@@ -298,11 +299,69 @@ ds_math::Vector3 Contact::calculateFrictionlessImpulse(ds_math::Matrix3* inverse
 	}
 }
 
-ds_math::Vector3 Contact::calculateFrictionImpulse(ds_math::Matrix3* inverseInertialTensor) {
-	//Vector3 impulseContact;
+/**
+ * Effectively the same as a vector cross product.
+ * We use it for converting betwwen linear and angular values.
+ * @param vec
+ * @return
+ */
+static ds_math::Matrix3 calculateSkewSymmetricMatrix(const ds_math::Vector3& vec) {
+    Matrix3 result;
+    result[0] = Vector3(     0, -vec.z,  vec.y);
+    result[1] = Vector3( vec.z,      0, -vec.x);
+    result[2] = Vector3(-vec.y,  vec.x,      0);
+    return result;
+}
 
-	//scalar inverseMass = body[0]->getInverseMass();
-	//Matrix3 impulseToTorque;
+ds_math::Vector3 Contact::calculateFrictionImpulse(ds_math::Matrix3* inverseInertiaTensor) {
 
-	return Vector3();
+	scalar totalInvMass = body[0]->getInverseMass();
+	Matrix3 impulseToTorque = calculateSkewSymmetricMatrix(relativeContactPosition[0]);
+	Matrix3 deltaWorldVel = -1 * ((impulseToTorque * inverseInertiaTensor[0]) * impulseToTorque);
+
+	if (body[1]) {
+		Matrix3 impulseToTorque2 = calculateSkewSymmetricMatrix(relativeContactPosition[1]);
+		deltaWorldVel += -1 * ((impulseToTorque2 * inverseInertiaTensor[1]) * impulseToTorque2);
+		totalInvMass += body[1]->getInverseMass();
+	}
+
+    // Convert worl velocity to contact-space velocity.
+    Matrix3 deltaVelocity = (Matrix3::Transpose(contactToWorld) * deltaWorldVel) * contactToWorld;
+
+    // Apply linear velocity change
+    deltaVelocity.data[0][0] += totalInvMass;
+    deltaVelocity.data[1][1] += totalInvMass;
+    deltaVelocity.data[2][2] += totalInvMass;
+
+    // Invert to get the impulse needed per unit of velocity
+    Matrix3 impulseMatrix = Matrix3::Inverse(deltaVelocity);
+
+    // Find the target velocities to kill
+    Vector3 velKill(desiredDeltaVelocity, -contactVelocity.y, -contactVelocity.z);
+
+    // Find the impulse to kill target velocities
+    Vector3 impulseContact = impulseMatrix * velKill;
+
+    // Check for exceeding friction
+    scalar planarImpulse = sqrt(impulseContact.y*impulseContact.y +
+    							impulseContact.z*impulseContact.z);
+
+    if (planarImpulse > impulseContact.x * friction) {
+        // We need to use dynamic friction
+
+    	scalar invPlanarImpulse = 1/planarImpulse;
+    	scalar normalisedYImp = impulseContact.y * invPlanarImpulse;
+    	scalar normalisedZImp = impulseContact.z * invPlanarImpulse;
+
+    	// @todo Figure out what this is about. Appears to be dark magic.
+        scalar dynamicFrictionCoeff = deltaVelocity.data[0][0];//+
+                                      deltaVelocity.data[0][1]*friction*normalisedYImp +
+                                      deltaVelocity.data[0][2]*friction*normalisedZImp;
+
+        impulseContact.x = desiredDeltaVelocity * 1/dynamicFrictionCoeff;
+        impulseContact.y = normalisedYImp * friction * impulseContact.x;
+        impulseContact.z = normalisedZImp * friction * impulseContact.x;
+    }
+
+	return impulseContact;
 }
