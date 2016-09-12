@@ -29,8 +29,12 @@ def writeObjectTexture(obj, folderpath):
     # Make a copy of the source image and save it in the assets directory
     img = obj.active_material.active_texture.image
     newimgpath = folderpath + "/" + img.name
-    shutil.copyfile(bpy.path.abspath(img.filepath), newimgpath)
-
+    try:
+        shutil.copyfile(bpy.path.abspath(img.filepath), newimgpath)
+    except shutil.Error as e:
+        # Ignore same file error
+        print("Warning: %s" % e)
+    
     out = open(texturepath, 'w')
     out.write("{\n")
     out.write(tab + "\"type\": \"2D\",\n")
@@ -83,8 +87,32 @@ def outputRenderComponent(obj, folderpath, meshpath, materialpath, out):
     out.write(tab + tab + tab + "\"materials\": {\n")
     out.write(tab + tab + tab + tab + "\"" + materialpath + "\": \"\"\n")
     out.write(tab + tab + tab + "}\n")
-    out.write(tab + tab + "}\n")
+    out.write(tab + tab + "}")
+
+def outputPhysicsComponent(obj, folderpath, out):
+    out.write(tab + tab + "\"physicsComponent\": {\n")
+    out.write(tab + tab + tab + "\"restitution\": " + str(obj.rigid_body.restitution) + ",\n")
+    out.write(tab + tab + tab + "\"damping\": " + str(obj.rigid_body.linear_damping) + ",\n")
+    out.write(tab + tab + tab + "\"angularDamping\": " + str(obj.rigid_body.angular_damping) + ",\n")
+    # TODO inverse mass
+    #if (obj.rigid_body.use_inv_mass):
+        #out.write(tab + tab + tab + "\"invMass\": " + str(obj.rigid_body.inv_mass) + ",\n")
+    out.write(tab + tab + tab + "\"mass\": " + str(obj.rigid_body.mass) + ",\n")
+    out.write(tab + tab + tab + "\"invInertiaTensor\": " + "[1.0, 1.0, 1.0],\n")
+    out.write(tab + tab + tab + "\"collisionShapes\": {\n")
     
+    i = 0
+    for shape in obj.rigid_body_collision_shapes:
+        colobj = bpy.context.scene.objects[shape.name]
+        out.write(tab + tab + tab + tab + "\"" + shape.name + "\": " + "{ \"type\": \"" + shape.shape + "\", \"dim\": [" + str(colobj.scale[0] / 2.0) + ", " + str(colobj.scale[1] / 2.0) + ", " + str(colobj.scale[2] / 2.0) + "], \"offset\": [" + str(colobj.location[0]) + ", " + str(colobj.location[2]) + ", " + str(-colobj.location[1]) + "] }")
+        if (i < (len(obj.rigid_body_collision_shapes) - 1)):
+            out.write(",\n")
+        else:
+            out.write("\n")
+        i = i + 1
+
+    out.write(tab + tab + tab + "}\n")
+    out.write(tab + tab + "}")
 
 def writePrefab(obj, folderpath, meshpath, materialpath):
     prefabpath = folderpath + "/" + obj.name + ".prefab"
@@ -93,6 +121,10 @@ def writePrefab(obj, folderpath, meshpath, materialpath):
     out.write("{\n")
     out.write(tab + "\"components\": {\n")
     outputRenderComponent(obj, folderpath, meshpath, materialpath, out)
+    if (obj.rigid_body):
+        out.write(",\n")
+        outputPhysicsComponent(obj, folderpath, out)
+    out.write("\n")
     out.write(tab + "}\n")
     out.write("}")
     out.close()
@@ -110,6 +142,9 @@ def writeAll(context, folderpath, levelpath):
     scene = bpy.context.scene
     for obj in scene.objects: 
         if (obj.type == 'MESH'):
+            # Skip collision shapes
+            if ("is_col_shape" in obj and obj.is_col_shape == True):
+                continue
             # Paths are relative to nearest asset/ dir
             reltexturepath = writeObjectTexture(obj, folderpath)
             relmaterialpath = writeObjectMaterial(obj, folderpath, reltexturepath)
