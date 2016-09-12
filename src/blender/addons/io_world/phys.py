@@ -3,6 +3,21 @@ import bpy
 from bpy.props import *
 from bpy.types import Panel, UIList
 
+class CollisionShapes(bpy.types.PropertyGroup):
+    """Class for collision shapes CollectionProperty"""
+    CollisionShapeTypes = [
+        ('Box', 'Box', 'Box'),
+        ('Sphere', 'Sphere', 'Sphere')]
+    #name = StringProperty()
+    id = IntProperty()
+    shape = EnumProperty(name="shape",
+        description="Shape of collision shape",
+        items=CollisionShapeTypes)
+    halfsize = bpy.props.FloatVectorProperty(
+        name="halfsize", description="", default=(1, 1, 1), min=0, precision=3, size=3)
+    offset = bpy.props.FloatVectorProperty(
+        name="offset", description="", default=(1, 1, 1), min=0, precision=3, size=3)
+
 class PHYSICS_UL_rigid_body_collision_shapes(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index, flt_flag):
         split = layout.split(0.2)
@@ -30,15 +45,62 @@ class PHYSICS_PT_rigid_body_collisions(bpy.types.Panel):
         ob = context.object
 
         row = layout.row()
-        row.template_list("PHYSICS_UL_rigid_body_collision_shapes", "", ob, "rigid_body_collision_shapes", ob, "rigid_body_collision_shapes_index", rows=3)
+        row.template_list("PHYSICS_UL_rigid_body_collision_shapes", "", ob, "rigid_body_collision_shapes", ob, "rigid_body_collision_shapes_index", rows=1)
+        col = row.column(align=True)
+        col.operator("rigid_body_props.add_col_shape", icon='ZOOMIN', text="")
+        col.operator("rigid_body_props.remove_col_shape", icon='ZOOMOUT', text="")
+        
+        layout.operator("rigid_body_props.add_col_shape", icon='ZOOMIN', text="New")
 
-class CollisionShapes(bpy.types.PropertyGroup):
-    """Class for collision shapes CollectionProperty"""
-    #name = StringProperty()
-    id = IntProperty()
-    halfsize = bpy.props.FloatVectorProperty(
-        name="halfsize", description="", default=(1, 1, 1), min=0, precision=3, size=3)
-    
+class PHYSICS_OT_add_rigid_body_collision_shape(bpy.types.Operator):
+    bl_label = ""
+    bl_description = "Add a Collision Shape to the Rigid Body"
+    bl_idname = "rigid_body_props.add_col_shape"
+
+
+    def execute(self, context):
+        #colShapes = bpy.context.object.rigid_body_collision_shapes
+        #pp = bpy.context.scene.palette_props
+        #new_index = 0
+        #if colShapes.items():
+            #new_index = pp.current_color_index + 1
+            #new_index = bpy.context.object.rigid_body_collision_shapes_index + 1
+        #pp.colors.add()
+        #colShapes.add()
+
+        #last = colShapes.__len__() - 1
+
+        #colShapes.move(last, new_index)
+        #bpy.context.object.rigid_body_collision_shapes_index = new_index
+        #sample()
+        #update_panels()
+            
+        ob = bpy.context.object
+        item = ob.rigid_body_collision_shapes.add()
+        item.id = len(ob.rigid_body_collision_shapes)
+        item.name = "Collision Shape " + chr(item.id + 64)
+        return {'FINISHED'}
+
+class PHYSICS_OT_remove_rigid_body_collision_shape(bpy.types.Operator):
+    bl_label = ""
+    bl_description = "Remove Selected Collision Shape"
+    bl_idname = "rigid_body_props.remove_col_shape"
+
+    @classmethod
+    def poll(cls, context):
+        colShapes = bpy.context.object.rigid_body_collision_shapes
+        return bool(colShapes.items())
+
+
+    def execute(self, context):
+        colShapes = bpy.context.object.rigid_body_collision_shapes
+        i = bpy.context.object.rigid_body_collision_shapes_index
+        colShapes.remove(i)
+
+        #if bpy.context.object.rigid_body_collision_shapes_index >= colShapes.__len__():
+            #pp.index = pp.current_color_index = pp.colors.__len__() - 1
+        return {'FINISHED'}
+
 
 def register():
     bpy.utils.register_module(__name__)
@@ -55,8 +117,3 @@ def unregister():
 
 if __name__ == "__main__":
     register()
-    
-    ob = bpy.context.object
-    item = ob.rigid_body_collision_shapes.add()
-    item.id = len(ob.rigid_body_collision_shapes)
-    item.name = "Collision Shape " + chr(item.id + 64)
