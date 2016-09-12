@@ -3,6 +3,7 @@ import bpy
 from bpy.props import *
 from bpy.types import Panel, UIList
 
+# TODO Inherit box collision shape and sphere collision shape from this??
 class CollisionShapes(bpy.types.PropertyGroup):
     """Class for collision shapes CollectionProperty"""
     CollisionShapeTypes = [
@@ -16,7 +17,7 @@ class CollisionShapes(bpy.types.PropertyGroup):
     halfsize = bpy.props.FloatVectorProperty(
         name="halfsize", description="", default=(1, 1, 1), min=0, precision=3, size=3)
     offset = bpy.props.FloatVectorProperty(
-        name="offset", description="", default=(1, 1, 1), min=0, precision=3, size=3)
+        name="offset", description="", default=(0, 0, 0), min=0, precision=3, size=3)
 
 class PHYSICS_UL_rigid_body_collision_shapes(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index, flt_flag):
@@ -52,11 +53,26 @@ class PHYSICS_PT_rigid_body_collisions(bpy.types.Panel):
         
         layout.operator("rigid_body_props.add_col_shape", icon='ZOOMIN', text="New")
 
+        ob = bpy.context.object
+        if (len(ob.rigid_body_collision_shapes) >= 1):
+            item = ob.rigid_body_collision_shapes[ob.rigid_body_collision_shapes_index]
+            layout.prop(item, "shape", text="Shape")
+            
+            if (item.shape == 'Box'):
+                row = layout.row()
+                row.prop(item, "halfsize", text="Half Size")
+                row = layout.row()
+                row.prop(item, "offset", text="Offset")
+            elif (item.shape == 'Sphere'):
+                row = layout.row()
+                #row.prop(item, "radius", text="Radius")
+                row = layout.row()
+                row.prop(item, "offset", text="Offset")
+
 class PHYSICS_OT_add_rigid_body_collision_shape(bpy.types.Operator):
     bl_label = ""
     bl_description = "Add a Collision Shape to the Rigid Body"
     bl_idname = "rigid_body_props.add_col_shape"
-
 
     def execute(self, context):
         #colShapes = bpy.context.object.rigid_body_collision_shapes
@@ -101,6 +117,29 @@ class PHYSICS_OT_remove_rigid_body_collision_shape(bpy.types.Operator):
             #pp.index = pp.current_color_index = pp.colors.__len__() - 1
         return {'FINISHED'}
 
+# class RigidBodyCollisionShapesPanel:
+#     bl_space_type = 'PROPERTIES'
+#     bl_region_type = 'WINDOW'
+#     bl_context = "physics"
+    
+# class PHYSICS_PT_box(RigidBodyCollisionShapesPanel, Panel):
+#     bl_label = "Box"
+    
+#     @classmethod
+#     def poll(cls, context):
+#         psys = context.particle_system
+#         settings = particle_get_settings(context)
+
+#         if settings is None:
+#             return False
+#         if settings.is_fluid:
+#             return False
+#         if particle_panel_poll(PARTICLE_PT_emission, context):
+#             return psys is None or not context.particle_system.point_cache.use_external
+#         return False
+
+#     def draw(self, context):
+#         layout = self.layout
 
 def register():
     bpy.utils.register_module(__name__)
