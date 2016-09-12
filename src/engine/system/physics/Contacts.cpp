@@ -354,7 +354,7 @@ ds_math::Vector3 Contact::calculateFrictionImpulse(ds_math::Matrix3* inverseIner
     	scalar normalisedZImp = impulseContact.z * invPlanarImpulse;
 
     	// @todo Figure out what this is about. Appears to be dark magic.
-        scalar dynamicFrictionCoeff = deltaVelocity.data[0][0];//+
+        scalar dynamicFrictionCoeff = deltaVelocity.data[0][0] +
                                       deltaVelocity.data[0][1]*friction*normalisedYImp +
                                       deltaVelocity.data[0][2]*friction*normalisedZImp;
 
