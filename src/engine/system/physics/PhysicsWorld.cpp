@@ -4,7 +4,7 @@
 
 namespace ds_phys
 {
-PhysicsWorld::PhysicsWorld(unsigned int maxContacts, unsigned int iterations)
+PhysicsWorld::PhysicsWorld(unsigned int maxContacts, unsigned int iterations) : m_contactResolver(255)
 {
     // m_collisionConfiguration = new btDefaultCollisionConfiguration();
     // m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
@@ -73,31 +73,15 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
     std::cout << m_plane.getTransform() << std::endl;
     std::cout << "---- Contacts generated -----" << std::endl;
 
-    int largest = 0;
     for (unsigned i = 0; i < got; ++i)
     {
         std::cout << m_contacts[i].contactPoint << " Pen: " << m_contacts[i].penetration << std::endl;
-
-        if (m_contacts[largest].penetration < m_contacts[i].penetration) largest = i;
     }
-
-    if (got > 0) {
-        ds_math::Vector3 linearChange[2];
-        ds_math::Vector3 angularChange[2];
-
-        ds_math::Vector3 linearVelChange[2];
-        ds_math::Vector3 angularVelChange[2];
-
-		m_contacts[largest].matchAwakeState();
-		m_contacts[largest].calculateInternals(duration);
-		m_contacts[largest].applyPositionChange(linearChange, angularChange, m_contacts[largest].penetration);
-		m_contacts[largest].applyVelocityChange(linearVelChange, angularVelChange);
-    }
+    m_contactResolver.resolveContacts(m_contacts, got, duration);
     std::cout << "---- -----" << std::endl;
 
     // Resolve contacts
     // TODO: pass in generated contacts
-    // m_contactResolver.resolveContacts()
 }
 
 void PhysicsWorld::addRigidBody(RigidBody *rigidBody)

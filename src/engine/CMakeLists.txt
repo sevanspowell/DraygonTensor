@@ -106,6 +106,7 @@ set(ENGINE_SRC_FILES
   system/physics/RigidBody.cpp
   system/physics/Contacts.cpp
   system/physics/CollisionFine.cpp
+  system/physics/ContactResolver.cpp
 
   system/platform/Keyboard.cpp
   system/platform/Platform.cpp

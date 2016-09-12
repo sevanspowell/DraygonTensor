@@ -633,10 +633,10 @@ unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,
         return 0;
 
     // Check for intersection
-    //if (!IntersectionTests::boxAndHalfSpace(box, plane))
-    //{
-    //    return 0;
-    //}
+    if (!IntersectionTests::boxAndHalfSpace(box, plane))
+    {
+        return 0;
+    }
 
     // We have an intersection, so find the intersection points. We can make
     // do with only checking vertices. If the box is resting on a plane
