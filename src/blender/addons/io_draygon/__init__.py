@@ -227,7 +227,9 @@ def writeObjectTexture(obj, folderpath):
     
     # Make a copy of the source image and save it in the assets directory
     img = obj.active_material.active_texture.image
-    newimgpath = folderpath + "/" + img.name
+    ext = os.path.splitext(img.filepath)[1]
+    newimgpath = folderpath + "/" + img.name + ext
+    print("NEW IMAGE PATH" + newimgpath)
     try:
         shutil.copyfile(bpy.path.abspath(img.filepath), newimgpath)
     except shutil.Error as e:
@@ -251,7 +253,8 @@ def writeObjectMaterial(obj, folderpath, texturepath):
 
     out = open(materialpath, 'w')
     out.write("{\n")
-    out.write(tab + "\"shader\": \"" + obj.active_material["shaderpath"] + "\",\n\n")
+    # out.write(tab + "\"shader\": \"" + obj.active_material["shaderpath"] + "\",\n\n")
+    out.write(tab + "\"shader\": \"" + "simple.shader" + "\",\n\n")
     
     out.write(tab + "\"textures\": {\n")
     out.write(tab + tab + "\"tex\": {\n")
