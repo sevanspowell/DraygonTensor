@@ -122,12 +122,12 @@ void Contact::calculateContactBasis()
         contactTan[0].z = -contactNormal.x * s;
 
         contactTan[1].x =
-            contactNormal.y * contactTan[0].z; // Changed from x to z, saw on
+            contactNormal.z * contactTan[0].x; // Changed from x to z, saw on
                                                // another branch of project and
                                                // makes sense.
         contactTan[1].y = contactNormal.z * contactTan[0].x -
                           contactNormal.x * contactTan[0].z;
-        contactTan[1].z = -contactNormal.y * contactTan[0].x;
+        contactTan[1].z = -contactNormal.z * contactTan[0].x;
     }
     else
     {

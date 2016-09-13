@@ -121,10 +121,6 @@ void PhysicsWorld::addRigidBody(RigidBody *rigidBody)
 	rigidBody->calculateDerivedData();*/
 	//rigidBody->setAngularDamping(0.0f);
 
-	ds_math::Matrix3 a;
-	rigidBody->setInertiaTensor(a);
-	setBlockInertiaTensor(a, ds_math::Vector3(0.5,0.5,0.5), 1);
-	rigidBody->calculateDerivedData();
 
     m_rigidBodies.push_back(rigidBody);
 }
