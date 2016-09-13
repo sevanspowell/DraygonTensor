@@ -39,7 +39,7 @@ void Contact::calculateInternals(ds_math::scalar duration)
 
 void Contact::swapBodies()
 {
-    contactNormal *= 1;
+    contactNormal *= -1;
     std::swap(body[0], body[1]);
 }
 
@@ -128,8 +128,6 @@ void Contact::calculateContactBasis()
         contactTan[1].y = contactNormal.z * contactTan[0].x -
                           contactNormal.x * contactTan[0].z;
         contactTan[1].z = -contactNormal.y * contactTan[0].x;
-
-        std::cout << "Hello" << std::endl;
     }
     else
     {
@@ -142,7 +140,7 @@ void Contact::calculateContactBasis()
         contactTan[1].x = contactNormal.y * contactTan[0].z -
                           contactNormal.z * contactTan[0].y;
         contactTan[1].y = -contactNormal.y * contactTan[0].z;
-        contactTan[1].z = contactNormal.x * contactTan[0].y;
+        contactTan[1].z = contactNormal.z * contactTan[0].y;
     }
 
     contactToWorld[0] = contactNormal;
@@ -196,7 +194,7 @@ void Contact::applyVelocityChange(ds_math::Vector3 velocityChange[2],
 
     body[0]->getInverseInertiaTensorWorld(&inverseInertiaTensor[0]);
     if (body[1])
-        body[0]->getInverseInertiaTensorWorld(&inverseInertiaTensor[1]);
+        body[1]->getInverseInertiaTensorWorld(&inverseInertiaTensor[1]);
 
     Vector3 impulse =
         contactToWorld *
@@ -458,8 +456,7 @@ Contact::calculateFrictionImpulse(ds_math::Matrix3 *inverseInertiaTensor)
     Matrix3 impulseMatrix = Matrix3::Inverse(deltaVelocity);
 
     // Find the target velocities to kill
-    Vector3 velKill(desiredDeltaVelocity, -contactVelocity.y,
-                    -contactVelocity.z);
+    Vector3 velKill(desiredDeltaVelocity, -contactVelocity.y, -contactVelocity.z);
 
     // Find the impulse to kill target velocities
     Vector3 impulseContact = impulseMatrix * velKill;
@@ -486,6 +483,8 @@ Contact::calculateFrictionImpulse(ds_math::Matrix3 *inverseInertiaTensor)
         impulseContact.y = normalisedYImp * friction * impulseContact.x;
         impulseContact.z = normalisedZImp * friction * impulseContact.x;
     }
+
+    impulseContact.z = 0; // There's something wrong with the z friction impulse. Setting it to 0 prevents objects drifitng.
 
     return impulseContact;
 }
