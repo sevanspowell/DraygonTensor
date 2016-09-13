@@ -17,6 +17,8 @@ PhysicsWorld::PhysicsWorld(unsigned int maxContacts, unsigned int iterations) : 
     m_plane.body = nullptr;
     m_plane.direction = ds_math::Vector3::Normalize(ds_math::Vector3(0, 1, 0));
     m_plane.offset = 0.0f;
+
+
 }
 
 PhysicsWorld::~PhysicsWorld()
@@ -84,8 +86,43 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
     // TODO: pass in generated contacts
 }
 
+void setInertiaTensorCoeffs(ds_math::Matrix3& mat, ds_math::scalar ix, ds_math::scalar iy, ds_math::scalar iz,
+		ds_math::scalar ixy=0, ds_math::scalar ixz=0, ds_math::scalar iyz=0) {
+    mat[0][0] = ix;
+    mat[0][1] =-ixy;
+    mat[0][2] =-ixz;
+
+    mat[1][0] = -ixy;
+    mat[1][1] = iy;
+    mat[1][2] = -iyz;
+
+    mat[2][0] =-ixz;
+    mat[2][1] = -iyz;
+    mat[2][2] = iz;
+}
+
+void setBlockInertiaTensor(ds_math::Matrix3& mat, const ds_math::Vector3 &halfSizes, ds_math::scalar mass) {
+    ds_math::Vector3 squares = halfSizes*2;
+    setInertiaTensorCoeffs(mat,
+    	0.3f*mass*(squares.y + squares.z),
+        0.3f*mass*(squares.x + squares.z),
+        0.3f*mass*(squares.x + squares.y));
+}
+
 void PhysicsWorld::addRigidBody(RigidBody *rigidBody)
 {
+	/*rigidBody->setLinearDamping(0.95);
+	rigidBody->setAngularDamping(0.80f);
+	rigidBody->clearAccumulators();
+	rigidBody->setCanSleep(false);
+	rigidBody->setAwake();
+	rigidBody->setMass(1);
+	ds_math::Matrix3 a;
+	setBlockInertiaTensor(a, ds_math::Vector3(0.5,0.5,0.5), 1);
+	rigidBody->setInertiaTensor(a);
+
+	rigidBody->calculateDerivedData();*/
+	//rigidBody->setAngularDamping(0.0f);
     m_rigidBodies.push_back(rigidBody);
 }
 

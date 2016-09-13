@@ -420,6 +420,7 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
         }
 
         // Add rigid body component to world
+        body->calculateDerivedData();
         m_physicsWorld.addRigidBody(body);
 
         std::cout << std::endl;

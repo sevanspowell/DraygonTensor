@@ -62,44 +62,22 @@ void Contact::matchAwakeState()
 
 void Contact::calculateDesiredDeltaVelocity(ds_math::scalar duration)
 {
-    Vector3 contactTangent[2];
+	const static scalar velocityLimit = 0.25;
 
-    // Check which axis is closer to the z
-    if (std::abs(contactNormal.x) > std::abs(contactNormal.y))
-    {
+	scalar accelVel = 0;
 
-        // Scaling factor to ensure the results are normalised
-        const scalar s = 1.0f / sqrt(contactNormal.z * contactNormal.z +
-                                     contactNormal.x * contactNormal.x);
+	for(int i = 0; i < 2; i++) {
+		if ((body[i]) && (body[i]->getAwake())) {
+			accelVel += Vector3::Dot(body[i]->getLastFrameAcceleration() * duration, contactNormal) * ((i%2)?1:-1);
+		}
+	}
 
-        // The new X-axis is at right angles to the world Y-axis
-        contactTangent[0].x = contactNormal.z * s;
-        contactTangent[0].y = 0;
-        contactTangent[0].z = -contactNormal.x * s;
+	scalar boundedResitution = restitution;
+	if (abs(contactVelocity.x) < velocityLimit) {
+		boundedResitution = 0.0;
+	}
 
-        // The new Y-axis is at right angles to the new X- and Z- axes
-        contactTangent[1].x = contactNormal.y * contactTangent[0].x;
-        contactTangent[1].y = contactNormal.z * contactTangent[0].x -
-                              contactNormal.x * contactTangent[0].z;
-        contactTangent[1].z = -contactNormal.y * contactTangent[0].x;
-    }
-    else
-    {
-        // Scaling factor to ensure the results are normalised
-        const scalar s = 1.0 / sqrt(contactNormal.z * contactNormal.z +
-                                    contactNormal.y * contactNormal.y);
-
-        // The new X-axis is at right angles to the world X-axis
-        contactTangent[0].x = 0;
-        contactTangent[0].y = -contactNormal.z * s;
-        contactTangent[0].z = contactNormal.y * s;
-
-        // The new Y-axis is at right angles to the new X- and Z- axes
-        contactTangent[1].x = contactNormal.y * contactTangent[0].z -
-                              contactNormal.z * contactTangent[0].y;
-        contactTangent[1].y = -contactNormal.x * contactTangent[0].z;
-        contactTangent[1].z = contactNormal.x * contactTangent[0].y;
-    }
+    desiredDeltaVelocity = -contactVelocity.x - boundedResitution * (contactVelocity.x - accelVel);
 }
 
 ds_math::Vector3 Contact::calculateLocalVelocity(unsigned bodyIndex,
@@ -407,7 +385,7 @@ void Contact::applyPositionChange(ds_math::Vector3 linearChange[2],
                 body[i]->calculateDerivedData();
 
             //@todo TODO TEMPORARY CODE
-            body[i]->setVelocity(0, 0, 0);
+            //body[i]->setVelocity(0, 0, 0);
         }
 }
 
@@ -441,9 +419,10 @@ static ds_math::Matrix3
 calculateSkewSymmetricMatrix(const ds_math::Vector3 &vec)
 {
     Matrix3 result;
-    result[0] = Vector3(0, -vec.z, vec.y);
-    result[1] = Vector3(vec.z, 0, -vec.x);
-    result[2] = Vector3(-vec.y, vec.x, 0);
+    result[0] = Vector3(     0, -vec.z,  vec.y);
+    result[1] = Vector3( vec.z,      0, -vec.x);
+    result[2] = Vector3(-vec.y,  vec.x, 0);
+
     return result;
 }
 

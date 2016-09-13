@@ -57,7 +57,7 @@ public:
 	 * @param restitution The restitution coefficient
 	 */
 	void setBodyData(RigidBody* rb1, RigidBody* rb2, ds_math::scalar friction, ds_math::scalar restitution);
-protected: public:
+protected:
 
 	/**
 	 * The matrix that maps the contact-space to the world-space.
