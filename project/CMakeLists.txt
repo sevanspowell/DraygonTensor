@@ -1,6 +1,6 @@
 subdirs(
-    blender
     empty
     example
+    milestone1
     physics
 )
