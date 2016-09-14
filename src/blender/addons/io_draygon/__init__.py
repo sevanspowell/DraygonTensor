@@ -18,6 +18,9 @@ import os.path
 import bpy
 from bpy.props import *
 from bpy.types import Panel, UIList
+import copy
+import math
+from mathutils import Euler, Vector, Quaternion
 
 def ensureUniqueName(name):
     i = 1
@@ -278,9 +281,24 @@ def writeObjectMesh(obj, folderpath):
     bpy.ops.object.select_all(action='DESELECT')
     # Select object to be exported
     obj.select = True
+    location = copy.copy(obj.location)
+    orientation = copy.copy(obj.rotation_euler)
+    #orientation = copy.copy(obj.rotation_quaternion)
+    scale = copy.copy(obj.scale)
+    
+    obj.location = Vector((0.0, 0.0, 0.0))
+    obj.rotation_euler = Euler((0.0, 0.0, 0.0), 'XYZ')
+    #obj.rotation_quaternion = Quaternion((1.0, 0.0, 0.0, 0.0))
+    obj.scale = Vector((1.0, 1.0, 1.0))
+    
     # Export .obj from selected object only
     bpy.ops.export_scene.obj(filepath=meshpath, axis_forward='-Z', axis_up='Y', use_materials=False, use_normals=True, use_uvs=True, use_triangles=True, use_selection=True)
-   
+    
+    obj.location = location
+    obj.rotation_euler = orientation
+    #obj.rotation_quaternion = orientation
+    obj.scale = scale
+    
     return getAssetRelativePath(meshpath)
 
 def outputRenderComponent(obj, folderpath, meshpath, materialpath, out):
@@ -356,8 +374,10 @@ def writeAll(context, folderpath, levelpath):
             # Get position, orientation and scale
             position = "Vector3(" + str(obj.location.x) + ", " + str(obj.location.z) + ", " + str(-obj.location.y) + ")"
             scale = "Vector3(" + str(obj.scale.x) + ", " + str(obj.scale.y) + ", " + str(obj.scale.z) + ")"
+            #orientation = obj.rotation_quaternion
             orientation = obj.rotation_euler.to_quaternion()
-            orientation = "Quaternion(" + str(orientation[1]) + ", " + str(orientation[2]) + ", " + str(orientation[3]) + ", " + str(orientation[0]) + ")"
+
+            orientation = "Quaternion(" + str(orientation[1]) + ", " + str(orientation[3]) + ", " + str(-orientation[2]) + ", " + str(orientation[0]) + ")"
             
             levelout.write(luatab + "location = " + position + "\n")
             levelout.write(luatab + "if offset ~= nil then\n")
@@ -423,6 +443,3 @@ def unregister():
 
 if __name__ == "__main__":
     register()
-    
-    #test call
-    # bpy.ops.export_draygon_tensor.world('INVOKE_DEFAULT')
