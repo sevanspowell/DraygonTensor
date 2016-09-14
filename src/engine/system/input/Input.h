@@ -34,6 +34,17 @@ namespace ds
 class Input : public ISystem
 {
 public:
+    struct ButtonState
+    {
+        ButtonState() : left(false), middle(false), right(false)
+        {
+        }
+
+        bool left;
+        bool middle;
+        bool right;
+    };
+
     Input();
 
     /**
@@ -118,6 +129,18 @@ public:
      * direction since last frame (pixels).
      */
     void GetMouseDeltaXY(int *xDelta, int *yDelta) const;
+
+    /**
+     * Get the current state of the buttons on the mouse.
+     *
+     * @param  xPos  int *, pointer to place to store the current x-position of
+     * the mouse. May be nullptr.
+     * @param  yPos  int *, pointer to place to store the current y-position of
+     * the mouse. May be nullptr.
+     * @return       ButtonState, struct representing state of buttons on the
+     * mouse, true for pressed, false otherwise.
+     */
+    ButtonState GetMouseState(int *xPos, int *yPos) const;
 
 private:
     /**

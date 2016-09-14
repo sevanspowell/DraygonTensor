@@ -166,6 +166,19 @@ bool Input::IsKeyPressed(const std::string &keyName) const
     return isPressed;
 }
 
+Input::ButtonState Input::GetMouseState(int *xPos, int *yPos) const
+{
+    ButtonState buttons;
+
+    uint32_t state = SDL_GetMouseState(xPos, yPos);
+
+    buttons.left = SDL_BUTTON(SDL_BUTTON_LEFT) & state;
+    buttons.middle = SDL_BUTTON(SDL_BUTTON_MIDDLE) & state;
+    buttons.right = SDL_BUTTON(SDL_BUTTON_RIGHT) & state;
+
+    return buttons;
+}
+
 void Input::GetMouseDeltaXY(int *xDelta, int *yDelta) const
 {
     SDL_GetRelativeMouseState(xDelta, yDelta);
