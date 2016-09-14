@@ -230,8 +230,13 @@ def writeObjectTexture(obj, folderpath):
     
     # Make a copy of the source image and save it in the assets directory
     img = obj.active_material.active_texture.image
-    ext = os.path.splitext(img.filepath)[1]
-    newimgpath = folderpath + "/" + img.name + ext
+    newimgpath = ""
+    if (len(os.path.splitext(img.name)[1]) > 0):
+        newimgpath = folderpath + "/" + img.name
+    else:
+        ext = os.path.splitext(img.filepath)[1]
+        newimgpath = folderpath + "/" + img.name + ext
+
     print("NEW IMAGE PATH" + newimgpath)
     try:
         shutil.copyfile(bpy.path.abspath(img.filepath), newimgpath)
