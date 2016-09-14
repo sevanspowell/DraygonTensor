@@ -6,6 +6,9 @@
 
 namespace ds_math
 {
+/**
+ * @author Samuel Evans-Powell
+ */
 class Quaternion
 {
 public:

@@ -11,6 +11,9 @@
 
 namespace ds
 {
+/**
+ * @author Samuel Evans-Powell
+ */
 class MaterialResource : public IResource
 {
 public:

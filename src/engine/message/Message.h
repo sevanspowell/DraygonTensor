@@ -18,6 +18,8 @@ namespace ds_msg
  * from the stream, extract a message header, get the type of the message and
  * the size of the message payload. Extract the given number of bytes into the
  * correct message structure.
+ *
+ * @author Samuel Evans-Powell
  */
 typedef ds_com::StreamBuffer MessageStream;
 

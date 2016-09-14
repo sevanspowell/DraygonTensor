@@ -13,6 +13,8 @@ namespace ds
  * uniquely refers to that string. That string can then be retrieved from
  * anywhere in the program using that id. This is useful because our messaging
  * system does not allow the passing of std::strings (a non-POD type).
+ *
+ * @author Samuel Evans-Powell
  */
 class StringIntern
 {

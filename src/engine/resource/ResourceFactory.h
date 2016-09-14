@@ -14,6 +14,8 @@ namespace ds
 /**
  * Creates products of type IResource, the game data resources such as mesh,
  * texture etc. Use dependency injection to
+ *
+ * @author Samuel Evans-Powell
  */
 class ResourceFactory
 {

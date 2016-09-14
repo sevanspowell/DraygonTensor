@@ -7,6 +7,9 @@ namespace ds_math
 {
 class Matrix4;
 
+/**
+ * @author Samuel Evans-Powell
+ */
 class Vector4
 {
 public:
