@@ -21,14 +21,18 @@ void Contact::setBodyData(RigidBody *rb1,
 
 void Contact::calculateInternals(ds_math::scalar duration)
 {
-    if (!body[0])
-        swapBodies();
+    if (!body[0]) swapBodies();
 
     calculateContactBasis();
 
+    std::cout << "TEST: " << 0 << std::endl;
     relativeContactPosition[0] = contactPoint - body[0]->getPosition();
+    std::cout << "TEST: " << 1 << std::endl;
+
     if (body[1])
         relativeContactPosition[1] = contactPoint - body[1]->getPosition();
+
+    std::cout << "TEST: " << 2 << std::endl;
 
     contactVelocity = calculateLocalVelocity(0, duration);
     if (body[1])
@@ -345,19 +349,18 @@ void Contact::applyPositionChange(ds_math::Vector3 linearChange[2],
     scalar angularInertia[2];
 
     Matrix3 iiTensor[2];
-    if (body[0])
-        body[0]->getInverseInertiaTensorWorld(&iiTensor[0]);
-    if (body[1])
-        body[1]->getInverseInertiaTensorWorld(&iiTensor[1]);
 
-    for (unsigned i = 0; i < 2; i++)
+    for (unsigned i = 0; i < 2; i++) {
         if (body[i])
         {
+            body[i]->getInverseInertiaTensorWorld(&iiTensor[i]);
+
             calculateFrictionlessInertia(
                 body[i], iiTensor[i], relativeContactPosition[i], contactNormal,
                 angularInertia[i], linearInertia[i]);
             totalInertia += linearInertia[i] + angularInertia[i];
         }
+    }
 
 
     scalar angularMove[2];
