@@ -65,7 +65,7 @@ public:
 
     CollisionBox m_box;
     CollisionBox m_box2;
-    //CollisionPlane m_plane;
+    CollisionPlane m_plane;
     ContactResolver m_contactResolver;
 
 private:

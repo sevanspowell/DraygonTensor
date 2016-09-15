@@ -29,8 +29,9 @@ static void setBlockInertiaTensor(ds_math::Matrix3& mat, const ds_math::Vector3 
         0.3f*mass*(squares.x + squares.y));
 }
 
-PhysicsWorld::PhysicsWorld(unsigned int maxContacts, unsigned int iterations) : m_contactResolver(255)
+PhysicsWorld::PhysicsWorld(unsigned int maxContacts, unsigned int iterations) : m_contactResolver(10)
 {
+	m_rigidBodies.reserve(100);
     // m_collisionConfiguration = new btDefaultCollisionConfiguration();
     // m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
     // m_broadPhase = new btDbvtBroadphase();
@@ -39,24 +40,11 @@ PhysicsWorld::PhysicsWorld(unsigned int maxContacts, unsigned int iterations) : 
     m_collisionData.contactArray = m_contacts;
 
     m_box.halfSize = ds_math::Vector3(0.5f, 0.5f, 0.5f);
-
-    m_box2.body = new RigidBody();
-    m_box2.body->setPosition(0, 0, -10);
     m_box2.halfSize = ds_math::Vector3(0.5f, 0.5f, 0.5f);
-    m_box2.body->setLinearDamping(0.95);
-    m_box2.body->setAngularDamping(0.80f);
-	m_box2.body->clearAccumulators();
-	m_box2.body->setCanSleep(false);
-	m_box2.body->setAwake();
-	m_box2.body->setMass(1);
-	ds_math::Matrix3 mat;
-	setBlockInertiaTensor(mat, m_box2.halfSize, m_box2.body->getMass());
-	m_box2.body->setInertiaTensor(mat);
-	m_box2.body->calculateDerivedData();
-    m_box2.calculateInternals();
-    /*m_plane.body = nullptr;
+
+    m_plane.body = nullptr;
     m_plane.direction = ds_math::Vector3::Normalize(ds_math::Vector3(0, 1, 0));
-    m_plane.offset = 0.0f;*/
+    m_plane.offset = 0.0f;
 
 
 }
@@ -92,7 +80,8 @@ void PhysicsWorld::startFrame()
 
 void PhysicsWorld::stepSimulation(ds_math::scalar duration)
 {
-	duration = duration;
+	duration = 1/60.0f;
+	//duration = duration;
     // Update force generators
     m_forceRegistry.updateForces(duration);
 
@@ -109,7 +98,9 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
     // Generate contacts
     // m_collisionWorld->performDiscreteCollisionDetection();
     m_box.calculateInternals();
-    //m_plane.calculateInternals();
+    m_box2.calculateInternals();
+    m_plane.calculateInternals();
+
     unsigned int got = generateContacts();
     std::cout << got << std::endl;
     std::cout << m_box.getTransform() << std::endl;
@@ -139,6 +130,17 @@ void PhysicsWorld::addRigidBody(RigidBody *rigidBody)
 	rigidBody->calculateDerivedData();*/
 	//rigidBody->setAngularDamping(0.0f);
 
+	//@todo Remove when propper loading is done.
+	rigidBody->setLinearDamping(0.9f);
+	rigidBody->setAngularDamping(0.80f);
+	rigidBody->clearAccumulators();
+	rigidBody->setCanSleep(true);
+	rigidBody->setAwake();
+	rigidBody->setMass(1);
+	ds_math::Matrix3 mat;
+	setBlockInertiaTensor(mat, m_box2.halfSize, rigidBody->getMass());
+	rigidBody->setInertiaTensor(mat);
+	rigidBody->calculateDerivedData();
 
     m_rigidBodies.push_back(rigidBody);
 }
@@ -171,7 +173,7 @@ void PhysicsWorld::removeForceGenerator(RigidBody *rigidBody,
 unsigned int PhysicsWorld::generateContacts()
 {
     m_collisionData.reset(PhysicsWorld::MAX_CONTACTS);
-    m_collisionData.friction = (ds_math::scalar)0.9;
+    m_collisionData.friction = (ds_math::scalar)2.0;
     m_collisionData.restitution = (ds_math::scalar)0.6;
     m_collisionData.tolerance = (ds_math::scalar)0.1;
 
@@ -181,7 +183,9 @@ unsigned int PhysicsWorld::generateContacts()
     }
 
     //CollisionDetector::boxAndHalfSpace(m_box, m_plane, &m_collisionData);
+    CollisionDetector::boxAndHalfSpace(m_box, m_plane, &m_collisionData);
     CollisionDetector::boxAndBox(m_box, m_box2, &m_collisionData);
+    CollisionDetector::boxAndHalfSpace(m_box2, m_plane, &m_collisionData);
 
     return m_collisionData.contactCount;
 }

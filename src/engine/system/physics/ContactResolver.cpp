@@ -23,6 +23,8 @@ void ContactResolver::prepareContacts(Contact *contactArray,
 {
     for (unsigned i = 0; i < numContacts; i++)
     {
+    	//if (!contactArray[i].body[0]) contactArray[i].swapBodies();
+        //contactArray[i].body[1] = nullptr;
         contactArray[i].calculateInternals(duration);
     }
 }
@@ -31,62 +33,56 @@ void ContactResolver::adjustVelocities(Contact *c,
                                        unsigned numContacts,
                                        scalar duration)
 {
-    Vector3 velocityChange[2], rotationChange[2];
-    Vector3 deltaVel;
-
     // iteratively handle impacts in order of severity.
     velocityIterationCount = 0;
     while (velocityIterationCount < maxVelocityIterations)
     {
         // Find contact with maximum magnitude of probable velocity change.
-        scalar max = velocityEpsilon;
+        scalar maxVel = velocityEpsilon;
         unsigned index = numContacts;
         for (unsigned i = 0; i < numContacts; i++)
         {
-            if (c[i].desiredDeltaVelocity > max)
+            if (c[i].desiredDeltaVelocity > maxVel)
             {
-                max = c[i].desiredDeltaVelocity;
+                maxVel = c[i].desiredDeltaVelocity;
                 index = i;
             }
         }
         if (index == numContacts)
             break;
 
+
         // Match the awake state at the contact
         c[index].matchAwakeState();
 
         // Do the resolution on the contact that came out top.
+        Vector3 velocityChange[2], rotationChange[2];
         c[index].applyVelocityChange(velocityChange, rotationChange);
 
         // With the change in velocity of the two bodies, the update of
         // contact velocities means that some of the relative closing
         // velocities need recomputing.
-        for (unsigned cContact = 0; cContact < numContacts; cContact++)
+        for (unsigned i = 0; i < numContacts; i++)
         {
             // Check each body in the contact
             for (unsigned cBody = 0; cBody < 2; cBody++)
             {
-                if (c[cContact].body[cBody])
+                if (c[i].body[cBody])
                 {
                     // Check for a match with each body in the newly
                     // resolved contact
                     for (unsigned cBody2 = 0; cBody2 < 2; cBody2++)
                     {
-                        if (c[cContact].body[cBody] == c[index].body[cBody2])
+                        if (c[i].body[cBody] == c[index].body[cBody2])
                         {
-                            deltaVel =
-                                velocityChange[cBody2] +
-                                Vector3::Cross(
-                                    rotationChange[cBody2],
-                                    c[cContact].relativeContactPosition[cBody]);
+                            Vector3 deltaVel = velocityChange[cBody2] +
+                            		   Vector3::Cross(rotationChange[cBody2], c[i].relativeContactPosition[cBody]);
 
                             // The sign of the change is negative if we're
                             // dealing
                             // with the second body in a contact.
-                            c[cContact].contactVelocity +=
-                                Matrix3::Transpose(c[cContact].contactToWorld) *
-                                deltaVel * (cBody ? -1 : 1);
-                            c[cContact].calculateDesiredDeltaVelocity(duration);
+                            c[i].contactVelocity += Matrix3::Transpose(c[i].contactToWorld) * deltaVel * (cBody ? -1 : 1);
+                            c[i].calculateDesiredDeltaVelocity(duration);
                         }
                     }
                 }
@@ -100,19 +96,14 @@ void ContactResolver::adjustPositions(Contact *c,
                                       unsigned numContacts,
                                       scalar duration)
 {
-    unsigned i, index;
-    Vector3 linearChange[2], angularChange[2];
-    scalar maxPen;
-    Vector3 deltaPosition;
-
     // iteratively resolve interpenetrations in order of severity.
     positionIterationCount = 0;
     while (positionIterationCount < maxPositionIterations)
     {
         // Find biggest penetration
-        maxPen = positionEpsilon;
-        index = numContacts;
-        for (i = 0; i < numContacts; i++)
+        scalar maxPen = positionEpsilon;
+        unsigned index = numContacts;
+        for (unsigned i = 0; i < numContacts; i++)
         {
             if (c[i].penetration > maxPen)
             {
@@ -127,11 +118,12 @@ void ContactResolver::adjustPositions(Contact *c,
         c[index].matchAwakeState();
 
         // Resolve the penetration.
+        Vector3 linearChange[2], angularChange[2];
         c[index].applyPositionChange(linearChange, angularChange, maxPen);
 
         // The resolution may have caused more conflicts.
         // Attempt to resolve them.
-        for (i = 0; i < numContacts; i++)
+        for (unsigned i = 0; i < numContacts; i++)
         {
             // Check each body in the contact
             for (unsigned cBody1 = 0; cBody1 < 2; cBody1++)
@@ -143,18 +135,12 @@ void ContactResolver::adjustPositions(Contact *c,
                     {
                         if (c[i].body[cBody1] == c[index].body[cBody2])
                         {
-                            deltaPosition =
-                                linearChange[cBody2] +
-                                Vector3::Cross(
-                                    angularChange[cBody2],
-                                    c[i].relativeContactPosition[cBody1]);
+                            Vector3 deltaPosition = linearChange[cBody2] +
+                            				  Vector3::Cross(angularChange[cBody2],  c[i].relativeContactPosition[cBody1]);
 
                             // If the body is the second one we need to reverse
                             // the number.
-                            c[i].penetration +=
-                                Vector3::Dot(deltaPosition,
-                                             c[i].contactNormal) *
-                                (cBody1 ? 1 : -1);
+                            c[i].penetration += Vector3::Dot(deltaPosition, c[i].contactNormal) * (cBody1 ? 1 : -1);
                         }
                     }
                 }

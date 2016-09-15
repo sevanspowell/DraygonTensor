@@ -25,14 +25,10 @@ void Contact::calculateInternals(ds_math::scalar duration)
 
     calculateContactBasis();
 
-    std::cout << "TEST: " << 0 << std::endl;
     relativeContactPosition[0] = contactPoint - body[0]->getPosition();
-    std::cout << "TEST: " << 1 << std::endl;
 
     if (body[1])
         relativeContactPosition[1] = contactPoint - body[1]->getPosition();
-
-    std::cout << "TEST: " << 2 << std::endl;
 
     contactVelocity = calculateLocalVelocity(0, duration);
     if (body[1])
@@ -77,7 +73,7 @@ void Contact::calculateDesiredDeltaVelocity(ds_math::scalar duration)
 	}
 
 	scalar boundedResitution = restitution;
-	if (abs(contactVelocity.x) < velocityLimit) {
+	if (fabs(contactVelocity.x) < velocityLimit) {
 		boundedResitution = 0.0;
 	}
 
@@ -117,7 +113,7 @@ void Contact::calculateContactBasis()
 {
     Vector3 contactTan[2];
 
-    if (abs(contactNormal.x) > abs(contactNormal.y))
+    if (fabs(contactNormal.x) > fabs(contactNormal.y))
     {
         scalar s = 1.0 / sqrt(contactNormal.z * contactNormal.z +
                               contactNormal.x * contactNormal.x);
@@ -167,9 +163,9 @@ static void applyImpulseToBody(RigidBody *body,
         rotChange = inverseInertiaTensor * impulsiveTorque;
         velChange = (impulse * body->getInverseMass());
 
-        std::cout << "APPLIED TORQUE: " << impulsiveTorque << std::endl;
-        std::cout << "APPLIED VELOCITY: " << velChange << std::endl;
-        std::cout << "APPLIED ROTATION: " << rotChange << std::endl;
+        // std::cout << "APPLIED TORQUE: " << impulsiveTorque << std::endl;
+        // std::cout << "APPLIED VELOCITY: " << velChange << std::endl;
+        // std::cout << "APPLIED ROTATION: " << rotChange << std::endl;
 
         body->addVelocity(velChange);
         body->addRotation(rotChange);
@@ -202,7 +198,8 @@ void Contact::applyVelocityChange(ds_math::Vector3 velocityChange[2],
 
     Vector3 impulse =
         contactToWorld *
-        ((friction == 0.0) ? calculateFrictionlessImpulse(inverseInertiaTensor)
+        ((friction == 0.0) ?
+        		calculateFrictionlessImpulse(inverseInertiaTensor)//;
                            : calculateFrictionImpulse(inverseInertiaTensor));
     // std::cout << "contactToWorld: " << contactToWorld << std::endl;
 
@@ -210,7 +207,7 @@ void Contact::applyVelocityChange(ds_math::Vector3 velocityChange[2],
     applyImpulseToBody(body[0], relativeContactPosition[0], impulse,
                        inverseInertiaTensor[0], velocityChange[0],
                        rotationChange[0]);
-    applyImpulseToBody(body[1], relativeContactPosition[1], impulse,
+    applyImpulseToBody(body[1], relativeContactPosition[1], -impulse,
                        inverseInertiaTensor[1], velocityChange[1],
                        rotationChange[1]);
 }
@@ -472,7 +469,7 @@ Contact::calculateFrictionImpulse(ds_math::Matrix3 *inverseInertiaTensor)
     {
         // We need to use dynamic friction
 
-        scalar invPlanarImpulse = 1 / planarImpulse;
+        /*scalar invPlanarImpulse = 1 / planarImpulse;
         scalar normalisedYImp = impulseContact.y * invPlanarImpulse;
         scalar normalisedZImp = impulseContact.z * invPlanarImpulse;
 
@@ -484,10 +481,19 @@ Contact::calculateFrictionImpulse(ds_math::Matrix3 *inverseInertiaTensor)
 
         impulseContact.x = desiredDeltaVelocity * 1 / dynamicFrictionCoeff;
         impulseContact.y = normalisedYImp * friction * impulseContact.x;
-        impulseContact.z = normalisedZImp * friction * impulseContact.x;
-    }
+        impulseContact.z = normalisedZImp * friction * impulseContact.x;*/
 
-    impulseContact.z = 0; // There's something wrong with the z friction impulse. Setting it to 0 prevents objects drifitng.
+        // We need to use dynamic friction
+        impulseContact.y /= planarImpulse;
+        impulseContact.z /= planarImpulse;
+
+        impulseContact.x = deltaVelocity[0][0] +
+            deltaVelocity[0][1]*friction*impulseContact.y +
+            deltaVelocity[0][2]*friction*impulseContact.z;
+        impulseContact.x = desiredDeltaVelocity / impulseContact.x;
+        impulseContact.y *= friction * impulseContact.x;
+        impulseContact.z *= friction * impulseContact.x;
+    }
 
     return impulseContact;
 }

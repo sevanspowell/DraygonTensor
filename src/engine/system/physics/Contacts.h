@@ -165,7 +165,7 @@ class ContactResolver
 {
 	private:
 		/// If the internal state needs to be updated.
-		bool isDirty;
+		// bool isDirty;
 
 		/// The max number of velocity iterations to attempt.
 		unsigned maxVelocityIterations;
@@ -187,12 +187,12 @@ class ContactResolver
 		unsigned positionIterationCount;
 
 
-		ContactResolver(unsigned maxIterations, ds_math::scalar velEpsilon = 0.01, ds_math::scalar posEpsilon = 0.01)
-			: isDirty(true), maxVelocityIterations(maxIterations), maxPositionIterations(maxIterations), velocityEpsilon(velEpsilon), positionEpsilon(posEpsilon),
+		ContactResolver(unsigned maxIterations, ds_math::scalar velEpsilon = 0.000001, ds_math::scalar posEpsilon = 0.000001)
+			: maxVelocityIterations(maxIterations), maxPositionIterations(maxIterations), velocityEpsilon(velEpsilon), positionEpsilon(posEpsilon),
 			  velocityIterationCount(0), positionIterationCount(0) {}
 
-		ContactResolver(unsigned maxVelIterations, unsigned maxPosIterations, ds_math::scalar velEpsilon = 0.01, ds_math::scalar posEpsilon = 0.01)
-			: isDirty(true), maxVelocityIterations(maxVelIterations), maxPositionIterations(maxPosIterations), velocityEpsilon(velEpsilon), positionEpsilon(posEpsilon),
+		ContactResolver(unsigned maxVelIterations, unsigned maxPosIterations, ds_math::scalar velEpsilon = 0.000001, ds_math::scalar posEpsilon = 0.000001)
+			: maxVelocityIterations(maxVelIterations), maxPositionIterations(maxPosIterations), velocityEpsilon(velEpsilon), positionEpsilon(posEpsilon),
 			  velocityIterationCount(0), positionIterationCount(0) {}
 
 		/**
@@ -202,8 +202,8 @@ class ContactResolver
 		bool isValid() {
 			return (maxVelocityIterations > 0)
 			    && (maxPositionIterations > 0)
-			    && (velocityEpsilon > 0)
-			    && (positionEpsilon > 0);
+			    && (velocityEpsilon >= 0)
+			    && (positionEpsilon >= 0);
 		}
 
 		/**

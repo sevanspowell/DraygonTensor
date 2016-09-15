@@ -396,7 +396,19 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
         ds_phys::RigidBody *body = new ds_phys::RigidBody();
 
         body->setMass(1.0f);
-        m_physicsWorld.m_box.body = body;
+
+        // DEBUG
+        static int tmpValue = 0;
+        if (tmpValue == 0) {
+        	m_physicsWorld.m_box.body = body;
+        	tmpValue++;
+        	std::cout << "Obj1" << std::endl;
+        } else  if (tmpValue == 1) {
+        	m_physicsWorld.m_box2.body = body;
+        	tmpValue++;
+        	std::cout << "Obj2" << std::endl;
+        }
+
 
         Instance phys =
             m_physicsComponentManager.CreateComponentForEntity(entity);

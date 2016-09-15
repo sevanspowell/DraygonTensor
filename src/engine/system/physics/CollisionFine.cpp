@@ -67,7 +67,7 @@ static inline bool overlapOnAxis(const CollisionBox &one,
                                  ds_math::Vector3 axis,
                                  const ds_math::Vector3 &toCentre)
 {
-	if (ds_math::Vector3::Dot(axis, axis) < 0.0001) return true;
+	//if (ds_math::Vector3::Dot(axis, axis) < 0.0001) return true;
 
     // Project the half-size of one onto axis
     ds_math::scalar oneProject = transformToAxis(one, axis);

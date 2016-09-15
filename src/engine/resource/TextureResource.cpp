@@ -78,9 +78,9 @@ std::unique_ptr<IResource> TextureResource::CreateFromFile(std::string filePath)
 
                 unsigned char *imageContents =
                     stbi_load(fullImagePath.str().c_str(), &widthInPixels,
-                              &heightInPixels, &components, 0);
+                              &heightInPixels, &components, 4);
 
-                channels = static_cast<ComponentFlag>(components);
+                channels = static_cast<ComponentFlag>(4);
 
                 createdTexResource->SetWidthInPixels(i, widthInPixels);
                 createdTexResource->SetHeightInPixels(i, heightInPixels);
