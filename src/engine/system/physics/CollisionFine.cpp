@@ -49,9 +49,11 @@ bool IntersectionTests::sphereAndSphere(const CollisionSphere &one,
 static inline ds_math::scalar transformToAxis(const CollisionBox &box,
                                               const ds_math::Vector3 &axis)
 {
+
     return box.halfSize.x * fabs(ds_math::Vector3::Dot(axis, box.getAxis(0))) +
            box.halfSize.y * fabs(ds_math::Vector3::Dot(axis, box.getAxis(1))) +
            box.halfSize.z * fabs(ds_math::Vector3::Dot(axis, box.getAxis(2)));
+	//return (ds_math::Vector3::Dot(axis, ds_math::Matrix3(box.getTransform()[0], box.getTransform()[1], box.getTransform()[2])*box.halfSize));
 }
 
 /**
@@ -65,6 +67,8 @@ static inline bool overlapOnAxis(const CollisionBox &one,
                                  ds_math::Vector3 axis,
                                  const ds_math::Vector3 &toCentre)
 {
+	if (ds_math::Vector3::Dot(axis, axis) < 0.0001) return true;
+
     // Project the half-size of one onto axis
     ds_math::scalar oneProject = transformToAxis(one, axis);
     ds_math::scalar twoProject = transformToAxis(two, axis);
@@ -124,7 +128,7 @@ bool IntersectionTests::boxAndHalfSpace(const CollisionBox &box,
     // Work out how far the box is from the origin
     ds_math::scalar boxDistance =
         ds_math::Vector3::Dot(plane.direction, box.getAxis(3)) -
-        projectedRadius;
+		projectedRadius;
 
     // Check for the intersection
     return boxDistance <= plane.offset;
