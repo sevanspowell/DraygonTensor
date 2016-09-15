@@ -288,6 +288,9 @@ GLRenderer::Create2DTexture(ImageFormat format,
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
 
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
     glTexImage2D(GL_TEXTURE_2D, 0, ToGLInternalImageFormat(internalFormat),
                  width, height, 0, ToGLImageFormat(format),
                  ToGLDataType(imageDataType), data);
