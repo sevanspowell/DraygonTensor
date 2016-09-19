@@ -80,7 +80,8 @@ void PhysicsWorld::startFrame()
 
 void PhysicsWorld::stepSimulation(ds_math::scalar duration)
 {
-	duration = 1/60.0f;
+	//duration = 1/60.0f;
+
 	//duration = duration;
     // Update force generators
     m_forceRegistry.updateForces(duration);
@@ -120,16 +121,6 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
 
 void PhysicsWorld::addRigidBody(RigidBody *rigidBody)
 {
-	/*rigidBody->setLinearDamping(0.95);
-	rigidBody->setAngularDamping(0.80f);
-	rigidBody->clearAccumulators();
-	rigidBody->setCanSleep(false);
-	rigidBody->setAwake();
-	rigidBody->setMass(1);
-
-	rigidBody->calculateDerivedData();*/
-	//rigidBody->setAngularDamping(0.0f);
-
 	//@todo Remove when propper loading is done.
 	rigidBody->setLinearDamping(0.9f);
 	rigidBody->setAngularDamping(0.80f);
@@ -173,7 +164,7 @@ void PhysicsWorld::removeForceGenerator(RigidBody *rigidBody,
 unsigned int PhysicsWorld::generateContacts()
 {
     m_collisionData.reset(PhysicsWorld::MAX_CONTACTS);
-    m_collisionData.friction = (ds_math::scalar)2.0;
+    m_collisionData.friction = (ds_math::scalar)0.1;
     m_collisionData.restitution = (ds_math::scalar)0.6;
     m_collisionData.tolerance = (ds_math::scalar)0.1;
 
