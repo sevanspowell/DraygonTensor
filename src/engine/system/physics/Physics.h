@@ -40,10 +40,10 @@ private:
     /** Messaging */
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
 
-    // /** Transform component manager */
-    TransformComponentManager m_transformComponentManager;
-    // /** Physics component manager */
-    PhysicsComponentManager m_physicsComponentManager;
+    /** Transform component manager */
+    TransformComponentManager *m_transformComponentManager;
+    /** Physics component manager */
+    PhysicsComponentManager *m_physicsComponentManager;
 
     ds_phys::PhysicsWorld m_physicsWorld;
 

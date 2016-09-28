@@ -62,6 +62,22 @@ public:
      */
     virtual bool RemoveInstance(Instance i);
 
+    /**
+     * Get the component for the given component instance.
+     *
+     * @param   i   Instance, component instance to get component for.
+     * @return      T, component associated with the given component instance.
+     */
+    virtual T GetComponentForInstance(Instance i) const;
+
+    /**
+     * Set the component to be associated with the given component instance.
+     *
+     * @param   i           Instance, component instance to set component for.
+     * @param   component   T, component to set.
+     */
+    virtual void SetComponentForInstance(Instance i, T component);
+
 protected:
     /**
      * Think of the Instance identifier as a pointer address. When the

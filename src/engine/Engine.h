@@ -8,6 +8,7 @@
 #include "engine/system/ISystem.h"
 #include "engine/system/platform/Platform.h"
 #include "engine/system/script/Script.h"
+#include "engine/entity/ComponentStore.h"
 
 namespace ds
 {
@@ -122,5 +123,7 @@ private:
     Platform *m_platform;
     // Script system always exists
     Script *m_script;
+
+    ComponentStore m_componentStore;
 };
 }
