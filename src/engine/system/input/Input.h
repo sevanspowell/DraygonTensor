@@ -34,6 +34,19 @@ namespace ds
 class Input : public ISystem
 {
 public:
+    struct ButtonState
+    {
+        ButtonState() : left(false), middle(false), right(false)
+        {
+        }
+
+        bool left;
+        bool middle;
+        bool right;
+    };
+
+    Input();
+
     /**
      * Initialize the input system.
      *
@@ -89,6 +102,14 @@ public:
     virtual ScriptBindingSet GetScriptBindings() const;
 
     /**
+     * Return true if the given key is not pressed this frame but was last
+     * frame.
+     *
+     * @param   keyName  const std::string &, name of key.
+     * @return           bool, TRUE if key was released, FALSE otherwise.
+     */
+    bool WasKeyReleased(const std::string &keyname) const;
+    /**
      * Return true if the given key name is pressed.
      *
      * @param   keyName  const std::string &, name of key.
@@ -108,6 +129,18 @@ public:
      * direction since last frame (pixels).
      */
     void GetMouseDeltaXY(int *xDelta, int *yDelta) const;
+
+    /**
+     * Get the current state of the buttons on the mouse.
+     *
+     * @param  xPos  int *, pointer to place to store the current x-position of
+     * the mouse. May be nullptr.
+     * @param  yPos  int *, pointer to place to store the current y-position of
+     * the mouse. May be nullptr.
+     * @return       ButtonState, struct representing state of buttons on the
+     * mouse, true for pressed, false otherwise.
+     */
+    ButtonState GetMouseState(int *xPos, int *yPos) const;
 
 private:
     /**
@@ -144,6 +177,9 @@ private:
 
     // All input contexts not on the stack
     std::vector<InputContext> m_inputContexts;
+
+    std::vector<uint8_t> m_currentKeys;
+    std::vector<uint8_t> m_prevKeys;
 
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
 };

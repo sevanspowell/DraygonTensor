@@ -101,12 +101,19 @@ public:
      *
      * @param   prefabFile  std::string, path to prefab, relative to the assets
      * directory.
-     * @param   position    const ds_math::Vector3, spawn prefab at this
-     * position with default orientation and scale.
-     * @return              Entity, entity id of prefab spawned.
+     * @param   position       const ds_math::Vector3, spawn prefab at this
+     * position.
+     * @param   orientataion   const ds_math::Quaternion &, spawn prefab with
+     * this orientation.
+     * @param   scale          const ds_math::Vector3 &, spawn prefab with this
+     * scale.
+     * @return                 Entity, entity id of prefab spawned.
      */
-    Entity SpawnPrefab(std::string prefabFile,
-                       const ds_math::Vector3 &position);
+    Entity SpawnPrefab(
+        std::string prefabFile,
+        const ds_math::Vector3 &position = ds_math::Vector3(),
+        const ds_math::Quaternion &orientation = ds_math::Quaternion(),
+        const ds_math::Vector3 &scale = ds_math::Vector3(1.0f, 1.0f, 1.0f));
 
     /**
      * Get the world transform of an entity.

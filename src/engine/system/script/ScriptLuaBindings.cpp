@@ -12,9 +12,9 @@ static int l_SpawnPrefab(lua_State *L)
 {
     // Get number of arguments provided
     int n = lua_gettop(L);
-    if (n != 2)
+    if (n < 1)
     {
-        return luaL_error(L, "Got %d arguments, expected 2.", n);
+        return luaL_error(L, "Got %d arguments, expected at least 1.", n);
     }
 
     const char *prefabFile = luaL_checklstring(L, 1, NULL);
@@ -30,36 +30,65 @@ static int l_SpawnPrefab(lua_State *L)
     }
     else
     {
-        // Get vector position from argument
-        ds_math::Vector3 *v = NULL;
+        // Get pos, orientation, scale arguments
+        ds_math::Vector3 pos;
+        ds_math::Quaternion orient;
+        ds_math::Vector3 scale = ds_math::Vector3(1.0f, 1.0f, 1.0f);
 
-        v = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
-
-        if (v != NULL)
+        // Get position argument
+        if (n > 1)
         {
-            ds::Script *p = (ds::Script *)lua_touserdata(L, -1);
-
-            assert(p != NULL && "spawnPrefab: Tried to deference userdata "
-                                "pointer which was null");
-
-            // Pop script system pointer
-            lua_pop(L, 1);
-
-            // Allocate space for entity handle
-            ds::Entity *entity =
-                (ds::Entity *)lua_newuserdata(L, sizeof(ds::Entity));
-
-            *entity = p->SpawnPrefab(prefabFile, *v);
-
-            // Get Entity metatable
-            luaL_getmetatable(L, "Entity");
-            // Set it as metatable of new user data
-            lua_setmetatable(L, -2);
+            ds_math::Vector3 *v =
+                (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
+            if (v != NULL)
+            {
+                pos = *v;
+            }
         }
+        // Get orientation argument
+        if (n > 2)
+        {
+            ds_math::Quaternion *q =
+                (ds_math::Quaternion *)luaL_checkudata(L, 3, "Quaternion");
+            if (q != NULL)
+            {
+                orient = *q;
+            }
+        }
+        // Get scale argument
+        if (n > 3)
+        {
+            ds_math::Vector3 *v =
+                (ds_math::Vector3 *)luaL_checkudata(L, 4, "Vector3");
+            if (v != NULL)
+            {
+                scale = *v;
+            }
+        }
+
+        // Get script system pointer off lua stack
+        ds::Script *p = (ds::Script *)lua_touserdata(L, -1);
+
+        assert(p != NULL && "spawnPrefab: Tried to deference userdata "
+                            "pointer which was null");
+
+        // Pop script system pointer
+        lua_pop(L, 1);
+
+        // Allocate space for entity handle
+        ds::Entity *entity =
+            (ds::Entity *)lua_newuserdata(L, sizeof(ds::Entity));
+
+        *entity = p->SpawnPrefab(prefabFile, pos, orient, scale);
+
+        // Get Entity metatable
+        luaL_getmetatable(L, "Entity");
+        // Set it as metatable of new user data
+        lua_setmetatable(L, -2);
     }
 
     // Ensure stack is clean
-    assert(lua_gettop(L) == 3);
+    assert(lua_gettop(L) == 1 + n);
 
     return 1;
 }

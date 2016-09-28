@@ -15,6 +15,8 @@ namespace ds
  * The Engine class manages all systems in the engine passes messages between
  * them using the message bus and facilitates interaction with low-level systems
  * via the framework.
+ *
+ * @author Samuel Evans-Powell
  */
 class Engine
 {

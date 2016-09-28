@@ -62,6 +62,9 @@ bool Script::Initialize(const Config &config)
             {
                 m_bootScriptLoaded = true;
 
+                // Call preinit function in boot script (no arguments)
+                m_lua.CallLuaFunction("preinit", 0);
+
                 result = true;
             }
         }
@@ -147,7 +150,9 @@ void Script::RegisterScriptBindings(const char *systemName, ISystem *systemPtr)
 }
 
 Entity Script::SpawnPrefab(std::string prefabFile,
-                           const ds_math::Vector3 &position)
+                           const ds_math::Vector3 &position,
+                           const ds_math::Quaternion &orientation,
+                           const ds_math::Vector3 &scale)
 {
     // Create new Entity
     Entity entity = m_entityManager.Create();
@@ -187,9 +192,8 @@ Entity Script::SpawnPrefab(std::string prefabFile,
 
         // Finally, send a create transform component message
         ds_msg::CreateComponent transformComponentMsg =
-            BuildTransformComponentCreateMessage(
-                entity, position, ds_math::Quaternion(),
-                ds_math::Vector3(1.0f, 1.0f, 1.0f));
+            BuildTransformComponentCreateMessage(entity, position, orientation,
+                                                 scale);
         ds_msg::AppendMessage(
             &m_messagesGenerated, ds_msg::MessageType::CreateComponent,
             sizeof(ds_msg::CreateComponent), &transformComponentMsg);

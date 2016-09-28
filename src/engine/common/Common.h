@@ -1,3 +1,6 @@
+/**
+ * @author Samuel Evans-Powell
+ */
 #pragma once
 
 #include <vector>

@@ -186,30 +186,35 @@ TEST(Quaternion, TestInvert)
     float y = 2.0f;
     float z = 0.0f;
     float w = -10.9f;
+    float invNorm = 1.0f / ((x * x) + (y * y) + (z * z) + (w * w));
+    float xExpect = -x * invNorm;
+    float yExpect = -y * invNorm;
+    float zExpect = -z * invNorm;
+    float wExpect = w * invNorm;
 
     ds_math::Quaternion q = ds_math::Quaternion(x, y, z, w);
     q.Invert();
 
-    EXPECT_EQ(-x, q.x);
-    EXPECT_EQ(-y, q.y);
-    EXPECT_EQ(-z, q.z);
-    EXPECT_EQ(-w, q.w);
+    EXPECT_EQ(xExpect, q.x);
+    EXPECT_EQ(yExpect, q.y);
+    EXPECT_EQ(zExpect, q.z);
+    EXPECT_EQ(wExpect, q.w);
 
     q = ds_math::Quaternion(x, y, z, w);
     q = ds_math::Quaternion::Invert(q);
 
-    EXPECT_EQ(-x, q.x);
-    EXPECT_EQ(-y, q.y);
-    EXPECT_EQ(-z, q.z);
-    EXPECT_EQ(-w, q.w);
+    EXPECT_EQ(xExpect, q.x);
+    EXPECT_EQ(yExpect, q.y);
+    EXPECT_EQ(zExpect, q.z);
+    EXPECT_EQ(wExpect, q.w);
 
     q = ds_math::Quaternion(x, y, z, w);
     q = -q;
 
-    EXPECT_EQ(-x, q.x);
-    EXPECT_EQ(-y, q.y);
-    EXPECT_EQ(-z, q.z);
-    EXPECT_EQ(-w, q.w);
+    EXPECT_EQ(xExpect, q.x);
+    EXPECT_EQ(yExpect, q.y);
+    EXPECT_EQ(zExpect, q.z);
+    EXPECT_EQ(wExpect, q.w);
 }
 
 TEST(Quaternion, TestQuaternionMultiplication)

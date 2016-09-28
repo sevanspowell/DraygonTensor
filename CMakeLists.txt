@@ -7,6 +7,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
 if (UNIX)
 	set(CMAKE_CXX_FLAGS "-Wall -Werror -std=c++11")
+	# set(CMAKE_CXX_FLAGS "-Wall -std=c++11")
 endif (UNIX)
 
 if (MSVC)

@@ -124,8 +124,13 @@ void Engine::Update(float deltaTime)
     // Update systems
     for (auto &system : m_systems)
     {
-        system->Update(deltaTime);
+        if (system.get() != m_script)
+        {
+            system->Update(deltaTime);
+        }
     }
+
+    m_script->Update(deltaTime);
 }
 
 void Engine::Shutdown()

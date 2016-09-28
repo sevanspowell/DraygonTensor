@@ -1,5 +1,6 @@
 subdirs(
-#    ballistic
     empty
     example
+    milestone1
+    physics
 )

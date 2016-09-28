@@ -13,6 +13,9 @@ namespace ds
 {
 /**
  * A texture resource.
+ *
+ * @author Samuel Evans-Powell
+ *
  */
 class TextureResource : public IResource
 {

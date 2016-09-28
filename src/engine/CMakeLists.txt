@@ -33,6 +33,13 @@ set(ENGINE_INCLUDE_FILES
   system/input/Input.h
   system/input/InputContext.h
 
+  system/physics/Physics.h
+  system/physics/PhysicsWorld.h
+  system/physics/PhysicsComponentManager.h
+  system/physics/ForceGenerator.h
+  system/physics/RigidBody.h
+  system/physics/CollisionFine.h
+
   system/platform/Keyboard.h
   system/platform/Mouse.h
   system/platform/Platform.h
@@ -90,6 +97,15 @@ set(ENGINE_SRC_FILES
   system/input/Input.cpp
   system/input/InputContext.cpp
   system/input/InputLuaBindings.cpp
+
+  system/physics/Physics.cpp
+  system/physics/PhysicsWorld.cpp
+  system/physics/PhysicsComponentManager.cpp
+  system/physics/PhysicsLuaBindings.cpp
+  system/physics/ForceGenerator.cpp
+  system/physics/RigidBody.cpp
+  system/physics/Contacts.cpp
+  system/physics/CollisionFine.cpp
 
   system/platform/Keyboard.cpp
   system/platform/Platform.cpp

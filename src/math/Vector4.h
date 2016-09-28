@@ -7,6 +7,9 @@ namespace ds_math
 {
 class Matrix4;
 
+/**
+ * @author Samuel Evans-Powell
+ */
 class Vector4
 {
 public:
@@ -144,6 +147,10 @@ public:
      * Change the sign of each component of the vector.
      */
     void Invert();
+    /**
+     * Set all the components of this vector to 0.
+     */
+    void Clear();
 
     /**
      * Find the dot product of the two given vectors.

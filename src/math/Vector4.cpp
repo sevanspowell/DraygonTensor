@@ -161,6 +161,14 @@ Vector4 Vector4::Invert(const Vector4 &vec)
     return (vec * -1);
 }
 
+void Vector4::Clear()
+{
+    this->x = 0.0f;
+    this->y = 0.0f;
+    this->z = 0.0f;
+    this->w = 0.0f;
+}
+
 Vector4 Vector4::Transform(const Vector4 &vec, const Matrix4 &matrix)
 {
     return (matrix * vec);

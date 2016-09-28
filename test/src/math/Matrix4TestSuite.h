@@ -216,6 +216,56 @@ TEST(Matrix4, TestInverse)
     EXPECT_EQ(result, inv);
 }
 
+TEST(Matrix4, TestTransformVector3)
+{
+    ds_math::Vector3 v(0.0f, 0.0f, 0.0f);
+
+    v = ds_math::Matrix4::Transform(
+        ds_math::Matrix4::CreateTranslationMatrix(0.0f, -2.0f, 0.0f), v);
+
+    EXPECT_EQ(0.0f, v.x);
+    EXPECT_EQ(-2.0f, v.y);
+    EXPECT_EQ(0.0f, v.z);
+}
+
+TEST(Matrix4, TestTransformVector4)
+{
+    ds_math::Vector4 v(0.0f, 0.0f, 0.0f, 1.0f);
+
+    v = ds_math::Matrix4::Transform(
+        ds_math::Matrix4::CreateTranslationMatrix(0.0f, -2.0f, 0.0f), v);
+
+    EXPECT_EQ(0.0f, v.x);
+    EXPECT_EQ(-2.0f, v.y);
+    EXPECT_EQ(0.0f, v.z);
+    EXPECT_EQ(1.0f, v.w);
+}
+
+TEST(Matrix4, TestInverseTransformVector3)
+{
+    ds_math::Vector3 v(0.0f, 0.0f, 0.0f);
+
+    v = ds_math::Matrix4::TransformInverse(
+        ds_math::Matrix4::CreateTranslationMatrix(0.0f, -2.0f, 0.0f), v);
+
+    EXPECT_EQ(0.0f, v.x);
+    EXPECT_EQ(2.0f, v.y);
+    EXPECT_EQ(0.0f, v.z);
+}
+
+TEST(Matrix4, TestInverseTransformVector4)
+{
+    ds_math::Vector4 v(0.0f, 0.0f, 0.0f, 1.0f);
+
+    v = ds_math::Matrix4::TransformInverse(
+        ds_math::Matrix4::CreateTranslationMatrix(0.0f, -2.0f, 0.0f), v);
+
+    EXPECT_EQ(0.0f, v.x);
+    EXPECT_EQ(2.0f, v.y);
+    EXPECT_EQ(0.0f, v.z);
+    EXPECT_EQ(1.0f, v.w);
+}
+
 TEST(Matrix4, TestCreateTranslationMatrix)
 {
     ds_math::Vector3 translation(1.0f, -2.3f, 0.3f);

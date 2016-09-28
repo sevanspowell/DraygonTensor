@@ -14,6 +14,9 @@ extern const char *inputSystemLuaName;
 
 namespace ds
 {
+Input::Input()
+{
+}
 
 bool Input::Initialize(const Config &config)
 {
@@ -69,12 +72,30 @@ bool Input::Initialize(const Config &config)
         }
     }
 
+    // Initialize keycode arrays
+    int numKeys = 0;
+    const uint8_t *keys = SDL_GetKeyboardState(&numKeys);
+    m_prevKeys.resize(numKeys, '\0');
+    memcpy((void *)&m_prevKeys[0], (void *)keys, numKeys * sizeof(uint8_t));
+
+    m_currentKeys.resize(numKeys, '\0');
+    memcpy((void *)&m_currentKeys[0], (void *)keys, numKeys * sizeof(uint8_t));
+
     return result;
 }
 
 void Input::Update(float deltaTime)
 {
     ProcessEvents(&m_messagesReceived);
+
+    // Update keycode arrays
+    // Swap prev keys with current keys
+    m_prevKeys = std::move(m_currentKeys);
+    // Update current keys
+    int numKeys = 0;
+    const uint8_t *keys = SDL_GetKeyboardState(&numKeys);
+    m_currentKeys.resize(numKeys, '\0');
+    memcpy((void *)&m_currentKeys[0], (void *)keys, numKeys * sizeof(uint8_t));
 
     m_messagesReceived.Clear();
 }
@@ -107,6 +128,24 @@ ScriptBindingSet Input::GetScriptBindings() const
     return ds_lua::LoadInputScriptBindings();
 }
 
+bool Input::WasKeyReleased(const std::string &keyName) const
+{
+    bool wasReleased = false;
+
+    ds_platform::Keyboard::Key key;
+
+    if (GetKeyCodeForKeyName(keyName, &key))
+    {
+        // Get scan code for key code
+        SDL_Scancode scanCode = SDL_GetScancodeFromKey((SDL_Keycode)key);
+
+        // Released if not currently pressed but was pressed
+        wasReleased = (bool)(!m_currentKeys[scanCode] && m_prevKeys[scanCode]);
+    }
+
+    return wasReleased;
+}
+
 bool Input::IsKeyPressed(const std::string &keyName) const
 {
     bool isPressed = false;
@@ -125,6 +164,19 @@ bool Input::IsKeyPressed(const std::string &keyName) const
     }
 
     return isPressed;
+}
+
+Input::ButtonState Input::GetMouseState(int *xPos, int *yPos) const
+{
+    ButtonState buttons;
+
+    uint32_t state = SDL_GetMouseState(xPos, yPos);
+
+    buttons.left = SDL_BUTTON(SDL_BUTTON_LEFT) & state;
+    buttons.middle = SDL_BUTTON(SDL_BUTTON_MIDDLE) & state;
+    buttons.right = SDL_BUTTON(SDL_BUTTON_RIGHT) & state;
+
+    return buttons;
 }
 
 void Input::GetMouseDeltaXY(int *xDelta, int *yDelta) const

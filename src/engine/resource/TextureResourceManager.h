@@ -13,6 +13,9 @@ typedef Handle TextureResourceHandle;
 /**
  * The texture resource manager is responsible for controlling the creation and
  * access of texture resources.
+ *
+ * @author Samuel Evans-Powell
+ *
  */
 class TextureResourceManager
 {
