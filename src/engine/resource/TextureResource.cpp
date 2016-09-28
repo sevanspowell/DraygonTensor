@@ -70,21 +70,17 @@ std::unique_ptr<IResource> TextureResource::CreateFromFile(std::string filePath)
 
                 int widthInPixels = 0;
                 int heightInPixels = 0;
-                int components = 0;
-                ComponentFlag channels;
 
                 std::stringstream fullImagePath;
                 fullImagePath << "../assets/" << imagePath;
 
                 unsigned char *imageContents =
                     stbi_load(fullImagePath.str().c_str(), &widthInPixels,
-                              &heightInPixels, &components, 0);
-
-                channels = static_cast<ComponentFlag>(components);
+                              &heightInPixels, nullptr, 4);
 
                 createdTexResource->SetWidthInPixels(i, widthInPixels);
                 createdTexResource->SetHeightInPixels(i, heightInPixels);
-                createdTexResource->SetComponentFlag(i, channels);
+                createdTexResource->SetComponentFlag(i, ComponentFlag::COMPONENT_FLAG_RGBA);
                 createdTexResource->SetImageFormat(i, typeFlag);
                 createdTexResource->SetTextureContents(i, imageContents);
             }
