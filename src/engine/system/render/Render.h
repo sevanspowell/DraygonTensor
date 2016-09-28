@@ -220,6 +220,12 @@ public:
      */
     virtual ScriptBindingSet GetScriptBindings() const;
 
+    /// @copydoc ds::ISystem::getUpdateRate
+    virtual unsigned getUpdateRate(uint32_t screenRefreshRate) const;
+
+    /// @copydoc ds::ISystem::getMaxConsecutiveUpdates
+    virtual unsigned getMaxConsecutiveUpdates() const;
+
     /**
      * Get the orientation of the camera component associated with the given
      * entity (if any).

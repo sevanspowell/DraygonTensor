@@ -92,6 +92,20 @@ uint32_t Platform::GetTicks() const
     return SDL_GetTicks();
 }
 
+uint32_t Platform::GetRefreshRate() const {
+	//@Hack HACK
+	/*auto window = SDL_GL_GetCurrentWindow();
+	SDL_DisplayMode mode;
+	SDL_GetWindowDisplayMode(window, &mode);
+	return mode.refresh_rate;*/
+
+	//@Hack HACK
+	SDL_DisplayMode mode;
+	SDL_GetDisplayMode(0, 0, &mode);
+	return mode.refresh_rate;
+
+}
+
 void Platform::AppendSDL2EventToGeneratedMessages(SDL_Event event)
 {
     switch (event.type)
