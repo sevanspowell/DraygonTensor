@@ -21,7 +21,8 @@ void Contact::setBodyData(RigidBody *rb1,
 
 void Contact::calculateInternals(ds_math::scalar duration)
 {
-    if (!body[0]) swapBodies();
+    if (!body[0])
+        swapBodies();
 
     calculateContactBasis();
 
@@ -33,6 +34,12 @@ void Contact::calculateInternals(ds_math::scalar duration)
     contactVelocity = calculateLocalVelocity(0, duration);
     if (body[1])
         contactVelocity -= calculateLocalVelocity(1, duration);
+
+    std::cout << "contactToWorld: " << contactToWorld << std::endl;
+    std::cout << "rel contactPosition 0: " << relativeContactPosition[0]
+              << std::endl;
+    std::cout << "rel contactPosition 1: " << relativeContactPosition[1]
+              << std::endl;
 
     calculateDesiredDeltaVelocity(duration);
 }
@@ -62,22 +69,48 @@ void Contact::matchAwakeState()
 
 void Contact::calculateDesiredDeltaVelocity(ds_math::scalar duration)
 {
-	const static scalar velocityLimit = 0.25;
+    // TODO: Change back to 0.25
+    const static scalar velocityLimit = 0.15;
 
-	scalar accelVel = 0;
+    scalar accelVel = 0;
 
-	for(int i = 0; i < 2; i++) {
-		if ((body[i]) && (body[i]->getAwake())) {
-			accelVel += Vector3::Dot(body[i]->getLastFrameAcceleration() * duration, contactNormal) * ((i%2)?1:-1);
-		}
-	}
+    for (int i = 0; i < 2; i++)
+    {
+        if ((body[i]) && (body[i]->getAwake()))
+        {
+            accelVel +=
+                Vector3::Dot(body[i]->getLastFrameAcceleration() * duration,
+                             contactNormal) *
+                ((i % 2) ? -1 : 1);
+        }
+    }
+    // if (body[0]->getAwake())
+    // {
+    //     accelVel +=
+    //         Vector3::Dot(body[0]->getLastFrameAcceleration() * duration, contactNormal);
+    // }
 
-	scalar boundedResitution = restitution;
-	if (fabs(contactVelocity.x) < velocityLimit) {
-		boundedResitution = 0.0;
-	}
+    // if (body[1] && body[1]->getAwake())
+    // {
+    //     accelVel -=
+    //         Vector3::Dot(body[1]->getLastFrameAcceleration() * duration, contactNormal);
+    // }
 
-    desiredDeltaVelocity = -contactVelocity.x - boundedResitution * (contactVelocity.x - accelVel);
+    scalar boundedResitution = restitution;
+    if (fabs(contactVelocity.x) < velocityLimit)
+    {
+        boundedResitution = 0.0;
+    }
+
+    desiredDeltaVelocity =
+        -contactVelocity.x - boundedResitution * (contactVelocity.x - accelVel);
+    // desiredDeltaVelocity /= 2.0f;
+    std::cout << "duration: " << duration << std::endl;
+    std::cout << "contactVelocity.x: " << contactVelocity.x << std::endl;
+    std::cout << "boundedResitution: " << boundedResitution << std::endl;
+    std::cout << "accelVel: " << accelVel << std::endl;
+    std::cout << "desiredDeltaVelocity: " << desiredDeltaVelocity << std::endl;
+    std::cout << "--o--" << std::endl;
 }
 
 ds_math::Vector3 Contact::calculateLocalVelocity(unsigned bodyIndex,
@@ -122,12 +155,12 @@ void Contact::calculateContactBasis()
         contactTan[0].z = -contactNormal.x * s;
 
         contactTan[1].x =
-            contactNormal.z * contactTan[0].x; // Changed from x to z, saw on
+            contactNormal.y * contactTan[0].x; // Changed from x to z, saw on
                                                // another branch of project and
                                                // makes sense.
         contactTan[1].y = contactNormal.z * contactTan[0].x -
                           contactNormal.x * contactTan[0].z;
-        contactTan[1].z = -contactNormal.z * contactTan[0].x;
+        contactTan[1].z = -contactNormal.y * contactTan[0].x;
     }
     else
     {
@@ -139,8 +172,8 @@ void Contact::calculateContactBasis()
 
         contactTan[1].x = contactNormal.y * contactTan[0].z -
                           contactNormal.z * contactTan[0].y;
-        contactTan[1].y = -contactNormal.y * contactTan[0].z;
-        contactTan[1].z = contactNormal.z * contactTan[0].y;
+        contactTan[1].y = -contactNormal.x * contactTan[0].z;
+        contactTan[1].z = contactNormal.x * contactTan[0].y;
     }
 
     contactToWorld[0] = contactNormal;
@@ -178,7 +211,7 @@ void Contact::applyImpulse(const ds_math::Vector3 &impulse,
                            ds_math::Vector3 *rotationChange)
 {
     ///@todo Check if this implementation is correct. As far as I can tell, it
-    ///should be.
+    /// should be.
     Matrix3 inverseInertiaTensor;
     body->getInverseInertiaTensorWorld(&inverseInertiaTensor);
     applyImpulseToBody(body, relativeContactPosition[0], impulse,
@@ -198,9 +231,9 @@ void Contact::applyVelocityChange(ds_math::Vector3 velocityChange[2],
 
     Vector3 impulse =
         contactToWorld *
-        ((friction == 0.0) ?
-        		calculateFrictionlessImpulse(inverseInertiaTensor)//;
-                           : calculateFrictionImpulse(inverseInertiaTensor));
+        ((friction == 0.0)
+             ? calculateFrictionlessImpulse(inverseInertiaTensor) //;
+             : calculateFrictionImpulse(inverseInertiaTensor));
     // std::cout << "contactToWorld: " << contactToWorld << std::endl;
 
     // Apply calculated impulse
@@ -225,7 +258,7 @@ static void calculateFrictionlessInertia(RigidBody *body,
         Vector3 angularIntertiaWorld =
             iiTensor * Vector3::Cross(contactRelPos, contactNorm);
         angularIntertiaWorld =
-            Vector3::Cross(angularIntertiaWorld, contactRelPos) * contactNorm;
+            Vector3::Cross(angularIntertiaWorld, contactRelPos);
         angularInertia = Vector3::Dot(angularIntertiaWorld, contactNorm);
 
         // Calculate linear inertia (It's just the inverseMass)
@@ -291,9 +324,9 @@ static void calculateAngularMove(RigidBody *body,
             Vector3 targetDirection =
                 Vector3::Cross(contactRelPos, contactNormal);
             Matrix3 iiTensor;
-            body->getInverseInertiaTensor(&iiTensor);
+            body->getInverseInertiaTensorWorld(&iiTensor);
             angularChange = (iiTensor * targetDirection) *
-                            (angularMove * (1 / angularInertia));
+                            (angularMove / angularInertia);
         }
     }
     else
@@ -331,7 +364,7 @@ static void applyAngularMoveToBody(RigidBody *body,
     {
         Quaternion q;
         body->getOrientation(&q);
-        q.AddScaledVector(angularChange, 1);
+        q.AddScaledVector(angularChange, ((ds_math::scalar)1.0));
         body->setOrientation(q);
     }
 }
@@ -347,7 +380,8 @@ void Contact::applyPositionChange(ds_math::Vector3 linearChange[2],
 
     Matrix3 iiTensor[2];
 
-    for (unsigned i = 0; i < 2; i++) {
+    for (unsigned i = 0; i < 2; i++)
+    {
         if (body[i])
         {
             body[i]->getInverseInertiaTensorWorld(&iiTensor[i]);
@@ -383,7 +417,7 @@ void Contact::applyPositionChange(ds_math::Vector3 linearChange[2],
                 body[i]->calculateDerivedData();
 
             //@todo TODO TEMPORARY CODE
-            //body[i]->setVelocity(0, 0, 0);
+            // body[i]->setVelocity(0, 0, 0);
         }
 }
 
@@ -417,9 +451,9 @@ static ds_math::Matrix3
 calculateSkewSymmetricMatrix(const ds_math::Vector3 &vec)
 {
     Matrix3 result;
-    result[0] = Vector3(     0, -vec.z,  vec.y);
-    result[1] = Vector3( vec.z,      0, -vec.x);
-    result[2] = Vector3(-vec.y,  vec.x, 0);
+    result[0] = Vector3(0, -vec.z, vec.y);
+    result[1] = Vector3(vec.z, 0, -vec.x);
+    result[2] = Vector3(-vec.y, vec.x, 0);
 
     return result;
 }
@@ -456,7 +490,8 @@ Contact::calculateFrictionImpulse(ds_math::Matrix3 *inverseInertiaTensor)
     Matrix3 impulseMatrix = Matrix3::Inverse(deltaVelocity);
 
     // Find the target velocities to kill
-    Vector3 velKill(desiredDeltaVelocity, -contactVelocity.y, -contactVelocity.z);
+    Vector3 velKill(desiredDeltaVelocity, -contactVelocity.y,
+                    -contactVelocity.z);
 
     // Find the impulse to kill target velocities
     Vector3 impulseContact = impulseMatrix * velKill;
@@ -488,8 +523,8 @@ Contact::calculateFrictionImpulse(ds_math::Matrix3 *inverseInertiaTensor)
         impulseContact.z /= planarImpulse;
 
         impulseContact.x = deltaVelocity[0][0] +
-            deltaVelocity[0][1]*friction*impulseContact.y +
-            deltaVelocity[0][2]*friction*impulseContact.z;
+                           deltaVelocity[0][1] * friction * impulseContact.y +
+                           deltaVelocity[0][2] * friction * impulseContact.z;
         impulseContact.x = desiredDeltaVelocity / impulseContact.x;
         impulseContact.y *= friction * impulseContact.x;
         impulseContact.z *= friction * impulseContact.x;

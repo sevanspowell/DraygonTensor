@@ -17,9 +17,19 @@ typedef float scalar;
 const float SCALAR_MAX = std::numeric_limits<float>::max();
 
 /**
- * Precision of the power operator
+ * Precision of the power operator.
  */
 #define SCALAR_POW powf
+
+/**
+ * Precision of the abs operator. 
+ */
+#define SCALAR_ABS fabs
+
+/**
+ * Precision of the square root operator.
+ */
+#define SCALAR_SQRT sqrtf
 
 /**
  * How 'close' two floats need to be in order to be considered equal.

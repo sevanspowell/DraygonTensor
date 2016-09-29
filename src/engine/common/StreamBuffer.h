@@ -11,6 +11,8 @@ namespace ds_com
  * When an object is inserted into the stream buffer the object is copied
  * directly, no constructors and destructors are called. For this reason, the
  * stream buffer should only be used to store POD types.
+ *
+ * @author Samuel Evans-Powell
  */
 class StreamBuffer
 {

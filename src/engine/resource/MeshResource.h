@@ -19,6 +19,8 @@ namespace ds
 /**
  * A mesh resource contains all the data in a mesh resource file, for now this
  * is simply the vertices, normals, texture coordinates and indices of the mesh.
+ *
+ * @author Samuel Evans-Powell
  */
 class MeshResource : public IResource
 {

@@ -14,6 +14,8 @@ namespace ds
  * - use Instances as a method of referring to a specific component instance in
  * the manager.
  * - provide getter and setter methods for all the component's data members.
+ *
+ * @author Samuel Evans-Powell
  */
 class IComponentManager
 {

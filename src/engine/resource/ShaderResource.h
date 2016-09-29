@@ -8,6 +8,9 @@
 
 namespace ds
 {
+/**
+ * @author Samuel Evans-Powell
+ */
 class ShaderResource : public IResource
 {
 public:

@@ -5,6 +5,9 @@
 
 namespace ds_math
 {
+/**
+ * @author Samuel Evans-Powell
+ */
 class Matrix4
 {
 public:

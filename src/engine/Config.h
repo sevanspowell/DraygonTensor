@@ -9,6 +9,8 @@ namespace ds
 /**
  * Engine configuration class.
  *
+ * @author Samuel Evans-Powell
+ *
  * This class abstracts away the details of the configuration loaded by the
  * engine and allows users to get data from the configuration file, configuring
  * themselves accordingly.

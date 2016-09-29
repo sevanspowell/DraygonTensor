@@ -1,9 +1,37 @@
-#include <engine/system/physics/CollisionFine.h>
+/**
+ *
+ * The MIT License
+ *
+ * Copyright (c) 2003-2009 Ian Millington
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @author Ian Millington
+ */
+#include <iostream>
 #include <algorithm>
 #include <memory.h>
 #include <assert.h>
 #include <cstdlib>
 #include <cstdio>
+
+#include <engine/system/physics/CollisionFine.h>
 
 using namespace ds_phys;
 
@@ -53,7 +81,9 @@ static inline ds_math::scalar transformToAxis(const CollisionBox &box,
     return box.halfSize.x * fabs(ds_math::Vector3::Dot(axis, box.getAxis(0))) +
            box.halfSize.y * fabs(ds_math::Vector3::Dot(axis, box.getAxis(1))) +
            box.halfSize.z * fabs(ds_math::Vector3::Dot(axis, box.getAxis(2)));
-	//return (ds_math::Vector3::Dot(axis, ds_math::Matrix3(box.getTransform()[0], box.getTransform()[1], box.getTransform()[2])*box.halfSize));
+    // return (ds_math::Vector3::Dot(axis,
+    // ds_math::Matrix3(box.getTransform()[0], box.getTransform()[1],
+    // box.getTransform()[2])*box.halfSize));
 }
 
 /**
@@ -67,7 +97,7 @@ static inline bool overlapOnAxis(const CollisionBox &one,
                                  ds_math::Vector3 axis,
                                  const ds_math::Vector3 &toCentre)
 {
-	//if (ds_math::Vector3::Dot(axis, axis) < 0.0001) return true;
+    // if (ds_math::Vector3::Dot(axis, axis) < 0.0001) return true;
 
     // Project the half-size of one onto axis
     ds_math::scalar oneProject = transformToAxis(one, axis);
@@ -90,19 +120,14 @@ bool IntersectionTests::boxAndBox(const CollisionBox &one,
     // Find the vector between the two centres
     ds_math::Vector3 toCentre = two.getAxis(3) - one.getAxis(3);
 
-    std::cout << "Box1 - Axis 1 " << one.getAxis(0) << " | Axis 2 " << one.getAxis(1)<< " | Axis 2 " << one.getAxis(2) << std::endl;
-    std::cout << "Box2 - Axis 1 " << two.getAxis(0) << " | Axis 2 " << two.getAxis(1)<< " | Axis 2 " << two.getAxis(2) << std::endl;
-    std::cout << "toCentre " << toCentre << std::endl;
 
-   	return (
+    return (
         // Check on box one's axes first
-        TEST_OVERLAP(one.getAxis(0)) &&
-        TEST_OVERLAP(one.getAxis(1)) &&
+        TEST_OVERLAP(one.getAxis(0)) && TEST_OVERLAP(one.getAxis(1)) &&
         TEST_OVERLAP(one.getAxis(2)) &&
 
         // And on two's
-        TEST_OVERLAP(two.getAxis(0)) &&
-        TEST_OVERLAP(two.getAxis(1)) &&
+        TEST_OVERLAP(two.getAxis(0)) && TEST_OVERLAP(two.getAxis(1)) &&
         TEST_OVERLAP(two.getAxis(2)) &&
 
         // Now on the cross products
@@ -114,8 +139,7 @@ bool IntersectionTests::boxAndBox(const CollisionBox &one,
         TEST_OVERLAP(ds_math::Vector3::Cross(one.getAxis(1), two.getAxis(2))) &&
         TEST_OVERLAP(ds_math::Vector3::Cross(one.getAxis(2), two.getAxis(0))) &&
         TEST_OVERLAP(ds_math::Vector3::Cross(one.getAxis(2), two.getAxis(1))) &&
-        TEST_OVERLAP(ds_math::Vector3::Cross(one.getAxis(2), two.getAxis(2)))
-    );
+        TEST_OVERLAP(ds_math::Vector3::Cross(one.getAxis(2), two.getAxis(2))));
 }
 #undef TEST_OVERLAP
 
@@ -128,7 +152,7 @@ bool IntersectionTests::boxAndHalfSpace(const CollisionBox &box,
     // Work out how far the box is from the origin
     ds_math::scalar boxDistance =
         ds_math::Vector3::Dot(plane.direction, box.getAxis(3)) -
-		projectedRadius;
+        projectedRadius;
 
     // Check for the intersection
     return boxDistance <= plane.offset;
@@ -282,7 +306,7 @@ static inline bool tryAxis(const CollisionBox &one,
                            ds_math::scalar &smallestPenetration,
                            unsigned &smallestCase)
 {
-    // Make sure we have a normalized axis, and don't check almost parallel  axes
+    // Make sure we have a normalized axis, and don't check almost parallel axes
     if (ds_math::Vector3::Dot(axis, axis) < 0.0001)
         return true;
     axis.Normalize();
@@ -309,7 +333,7 @@ void fillPointFaceBoxBox(const CollisionBox &one,
     // This method is called when we know that a vertex from
     // box two is in contact with box one.
 
-    Contact* contact = data->contacts;
+    Contact *contact = data->contacts;
 
     // We know which axis the collision is on (i.e. best),
     // but we need to work out which of the two faces on
@@ -323,16 +347,18 @@ void fillPointFaceBoxBox(const CollisionBox &one,
     // Work out which vertex of box two we're colliding with.
     // Using toCentre doesn't work!
     ds_math::Vector3 vertex = two.halfSize;
-    if (ds_math::Vector3::Dot(two.getAxis(0), normal) < 0) vertex.x = -vertex.x;
-    if (ds_math::Vector3::Dot(two.getAxis(1), normal) < 0) vertex.y = -vertex.y;
-    if (ds_math::Vector3::Dot(two.getAxis(2), normal) < 0) vertex.z = -vertex.z;
+    if (ds_math::Vector3::Dot(two.getAxis(0), normal) < 0)
+        vertex.x = -vertex.x;
+    if (ds_math::Vector3::Dot(two.getAxis(1), normal) < 0)
+        vertex.y = -vertex.y;
+    if (ds_math::Vector3::Dot(two.getAxis(2), normal) < 0)
+        vertex.z = -vertex.z;
 
     // Create the contact data
     contact->contactNormal = normal;
     contact->penetration = pen;
     contact->contactPoint = two.getTransform() * vertex;
-    contact->setBodyData(one.body, two.body,
-        data->friction, data->restitution);
+    contact->setBodyData(one.body, two.body, data->friction, data->restitution);
 }
 
 static inline ds_math::Vector3
@@ -398,7 +424,8 @@ unsigned CollisionDetector::boxAndBox(const CollisionBox &one,
                                       const CollisionBox &two,
                                       CollisionData *data)
 {
-    if (!IntersectionTests::boxAndBox(one, two)) return false;
+    // if (!IntersectionTests::boxAndBox(one, two))
+    //     return 0;
 
     // Find the vector between the two centres
     ds_math::Vector3 toCentre = two.getAxis(3) - one.getAxis(3);
@@ -452,7 +479,7 @@ unsigned CollisionDetector::boxAndBox(const CollisionBox &one,
         // We use the same algorithm as above, but swap around
         // one and two (and therefore also the vector between their
         // centres).
-        fillPointFaceBoxBox(two, one, toCentre*-1.0f, data, best-3, pen);
+        fillPointFaceBoxBox(two, one, toCentre * -1.0f, data, best - 3, pen);
         data->addContacts(1);
         return 1;
     }
@@ -469,8 +496,8 @@ unsigned CollisionDetector::boxAndBox(const CollisionBox &one,
 
         // The axis should point from box one to box two.
         {
-        	auto tmp = (axis * toCentre);
-        	if (ds_math::Vector3::Dot(tmp, tmp) > 0) axis = axis * -1.0f;
+            if (ds_math::Vector3::Dot(axis, toCentre) > 0)
+                axis = axis * -1.0f;
         }
         // We have the axes, but not the edges: each axis has 4 edges parallel
         // to it, we need to find which of the 4 for each object. We do
@@ -482,11 +509,15 @@ unsigned CollisionDetector::boxAndBox(const CollisionBox &one,
         ds_math::Vector3 ptOnTwoEdge = two.halfSize;
         for (unsigned i = 0; i < 3; i++)
         {
-            if (i == oneAxisIndex) ptOnOneEdge[i] = 0;
-            else if (ds_math::Vector3::Dot(one.getAxis(i), axis) > 0) ptOnOneEdge[i] = -ptOnOneEdge[i];
+            if (i == oneAxisIndex)
+                ptOnOneEdge[i] = 0;
+            else if (ds_math::Vector3::Dot(one.getAxis(i), axis) > 0)
+                ptOnOneEdge[i] = -ptOnOneEdge[i];
 
-            if (i == twoAxisIndex) ptOnTwoEdge[i] = 0;
-            else if (ds_math::Vector3::Dot(two.getAxis(i), axis) < 0) ptOnTwoEdge[i] = -ptOnTwoEdge[i];
+            if (i == twoAxisIndex)
+                ptOnTwoEdge[i] = 0;
+            else if (ds_math::Vector3::Dot(two.getAxis(i), axis) < 0)
+                ptOnTwoEdge[i] = -ptOnTwoEdge[i];
         }
 
         // Move them into world coordinates (they are already oriented
@@ -498,24 +529,24 @@ unsigned CollisionDetector::boxAndBox(const CollisionBox &one,
         // We need to find out point of closest approach of the two
         // line-segments.
         ds_math::Vector3 vertex = contactPoint(
-            ptOnOneEdge, oneAxis, one.halfSize[oneAxisIndex],
-            ptOnTwoEdge, twoAxis, two.halfSize[twoAxisIndex],
-            bestSingleAxis > 2
-            );
+            ptOnOneEdge, oneAxis, one.halfSize[oneAxisIndex], ptOnTwoEdge,
+            twoAxis, two.halfSize[twoAxisIndex], bestSingleAxis > 2);
 
         // We can fill the contact.
-        Contact* contact = data->contacts;
+        Contact *contact = data->contacts;
 
-        std::cout << "PEN: " << pen << std::endl;
         contact->penetration = pen;
         contact->contactNormal = axis;
         contact->contactPoint = vertex;
-        contact->setBodyData(one.body, two.body,
-            data->friction, data->restitution);
+        contact->setBodyData(one.body, two.body, data->friction,
+                             data->restitution);
         data->addContacts(1);
-        return true;
+        std::cout << "contactNormal: " << contact->contactNormal << std::endl;
+        std::cout << "contactRestitution: " << contact->restitution
+                  << std::endl;
+        return 1;
     }
-    return false;
+    return 0;
 }
 #undef CHECK_OVERLAP
 
@@ -628,10 +659,6 @@ unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,
                                             const CollisionPlane &plane,
                                             CollisionData *data)
 {
-    std::cout << "box - halfSize: " << box.halfSize << std::endl;
-    std::cout << "box - transform: " << box.getTransform()[3] << std::endl;
-    std::cout << "plane - direction: " << plane.direction << std::endl;
-    std::cout << "plane - offset: " << plane.offset << std::endl;
     // Make sure we have contacts
     if (data->contactsLeft <= 0)
         return 0;
@@ -661,13 +688,9 @@ unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,
         vertexPos = vertexPos * box.halfSize; // was componentProductUpdate
         vertexPos = ds_math::Matrix4::Transform(box.transform, vertexPos);
 
-
         // Calculate the distance from the plane
         ds_math::scalar vertexDistance =
             ds_math::Vector3::Dot(vertexPos, plane.direction);
-
-        std::cout << "vertexPos: " << vertexPos << std::endl;
-        std::cout << "vDist: " << vertexDistance << std::endl;
 
         // Compare this to the plane's distance
         if (vertexDistance <= plane.offset)
@@ -677,13 +700,16 @@ unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,
             // The contact point is halfway between the vertex and the
             // plane - we multiply the direction by half the separation
             // distance and add the vertex location.
-            std::cout << "vt - po: " << vertexDistance - plane.offset
-                      << std::endl;
             // @todo TODO Should this be 0.5f? (Doesn't seem to matter afaik)
+            // contact->contactPoint =
+            //     vertexPos +
+            //     1.0f * (plane.direction *
+            //             (std::abs(vertexDistance - plane.offset)));
+            contact->contactPoint = plane.direction;
             contact->contactPoint =
-                vertexPos +
-                1.0f * (plane.direction *
-                        (std::abs(vertexDistance - plane.offset)));
+                contact->contactPoint * (vertexDistance - plane.offset);
+            contact->contactPoint = contact->contactPoint + vertexPos;
+
             contact->contactNormal = plane.direction;
             contact->penetration = (plane.offset - vertexDistance);
 

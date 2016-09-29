@@ -45,9 +45,6 @@ void Gravity::updateForce(RigidBody *body, ds_math::scalar duration)
     {
         // Apply mass-scaled force to body
         body->addForce(m_gravity);
-        std::cout << "vel: " << body->getVelocity() << std::endl;
-        std::cout << "accel: " << body->getAcceleration() << std::endl;
-        std::cout << "lf. accel: " << body->getLastFrameAcceleration() << std::endl;
     }
 }
 

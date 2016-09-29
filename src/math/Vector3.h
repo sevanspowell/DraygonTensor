@@ -10,7 +10,7 @@ class Matrix4;
 class Quaternion;
 class Vector4;
 /**
- *  Vector-3 class.
+ * @author Samuel Evans-Powell
  */
 class Vector3
 {

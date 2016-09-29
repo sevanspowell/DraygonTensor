@@ -1,37 +1,47 @@
 #include <algorithm>
+#include <thread>
+#include <chrono>
 
 #include "engine/system/physics/PhysicsWorld.h"
 
 namespace ds_phys
 {
 
-
-// static void setInertiaTensorCoeffs(ds_math::Matrix3& mat, ds_math::scalar ix, ds_math::scalar iy, ds_math::scalar iz,
-// 		ds_math::scalar ixy=0, ds_math::scalar ixz=0, ds_math::scalar iyz=0) {
-//     mat[0][0] = ix;
-//     mat[0][1] =-ixy;
-//     mat[0][2] =-ixz;
-
-//     mat[1][0] = -ixy;
-//     mat[1][1] = iy;
-//     mat[1][2] = -iyz;
-
-//     mat[2][0] =-ixz;
-//     mat[2][1] = -iyz;
-//     mat[2][2] = iz;
-// }
-
-// static void setBlockInertiaTensor(ds_math::Matrix3& mat, const ds_math::Vector3 &halfSizes, ds_math::scalar mass) {
-//     ds_math::Vector3 squares = halfSizes*2;
-//     setInertiaTensorCoeffs(mat,
-//     	0.3f*mass*(squares.y + squares.z),
-//         0.3f*mass*(squares.x + squares.z),
-//         0.3f*mass*(squares.x + squares.y));
-// }
-
-PhysicsWorld::PhysicsWorld(unsigned int maxContacts, unsigned int iterations) : m_contactResolver(10)
+static void setInertiaTensorCoeffs(ds_math::Matrix3 &mat,
+                                   ds_math::scalar ix,
+                                   ds_math::scalar iy,
+                                   ds_math::scalar iz,
+                                   ds_math::scalar ixy = 0,
+                                   ds_math::scalar ixz = 0,
+                                   ds_math::scalar iyz = 0)
 {
-	m_rigidBodies.reserve(100);
+    mat[0][0] = ix;
+    mat[0][1] = -ixy;
+    mat[0][2] = -ixz;
+
+    mat[1][0] = -ixy;
+    mat[1][1] = iy;
+    mat[1][2] = -iyz;
+
+    mat[2][0] = -ixz;
+    mat[2][1] = -iyz;
+    mat[2][2] = iz;
+}
+
+static void setBlockInertiaTensor(ds_math::Matrix3 &mat,
+                                  const ds_math::Vector3 &halfSizes,
+                                  ds_math::scalar mass)
+{
+    ds_math::Vector3 squares = halfSizes * halfSizes;
+    setInertiaTensorCoeffs(mat, 0.3f * mass * (squares.y + squares.z),
+                           0.3f * mass * (squares.x + squares.z),
+                           0.3f * mass * (squares.x + squares.y));
+}
+
+PhysicsWorld::PhysicsWorld(unsigned int maxContacts, unsigned int iterations)
+    : m_contactResolver(10)
+{
+    m_rigidBodies.reserve(100);
     // m_collisionConfiguration = new btDefaultCollisionConfiguration();
     // m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
     // m_broadPhase = new btDbvtBroadphase();
@@ -40,13 +50,11 @@ PhysicsWorld::PhysicsWorld(unsigned int maxContacts, unsigned int iterations) : 
     m_collisionData.contactArray = m_contacts;
 
     m_box.halfSize = ds_math::Vector3(0.5f, 0.5f, 0.5f);
-    // m_box2.halfSize = ds_math::Vector3(0.5f, 0.5f, 0.5f);
+    m_box2.halfSize = ds_math::Vector3(0.5f, 0.5f, 0.5f);
 
     m_plane.body = nullptr;
     m_plane.direction = ds_math::Vector3::Normalize(ds_math::Vector3(0, 1, 0));
     m_plane.offset = 0.0f;
-
-
 }
 
 PhysicsWorld::~PhysicsWorld()
@@ -80,9 +88,10 @@ void PhysicsWorld::startFrame()
 
 void PhysicsWorld::stepSimulation(ds_math::scalar duration)
 {
-	//duration = 1/60.0f;
+    duration = 1 / 60.0f;
+    std::this_thread::sleep_for(std::chrono::milliseconds(15));
 
-	//duration = duration;
+    // duration = duration;
     // Update force generators
     m_forceRegistry.updateForces(duration);
 
@@ -99,18 +108,18 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
     // Generate contacts
     // m_collisionWorld->performDiscreteCollisionDetection();
     m_box.calculateInternals();
-    // m_box2.calculateInternals();
+    m_box2.calculateInternals();
     m_plane.calculateInternals();
 
     unsigned int got = generateContacts();
-    std::cout << got << std::endl;
-    std::cout << m_box.getTransform() << std::endl;
-    //std::cout << m_plane.getTransform() << std::endl;
+    // std::cout << m_plane.getTransform() << std::endl;
     std::cout << "---- Contacts generated -----" << std::endl;
 
+    std::cout << "Got " << got << " contacts." << std::endl;
     for (unsigned i = 0; i < got; ++i)
     {
-        std::cout << m_contacts[i].contactPoint << " Pen: " << m_contacts[i].penetration << std::endl;
+        std::cout << m_contacts[i].contactPoint
+                  << " Pen: " << m_contacts[i].penetration << std::endl;
     }
     m_contactResolver.resolveContacts(m_contacts, got, duration);
     std::cout << "---- -----" << std::endl;
@@ -121,17 +130,26 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
 
 void PhysicsWorld::addRigidBody(RigidBody *rigidBody)
 {
-	//@todo Remove when propper loading is done.
-	rigidBody->setLinearDamping(0.9f);
-	rigidBody->setAngularDamping(0.80f);
-	rigidBody->clearAccumulators();
-	rigidBody->setCanSleep(true);
-	rigidBody->setAwake();
-	rigidBody->setMass(1);
-	ds_math::Matrix3 mat;
-	// setBlockInertiaTensor(mat, m_box2.halfSize, rigidBody->getMass());
-	rigidBody->setInertiaTensor(mat);
-	rigidBody->calculateDerivedData();
+    //@todo Remove when propper loading is done.
+    rigidBody->setRotation(ds_math::Vector3(0, 0, 0));
+
+    ds_math::scalar mass =
+        m_box.halfSize.x * m_box.halfSize.y * m_box.halfSize.z * 8.0f;
+    rigidBody->setMass(mass);
+
+    ds_math::Matrix3 tensor;
+    setBlockInertiaTensor(tensor, m_box.halfSize, rigidBody->getMass());
+    rigidBody->setInertiaTensor(tensor);
+
+    rigidBody->setLinearDamping(0.95f);
+    rigidBody->setAngularDamping(0.80f);
+    rigidBody->clearAccumulators();
+    rigidBody->setAcceleration(0.0f, -10.0f, 0.0f);
+    rigidBody->setCanSleep(true);
+
+    rigidBody->setAwake();
+
+    rigidBody->calculateDerivedData();
 
     m_rigidBodies.push_back(rigidBody);
 }
@@ -164,7 +182,7 @@ void PhysicsWorld::removeForceGenerator(RigidBody *rigidBody,
 unsigned int PhysicsWorld::generateContacts()
 {
     m_collisionData.reset(PhysicsWorld::MAX_CONTACTS);
-    m_collisionData.friction = (ds_math::scalar)0.1;
+    m_collisionData.friction = (ds_math::scalar)0.9;
     m_collisionData.restitution = (ds_math::scalar)0.6;
     m_collisionData.tolerance = (ds_math::scalar)0.1;
 
@@ -173,10 +191,10 @@ unsigned int PhysicsWorld::generateContacts()
         return m_collisionData.contactCount;
     }
 
-    //CollisionDetector::boxAndHalfSpace(m_box, m_plane, &m_collisionData);
+    // CollisionDetector::boxAndHalfSpace(m_box, m_plane, &m_collisionData);
     CollisionDetector::boxAndHalfSpace(m_box, m_plane, &m_collisionData);
-    // CollisionDetector::boxAndBox(m_box, m_box2, &m_collisionData);
-    // CollisionDetector::boxAndHalfSpace(m_box2, m_plane, &m_collisionData);
+    CollisionDetector::boxAndHalfSpace(m_box2, m_plane, &m_collisionData);
+    CollisionDetector::boxAndBox(m_box, m_box2, &m_collisionData);
 
     return m_collisionData.contactCount;
 }

@@ -19,6 +19,9 @@ namespace ds
 * vertices, indicies, normals, width, depth and pixelheights.
 *
 * Terrain height data begins normalized between the range -0.5f to 0.5f.
+*
+* @author Samuel Evans-Powell
+*
 */
 class TerrainResource : public IResource
 {

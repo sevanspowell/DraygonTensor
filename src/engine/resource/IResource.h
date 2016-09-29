@@ -2,6 +2,9 @@
 
 namespace ds
 {
+/**
+ * @author Samuel Evans-Powell
+ */
 class IResource
 {
 public:

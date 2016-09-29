@@ -16,7 +16,7 @@ namespace ds
 // TODO: Update these values for m_physicsWorld constructor
 Physics::Physics()
     : m_physicsWorld(0, 0),
-      m_fg(ds_phys::Gravity(ds_math::Vector3(0.0f, -5.0f, 0.0f)))
+      m_fg(ds_phys::Gravity(ds_math::Vector3(0.0f, -1.0f, 0.0f)))
 {
 }
 
@@ -35,7 +35,7 @@ void Physics::AddForceGenerator(Entity entity)
 
         assert(body != nullptr);
 
-        m_physicsWorld.addForceGenerator(body, &m_fg);
+        // m_physicsWorld.addForceGenerator(body, &m_fg);
     }
 }
 
@@ -72,25 +72,25 @@ void Physics::UpdateComponents()
         std::cout << body->getPosition() << std::endl;
 
         {
-			ds_msg::SetLocalTranslation setTranslationMsg;
-			setTranslationMsg.entity = entity;
-			setTranslationMsg.localTranslation = body->getPosition();
+            ds_msg::SetLocalTranslation setTranslationMsg;
+            setTranslationMsg.entity = entity;
+            setTranslationMsg.localTranslation = body->getPosition();
 
-			// Send message telling transform component to update
-			ds_msg::AppendMessage(
-				&m_messagesGenerated, ds_msg::MessageType::SetLocalTranslation,
-				sizeof(ds_msg::SetLocalTranslation), &setTranslationMsg);
-    	}
+            // Send message telling transform component to update
+            ds_msg::AppendMessage(
+                &m_messagesGenerated, ds_msg::MessageType::SetLocalTranslation,
+                sizeof(ds_msg::SetLocalTranslation), &setTranslationMsg);
+        }
 
         {
-        	ds_msg::SetLocalOrientation setLocalOrientation;
-			setLocalOrientation.entity = entity;
-			setLocalOrientation.localOrientation = body->getOrientation();
+            ds_msg::SetLocalOrientation setLocalOrientation;
+            setLocalOrientation.entity = entity;
+            setLocalOrientation.localOrientation = body->getOrientation();
 
-			// Send message telling transform component to update
-			ds_msg::AppendMessage(
-				&m_messagesGenerated, ds_msg::MessageType::SetLocalOrientation,
-				sizeof(ds_msg::SetLocalOrientation), &setLocalOrientation);
+            // Send message telling transform component to update
+            ds_msg::AppendMessage(
+                &m_messagesGenerated, ds_msg::MessageType::SetLocalOrientation,
+                sizeof(ds_msg::SetLocalOrientation), &setLocalOrientation);
         }
     }
 }
@@ -192,7 +192,7 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
             // Get component instance of entity to move
             Instance transform =
                 m_transformComponentManager.GetInstanceForEntity(
-                		setLocalOrientation.entity);
+                    setLocalOrientation.entity);
 
             // If has transform component
             if (transform.IsValid())
@@ -399,14 +399,17 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
 
         // DEBUG
         static int tmpValue = 0;
-        if (tmpValue == 0) {
-        	m_physicsWorld.m_box.body = body;
-        	tmpValue++;
-        	std::cout << "Obj1" << std::endl;
-        } else  if (tmpValue == 1) {
-        	m_physicsWorld.m_box2.body = body;
-        	tmpValue++;
-        	std::cout << "Obj2" << std::endl;
+        if (tmpValue == 0)
+        {
+            m_physicsWorld.m_box.body = body;
+            tmpValue++;
+            std::cout << "Obj1" << std::endl;
+        }
+        else if (tmpValue == 1)
+        {
+            m_physicsWorld.m_box2.body = body;
+            tmpValue++;
+            std::cout << "Obj2" << std::endl;
         }
 
 
@@ -429,13 +432,26 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
             ds_math::Vector3 origin = ds_math::Vector3(temp.x, temp.y, temp.z);
 
             body->setPosition(origin);
+            body->setOrientation(
+                m_transformComponentManager.GetWorldOrientation(transform));
         }
 
         // Add rigid body component to world
-        body->calculateDerivedData();
-        m_physicsWorld.addRigidBody(body);
+        // body->setVelocity(ds_math::Vector3(0, 0, 0));
+        // body->setRotation(ds_math::Vector3(0, 0, 0));
+        // ds_math::scalar mass = 0.5f * 0.5f * 0.5f * 8.0f;
+        // body->setMass(mass);
 
-        std::cout << std::endl;
+        // ds_math::Matrix3 tensor;
+        // tensor.set;
+        // body->setInertiaTensor(tensor);
+
+        // body->setLinearDamping(0.95f);
+        // body->setAngularDamping(0.8f);
+        // body->clearAccumulators();
+        // body->setAcceleration(0, -10.0f, 0.0f);
+        // body->calculateDerivedData();
+        m_physicsWorld.addRigidBody(body);
     }
 }
 }
