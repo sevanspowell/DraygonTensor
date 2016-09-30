@@ -541,9 +541,7 @@ unsigned CollisionDetector::boxAndBox(const CollisionBox &one,
         contact->setBodyData(one.body, two.body, data->friction,
                              data->restitution);
         data->addContacts(1);
-        std::cout << "contactNormal: " << contact->contactNormal << std::endl;
-        std::cout << "contactRestitution: " << contact->restitution
-                  << std::endl;
+
         return 1;
     }
     return 0;

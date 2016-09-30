@@ -69,8 +69,6 @@ void Physics::UpdateComponents()
 
         assert(body != nullptr);
 
-        std::cout << body->getPosition() << std::endl;
-
         {
             ds_msg::SetLocalTranslation setTranslationMsg;
             setTranslationMsg.entity = entity;

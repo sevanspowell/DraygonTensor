@@ -106,26 +106,14 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
                   });
 
     // Generate contacts
-    // m_collisionWorld->performDiscreteCollisionDetection();
     m_box.calculateInternals();
     m_box2.calculateInternals();
     m_plane.calculateInternals();
 
     unsigned int got = generateContacts();
-    // std::cout << m_plane.getTransform() << std::endl;
-    std::cout << "---- Contacts generated -----" << std::endl;
-
-    std::cout << "Got " << got << " contacts." << std::endl;
-    for (unsigned i = 0; i < got; ++i)
-    {
-        std::cout << m_contacts[i].contactPoint
-                  << " Pen: " << m_contacts[i].penetration << std::endl;
-    }
-    m_contactResolver.resolveContacts(m_contacts, got, duration);
-    std::cout << "---- -----" << std::endl;
 
     // Resolve contacts
-    // TODO: pass in generated contacts
+    m_contactResolver.resolveContacts(m_contacts, got, duration);
 }
 
 void PhysicsWorld::addRigidBody(RigidBody *rigidBody)
