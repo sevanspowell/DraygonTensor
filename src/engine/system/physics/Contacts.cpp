@@ -70,7 +70,7 @@ void Contact::matchAwakeState()
 void Contact::calculateDesiredDeltaVelocity(ds_math::scalar duration)
 {
     // TODO: Change back to 0.25
-    const static scalar velocityLimit = 0.15;
+    const static scalar velocityLimit = 0.25;
 
     scalar accelVel = 0;
 
@@ -87,13 +87,15 @@ void Contact::calculateDesiredDeltaVelocity(ds_math::scalar duration)
     // if (body[0]->getAwake())
     // {
     //     accelVel +=
-    //         Vector3::Dot(body[0]->getLastFrameAcceleration() * duration, contactNormal);
+    //         Vector3::Dot(body[0]->getLastFrameAcceleration() * duration,
+    //         contactNormal);
     // }
 
     // if (body[1] && body[1]->getAwake())
     // {
     //     accelVel -=
-    //         Vector3::Dot(body[1]->getLastFrameAcceleration() * duration, contactNormal);
+    //         Vector3::Dot(body[1]->getLastFrameAcceleration() * duration,
+    //         contactNormal);
     // }
 
     scalar boundedResitution = restitution;
@@ -284,8 +286,8 @@ static void calculateMoveAmounts(scalar penertration,
 
     angularMove = penertration * (angularInertia / totalInertia);
     linearMove = penertration * (linearInertia / totalInertia);
-    //angularMove = 0;
-    //linearMove = 0;
+    // angularMove = 0;
+    // linearMove = 0;
 
     // @todo Figure out this projection sorcery.
     Vector3 projection =
@@ -335,8 +337,8 @@ static void calculateAngularMove(RigidBody *body,
                 Vector3::Cross(contactRelPos, contactNormal);
             Matrix3 iiTensor;
             body->getInverseInertiaTensorWorld(&iiTensor);
-            angularChange = (iiTensor * targetDirection) *
-                            (angularMove / angularInertia);
+            angularChange =
+                (iiTensor * targetDirection) * (angularMove / angularInertia);
         }
     }
     else
@@ -354,15 +356,13 @@ static void calculateLinearMove(const scalar &linearMove,
     linearChange = contactNorm * linearMove;
 }
 
-static void applyLinearMoveToBody(RigidBody *body,
-                                  const Vector3 &contactNorm,
-                                  const Vector3 &linearChange)
+static void applyLinearMoveToBody(RigidBody *body, const Vector3 &linearChange)
 {
     if (body)
     {
         Vector3 pos;
         body->getPosition(&pos);
-        pos += contactNorm * linearChange;
+        pos += linearChange;
         body->setPosition(pos);
     }
 }
@@ -399,7 +399,7 @@ void Contact::applyPositionChange(ds_math::Vector3 linearChange[2],
             calculateFrictionlessInertia(
                 body[i], iiTensor[i], relativeContactPosition[i], contactNormal,
                 angularInertia[i], linearInertia[i]);
-           // totalInertia = 0;
+            // totalInertia = 0;
             totalInertia += linearInertia[i] + angularInertia[i];
         }
     }
@@ -408,22 +408,24 @@ void Contact::applyPositionChange(ds_math::Vector3 linearChange[2],
     scalar angularMove[2];
     scalar linearMove[2];
 
-    for (unsigned i = 0; i < 2; i++) {
+    for (unsigned i = 0; i < 2; i++)
+    {
         if (body[i])
         {
+            scalar bSign = ((i == 0) ? 1 : -1);
             std::cout << "BODY: " << i << std::endl;
             std::cout << "Pos: " << body[i]->getTransform()[3] << std::endl;
-            calculateMoveAmounts(((i == 0) ? 1 : -1) * penetration,
-                                 linearInertia[i], angularInertia[i],
-                                 totalInertia, relativeContactPosition[i],
-                                 contactNormal, linearMove[i], angularMove[i]);
+            calculateMoveAmounts(bSign * penetration, linearInertia[i],
+                                 angularInertia[i], totalInertia,
+                                 relativeContactPosition[i], contactNormal,
+                                 linearMove[i], angularMove[i]);
 
             calculateAngularMove(body[i], relativeContactPosition[i],
                                  contactNormal, angularInertia[i],
                                  angularMove[i], angularChange[i]);
 
             calculateLinearMove(linearMove[i], contactNormal, linearChange[i]);
-            applyLinearMoveToBody(body[i], contactNormal, linearChange[i]);
+            applyLinearMoveToBody(body[i], linearChange[i]);
             applyAngularMoveToBody(body[i], angularChange[i]);
 
             if (body[i]->getAwake())
@@ -456,11 +458,11 @@ Contact::calculateFrictionlessImpulse(ds_math::Matrix3 *inverseInertiaTensor)
         return Vector3(desiredDeltaVelocity / deltaVel, 0, 0);*/
 
 
-
     // Build a vector that shows the change in velocity in
     // world space for a unit impulse in the direction of the contact
     // normal.
-    Vector3 deltaVelWorld = Vector3::Cross(relativeContactPosition[0], contactNormal);
+    Vector3 deltaVelWorld =
+        Vector3::Cross(relativeContactPosition[0], contactNormal);
     deltaVelWorld = inverseInertiaTensor[0] * deltaVelWorld;
     deltaVelWorld = Vector3::Cross(deltaVelWorld, relativeContactPosition[0]);
 
@@ -474,9 +476,11 @@ Contact::calculateFrictionlessImpulse(ds_math::Matrix3 *inverseInertiaTensor)
     if (body[1])
     {
         // Go through the same transformation sequence again
-        Vector3 deltaVelWorld = Vector3::Cross(relativeContactPosition[1], contactNormal);
+        Vector3 deltaVelWorld =
+            Vector3::Cross(relativeContactPosition[1], contactNormal);
         deltaVelWorld = inverseInertiaTensor[1] * deltaVelWorld;
-        deltaVelWorld = Vector3::Cross(deltaVelWorld, relativeContactPosition[1]);
+        deltaVelWorld =
+            Vector3::Cross(deltaVelWorld, relativeContactPosition[1]);
 
         // Add the change in velocity due to rotation
         deltaVelocity += Vector3::Dot(deltaVelWorld, contactNormal);
