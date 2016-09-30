@@ -11,6 +11,8 @@ set(ENGINE_INCLUDE_FILES
   common/StringIntern.h
   entity/ComponentManager.h
   entity/ComponentManager.hpp
+  entity/ComponentStore.h
+  entity/ComponentStore.hpp
   entity/Entity.h
   entity/EntityManager.h
   entity/IComponentManager.h

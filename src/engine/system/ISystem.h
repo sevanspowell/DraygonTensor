@@ -1,8 +1,12 @@
 #pragma once
 
+#include <cassert>
+
 #include "engine/Config.h"
 #include "engine/message/Message.h"
 #include "engine/system/script/ScriptBindingSet.h"
+
+#include "engine/entity/ComponentStore.h"
 
 namespace ds
 {
@@ -17,6 +21,10 @@ namespace ds
 class ISystem
 {
 public:
+    ISystem() : m_componentStore(nullptr)
+    {
+    }
+
     /**
      * Virtual destructor. Required so that the destructor of derived classes is
      * called properly.
@@ -94,5 +102,45 @@ public:
     {
         return ScriptBindingSet();
     }
+
+    /**
+     * Set the component store this system has access to.
+     *
+     * @param   componentStore   ComponentStore &, structure where all
+     * components are kept.
+     */
+    void SetComponentStore(ComponentStore *componentStore)
+    {
+        m_componentStore = componentStore;
+    }
+
+protected:
+    /**
+     * Get the component store.
+     *
+     * @return   ComponentStore &, component store.
+     */
+    ComponentStore &GetComponentStore()
+    {
+        assert(m_componentStore != nullptr);
+
+        return *m_componentStore;
+    }
+
+    /**
+     * Get the component store.
+     *
+     * @return   const ComponentStore &, component store.
+     */
+    const ComponentStore &GetComponentStore() const
+    {
+        assert(m_componentStore != nullptr);
+
+        return *m_componentStore;
+    }
+
+private:
+    /** Pointer to where all components in the engine are stored. */
+    ComponentStore *m_componentStore;
 };
 }

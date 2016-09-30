@@ -22,16 +22,22 @@ Physics::Physics()
 
 bool Physics::Initialize(const Config &config)
 {
+    m_transformComponentManager =
+        GetComponentStore().GetComponentManager<TransformComponentManager>();
+    m_physicsComponentManager =
+        GetComponentStore().GetComponentManager<PhysicsComponentManager>();
+
     return true;
 }
 
 void Physics::AddForceGenerator(Entity entity)
 {
-    Instance phys = m_physicsComponentManager.GetInstanceForEntity(entity);
+    Instance phys = m_physicsComponentManager->GetInstanceForEntity(entity);
 
     if (phys.IsValid())
     {
-        ds_phys::RigidBody *body = m_physicsComponentManager.GetRigidBody(phys);
+        ds_phys::RigidBody *body =
+            m_physicsComponentManager->GetRigidBody(phys);
 
         assert(body != nullptr);
 
@@ -56,39 +62,35 @@ void Physics::Update(float deltaTime)
 void Physics::UpdateComponents()
 {
     // Loop thru everything with a physics rigid body
-    for (unsigned int i = 0; i < m_physicsComponentManager.GetNumInstances();
+    for (unsigned int i = 0; i < m_physicsComponentManager->GetNumInstances();
          ++i)
     {
         Instance phys = Instance::MakeInstance(i);
 
         // Get entity for instance
-        Entity entity = m_physicsComponentManager.GetEntityForInstance(phys);
+        Entity entity = m_physicsComponentManager->GetEntityForInstance(phys);
 
         // Get rigidbody
-        ds_phys::RigidBody *body = m_physicsComponentManager.GetRigidBody(phys);
+        ds_phys::RigidBody *body =
+            m_physicsComponentManager->GetRigidBody(phys);
 
         assert(body != nullptr);
 
         {
-            ds_msg::SetLocalTranslation setTranslationMsg;
-            setTranslationMsg.entity = entity;
-            setTranslationMsg.localTranslation = body->getPosition();
+            Instance transform =
+                m_transformComponentManager->GetInstanceForEntity(entity);
 
-            // Send message telling transform component to update
-            ds_msg::AppendMessage(
-                &m_messagesGenerated, ds_msg::MessageType::SetLocalTranslation,
-                sizeof(ds_msg::SetLocalTranslation), &setTranslationMsg);
-        }
+            // If has transform component
+            if (transform.IsValid())
+            {
+                // Set translation of entity
+                m_transformComponentManager->SetLocalTranslation(
+                    transform, body->getPosition());
 
-        {
-            ds_msg::SetLocalOrientation setLocalOrientation;
-            setLocalOrientation.entity = entity;
-            setLocalOrientation.localOrientation = body->getOrientation();
-
-            // Send message telling transform component to update
-            ds_msg::AppendMessage(
-                &m_messagesGenerated, ds_msg::MessageType::SetLocalOrientation,
-                sizeof(ds_msg::SetLocalOrientation), &setLocalOrientation);
+                // Set orientation of entity
+                m_transformComponentManager->SetLocalOrientation(
+                    transform, body->getOrientation());
+            }
         }
     }
 }
@@ -162,46 +164,77 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
 
             break;
         }
-        case ds_msg::MessageType::SetLocalTranslation:
+        case ds_msg::MessageType::DestroyEntity:
         {
-            ds_msg::SetLocalTranslation setTranslationMsg;
-            (*messages) >> setTranslationMsg;
+            ds_msg::DestroyEntity destroyEntityMsg;
+            (*messages) >> destroyEntityMsg;
 
-            // Get component instance of entity to move
+            Entity e = destroyEntityMsg.entity;
+
+            // Remove entity from all component managers
+
+            // Physics
+            // Get component instance for entity
+            Instance physics =
+                m_physicsComponentManager->GetInstanceForEntity(e);
+
+            // If valid, remove it from component manager
+            if (physics.IsValid())
+            {
+                m_physicsComponentManager->RemoveInstance(physics);
+            }
+
+            // Transform
             Instance transform =
-                m_transformComponentManager.GetInstanceForEntity(
-                    setTranslationMsg.entity);
+                m_transformComponentManager->GetInstanceForEntity(e);
 
-            // If has transform component
             if (transform.IsValid())
             {
-                // Set translation of entity
-                m_transformComponentManager.SetLocalTranslation(
-                    transform, setTranslationMsg.localTranslation);
+                m_transformComponentManager->RemoveInstance(transform);
             }
 
             break;
         }
-        case ds_msg::MessageType::SetLocalOrientation:
-        {
-            ds_msg::SetLocalOrientation setLocalOrientation;
-            (*messages) >> setLocalOrientation;
+        // case ds_msg::MessageType::SetLocalTranslation:
+        // {
+        //     ds_msg::SetLocalTranslation setTranslationMsg;
+        //     (*messages) >> setTranslationMsg;
 
-            // Get component instance of entity to move
-            Instance transform =
-                m_transformComponentManager.GetInstanceForEntity(
-                    setLocalOrientation.entity);
+        //     // Get component instance of entity to move
+        //     Instance transform =
+        //         m_transformComponentManager->GetInstanceForEntity(
+        //             setTranslationMsg.entity);
 
-            // If has transform component
-            if (transform.IsValid())
-            {
-                // Set translation of entity
-                m_transformComponentManager.SetLocalOrientation(
-                    transform, setLocalOrientation.localOrientation);
-            }
+        //     // If has transform component
+        //     if (transform.IsValid())
+        //     {
+        //         // Set translation of entity
+        //         m_transformComponentManager->SetLocalTranslation(
+        //             transform, setTranslationMsg.localTranslation);
+        //     }
 
-            break;
-        }
+        //     break;
+        // }
+        // case ds_msg::MessageType::SetLocalOrientation:
+        // {
+        //     ds_msg::SetLocalOrientation setLocalOrientation;
+        //     (*messages) >> setLocalOrientation;
+
+        //     // Get component instance of entity to move
+        //     Instance transform =
+        //         m_transformComponentManager->GetInstanceForEntity(
+        //             setLocalOrientation.entity);
+
+        //     // If has transform component
+        //     if (transform.IsValid())
+        //     {
+        //         // Set translation of entity
+        //         m_transformComponentManager->SetLocalOrientation(
+        //             transform, setLocalOrientation.localOrientation);
+        //     }
+
+        //     break;
+        // }
         default:
         {
             // Extract message to prevent corrupting message stream
@@ -215,241 +248,264 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
 void Physics::CreateTransformComponent(Entity entity,
                                        const Config &componentData)
 {
-    // Create transform component
+    // Does entity already have transform component?
     Instance transform =
-        TransformComponentManager::CreateComponentForEntityFromConfig(
-            &m_transformComponentManager, entity, componentData);
-    // If this entity also has physics component, update it with new
-    // pos,
-    // orientation, scale, etc.
-    Instance phys = m_physicsComponentManager.GetInstanceForEntity(entity);
-    // If physics instance is valid (entity has phys component too)
-    if (phys.IsValid())
+        m_transformComponentManager->GetInstanceForEntity(entity);
+
+    // If not, create one
+    if (!transform.IsValid())
     {
-        ds_phys::RigidBody *rigidBody =
-            m_physicsComponentManager.GetRigidBody(phys);
+        // Create transform component
+        transform =
+            TransformComponentManager::CreateComponentForEntityFromConfig(
+                m_transformComponentManager, entity, componentData);
 
-        if (rigidBody != nullptr)
+        // If this entity also has physics component, update it with new
+        // pos,
+        // orientation, scale, etc.
+        Instance phys = m_physicsComponentManager->GetInstanceForEntity(entity);
+        // If physics instance is valid (entity has phys component too)
+        if (phys.IsValid())
         {
-            ds_math::Vector4 temp =
-                m_transformComponentManager.GetWorldTransform(transform)[3];
-            ds_math::Vector3 origin = ds_math::Vector3(temp.x, temp.y, temp.z);
+            ds_phys::RigidBody *rigidBody =
+                m_physicsComponentManager->GetRigidBody(phys);
 
-            // Update position
-            rigidBody->setPosition(origin);
+            if (rigidBody != nullptr)
+            {
+                ds_math::Vector4 temp =
+                    m_transformComponentManager->GetWorldTransform(
+                        transform)[3];
+                ds_math::Vector3 origin =
+                    ds_math::Vector3(temp.x, temp.y, temp.z);
+
+                // Update position
+                rigidBody->setPosition(origin);
+            }
         }
     }
 }
 
 void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
 {
-    // Get physics component data.
-    float dataMass;
-    float dataInvMass;
-    float dataDamping;
-    float dataAngularDamping;
-    float dataRestitution;
-    std::vector<float> dataInvInertiaTensor;
-    std::vector<float> dataInertiaTensor;
+    // Does entity already have physics component?
+    Instance phys = m_physicsComponentManager->GetInstanceForEntity(entity);
 
-    // Get data that can only be in one form
-    if (componentData.GetFloat("restitution", &dataRestitution) &&
-        componentData.GetFloat("angularDamping", &dataAngularDamping) &&
-        componentData.GetFloat("damping", &dataDamping))
+    // If not, create one
+    if (!phys.IsValid())
     {
-        bool isInvMass = false;
-        bool isInvInertiaTensor = false;
+        // Get physics component data.
+        float dataMass;
+        float dataInvMass;
+        float dataDamping;
+        float dataAngularDamping;
+        float dataRestitution;
+        std::vector<float> dataInvInertiaTensor;
+        std::vector<float> dataInertiaTensor;
 
-        ds_math::Vector3 invInertiaTensor;
-        ds_math::Vector3 inertiaTensor;
+        // Get data that can only be in one form
+        if (componentData.GetFloat("restitution", &dataRestitution) &&
+            componentData.GetFloat("angularDamping", &dataAngularDamping) &&
+            componentData.GetFloat("damping", &dataDamping))
+        {
+            bool isInvMass = false;
+            bool isInvInertiaTensor = false;
 
-        if (componentData.GetFloat("mass", &dataMass))
-        {
-            isInvMass = false;
-        }
-        else if (componentData.GetFloat("invMass", &dataInvMass))
-        {
-            isInvMass = true;
-        }
-        else
-        {
-            // Make sure we get atleast one piece of mass data
-            return;
-        }
+            ds_math::Vector3 invInertiaTensor;
+            ds_math::Vector3 inertiaTensor;
 
-        if (componentData.GetFloatArray("inertiaTensor", &dataInertiaTensor))
-        {
-            isInvInertiaTensor = false;
-            inertiaTensor =
-                ds_math::Vector3(dataInertiaTensor[0], dataInertiaTensor[1],
-                                 dataInertiaTensor[2]);
-        }
-        else if (componentData.GetFloatArray("invInertiaTensor",
-                                             &dataInvInertiaTensor))
-        {
-            isInvInertiaTensor = true;
-            invInertiaTensor = ds_math::Vector3(dataInvInertiaTensor[0],
-                                                dataInvInertiaTensor[1],
-                                                dataInvInertiaTensor[2]);
-        }
-        else
-        {
-            // Make sure we get atleast one piece of inertia
-            // tensor data
-            return;
-        }
-
-        std::cout << std::endl
-                  << " -- Prefab component contents -- " << std::endl;
-        std::cout << "restitution: " << dataRestitution << std::endl;
-        std::cout << "damping: " << dataDamping << std::endl;
-        std::cout << "angularDamping: " << dataAngularDamping << std::endl;
-        if (isInvMass == false)
-        {
-            std::cout << "mass: " << dataMass << std::endl;
-        }
-        else
-        {
-            std::cout << "inv. mass: " << dataInvMass << std::endl;
-        }
-        if (isInvInertiaTensor == false)
-        {
-            std::cout << "inertia tensor: " << inertiaTensor << std::endl;
-        }
-        else
-        {
-            std::cout << "inv. inertia tensor: " << invInertiaTensor
-                      << std::endl;
-        }
-
-
-        // Get collision shapes
-        std::vector<std::string> collisionShapeKeys =
-            componentData.GetObjectKeys("collisionShapes");
-
-        std::cout << "collisionShapes:" << std::endl;
-        // Create each collision shape
-        std::for_each(
-            collisionShapeKeys.begin(), collisionShapeKeys.end(),
-            [&](const std::string &key)
+            if (componentData.GetFloat("mass", &dataMass))
             {
-                std::cout << "\t" << key << ": ";
+                isInvMass = false;
+            }
+            else if (componentData.GetFloat("invMass", &dataInvMass))
+            {
+                isInvMass = true;
+            }
+            else
+            {
+                // Make sure we get atleast one piece of mass data
+                return;
+            }
 
-                // Get key path to collision shape
-                std::stringstream colShapeBaseKey;
-                colShapeBaseKey << "collisionShapes"
-                                << "." << key;
+            if (componentData.GetFloatArray("inertiaTensor",
+                                            &dataInertiaTensor))
+            {
+                isInvInertiaTensor = false;
+                inertiaTensor =
+                    ds_math::Vector3(dataInertiaTensor[0], dataInertiaTensor[1],
+                                     dataInertiaTensor[2]);
+            }
+            else if (componentData.GetFloatArray("invInertiaTensor",
+                                                 &dataInvInertiaTensor))
+            {
+                isInvInertiaTensor = true;
+                invInertiaTensor = ds_math::Vector3(dataInvInertiaTensor[0],
+                                                    dataInvInertiaTensor[1],
+                                                    dataInvInertiaTensor[2]);
+            }
+            else
+            {
+                // Make sure we get atleast one piece of inertia
+                // tensor data
+                return;
+            }
 
-                // Get shape type
-                std::stringstream colShapeTypeKey;
-                std::string dataType;
+            std::cout << std::endl
+                      << " -- Prefab component contents -- " << std::endl;
+            std::cout << "restitution: " << dataRestitution << std::endl;
+            std::cout << "damping: " << dataDamping << std::endl;
+            std::cout << "angularDamping: " << dataAngularDamping << std::endl;
+            if (isInvMass == false)
+            {
+                std::cout << "mass: " << dataMass << std::endl;
+            }
+            else
+            {
+                std::cout << "inv. mass: " << dataInvMass << std::endl;
+            }
+            if (isInvInertiaTensor == false)
+            {
+                std::cout << "inertia tensor: " << inertiaTensor << std::endl;
+            }
+            else
+            {
+                std::cout << "inv. inertia tensor: " << invInertiaTensor
+                          << std::endl;
+            }
 
-                colShapeTypeKey << colShapeBaseKey.str() << "."
-                                << "type";
 
-                if (componentData.GetString(colShapeTypeKey.str(), &dataType))
+            // Get collision shapes
+            std::vector<std::string> collisionShapeKeys =
+                componentData.GetObjectKeys("collisionShapes");
+
+            std::cout << "collisionShapes:" << std::endl;
+            // Create each collision shape
+            std::for_each(
+                collisionShapeKeys.begin(), collisionShapeKeys.end(),
+                [&](const std::string &key)
                 {
-                    std::cout << "type: " << dataType << ", ";
+                    std::cout << "\t" << key << ": ";
 
-                    // Get shape dimensions
-                    std::stringstream colShapeDimKey;
-                    std::vector<float> dataDim;
+                    // Get key path to collision shape
+                    std::stringstream colShapeBaseKey;
+                    colShapeBaseKey << "collisionShapes"
+                                    << "." << key;
 
-                    colShapeDimKey << colShapeBaseKey.str() << "."
-                                   << "dim";
+                    // Get shape type
+                    std::stringstream colShapeTypeKey;
+                    std::string dataType;
 
-                    if (componentData.GetFloatArray(colShapeDimKey.str(),
-                                                    &dataDim))
+                    colShapeTypeKey << colShapeBaseKey.str() << "."
+                                    << "type";
+
+                    if (componentData.GetString(colShapeTypeKey.str(),
+                                                &dataType))
                     {
-                        ds_math::Vector3 dim(dataDim[0], dataDim[1],
-                                             dataDim[2]);
-                        std::cout << "dim: " << dim << ", ";
+                        std::cout << "type: " << dataType << ", ";
 
-                        // Get shape offset
-                        std::stringstream colShapeOffsetKey;
-                        std::vector<float> dataOffset;
+                        // Get shape dimensions
+                        std::stringstream colShapeDimKey;
+                        std::vector<float> dataDim;
 
-                        colShapeOffsetKey << colShapeBaseKey.str() << "."
-                                          << "offset";
+                        colShapeDimKey << colShapeBaseKey.str() << "."
+                                       << "dim";
 
-                        if (componentData.GetFloatArray(colShapeOffsetKey.str(),
-                                                        &dataOffset))
+                        if (componentData.GetFloatArray(colShapeDimKey.str(),
+                                                        &dataDim))
                         {
-                            ds_math::Vector3 offset(
-                                dataOffset[0], dataOffset[1], dataOffset[2]);
+                            ds_math::Vector3 dim(dataDim[0], dataDim[1],
+                                                 dataDim[2]);
+                            std::cout << "dim: " << dim << ", ";
 
-                            std::cout << "offset: " << offset << std::endl;
+                            // Get shape offset
+                            std::stringstream colShapeOffsetKey;
+                            std::vector<float> dataOffset;
 
-                            if (dataType == "box")
+                            colShapeOffsetKey << colShapeBaseKey.str() << "."
+                                              << "offset";
+
+                            if (componentData.GetFloatArray(
+                                    colShapeOffsetKey.str(), &dataOffset))
                             {
-                                // ds_phys::CollisionBox
+                                ds_math::Vector3 offset(dataOffset[0],
+                                                        dataOffset[1],
+                                                        dataOffset[2]);
+
+                                std::cout << "offset: " << offset << std::endl;
+
+                                if (dataType == "box")
+                                {
+                                    // ds_phys::CollisionBox
+                                }
                             }
                         }
                     }
-                }
 
-            });
+                });
 
-        // Create rigid body component
-        ds_phys::RigidBody *body = new ds_phys::RigidBody();
+            // Create rigid body component
+            ds_phys::RigidBody *body = new ds_phys::RigidBody();
 
-        body->setMass(1.0f);
+            body->setMass(1.0f);
 
-        // DEBUG
-        static int tmpValue = 0;
-        if (tmpValue == 0)
-        {
-            m_physicsWorld.m_box.body = body;
-            tmpValue++;
-            std::cout << "Obj1" << std::endl;
+            // DEBUG
+            static int tmpValue = 0;
+            if (tmpValue == 0)
+            {
+                m_physicsWorld.m_box.body = body;
+                tmpValue++;
+                std::cout << "Obj1" << std::endl;
+            }
+            else if (tmpValue == 1)
+            {
+                m_physicsWorld.m_box2.body = body;
+                tmpValue++;
+                std::cout << "Obj2" << std::endl;
+            }
+
+
+            phys = m_physicsComponentManager->CreateComponentForEntity(entity);
+            m_physicsComponentManager->SetRigidBody(phys, body);
+
+            // TODO: Set mass etc.
+            // If this entity also has a transform component, update
+            // rigidbody
+            // with pos, orientation and scale of that transform component
+            Instance transform =
+                m_transformComponentManager->GetInstanceForEntity(entity);
+
+            if (transform.IsValid())
+            {
+
+                ds_math::Vector4 temp =
+                    m_transformComponentManager->GetWorldTransform(
+                        transform)[3];
+                ds_math::Vector3 origin =
+                    ds_math::Vector3(temp.x, temp.y, temp.z);
+
+                body->setPosition(origin);
+                body->setOrientation(
+                    m_transformComponentManager->GetWorldOrientation(
+                        transform));
+            }
+
+            // Add rigid body component to world
+            // body->setVelocity(ds_math::Vector3(0, 0, 0));
+            // body->setRotation(ds_math::Vector3(0, 0, 0));
+            // ds_math::scalar mass = 0.5f * 0.5f * 0.5f * 8.0f;
+            // body->setMass(mass);
+
+            // ds_math::Matrix3 tensor;
+            // tensor.set;
+            // body->setInertiaTensor(tensor);
+
+            // body->setLinearDamping(0.95f);
+            // body->setAngularDamping(0.8f);
+            // body->clearAccumulators();
+            // body->setAcceleration(0, -10.0f, 0.0f);
+            // body->calculateDerivedData();
+            m_physicsWorld.addRigidBody(body);
         }
-        else if (tmpValue == 1)
-        {
-            m_physicsWorld.m_box2.body = body;
-            tmpValue++;
-            std::cout << "Obj2" << std::endl;
-        }
-
-
-        Instance phys =
-            m_physicsComponentManager.CreateComponentForEntity(entity);
-        m_physicsComponentManager.SetRigidBody(phys, body);
-
-        // TODO: Set mass etc.
-        // If this entity also has a transform component, update
-        // rigidbody
-        // with pos, orientation and scale of that transform component
-        Instance transform =
-            m_transformComponentManager.GetInstanceForEntity(entity);
-
-        if (transform.IsValid())
-        {
-
-            ds_math::Vector4 temp =
-                m_transformComponentManager.GetWorldTransform(transform)[3];
-            ds_math::Vector3 origin = ds_math::Vector3(temp.x, temp.y, temp.z);
-
-            body->setPosition(origin);
-            body->setOrientation(
-                m_transformComponentManager.GetWorldOrientation(transform));
-        }
-
-        // Add rigid body component to world
-        // body->setVelocity(ds_math::Vector3(0, 0, 0));
-        // body->setRotation(ds_math::Vector3(0, 0, 0));
-        // ds_math::scalar mass = 0.5f * 0.5f * 0.5f * 8.0f;
-        // body->setMass(mass);
-
-        // ds_math::Matrix3 tensor;
-        // tensor.set;
-        // body->setInertiaTensor(tensor);
-
-        // body->setLinearDamping(0.95f);
-        // body->setAngularDamping(0.8f);
-        // body->clearAccumulators();
-        // body->setAcceleration(0, -10.0f, 0.0f);
-        // body->calculateDerivedData();
-        m_physicsWorld.addRigidBody(body);
     }
 }
 }

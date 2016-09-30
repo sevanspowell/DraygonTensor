@@ -343,13 +343,13 @@ private:
     static std::unique_ptr<ds_render::IRenderer> m_renderer;
 
     /** Render component manager */
-    ds_render::RenderComponentManager m_renderComponentManager;
+    ds_render::RenderComponentManager *m_renderComponentManager;
     /** Transform component manager */
-    TransformComponentManager m_transformComponentManager;
+    TransformComponentManager *m_transformComponentManager;
     /** Camera component manager */
-    ds_render::CameraComponentManager m_cameraComponentManager;
+    ds_render::CameraComponentManager *m_cameraComponentManager;
     /** GUI-specific data */
-    ds_render::ButtonComponentManager m_buttonComponentManager;
+    ds_render::ButtonComponentManager *m_buttonComponentManager;
 
     ds_render::Mesh m_mesh;
     ds_render::Material m_material;

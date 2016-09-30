@@ -1,6 +1,8 @@
 #include <algorithm>
 #include "engine/Engine.h"
 
+#include "engine/system/scene/TransformComponent.h"
+
 namespace ds
 {
 Engine::Engine()
@@ -63,6 +65,8 @@ bool Engine::AddSystem(std::unique_ptr<ISystem> system)
             // Register system script bindings
             m_script->RegisterScriptBindings(sharedPtr->GetName(),
                                              sharedPtr.get());
+
+            sharedPtr->SetComponentStore(&m_componentStore);
 
             result = true;
         }
