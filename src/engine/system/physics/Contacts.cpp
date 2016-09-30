@@ -425,7 +425,7 @@ void Contact::applyPositionChange(ds_math::Vector3 linearChange[2],
                                  angularMove[i], angularChange[i]);
 
             calculateLinearMove(linearMove[i], contactNormal, linearChange[i]);
-            applyLinearMoveToBody(body[i], linearChange[i]);
+            applyLinearMoveToBody(body[i], contactNormal * linearMove[i]);
             applyAngularMoveToBody(body[i], angularChange[i]);
 
             if (body[i]->getAwake())
