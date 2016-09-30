@@ -35,12 +35,6 @@ void Contact::calculateInternals(ds_math::scalar duration)
     if (body[1])
         contactVelocity -= calculateLocalVelocity(1, duration);
 
-    std::cout << "contactToWorld: " << contactToWorld << std::endl;
-    std::cout << "rel contactPosition 0: " << relativeContactPosition[0]
-              << std::endl;
-    std::cout << "rel contactPosition 1: " << relativeContactPosition[1]
-              << std::endl;
-
     calculateDesiredDeltaVelocity(duration);
 }
 
@@ -107,12 +101,6 @@ void Contact::calculateDesiredDeltaVelocity(ds_math::scalar duration)
     desiredDeltaVelocity =
         -contactVelocity.x - boundedResitution * (contactVelocity.x - accelVel);
     // desiredDeltaVelocity /= 2.0f;
-    std::cout << "duration: " << duration << std::endl;
-    std::cout << "contactVelocity.x: " << contactVelocity.x << std::endl;
-    std::cout << "boundedResitution: " << boundedResitution << std::endl;
-    std::cout << "accelVel: " << accelVel << std::endl;
-    std::cout << "desiredDeltaVelocity: " << desiredDeltaVelocity << std::endl;
-    std::cout << "--o--" << std::endl;
 }
 
 ds_math::Vector3 Contact::calculateLocalVelocity(unsigned bodyIndex,
@@ -198,10 +186,6 @@ static void applyImpulseToBody(RigidBody *body,
         rotChange = inverseInertiaTensor * impulsiveTorque;
         velChange = (impulse * body->getInverseMass());
 
-        // std::cout << "APPLIED TORQUE: " << impulsiveTorque << std::endl;
-        // std::cout << "APPLIED VELOCITY: " << velChange << std::endl;
-        // std::cout << "APPLIED ROTATION: " << rotChange << std::endl;
-
         body->addVelocity(velChange);
         body->addRotation(rotChange);
     }
@@ -236,7 +220,6 @@ void Contact::applyVelocityChange(ds_math::Vector3 velocityChange[2],
         ((friction == 0.0)
              ? calculateFrictionlessImpulse(inverseInertiaTensor) //;
              : calculateFrictionImpulse(inverseInertiaTensor));
-    // std::cout << "contactToWorld: " << contactToWorld << std::endl;
 
     // Apply calculated impulse
     applyImpulseToBody(body[0], relativeContactPosition[0], impulse,
@@ -307,13 +290,6 @@ static void calculateMoveAmounts(scalar penertration,
         angularMove = maxAngularMove;         // Limit angular movement
         linearMove = totalMove - angularMove; // Conserve energy. Kinda.
     }
-
-    std::cout << "PEN: " << penertration << std::endl;
-    std::cout << "TOTAL_IN: " << totalInertia << std::endl;
-    std::cout << "ANGULAR_IN: " << angularInertia << std::endl;
-    std::cout << "LINEAR_IN: " << linearInertia << std::endl;
-    std::cout << "ANGULAR_MOVE: " << angularMove << std::endl;
-    std::cout << "LINEAR_LINEAR: " << linearMove << std::endl;
 }
 
 static void calculateAngularMove(RigidBody *body,
@@ -413,8 +389,6 @@ void Contact::applyPositionChange(ds_math::Vector3 linearChange[2],
         if (body[i])
         {
             scalar bSign = ((i == 0) ? 1 : -1);
-            std::cout << "BODY: " << i << std::endl;
-            std::cout << "Pos: " << body[i]->getTransform()[3] << std::endl;
             calculateMoveAmounts(bSign * penetration, linearInertia[i],
                                  angularInertia[i], totalInertia,
                                  relativeContactPosition[i], contactNormal,
