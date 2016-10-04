@@ -104,7 +104,6 @@ public:
     }
 
     /**
-<<<<<<< HEAD
      * Gets the rate at which the system should be updated.
      * If the returned value is 0, the system will be updated as often as possible.
      * @param screenRefreshRate The refreshrate of the current monitor.

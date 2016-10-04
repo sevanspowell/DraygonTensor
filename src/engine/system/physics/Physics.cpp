@@ -45,6 +45,14 @@ void Physics::AddForceGenerator(Entity entity)
     }
 }
 
+unsigned Physics::getUpdateRate(uint32_t screenRefreshRate) const {
+	return screenRefreshRate * 2;
+}
+
+unsigned Physics::getMaxConsecutiveUpdates() const {
+	return 1;
+}
+
 void Physics::Update(float deltaTime)
 {
     ProcessEvents(&m_messagesReceived);

@@ -1,6 +1,4 @@
 #include <algorithm>
-#include <thread>
-#include <chrono>
 
 #include "engine/system/physics/PhysicsWorld.h"
 
@@ -88,9 +86,6 @@ void PhysicsWorld::startFrame()
 
 void PhysicsWorld::stepSimulation(ds_math::scalar duration)
 {
-    duration = 1 / 60.0f;
-    std::this_thread::sleep_for(std::chrono::milliseconds(15));
-
     // duration = duration;
     // Update force generators
     m_forceRegistry.updateForces(duration);

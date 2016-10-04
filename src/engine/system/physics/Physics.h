@@ -28,6 +28,10 @@ public:
 
     void AddForceGenerator(Entity entity);
 
+    virtual unsigned getUpdateRate(uint32_t screenRefreshRate) const;
+
+    virtual unsigned getMaxConsecutiveUpdates() const;
+
 private:
     void ProcessEvents(ds_msg::MessageStream *messages);
 
