@@ -21,7 +21,7 @@ namespace ds
 class ISystem
 {
 public:
-    ISystem() : m_componentStore(nullptr)
+    ISystem() : m_accumBuffer(0), m_componentStore(nullptr)
     {
     }
 
@@ -104,6 +104,46 @@ public:
     }
 
     /**
+<<<<<<< HEAD
+     * Gets the rate at which the system should be updated.
+     * If the returned value is 0, the system will be updated as often as possible.
+     * @param screenRefreshRate The refreshrate of the current monitor.
+     * @return The desired update rate
+     */
+    virtual unsigned getUpdateRate(uint32_t screenRefreshRate) const {
+    	return 0;
+    }
+
+    /**
+     * Gets the number of consecutive updates, used when system falls behind on updates.
+     * For example:
+     *   Rendering took longer than normal.
+     *   Physics is allowed to catch up by updating multiple times, keeping realtime.
+     * If the returned value is 0, then there is an unlimited number of consecutive updates.
+     * @return The max number of consecutive updates
+     * @remarks On systems that may lag behind on updates, this should not return 0. Otherwise an infinite loop may be entered.
+     */
+    virtual unsigned getMaxConsecutiveUpdates() const {
+    	return 0;
+    }
+
+    /**
+     * Getter access to the internal update time accumulation buffer.
+     * @return The amount of time the system has "saved up" from updates.
+     */
+    float getUpdateAccum() {
+    	return m_accumBuffer;
+    }
+
+     /**
+      * Sets the internal update time accumulation buffer.
+      * @param accum The amount of time the system has "saved up" from updates.
+      */
+    void setUpdateAccum(float accum) {
+	    m_accumBuffer = accum;
+    }
+
+   /**
      * Set the component store this system has access to.
      *
      * @param   componentStore   ComponentStore &, structure where all
@@ -140,6 +180,9 @@ protected:
     }
 
 private:
+    /** Contains the accumulated delta time for this system **/
+	float m_accumBuffer;
+
     /** Pointer to where all components in the engine are stored. */
     ComponentStore *m_componentStore;
 };

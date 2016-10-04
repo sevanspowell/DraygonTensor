@@ -317,6 +317,14 @@ ScriptBindingSet Render::GetScriptBindings() const
     return ds_lua::LoadRenderScriptBindings();
 }
 
+unsigned Render::getUpdateRate(uint32_t screenRefreshRate) const {
+	return screenRefreshRate + 1;
+}
+
+unsigned Render::getMaxConsecutiveUpdates() const {
+	return 1;
+}
+
 void Render::SetSkyboxMaterial(const std::string &skyboxMaterial)
 {
     std::stringstream skyboxMaterialFullPath;
