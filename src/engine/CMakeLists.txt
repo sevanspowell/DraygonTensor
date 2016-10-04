@@ -11,6 +11,8 @@ set(ENGINE_INCLUDE_FILES
   common/StringIntern.h
   entity/ComponentManager.h
   entity/ComponentManager.hpp
+  entity/ComponentStore.h
+  entity/ComponentStore.hpp
   entity/Entity.h
   entity/EntityManager.h
   entity/IComponentManager.h
@@ -106,6 +108,7 @@ set(ENGINE_SRC_FILES
   system/physics/RigidBody.cpp
   system/physics/Contacts.cpp
   system/physics/CollisionFine.cpp
+  system/physics/ContactResolver.cpp
 
   system/platform/Keyboard.cpp
   system/platform/Platform.cpp

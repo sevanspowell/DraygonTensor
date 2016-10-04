@@ -9,8 +9,7 @@ unsigned int ComponentManager<T>::GetNumInstances() const
 }
 
 template <typename T>
-Instance
-ComponentManager<T>::CreateComponentForEntity(Entity entity)
+Instance ComponentManager<T>::CreateComponentForEntity(Entity entity)
 {
     // Index to new component instance will be put into
     unsigned int newIndex = m_data.entity.size();
@@ -108,4 +107,30 @@ bool ComponentManager<T>::RemoveInstance(Instance i)
     }
 
     return result;
+}
+
+template <typename T>
+T ComponentManager<T>::GetComponentForInstance(Instance i) const
+{
+    T component;
+
+    const int index = i.index;
+
+    if ((unsigned)index < GetNumInstances() && index >= 0)
+    {
+        component = m_data.component[index];
+    }
+
+    return component;
+}
+
+template <typename T>
+void ComponentManager<T>::SetComponentForInstance(Instance i, T component)
+{
+    const int index = i.index;
+
+    if ((unsigned)index < GetNumInstances() && index >= 0)
+    {
+        m_data.component[index] = component;
+    }
 }

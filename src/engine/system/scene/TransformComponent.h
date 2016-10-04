@@ -22,3 +22,5 @@ struct TransformComponent
     Instance prevSibling;
 };
 }
+
+// TODO add methods for manipulating

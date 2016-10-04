@@ -241,6 +241,18 @@ bool Render::Initialize(const Config &config)
 {
     bool result = true;
 
+    m_renderComponentManager =
+        GetComponentStore()
+            .GetComponentManager<ds_render::RenderComponentManager>();
+    m_transformComponentManager =
+        GetComponentStore().GetComponentManager<TransformComponentManager>();
+    m_cameraComponentManager =
+        GetComponentStore()
+            .GetComponentManager<ds_render::CameraComponentManager>();
+    m_buttonComponentManager =
+        GetComponentStore()
+            .GetComponentManager<ds_render::ButtonComponentManager>();
+
     // Register creators
     m_factory.RegisterCreator<MaterialResource>(
         MaterialResource::CreateFromFile);
@@ -459,13 +471,13 @@ ds_render::Mesh Render::CreatePanelMesh(float startX,
 
 void Render::SetAnimationIndex(Entity entity, int animationIndex)
 {
-    Instance i = m_renderComponentManager.GetInstanceForEntity(entity);
+    Instance i = m_renderComponentManager->GetInstanceForEntity(entity);
 
     if (i.IsValid())
     {
         // Get mesh resource handle for mesh
         ds_render::MeshResourceHandle meshResourceHandle =
-            m_renderComponentManager.GetMesh(i).GetMeshResourceHandle();
+            m_renderComponentManager->GetMesh(i).GetMeshResourceHandle();
 
         // Get mesh resource for mesh
         MeshResource *meshResource =
@@ -612,364 +624,411 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                 // Create render component
                 if (componentType == "renderComponent")
                 {
-                    std::string meshName;
-                    std::string materialName;
-                    if (componentData.GetString("mesh", &meshName))
+                    // Check if render component already created for this entity
+                    Instance render =
+                        m_renderComponentManager->GetInstanceForEntity(
+                            createComponentMsg.entity);
+
+                    if (!render.IsValid())
                     {
-                        // Get mesh resource path
-                        std::stringstream meshResourcePath;
-                        meshResourcePath << "../assets/" << meshName;
-
-                        // Get material file paths
-                        std::vector<std::string> materialKeys =
-                            componentData.GetObjectKeys("materials");
-
-                        // Create Mesh
-                        ds_render::Mesh mesh =
-                            CreateMeshFromMeshResource(meshResourcePath.str());
-
-                        // Only continue if the number of submeshes matches the
-                        // number of materials provided
-                        if (mesh.GetNumSubMeshes() == materialKeys.size())
+                        std::string meshName;
+                        std::string materialName;
+                        if (componentData.GetString("mesh", &meshName))
                         {
-                            // For each material file path
-                            for (unsigned int iMaterial = 0;
-                                 iMaterial < materialKeys.size(); ++iMaterial)
+                            // Get mesh resource path
+                            std::stringstream meshResourcePath;
+                            meshResourcePath << "../assets/" << meshName;
+
+                            // Get material file paths
+                            std::vector<std::string> materialKeys =
+                                componentData.GetObjectKeys("materials");
+
+                            // Create Mesh
+                            ds_render::Mesh mesh = CreateMeshFromMeshResource(
+                                meshResourcePath.str());
+
+                            // Only continue if the number of submeshes matches
+                            // the number of materials provided
+                            if (mesh.GetNumSubMeshes() == materialKeys.size())
                             {
-                                // Load material resource
-                                // Get material resource path
-                                std::stringstream materialResourcePath;
-                                materialResourcePath << "../assets/"
-                                                     << materialKeys[iMaterial];
-
-                                // Get material resource handle
-                                MaterialResourceHandle materialResourceHandle;
-
-                                // If loaded material resource successfully
-                                if (m_materialResourceManager
-                                        .LoadMaterialResourceFromFile(
-                                            materialResourcePath.str(),
-                                            &materialResourceHandle) == true)
+                                // For each material file path
+                                for (unsigned int iMaterial = 0;
+                                     iMaterial < materialKeys.size();
+                                     ++iMaterial)
                                 {
-                                    // Get material handle
-                                    ds_render::MaterialHandle materialHandle;
-                                    if (m_materialManager
-                                            .GetMaterialForResourceHandle(
-                                                materialResourceHandle,
-                                                &materialHandle) == true)
-                                    {
-                                        // Each material maps to one submesh,
-                                        // get that submesh and set material
-                                        ds_render::SubMesh subMesh =
-                                            mesh.GetSubMesh(iMaterial);
-                                        subMesh.materialHandle = materialHandle;
+                                    // Load material resource
+                                    // Get material resource path
+                                    std::stringstream materialResourcePath;
+                                    materialResourcePath
+                                        << "../assets/"
+                                        << materialKeys[iMaterial];
 
-                                        mesh.SetSubMesh(iMaterial, subMesh);
+                                    // Get material resource handle
+                                    MaterialResourceHandle
+                                        materialResourceHandle;
+
+                                    // If loaded material resource successfully
+                                    if (m_materialResourceManager
+                                            .LoadMaterialResourceFromFile(
+                                                materialResourcePath.str(),
+                                                &materialResourceHandle) ==
+                                        true)
+                                    {
+                                        // Get material handle
+                                        ds_render::MaterialHandle
+                                            materialHandle;
+                                        if (m_materialManager
+                                                .GetMaterialForResourceHandle(
+                                                    materialResourceHandle,
+                                                    &materialHandle) == true)
+                                        {
+                                            // Each material maps to one
+                                            // submesh,
+                                            // get that submesh and set material
+                                            ds_render::SubMesh subMesh =
+                                                mesh.GetSubMesh(iMaterial);
+                                            subMesh.materialHandle =
+                                                materialHandle;
+
+                                            mesh.SetSubMesh(iMaterial, subMesh);
+                                        }
                                     }
                                 }
-                            }
 
-                            Instance i = m_renderComponentManager
-                                             .CreateComponentForEntity(
-                                                 createComponentMsg.entity);
-                            m_renderComponentManager.SetMesh(i, mesh);
-                        }
-                        else
-                        {
-                            std::cerr
-                                << "Number of materials specified in "
-                                << meshResourcePath.str()
-                                << " not equal to number of submeshes in mesh."
-                                << std::endl;
+                                Instance i = m_renderComponentManager
+                                                 ->CreateComponentForEntity(
+                                                     createComponentMsg.entity);
+                                m_renderComponentManager->SetMesh(i, mesh);
+                            }
+                            else
+                            {
+                                std::cerr << "Number of materials specified in "
+                                          << meshResourcePath.str()
+                                          << " not equal to number of "
+                                             "submeshes in mesh."
+                                          << std::endl;
+                            }
                         }
                     }
                 }
                 // Create transform component
                 else if (componentType == "transformComponent")
                 {
-                    TransformComponentManager::
-                        CreateComponentForEntityFromConfig(
-                            &m_transformComponentManager,
-                            createComponentMsg.entity, componentData);
+                    // Check if transform component already created for this
+                    // entity
+                    Instance transform =
+                        m_transformComponentManager->GetInstanceForEntity(
+                            createComponentMsg.entity);
+
+                    // Only create component if one has not already been created
+                    if (!transform.IsValid())
+                    {
+                        TransformComponentManager::
+                            CreateComponentForEntityFromConfig(
+                                m_transformComponentManager,
+                                createComponentMsg.entity, componentData);
+                    }
                 }
                 // Create camera component
                 else if (componentType == "cameraComponent")
                 {
-                    std::string projectionType;
-                    float verticalFov = 0.0f;
-                    float nearClip = 0.0f;
-                    float farClip = 0.0f;
+                    // Check if camera component already created for this
+                    // entity
+                    Instance camera =
+                        m_cameraComponentManager->GetInstanceForEntity(
+                            createComponentMsg.entity);
 
-                    if (componentData.GetString("projection",
-                                                &projectionType) &&
-                        componentData.GetFloat("vertical_fov", &verticalFov) &&
-                        componentData.GetFloat("near_clip", &nearClip) &&
-                        componentData.GetFloat("far_clip", &farClip))
+                    // Only create component if one has not already been created
+                    if (!camera.IsValid())
                     {
-                        // ds_math::Matrix4 projectionMatrix;
+                        std::string projectionType;
+                        float verticalFov = 0.0f;
+                        float nearClip = 0.0f;
+                        float farClip = 0.0f;
 
-                        // if (projectionType == "perspective")
-                        // {
-                        //     projectionMatrix =
-                        //         ds_math::Matrix4::CreatePerspectiveFieldOfView(
-                        //             verticalFov, m_windowWidth /
-                        //             m_windowHeight,
-                        //             nearClip, farClip);
-                        // }
-                        // else if (projectionType == "orthographic")
-                        // {
-                        //     projectionMatrix =
-                        //         ds_math::Matrix4::CreateOrthographic(
-                        //             m_windowWidth, m_windowHeight, nearClip,
-                        //             farClip);
-                        // }
-
-                        Entity e = createComponentMsg.entity;
-                        Instance i =
-                            m_cameraComponentManager.CreateComponentForEntity(
-                                e);
-                        m_cameraComponentManager.SetVerticalFieldOfView(
-                            i, verticalFov);
-                        m_cameraComponentManager.SetAspectRatio(
-                            i, m_windowWidth / (float)m_windowHeight);
-                        m_cameraComponentManager.SetNearClippingPlane(i,
-                                                                      nearClip);
-                        m_cameraComponentManager.SetFarClippingPlane(i,
-                                                                     farClip);
-
-                        // Is any camera currently active?
-                        if (m_cameraActive == false)
+                        if (componentData.GetString("projection",
+                                                    &projectionType) &&
+                            componentData.GetFloat("vertical_fov",
+                                                   &verticalFov) &&
+                            componentData.GetFloat("near_clip", &nearClip) &&
+                            componentData.GetFloat("far_clip", &farClip))
                         {
-                            // If no camera is current, set this camera to be
-                            // current camera
-                            m_activeCameraEntity = e;
-                            m_cameraActive = true;
+                            // ds_math::Matrix4 projectionMatrix;
+
+                            // if (projectionType == "perspective")
+                            // {
+                            //     projectionMatrix =
+                            // ds_math::Matrix4::CreatePerspectiveFieldOfView(
+                            //             verticalFov, m_windowWidth /
+                            //             m_windowHeight,
+                            //             nearClip, farClip);
+                            // }
+                            // else if (projectionType == "orthographic")
+                            // {
+                            //     projectionMatrix =
+                            //         ds_math::Matrix4::CreateOrthographic(
+                            //             m_windowWidth, m_windowHeight,
+                            // nearClip,
+                            //             farClip);
+                            // }
+
+                            Entity e = createComponentMsg.entity;
+                            Instance i = m_cameraComponentManager
+                                             ->CreateComponentForEntity(e);
+                            m_cameraComponentManager->SetVerticalFieldOfView(
+                                i, verticalFov);
+                            m_cameraComponentManager->SetAspectRatio(
+                                i, m_windowWidth / (float)m_windowHeight);
+                            m_cameraComponentManager->SetNearClippingPlane(
+                                i, nearClip);
+                            m_cameraComponentManager->SetFarClippingPlane(
+                                i, farClip);
+
+                            // Is any camera currently active?
+                            if (m_cameraActive == false)
+                            {
+                                // If no camera is current, set this camera to
+                                // be
+                                // current camera
+                                m_activeCameraEntity = e;
+                                m_cameraActive = true;
+                            }
                         }
                     }
                 }
                 else if (componentType == "terrainComponent")
                 {
-                    std::string heightMapName;
-                    std::string materialName;
-                    float heightScale;
+                    // std::string heightMapName;
+                    // std::string materialName;
+                    // float heightScale;
 
-                    if (componentData.GetString("heightmap", &heightMapName) &&
-                        componentData.GetString("material", &materialName) &&
-                        componentData.GetFloat("heightScale", &heightScale))
-                    {
-                        std::stringstream heightMapPath;
-                        heightMapPath << "../assets/" << heightMapName;
+                    // if (componentData.GetString("heightmap", &heightMapName)
+                    // &&
+                    //     componentData.GetString("material", &materialName) &&
+                    //     componentData.GetFloat("heightScale", &heightScale))
+                    // {
+                    //     std::stringstream heightMapPath;
+                    //     heightMapPath << "../assets/" << heightMapName;
 
-                        std::unique_ptr<TerrainResource> terrainResource =
-                            m_factory.CreateResource<TerrainResource>(
-                                heightMapPath.str());
-                        terrainResource->SetHeightScale(heightScale);
+                    //     std::unique_ptr<TerrainResource> terrainResource =
+                    //         m_factory.CreateResource<TerrainResource>(
+                    //             heightMapPath.str());
+                    //     terrainResource->SetHeightScale(heightScale);
 
-                        // above function does this
-                        // std::unique_ptr<MaterialResource> materialResource =
-                        // m_factory.CreateResource<materialResource>(materialResourcePath.str());
+                    //     // above function does this
+                    //     // std::unique_ptr<MaterialResource> materialResource
+                    //     =
+                    //         //
+                    //         m_factory.CreateResource<materialResource>(
+                    //             materialResourcePath.str());
 
-                        // Create vertex buffer data store
+                    //     // Create vertex buffer data store
 
-                        ds_com::StreamBuffer vertexBufferStore;
+                    //     ds_com::StreamBuffer vertexBufferStore;
 
-                        const std::vector<ds_math::Vector3> positions =
-                            terrainResource->GetVerticesVector();
+                    //     const std::vector<ds_math::Vector3> positions =
+                    //         terrainResource->GetVerticesVector();
 
-                        for (const ds_math::Vector3 &position : positions)
-                        {
-                            vertexBufferStore << position;
-                        }
+                    //     for (const ds_math::Vector3 &position : positions)
+                    //     {
+                    //         vertexBufferStore << position;
+                    //     }
 
-                        // Describe position data
-                        ds_render::VertexBufferDescription::AttributeDescription
-                            positionAttributeDescriptor;
+                    //     // Describe position data
+                    //     ds_render::VertexBufferDescription::AttributeDescription
+                    //         positionAttributeDescriptor;
 
-                        positionAttributeDescriptor.attributeType =
-                            ds_render::AttributeType::Position;
+                    //     positionAttributeDescriptor.attributeType =
+                    //         ds_render::AttributeType::Position;
 
-                        positionAttributeDescriptor.attributeDataType =
-                            ds_render::RenderDataType::Float;
+                    //     positionAttributeDescriptor.attributeDataType =
+                    //         ds_render::RenderDataType::Float;
 
-                        positionAttributeDescriptor.numElementsPerAttribute = 3;
-                        positionAttributeDescriptor.stride = 0;
-                        positionAttributeDescriptor.offset = 0;
-                        positionAttributeDescriptor.normalized = false;
+                    //     positionAttributeDescriptor.numElementsPerAttribute =
+                    //     3;
+                    //     positionAttributeDescriptor.stride = 0;
+                    //     positionAttributeDescriptor.offset = 0;
+                    //     positionAttributeDescriptor.normalized = false;
 
-                        // // Create texCoord data
+                    //     // // Create texCoord data
 
-                        // // Get texture coordinate data
+                    //     // // Get texture coordinate data
 
-                        // meshresource change to terrainresource
+                    //     // meshresource change to terrainresource
 
-                        const std::vector<
-                            struct TerrainResource::TextureCoordinates>
-                            textureCoordinates =
-                                terrainResource->GetTextureCoordinatesVector();
+                    //     const std::vector<
+                    //         struct TerrainResource::TextureCoordinates>
+                    //         textureCoordinates =
+                    //             terrainResource->GetTextureCoordinatesVector();
 
-                        for (const TerrainResource::TextureCoordinates
-                                 &texCoord : textureCoordinates)
-                        {
-                            vertexBufferStore << texCoord.u;
+                    //     for (const TerrainResource::TextureCoordinates
+                    //              &texCoord : textureCoordinates)
+                    //     {
+                    //         vertexBufferStore << texCoord.u;
 
-                            // Flip y texcoord
-                            vertexBufferStore
-                                << 1.0f - texCoord.v; // removed 1 - texcoord.v
-                        }
+                    //         // Flip y texcoord
+                    //         vertexBufferStore
+                    //             << 1.0f - texCoord.v; // removed 1 -
+                    //         texcoord.v
+                    //     }
 
-                        // Describe texCoord data
-                        ds_render::VertexBufferDescription::AttributeDescription
-                            texCoordAttributeDescriptor;
+                    //     // Describe texCoord data
+                    //     ds_render::VertexBufferDescription::AttributeDescription
+                    //         texCoordAttributeDescriptor;
 
-                        texCoordAttributeDescriptor.attributeType =
-                            ds_render::AttributeType::TextureCoordinate;
+                    //     texCoordAttributeDescriptor.attributeType =
+                    //         ds_render::AttributeType::TextureCoordinate;
 
-                        texCoordAttributeDescriptor.attributeDataType =
-                            ds_render::RenderDataType::Float;
+                    //     texCoordAttributeDescriptor.attributeDataType =
+                    //         ds_render::RenderDataType::Float;
 
-                        texCoordAttributeDescriptor.numElementsPerAttribute = 2;
+                    //     texCoordAttributeDescriptor.numElementsPerAttribute =
+                    //     2;
 
-                        texCoordAttributeDescriptor.stride = 0;
+                    //     texCoordAttributeDescriptor.stride = 0;
 
-                        texCoordAttributeDescriptor.offset =
-                            terrainResource->GetVerticesCount() *
-                            sizeof(ds_math::Vector3);
+                    //     texCoordAttributeDescriptor.offset =
+                    //         terrainResource->GetVerticesCount() *
+                    //         sizeof(ds_math::Vector3);
 
-                        texCoordAttributeDescriptor.normalized = false;
+                    //     texCoordAttributeDescriptor.normalized = false;
 
-                        // Add position and texcoord attribute descriptions to
+                    //     // Add position and texcoord attribute descriptions
+                    //     to
 
-                        // vertex buffer
-                        // descriptor
+                    //         // vertex buffer
+                    //         // descriptor
 
-                        ds_render::VertexBufferDescription
-                            vertexBufferDescriptor;
+                    //         ds_render::VertexBufferDescription
+                    //             vertexBufferDescriptor;
 
-                        vertexBufferDescriptor.AddAttributeDescription(
-                            positionAttributeDescriptor);
+                    //     vertexBufferDescriptor.AddAttributeDescription(
+                    //         positionAttributeDescriptor);
 
-                        // for texture
-                        vertexBufferDescriptor.AddAttributeDescription(
-                            texCoordAttributeDescriptor);
+                    //     // for texture
+                    //     vertexBufferDescriptor.AddAttributeDescription(
+                    //         texCoordAttributeDescriptor);
 
-                        // Create vertex buffer
+                    //     // Create vertex buffer
 
-                        ds_render::VertexBufferHandle vb =
-                            m_renderer->CreateVertexBuffer(
-                                ds_render::BufferUsageType::Static,
-                                vertexBufferDescriptor,
-                                vertexBufferStore.AvailableBytes(),
-                                vertexBufferStore.GetDataPtr());
+                    //     ds_render::VertexBufferHandle vb =
+                    //         m_renderer->CreateVertexBuffer(
+                    //             ds_render::BufferUsageType::Static,
+                    //             vertexBufferDescriptor,
+                    //             vertexBufferStore.AvailableBytes(),
+                    //             vertexBufferStore.GetDataPtr());
 
-                        // Create index buffer
+                    //     // Create index buffer
 
-                        std::vector<int> indices =
-                            terrainResource->GetIndicesVector();
+                    //     std::vector<int> indices =
+                    //         terrainResource->GetIndicesVector();
 
-                        // Create index buffer
+                    //     // Create index buffer
 
-                        ds_render::IndexBufferHandle ib =
-                            m_renderer->CreateIndexBuffer(
-                                ds_render::BufferUsageType::Static,
-                                sizeof(unsigned int) * indices.size(),
-                                &indices[0]);
+                    //     ds_render::IndexBufferHandle ib =
+                    //         m_renderer->CreateIndexBuffer(
+                    //             ds_render::BufferUsageType::Static,
+                    //             sizeof(unsigned int) * indices.size(),
+                    //             &indices[0]);
 
-                        ds_render::Mesh mesh = ds_render::Mesh(
-                            vb, ib, ds_render::MeshResourceHandle());
+                    //     ds_render::Mesh mesh = ds_render::Mesh(
+                    //         vb, ib, ds_render::MeshResourceHandle());
 
-                        // Create and load material
-                        std::stringstream materialResourcePath;
-                        materialResourcePath << "../assets/" << materialName;
+                    //     // Create and load material
+                    //     std::stringstream materialResourcePath;
+                    //     materialResourcePath << "../assets/" << materialName;
 
-                        // Get handle to material resource created
-                        MaterialResourceHandle materialResourceHandle;
-                        if (m_materialResourceManager
-                                .LoadMaterialResourceFromFile(
-                                    materialResourcePath.str(),
-                                    &materialResourceHandle))
-                        {
-                            // Get material handle for material resource
-                            ds_render::MaterialHandle materialHandle;
-                            if (m_materialManager.GetMaterialForResourceHandle(
-                                    materialResourceHandle, &materialHandle) ==
-                                true)
-                            {
-                                mesh.AddSubMesh(ds_render::SubMesh(
-                                    0, indices.size(), materialHandle));
-                            }
-                        }
+                    //     // Get handle to material resource created
+                    //     MaterialResourceHandle materialResourceHandle;
+                    //     if (m_materialResourceManager
+                    //             .LoadMaterialResourceFromFile(
+                    //                 materialResourcePath.str(),
+                    //                 &materialResourceHandle))
+                    //     {
+                    //         // Get material handle for material resource
+                    //         ds_render::MaterialHandle materialHandle;
+                    //         if
+                    //         (m_materialManager.GetMaterialForResourceHandle(
+                    //                 materialResourceHandle, &materialHandle)
+                    //                 ==
+                    //             true)
+                    //         {
+                    //             mesh.AddSubMesh(ds_render::SubMesh(
+                    //                 0, indices.size(), materialHandle));
+                    //         }
+                    //     }
 
-                        Instance i =
-                            m_renderComponentManager.CreateComponentForEntity(
-                                createComponentMsg.entity);
+                    //     Instance i =
+                    //         m_renderComponentManager->CreateComponentForEntity(
+                    //             createComponentMsg.entity);
 
-                        m_renderComponentManager.SetMesh(i, mesh);
-                    }
+                    //     m_renderComponentManager->SetMesh(i, mesh);
+                    // }
                 }
             }
 
             break;
         }
-        case ds_msg::MessageType::SetLocalTranslation:
-        {
-            ds_msg::SetLocalTranslation setTranslationMsg;
-            (*messages) >> setTranslationMsg;
+        // case ds_msg::MessageType::SetLocalTranslation:
+        // {
+        //     ds_msg::SetLocalTranslation setTranslationMsg;
+        //     (*messages) >> setTranslationMsg;
 
-            // Get component instance of entity to move
-            Instance transform =
-                m_transformComponentManager.GetInstanceForEntity(
-                    setTranslationMsg.entity);
+        //     // Get component instance of entity to move
+        //     Instance transform =
+        //         m_transformComponentManager->GetInstanceForEntity(
+        //             setTranslationMsg.entity);
 
-            // If has transform component
-            if (transform.IsValid())
-            {
-                // Set translation of entity
-                m_transformComponentManager.SetLocalTranslation(
-                    transform, setTranslationMsg.localTranslation);
-            }
+        //     // If has transform component
+        //     if (transform.IsValid())
+        //     {
+        //         // Set translation of entity
+        //         m_transformComponentManager->SetLocalTranslation(
+        //             transform, setTranslationMsg.localTranslation);
+        //     }
 
-            break;
-        }
-        case ds_msg::MessageType::SetLocalOrientation:
-        {
-            ds_msg::SetLocalOrientation setOrientationMsg;
-            (*messages) >> setOrientationMsg;
+        //     break;
+        // }
+        // case ds_msg::MessageType::SetLocalOrientation:
+        // {
+        //     ds_msg::SetLocalOrientation setOrientationMsg;
+        //     (*messages) >> setOrientationMsg;
 
-            // Get component instance of entity to rotate
-            Instance transform =
-                m_transformComponentManager.GetInstanceForEntity(
-                    setOrientationMsg.entity);
+        //     // Get component instance of entity to rotate
+        //     Instance transform =
+        //         m_transformComponentManager->GetInstanceForEntity(
+        //             setOrientationMsg.entity);
 
-            // If has transform component
-            if (transform.IsValid())
-            {
-                // Set orientation of entity
-                m_transformComponentManager.SetLocalOrientation(
-                    transform, setOrientationMsg.localOrientation);
-            }
+        //     // If has transform component
+        //     if (transform.IsValid())
+        //     {
+        //         // Set orientation of entity
+        //         m_transformComponentManager->SetLocalOrientation(
+        //             transform, setOrientationMsg.localOrientation);
+        //     }
 
-            break;
-        }
-        case ds_msg::MessageType::SetLocalScale:
-        {
-            ds_msg::SetLocalScale setScaleMsg;
-            (*messages) >> setScaleMsg;
+        //     break;
+        // }
+        // case ds_msg::MessageType::SetLocalScale:
+        // {
+        //     ds_msg::SetLocalScale setScaleMsg;
+        //     (*messages) >> setScaleMsg;
 
-            // Get component instance of entity to scale
-            Instance transform =
-                m_transformComponentManager.GetInstanceForEntity(
-                    setScaleMsg.entity);
+        //     // Get component instance of entity to scale
+        //     Instance transform =
+        //         m_transformComponentManager->GetInstanceForEntity(
+        //             setScaleMsg.entity);
 
-            // If has transform component
-            if (transform.IsValid())
-            {
-                // Set scale of entity
-                m_transformComponentManager.SetLocalScale(
-                    transform, setScaleMsg.localScale);
-            }
+        //     // If has transform component
+        //     if (transform.IsValid())
+        //     {
+        //         // Set scale of entity
+        //         m_transformComponentManager->SetLocalScale(
+        //             transform, setScaleMsg.localScale);
+        //     }
 
-            break;
-        }
+        //     break;
+        // }
         case ds_msg::MessageType::SetAnimationIndex:
         {
             ds_msg::SetAnimationIndex setAnimationMsg;
@@ -998,10 +1057,10 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                                 createPanelMsg.endX, createPanelMsg.endY,
                                 StringIntern::Instance().GetString(
                                     createPanelMsg.materialPath));
-            Instance i = m_renderComponentManager.CreateComponentForEntity(
+            Instance i = m_renderComponentManager->CreateComponentForEntity(
                 createPanelMsg.entity);
 
-            m_renderComponentManager.SetMesh(i, mesh);
+            m_renderComponentManager->SetMesh(i, mesh);
             break;
         }
         case ds_msg::MessageType::CreateButton:
@@ -1016,9 +1075,10 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                                     createButtonMsg.defaultMaterialPath));
 
             // Create render component
-            Instance render = m_renderComponentManager.CreateComponentForEntity(
-                createButtonMsg.entity);
-            m_renderComponentManager.SetMesh(render, mesh);
+            Instance render =
+                m_renderComponentManager->CreateComponentForEntity(
+                    createButtonMsg.entity);
+            m_renderComponentManager->SetMesh(render, mesh);
 
             std::stringstream defaultMaterialPathFull;
             defaultMaterialPathFull << "../assets/"
@@ -1061,25 +1121,25 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                 {
                     // Create button component
                     Instance button =
-                        m_buttonComponentManager.CreateComponentForEntity(
+                        m_buttonComponentManager->CreateComponentForEntity(
                             createButtonMsg.entity);
 
                     // Set material handles
-                    m_buttonComponentManager.SetDefaultMaterialHandle(
+                    m_buttonComponentManager->SetDefaultMaterialHandle(
                         button, defaultMaterialHandle);
-                    m_buttonComponentManager.SetPressedMaterialHandle(
+                    m_buttonComponentManager->SetPressedMaterialHandle(
                         button, pressedMaterialHandle);
-                    m_buttonComponentManager.SetHoverMaterialHandle(
+                    m_buttonComponentManager->SetHoverMaterialHandle(
                         button, hoverMaterialHandle);
 
                     // Set button properties
-                    m_buttonComponentManager.SetStartXCoordinate(
+                    m_buttonComponentManager->SetStartXCoordinate(
                         button, createButtonMsg.startX);
-                    m_buttonComponentManager.SetStartYCoordinate(
+                    m_buttonComponentManager->SetStartYCoordinate(
                         button, createButtonMsg.startY);
-                    m_buttonComponentManager.SetEndXCoordinate(
+                    m_buttonComponentManager->SetEndXCoordinate(
                         button, createButtonMsg.endX);
-                    m_buttonComponentManager.SetEndYCoordinate(
+                    m_buttonComponentManager->SetEndYCoordinate(
                         button, createButtonMsg.endY);
                 }
             }
@@ -1094,43 +1154,43 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 
             // For each button component
             for (unsigned int i = 0;
-                 i < m_buttonComponentManager.GetNumInstances(); ++i)
+                 i < m_buttonComponentManager->GetNumInstances(); ++i)
             {
                 // Get button component instance
                 Instance button = Instance::MakeInstance(i);
 
                 // Get entity
                 Entity entity =
-                    m_buttonComponentManager.GetEntityForInstance(button);
+                    m_buttonComponentManager->GetEntityForInstance(button);
 
                 // Get render component instance
                 Instance render =
-                    m_renderComponentManager.GetInstanceForEntity(entity);
+                    m_renderComponentManager->GetInstanceForEntity(entity);
 
                 if (render.IsValid())
                 {
                     // Reset all materials to default material
                     ds_render::Mesh mesh =
-                        m_renderComponentManager.GetMesh(render);
+                        m_renderComponentManager->GetMesh(render);
                     ds_render::SubMesh subMesh = mesh.GetSubMesh(0);
                     subMesh.materialHandle =
-                        m_buttonComponentManager.GetDefaultMaterialHandle(
+                        m_buttonComponentManager->GetDefaultMaterialHandle(
                             button);
                     mesh.SetSubMesh(0, subMesh);
-                    m_renderComponentManager.SetMesh(render, mesh);
+                    m_renderComponentManager->SetMesh(render, mesh);
 
                     // Is mouse colliding with button
                     if (mouseMotionEvent.x >
-                            m_buttonComponentManager.GetStartXCoordinate(
+                            m_buttonComponentManager->GetStartXCoordinate(
                                 button) &&
                         mouseMotionEvent.y <
-                            m_buttonComponentManager.GetStartYCoordinate(
+                            m_buttonComponentManager->GetStartYCoordinate(
                                 button) &&
                         mouseMotionEvent.x <
-                            m_buttonComponentManager.GetEndXCoordinate(
+                            m_buttonComponentManager->GetEndXCoordinate(
                                 button) &&
                         mouseMotionEvent.y >
-                            m_buttonComponentManager.GetEndYCoordinate(button))
+                            m_buttonComponentManager->GetEndYCoordinate(button))
 
                     {
                         // If user is holding down left mouse button
@@ -1138,26 +1198,26 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                         {
                             // Set pressed material
                             ds_render::Mesh mesh =
-                                m_renderComponentManager.GetMesh(render);
+                                m_renderComponentManager->GetMesh(render);
                             ds_render::SubMesh subMesh = mesh.GetSubMesh(0);
                             subMesh.materialHandle =
                                 m_buttonComponentManager
-                                    .GetPressedMaterialHandle(button);
+                                    ->GetPressedMaterialHandle(button);
                             mesh.SetSubMesh(0, subMesh);
-                            m_renderComponentManager.SetMesh(render, mesh);
+                            m_renderComponentManager->SetMesh(render, mesh);
                         }
                         // Else
                         else
                         {
                             // Set hover material
                             ds_render::Mesh mesh =
-                                m_renderComponentManager.GetMesh(render);
+                                m_renderComponentManager->GetMesh(render);
                             ds_render::SubMesh subMesh = mesh.GetSubMesh(0);
                             subMesh.materialHandle =
-                                m_buttonComponentManager.GetHoverMaterialHandle(
-                                    button);
+                                m_buttonComponentManager
+                                    ->GetHoverMaterialHandle(button);
                             mesh.SetSubMesh(0, subMesh);
-                            m_renderComponentManager.SetMesh(render, mesh);
+                            m_renderComponentManager->SetMesh(render, mesh);
                         }
                     }
                 }
@@ -1171,42 +1231,42 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 
             // For each button component
             for (unsigned int i = 0;
-                 i < m_buttonComponentManager.GetNumInstances(); ++i)
+                 i < m_buttonComponentManager->GetNumInstances(); ++i)
             {
                 // Get button component instance
                 Instance button = Instance::MakeInstance(i);
 
                 // Get entity
                 Entity entity =
-                    m_buttonComponentManager.GetEntityForInstance(button);
+                    m_buttonComponentManager->GetEntityForInstance(button);
 
                 // Get render component instance
                 Instance render =
-                    m_renderComponentManager.GetInstanceForEntity(entity);
+                    m_renderComponentManager->GetInstanceForEntity(entity);
 
                 if (render.IsValid())
                 {
                     // Reset all materials to default material
                     // ds_render::Mesh mesh =
-                    //     m_renderComponentManager.GetMesh(render);
+                    //     m_renderComponentManager->GetMesh(render);
                     // ds_render::SubMesh subMesh = mesh.GetSubMesh(0);
                     // subMesh.material =
-                    //     m_buttonComponentManager.GetDefaultMaterial(button);
+                    //     m_buttonComponentManager->GetDefaultMaterial(button);
                     // mesh.SetSubMesh(0, subMesh);
-                    // m_renderComponentManager.SetMesh(render, mesh);
+                    // m_renderComponentManager->SetMesh(render, mesh);
 
                     // Is mouse colliding with button
                     if (mouseButtonEvent.x >
-                            m_buttonComponentManager.GetStartXCoordinate(
+                            m_buttonComponentManager->GetStartXCoordinate(
                                 button) &&
                         mouseButtonEvent.y <
-                            m_buttonComponentManager.GetStartYCoordinate(
+                            m_buttonComponentManager->GetStartYCoordinate(
                                 button) &&
                         mouseButtonEvent.x <
-                            m_buttonComponentManager.GetEndXCoordinate(
+                            m_buttonComponentManager->GetEndXCoordinate(
                                 button) &&
                         mouseButtonEvent.y >
-                            m_buttonComponentManager.GetEndYCoordinate(button))
+                            m_buttonComponentManager->GetEndYCoordinate(button))
 
                     {
                         // If user has pressed left mouse button
@@ -1214,13 +1274,13 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                         {
                             // Set pressed material
                             ds_render::Mesh mesh =
-                                m_renderComponentManager.GetMesh(render);
+                                m_renderComponentManager->GetMesh(render);
                             ds_render::SubMesh subMesh = mesh.GetSubMesh(0);
                             subMesh.materialHandle =
                                 m_buttonComponentManager
-                                    .GetPressedMaterialHandle(button);
+                                    ->GetPressedMaterialHandle(button);
                             mesh.SetSubMesh(0, subMesh);
-                            m_renderComponentManager.SetMesh(render, mesh);
+                            m_renderComponentManager->SetMesh(render, mesh);
 
                             // Send a button fired message with the id of the
                             // pressed button
@@ -1237,13 +1297,13 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                         {
                             // Set hover material
                             ds_render::Mesh mesh =
-                                m_renderComponentManager.GetMesh(render);
+                                m_renderComponentManager->GetMesh(render);
                             ds_render::SubMesh subMesh = mesh.GetSubMesh(0);
                             subMesh.materialHandle =
-                                m_buttonComponentManager.GetHoverMaterialHandle(
-                                    button);
+                                m_buttonComponentManager
+                                    ->GetHoverMaterialHandle(button);
                             mesh.SetSubMesh(0, subMesh);
-                            m_renderComponentManager.SetMesh(render, mesh);
+                            m_renderComponentManager->SetMesh(render, mesh);
                         }
                     }
                 }
@@ -1261,37 +1321,37 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 
             // Render
             // Get component instance for entity
-            Instance render = m_renderComponentManager.GetInstanceForEntity(e);
+            Instance render = m_renderComponentManager->GetInstanceForEntity(e);
 
             // If valid, remove it from component manager
             if (render.IsValid())
             {
-                m_renderComponentManager.RemoveInstance(render);
+                m_renderComponentManager->RemoveInstance(render);
             }
 
             // Transform
             Instance transform =
-                m_transformComponentManager.GetInstanceForEntity(e);
+                m_transformComponentManager->GetInstanceForEntity(e);
 
             if (transform.IsValid())
             {
-                m_transformComponentManager.RemoveInstance(transform);
+                m_transformComponentManager->RemoveInstance(transform);
             }
 
             // Camera
-            Instance camera = m_cameraComponentManager.GetInstanceForEntity(e);
+            Instance camera = m_cameraComponentManager->GetInstanceForEntity(e);
 
             if (camera.IsValid())
             {
-                m_cameraComponentManager.RemoveInstance(camera);
+                m_cameraComponentManager->RemoveInstance(camera);
             }
 
             // Buttons
-            Instance button = m_buttonComponentManager.GetInstanceForEntity(e);
+            Instance button = m_buttonComponentManager->GetInstanceForEntity(e);
 
             if (button.IsValid())
             {
-                m_buttonComponentManager.RemoveInstance(button);
+                m_buttonComponentManager->RemoveInstance(button);
             }
 
             break;
@@ -1440,6 +1500,7 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
             break;
         }
         case ds_msg::MessageType::WindowResize:
+        {
             ds_msg::WindowResize windowResizeMsg;
             (*messages) >> windowResizeMsg;
 
@@ -1453,19 +1514,22 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
 
                 // Update all camera component aspect ratios
                 for (unsigned int i = 0;
-                     i < m_cameraComponentManager.GetNumInstances(); ++i)
+                     i < m_cameraComponentManager->GetNumInstances(); ++i)
                 {
                     Instance camera = Instance::MakeInstance(i);
 
-                    m_cameraComponentManager.SetAspectRatio(
+                    m_cameraComponentManager->SetAspectRatio(
                         camera, m_windowWidth / (float)m_windowHeight);
                 }
             }
 
             break;
+        }
         default:
+        {
             messages->Extract(header.size);
             break;
+        }
         }
     }
 }
@@ -1881,19 +1945,20 @@ void Render::RenderScene(float deltaTime)
     {
         // Get active camera
         Instance cameraTransform =
-            m_transformComponentManager.GetInstanceForEntity(
+            m_transformComponentManager->GetInstanceForEntity(
                 m_activeCameraEntity);
         Instance cameraComponent =
-            m_cameraComponentManager.GetInstanceForEntity(m_activeCameraEntity);
+            m_cameraComponentManager->GetInstanceForEntity(
+                m_activeCameraEntity);
 
         const ds_math::Matrix4 &worldTransform =
-            m_transformComponentManager.GetWorldTransform(cameraTransform);
+            m_transformComponentManager->GetWorldTransform(cameraTransform);
         const ds_math::Matrix4 &viewMatrix =
             ds_math::Matrix4::Inverse(worldTransform);
 
         // Get projection matrix of camera
         const ds_math::Matrix4 &projectionMatrix =
-            m_cameraComponentManager.GetProjectionMatrix(cameraComponent);
+            m_cameraComponentManager->GetProjectionMatrix(cameraComponent);
 
         // Update scene constant buffer
         m_sceneBufferDescrip.InsertMemberData(
@@ -1973,25 +2038,25 @@ void Render::RenderScene(float deltaTime)
         }
 
         // For each render component
-        for (unsigned int i = 0; i < m_renderComponentManager.GetNumInstances();
-             ++i)
+        for (unsigned int i = 0;
+             i < m_renderComponentManager->GetNumInstances(); ++i)
         {
             Instance renderInstance = Instance::MakeInstance(i);
             // Get transform component
             Entity entity =
-                m_renderComponentManager.GetEntityForInstance(renderInstance);
+                m_renderComponentManager->GetEntityForInstance(renderInstance);
             Instance transformInstance =
-                m_transformComponentManager.GetInstanceForEntity(entity);
+                m_transformComponentManager->GetInstanceForEntity(entity);
 
             // Get mesh
             ds_render::Mesh mesh =
-                m_renderComponentManager.GetMesh(renderInstance);
+                m_renderComponentManager->GetMesh(renderInstance);
 
             // If has transform instance
             if (transformInstance.IsValid())
             {
                 ds_math::Matrix4 worldTransform =
-                    m_transformComponentManager.GetWorldTransform(
+                    m_transformComponentManager->GetWorldTransform(
                         transformInstance);
                 // Update object constant buffer with world transform of this
                 // transform instance

@@ -444,7 +444,7 @@ private:
     EntityManager m_entityManager;
 
     // Keep track of transforms of entities
-    TransformComponentManager m_transformManager;
+    TransformComponentManager *m_transformManager;
 
     bool m_isFirstUpdate;
 };

@@ -64,7 +64,9 @@ public:
     std::vector<RigidBody *> m_rigidBodies;
 
     CollisionBox m_box;
+    CollisionBox m_box2;
     CollisionPlane m_plane;
+    ContactResolver m_contactResolver;
 
 private:
 
