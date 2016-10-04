@@ -4,6 +4,7 @@
 #include "engine/system/ISystem.h"
 #include "engine/system/scene/TransformComponentManager.h"
 #include "engine/system/script/LuaEnvironment.h"
+#include "engine/system/script/ScriptComponentManager.h"
 #include "math/Quaternion.h"
 #include "math/Vector3.h"
 
@@ -425,6 +426,14 @@ private:
                                          const ds_math::Vector3 &position,
                                          const ds_math::Quaternion &orientation,
                                          const ds_math::Vector3 &scale);
+    /**
+     * Create script component from component data.
+     *
+     * @param   entity   Entity, entity to create script component for.
+     * @param   config   const Config &, component data to create script
+     * component from.
+     */
+    void CreateScriptComponent(Entity entity, const Config &componentData);
 
     // Messaging
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
@@ -445,6 +454,7 @@ private:
 
     // Keep track of transforms of entities
     TransformComponentManager *m_transformManager;
+    ScriptComponentManager *m_scriptManager;
 
     bool m_isFirstUpdate;
 };

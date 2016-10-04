@@ -30,6 +30,8 @@ bool Script::Initialize(const Config &config)
     // Initialize transform component manager
     m_transformManager =
         GetComponentStore().GetComponentManager<TransformComponentManager>();
+    m_scriptManager =
+        GetComponentStore().GetComponentManager<ScriptComponentManager>();
 
     // Initialize lua environment
     if (m_lua.Init())
@@ -709,6 +711,11 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
                                 componentData);
                     }
                 }
+                else if (componentType == "scriptComponent")
+                {
+                    CreateScriptComponent(createComponentMsg.entity,
+                                          componentData);
+                }
             }
             break;
         }
@@ -900,5 +907,23 @@ ds_msg::CreateComponent Script::BuildTransformComponentCreateMessage(
 
     // Return message
     return transformComponent;
+}
+
+void Script::CreateScriptComponent(Entity entity, const Config &componentData)
+{
+    Instance script = m_scriptManager->GetInstanceForEntity(entity);
+
+    if (!script.IsValid())
+    {
+        bool isInitialized = false;
+        std::string scriptPath;
+
+        if (componentData.GetString("scriptPath", &scriptPath))
+        {
+            script = m_scriptManager->CreateComponentForEntity(entity);
+            m_scriptManager->SetInitialized(script, isInitialized);
+            m_scriptManager->SetScriptPath(script, scriptPath);
+        }
+    }
 }
 }

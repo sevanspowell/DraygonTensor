@@ -73,6 +73,9 @@ set(ENGINE_INCLUDE_FILES
   system/script/LuaHelper.h
   system/script/Script.h
   system/script/ScriptBindingSet.h
+  system/script/ScriptComponent.h
+  system/script/ScriptComponentManager.h
+  system/script/ScriptComponentManager.cpp
 )
 
 set(ENGINE_SRC_FILES
