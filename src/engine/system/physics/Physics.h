@@ -39,7 +39,8 @@ private:
 
     void CreatePhysicsComponent(Entity entity, const Config &componentData);
 
-    void UpdateComponents();
+    void UpdateRigidBodyTransforms();
+    void PropagateTransform();
 
     /** Messaging */
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;

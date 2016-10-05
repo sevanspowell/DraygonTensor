@@ -79,6 +79,7 @@ public:
     ds_math::Matrix4 offset;
 
     CollisionPrimitive();
+    virtual ~CollisionPrimitive() {}
 
     /**
     * Calculates the internals for the primitive.
@@ -259,10 +260,6 @@ class CollisionDetector
 {
 public:
     static unsigned sphereAndHalfSpace(const CollisionSphere &sphere,
-                                       const CollisionPlane &plane,
-                                       CollisionData *data);
-
-    static unsigned sphereAndTruePlane(const CollisionSphere &sphere,
                                        const CollisionPlane &plane,
                                        CollisionData *data);
 

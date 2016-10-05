@@ -29,15 +29,19 @@
  */
 #pragma once
 
-#include "math/Precision.h"
-
-#include "engine/system/physics/RigidBody.h"
-#include "engine/system/physics/ForceGenerator.h"
-#include "engine/system/physics/Contacts.h"
+#include <map>
+#include <memory>
+#include <vector>
 #include "engine/system/physics/CollisionFine.h"
+#include "engine/system/physics/Contacts.h"
+#include "engine/system/physics/ForceGenerator.h"
+#include "engine/system/physics/RigidBody.h"
+#include "math/Precision.h"
 
 namespace ds_phys
 {
+typedef int CollisionPrimitiveID;
+
 class PhysicsWorld
 {
 public:
@@ -60,11 +64,24 @@ public:
     void removeForceGenerator(RigidBody *rigidBody,
                               IForceGenerator *forceGenerator);
 
+    CollisionPrimitiveID addCollisionPrimitive(std::unique_ptr<CollisionPrimitive>&& primitive);
+    CollisionPrimitive* getCollisionPrimitive(CollisionPrimitiveID id);
+    CollisionPrimitiveID getCollisionPrimitiveID(CollisionPrimitive* primitive);
+    std::unique_ptr<CollisionPrimitive> removeCollisionPrimitive(CollisionPrimitiveID id);
+    std::unique_ptr<CollisionPrimitive> removeCollisionPrimitive(CollisionPrimitive* primitive);
+
     // TODO Not public
     std::vector<RigidBody *> m_rigidBodies;
 
+    CollisionPrimitiveID m_currentCPID;
+    std::map<CollisionPrimitiveID, std::unique_ptr<CollisionPrimitive>> m_collisionPrimitives;
+
     CollisionBox m_box;
     CollisionBox m_box2;
+
+    CollisionSphere m_sphere;
+    CollisionSphere m_sphere2;
+
     CollisionPlane m_plane;
     ContactResolver m_contactResolver;
 
