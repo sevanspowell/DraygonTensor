@@ -671,6 +671,14 @@ void Script::SetPause(bool shouldPause)
                           sizeof(ds_msg::PauseEvent), &pauseEvent);
 }
 
+unsigned Script::getUpdateRate(uint32_t screenRefreshRate) const {
+	return screenRefreshRate * 2;
+}
+
+unsigned Script::getMaxConsecutiveUpdates() const {
+    return 1;
+}
+
 void Script::ProcessEvents(ds_msg::MessageStream *messages)
 {
     while (messages->AvailableBytes() != 0)

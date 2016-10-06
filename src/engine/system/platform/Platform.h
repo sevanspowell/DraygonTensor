@@ -71,6 +71,8 @@ public:
      */
     uint32_t GetTicks() const;
 
+    uint32_t GetRefreshRate() const;
+
 private:
     /**
      * Translate an SDL2 event into a message and append it to the list of
