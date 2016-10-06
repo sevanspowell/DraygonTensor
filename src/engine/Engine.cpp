@@ -29,7 +29,7 @@ void Engine::Start()
             double currSeconds = ((Platform *)m_platform)->GetTicks() / 1000.0f;
             float deltaTime = (float)(currSeconds - prevSeconds);
 
-            if (deltaTime > 0.001) {
+            if (deltaTime >= 0.001) {
             	prevSeconds = currSeconds;
             	Update(deltaTime);
             } else {
