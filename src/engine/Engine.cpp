@@ -130,32 +130,27 @@ void Engine::Update(float deltaTime)
     // Update systems
     for (auto &system : m_systems)
     {
-        if (system.get() != m_script)
-        {
-			if (system->getUpdateRate(screenRefreshRate) == 0)
-			{
-				system->Update(deltaTime);
-			}
-			else
-			{
-				unsigned maxUpdates = system->getMaxConsecutiveUpdates();
-				float accum = system->getUpdateAccum();
-				float updateDT = 1/(float)system->getUpdateRate(screenRefreshRate);
-				float boundedDeltaTime = maxUpdates == 0 ? deltaTime : std::min(maxUpdates * updateDT, deltaTime);
-				accum += boundedDeltaTime;
+		if (system->getUpdateRate(screenRefreshRate) == 0)
+		{
+			system->Update(deltaTime);
+		}
+		else
+		{
+			unsigned maxUpdates = system->getMaxConsecutiveUpdates();
+			float accum = system->getUpdateAccum();
+			float updateDT = 1/(float)system->getUpdateRate(screenRefreshRate);
+			float boundedDeltaTime = maxUpdates == 0 ? deltaTime : std::min(maxUpdates * updateDT, deltaTime);
+			accum += boundedDeltaTime;
 
-				while (accum >= updateDT)
-				{
-					system->Update(updateDT);
-					accum -= updateDT;
-				}
-
-				system->setUpdateAccum(accum);
+			while (accum >= updateDT)
+			{
+				system->Update(updateDT);
+				accum -= updateDT;
 			}
-        }
+
+			system->setUpdateAccum(accum);
+		}
     }
-
-    m_script->Update(deltaTime);
 }
 
 void Engine::Shutdown()

@@ -172,6 +172,7 @@ static int l_GetNextMessage(lua_State *L)
             switch (header.type)
             {
             case ds_msg::MessageType::ScriptInterpret:
+            {
                 ds_msg::ScriptInterpret scriptMsg;
                 msg >> scriptMsg;
 
@@ -185,6 +186,7 @@ static int l_GetNextMessage(lua_State *L)
                 lua_setfield(L, -2, "script"); // table.script = script message
 
                 break;
+            }
             case ds_msg::MessageType::ButtonFired:
             {
                 ds_msg::ButtonFired buttonFiredMsg;
@@ -322,6 +324,63 @@ static int l_GetNextMessage(lua_State *L)
                 lua_setfield(L, -2,
                              "repeat"); // table.repeat = keyboardEvent.repeat
 
+                break;
+            }
+            case ds_msg::MessageType::CreateComponent:
+            {
+                ds_msg::CreateComponent createComponentMsg;
+                msg >> createComponentMsg;
+
+                // Create payload table
+                lua_pushliteral(L, "create_component");
+                lua_setfield(L, -2, "type"); // table.type = create_component
+
+                // Push key string
+                std::string typeString = ds::StringIntern::Instance().GetString(
+                    createComponentMsg.componentType);
+                lua_pushlstring(L, typeString.c_str(), typeString.length());
+
+                // Set key field
+                lua_setfield(L, -2,
+                             "component_type"); // table.type = type string
+
+                // Create entity and push to stack
+                ds::Entity *entity =
+                    (ds::Entity *)lua_newuserdata(L, sizeof(ds::Entity));
+                *entity = createComponentMsg.entity;
+
+                // Get Entity metatable
+                luaL_getmetatable(L, "Entity");
+                // Set it as metatable of new user data
+                lua_setmetatable(L, -2);
+
+                // Set entityA field
+                lua_setfield(L, -2, "entity"); // table.entity = entity
+
+                ds::Config componentData;
+                if (componentData.LoadMemory(
+                        ds::StringIntern::Instance().GetString(
+                            createComponentMsg.componentData)))
+                {
+                    if (typeString == "scriptComponent")
+                    {
+                        std::string scriptPath;
+                        if (componentData.GetString("scriptPath", &scriptPath))
+                        {
+                            // Push scriptPath string
+                            size_t lastDotIndex = scriptPath.find_last_of(".");
+                            std::string noExtension =
+                                scriptPath.substr(0, lastDotIndex);
+                            lua_pushlstring(L, noExtension.c_str(),
+                                            noExtension.length());
+
+                            // Set key field
+                            lua_setfield(L, -2,
+                                         "scriptPath"); // table.scriptPath =
+                                                        // scriptPath string
+                        }
+                    }
+                }
                 break;
             }
             default:
