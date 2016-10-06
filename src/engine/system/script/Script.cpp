@@ -206,6 +206,9 @@ Entity Script::SpawnPrefab(std::string prefabFile,
             fullComponentKey << "components"
                              << "." << component;
 
+            std::cout << fullPrefabFilePath.str() << ": "
+                      << fullComponentKey.str() << std::endl;
+
             std::string componentData =
                 prefab.StringifyObject(fullComponentKey.str());
 
@@ -671,11 +674,13 @@ void Script::SetPause(bool shouldPause)
                           sizeof(ds_msg::PauseEvent), &pauseEvent);
 }
 
-unsigned Script::getUpdateRate(uint32_t screenRefreshRate) const {
-	return screenRefreshRate * 2;
+unsigned Script::getUpdateRate(uint32_t screenRefreshRate) const
+{
+    return screenRefreshRate * 2;
 }
 
-unsigned Script::getMaxConsecutiveUpdates() const {
+unsigned Script::getMaxConsecutiveUpdates() const
+{
     return 1;
 }
 

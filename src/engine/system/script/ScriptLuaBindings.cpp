@@ -361,24 +361,54 @@ static int l_GetNextMessage(lua_State *L)
                 if (componentData.LoadMemory(
                         ds::StringIntern::Instance().GetString(
                             createComponentMsg.componentData)))
-                {
-                    if (typeString == "scriptComponent")
+                { 
+                    if (typeString == "scriptComponents")
                     {
-                        std::string scriptPath;
-                        if (componentData.GetString("scriptPath", &scriptPath))
+
+                        std::vector<std::string> scriptPaths =
+                            componentData.GetObjectKeys(
+                                "scriptPaths");
+                        if (scriptPaths.size() > 0)
                         {
-                            // Push scriptPath string
-                            size_t lastDotIndex = scriptPath.find_last_of(".");
-                            std::string noExtension =
-                                scriptPath.substr(0, lastDotIndex);
-                            lua_pushlstring(L, noExtension.c_str(),
-                                            noExtension.length());
+                            lua_createtable(L, scriptPaths.size(), 0);
+                            for (unsigned int i = 0; i < scriptPaths.size();
+                                 ++i)
+                            {
+                                const std::string &scriptPath = scriptPaths[i];
+
+                                // Push scriptPath string
+                                size_t lastDotIndex =
+                                    scriptPath.find_last_of(".");
+                                std::string noExtension =
+                                    scriptPath.substr(0, lastDotIndex);
+                                lua_pushlstring(L, noExtension.c_str(),
+                                                noExtension.length());
+
+                                lua_rawseti(L, -2, i + 1);
+                            }
 
                             // Set key field
                             lua_setfield(L, -2,
-                                         "scriptPath"); // table.scriptPath =
-                                                        // scriptPath string
+                                         "script_paths"); // table.scriptPath =
+                                                         // scriptPath array 
                         }
+                        // std::string scriptPath;
+                        // if (componentData.GetString("scriptPath",
+                        // &scriptPath))
+                        // {
+                        //     // Push scriptPath string
+                        //     size_t lastDotIndex =
+                        //     scriptPath.find_last_of(".");
+                        //     std::string noExtension =
+                        //         scriptPath.substr(0, lastDotIndex);
+                        //     lua_pushlstring(L, noExtension.c_str(),
+                        //                     noExtension.length());
+
+                        //     // Set key field
+                        //     lua_setfield(L, -2,
+                        //                  "scriptPath"); // table.scriptPath =
+                        //                                 // scriptPath string
+                        // }
                     }
                 }
                 break;
