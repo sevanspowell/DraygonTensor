@@ -30,6 +30,8 @@ bool Script::Initialize(const Config &config)
     // Initialize transform component manager
     m_transformManager =
         GetComponentStore().GetComponentManager<TransformComponentManager>();
+    m_scriptManager =
+        GetComponentStore().GetComponentManager<ScriptComponentManager>();
 
     // Initialize lua environment
     if (m_lua.Init())
@@ -103,6 +105,32 @@ void Script::Update(float deltaTime)
     }
 
     ProcessEvents(&m_messagesReceived);
+
+    // For each script component
+    // for (unsigned int i = 0; i < m_scriptManager->GetNumInstances(); ++i)
+    // {
+    //     Instance script = Instance::MakeInstance(i);
+
+    //     // Initialize script component
+    //     if (m_scriptManager->IsInitialized(script) == false)
+    //     {
+    //         std::stringstream fullScriptPath;
+    //         fullScriptPath << "../assets/"
+    //                        << m_scriptManager->GetScriptPath(script);
+    //         if (m_lua.ExecuteFile(fullScriptPath.str().c_str()))
+    //         {
+    //             // Get name of class
+    //             m_lua.CallLuaFunction(
+    //                 "chair.new", 1,
+    //                 ds_lua::LuaEnvironment::ArgumentType::ARGUMENT_FLOAT,
+    //                 (float)m_scriptManager->GetEntityForInstance(script).id);
+
+    //             entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
+    //         }
+
+    //         m_scriptManager->SetInitialized(script, true);
+    //     }
+    // }
 
     if (m_bootScriptLoaded)
     {
@@ -643,6 +671,14 @@ void Script::SetPause(bool shouldPause)
                           sizeof(ds_msg::PauseEvent), &pauseEvent);
 }
 
+unsigned Script::getUpdateRate(uint32_t screenRefreshRate) const {
+	return screenRefreshRate * 2;
+}
+
+unsigned Script::getMaxConsecutiveUpdates() const {
+    return 1;
+}
+
 void Script::ProcessEvents(ds_msg::MessageStream *messages)
 {
     while (messages->AvailableBytes() != 0)
@@ -683,6 +719,11 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::CreateComponent createComponentMsg;
             (*messages) >> createComponentMsg;
 
+            // Insert header into messages to be sent to script
+            m_toScriptMessages << header;
+            // Insert payload into messages to be sent to script
+            m_toScriptMessages << createComponentMsg;
+
             // Load up component data for component
             Config componentData;
             if (componentData.LoadMemory(StringIntern::Instance().GetString(
@@ -708,6 +749,11 @@ void Script::ProcessEvents(ds_msg::MessageStream *messages)
                                 m_transformManager, createComponentMsg.entity,
                                 componentData);
                     }
+                }
+                else if (componentType == "scriptComponent")
+                {
+                    CreateScriptComponent(createComponentMsg.entity,
+                                          componentData);
                 }
             }
             break;
@@ -900,5 +946,23 @@ ds_msg::CreateComponent Script::BuildTransformComponentCreateMessage(
 
     // Return message
     return transformComponent;
+}
+
+void Script::CreateScriptComponent(Entity entity, const Config &componentData)
+{
+    Instance script = m_scriptManager->GetInstanceForEntity(entity);
+
+    if (!script.IsValid())
+    {
+        bool isInitialized = false;
+        std::string scriptPath;
+
+        if (componentData.GetString("scriptPath", &scriptPath))
+        {
+            script = m_scriptManager->CreateComponentForEntity(entity);
+            m_scriptManager->SetInitialized(script, isInitialized);
+            m_scriptManager->SetScriptPath(script, scriptPath);
+        }
+    }
 }
 }

@@ -290,46 +290,6 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
 
             break;
         }
-        // case ds_msg::MessageType::SetLocalTranslation:
-        // {
-        //     ds_msg::SetLocalTranslation setTranslationMsg;
-        //     (*messages) >> setTranslationMsg;
-
-        //     // Get component instance of entity to move
-        //     Instance transform =
-        //         m_transformComponentManager->GetInstanceForEntity(
-        //             setTranslationMsg.entity);
-
-        //     // If has transform component
-        //     if (transform.IsValid())
-        //     {
-        //         // Set translation of entity
-        //         m_transformComponentManager->SetLocalTranslation(
-        //             transform, setTranslationMsg.localTranslation);
-        //     }
-
-        //     break;
-        // }
-        // case ds_msg::MessageType::SetLocalOrientation:
-        // {
-        //     ds_msg::SetLocalOrientation setLocalOrientation;
-        //     (*messages) >> setLocalOrientation;
-
-        //     // Get component instance of entity to move
-        //     Instance transform =
-        //         m_transformComponentManager->GetInstanceForEntity(
-        //             setLocalOrientation.entity);
-
-        //     // If has transform component
-        //     if (transform.IsValid())
-        //     {
-        //         // Set translation of entity
-        //         m_transformComponentManager->SetLocalOrientation(
-        //             transform, setLocalOrientation.localOrientation);
-        //     }
-
-        //     break;
-        // }
         default:
         {
             // Extract message to prevent corrupting message stream
@@ -466,8 +426,6 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
                 collisionShapeKeys.begin(), collisionShapeKeys.end(),
                 [&](const std::string &key)
                 {
-                    std::cout << "\t" << key << ": ";
-
                     // Get key path to collision shape
                     std::stringstream colShapeBaseKey;
                     colShapeBaseKey << "collisionShapes"
@@ -483,8 +441,6 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
                     if (componentData.GetString(colShapeTypeKey.str(),
                                                 &dataType))
                     {
-                        std::cout << "type: " << dataType << ", ";
-
                         // Get shape dimensions
                         std::stringstream colShapeDimKey;
                         std::vector<float> dataDim;
@@ -496,7 +452,6 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
                                                         &dataDim))
                         {
                             ds_math::Vector3 dim(dataDim[0], dataDim[1], dataDim[2]);
-                            std::cout << "dim: " << dim << ", ";
 
                             // Get shape offset
                             std::stringstream colShapeOffsetKey;
@@ -511,8 +466,6 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
                                 ds_math::Vector3 offset(dataOffset[0],
                                                         dataOffset[1],
                                                         dataOffset[2]);
-
-                                std::cout << "offset: " << offset << std::endl;
 
                                 if (dataType == "box")
                                 {

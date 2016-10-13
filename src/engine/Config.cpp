@@ -121,8 +121,8 @@ bool Config::GetUnsignedInt(const std::string &key, unsigned int *uint) const
             }
             else
             {
-                std::cerr << "Config::GetUnsignedInt: Warning: '" << key
-                          << "' is not an unsigned int." << std::endl;
+                //std::cerr << "Config::GetUnsignedInt: Warning: '" << key
+                //          << "' is not an unsigned int." << std::endl;
             }
         }
     }
@@ -147,8 +147,8 @@ bool Config::GetInt(const std::string &key, int *integer) const
             }
             else
             {
-                std::cerr << "Config::GetInt: Warning: '" << key
-                          << "' is not an int." << std::endl;
+                //std::cerr << "Config::GetInt: Warning: '" << key
+                //          << "' is not an int." << std::endl;
             }
         }
     }
@@ -173,8 +173,8 @@ bool Config::GetFloat(const std::string &key, float *f) const
             }
             else
             {
-                std::cerr << "Config::GetFloat: Warning: '" << key
-                          << "' is not a float." << std::endl;
+                //std::cerr << "Config::GetFloat: Warning: '" << key
+                //          << "' is not a float." << std::endl;
             }
         }
     }
@@ -224,8 +224,8 @@ bool Config::GetFloatArray(const std::string &key,
             }
             else
             {
-                std::cerr << "Config::GetFloatArray: Warning: '" << key
-                          << "' is not an array." << std::endl;
+                //std::cerr << "Config::GetFloatArray: Warning: '" << key
+                //          << "' is not an array." << std::endl;
             }
         }
     }
@@ -250,8 +250,8 @@ bool Config::GetBool(const std::string &key, bool *boolean) const
             }
             else
             {
-                std::cerr << "Config::GetBool: Warning: '" << key
-                          << "' is not a bool." << std::endl;
+                //std::cerr << "Config::GetBool: Warning: '" << key
+                //          << "' is not a bool." << std::endl;
             }
         }
     }
@@ -276,8 +276,8 @@ bool Config::GetString(const std::string &key, std::string *string) const
             }
             else
             {
-                std::cerr << "Config::GetString: Warning: '" << key
-                          << "' is not a string." << std::endl;
+                //std::cerr << "Config::GetString: Warning: '" << key
+                //          << "' is not a string." << std::endl;
             }
         }
     }
@@ -308,8 +308,8 @@ std::vector<std::string> Config::GetObjectKeys(const std::string &key) const
             }
             else
             {
-                std::cerr << "Config::GetString: Warning: '" << key
-                          << "' is not an object." << std::endl;
+                //std::cerr << "Config::GetString: Warning: '" << key
+                //          << "' is not an object." << std::endl;
             }
         }
     }
@@ -547,34 +547,34 @@ Config::GetDocumentMember(const std::string &key) const
                             }
                             else
                             {
-                                std::cerr << "Config::GetDocumentMember: "
-                                             "Warning: value '";
-                                for (std::vector<std::string>::const_iterator
-                                         tokenPrint = tokens.begin();
-                                     tokenPrint != tokenIt + 1; ++tokenPrint)
-                                {
-                                    std::cerr << *tokenPrint << ". ";
-                                }
-                                std::cerr << "' is not an object, it's members "
-                                             "can't be accessed."
-                                          << std::endl;
-                                break;
+//                                std::cerr << "Config::GetDocumentMember: "
+//                                             "Warning: value '";
+//                                for (std::vector<std::string>::const_iterator
+//                                         tokenPrint = tokens.begin();
+//                                     tokenPrint != tokenIt + 1; ++tokenPrint)
+//                                {
+//                                    std::cerr << *tokenPrint << ". ";
+//                                }
+//                                std::cerr << "' is not an object, it's members "
+//                                             "can't be accessed."
+//                                          << std::endl;
+//                                break;
                             }
                         }
                     }
                     else
                     {
-                        std::cerr << "Config::GetDocumentMember: Warning: "
-                                     "Could not find '";
-                        std::vector<std::string>::const_iterator tokenPrint =
-                            tokens.begin();
-                        std::cerr << *tokenPrint;
-                        ++tokenPrint;
-                        for (; tokenPrint != tokenIt + 1; ++tokenPrint)
-                        {
-                            std::cerr << "." << *tokenPrint;
-                        }
-                        std::cerr << "' in config file." << std::endl;
+//                        std::cerr << "Config::GetDocumentMember: Warning: "
+//                                     "Could not find '";
+//                        std::vector<std::string>::const_iterator tokenPrint =
+//                            tokens.begin();
+//                        std::cerr << *tokenPrint;
+//                        ++tokenPrint;
+//                        for (; tokenPrint != tokenIt + 1; ++tokenPrint)
+//                        {
+//                            std::cerr << "." << *tokenPrint;
+//                        }
+//                        std::cerr << "' in config file." << std::endl;
                         break;
                     }
                 }
@@ -582,18 +582,18 @@ Config::GetDocumentMember(const std::string &key) const
             // If not, error
             else
             {
-                std::cerr
-                    << "Config::GetDocumentMember: Warning: '" << *(tokenIt - 1)
-                    << "' is not an object, it's members can't be accessed."
-                    << std::endl;
+//                std::cerr
+//                    << "Config::GetDocumentMember: Warning: '" << *(tokenIt - 1)
+//                    << "' is not an object, it's members can't be accessed."
+//                    << std::endl;
             }
         }
     }
     else
     {
-        std::cerr
-            << "Config::GetDocumentMember: Warning: could not find member: '"
-            << *(tokenIt) << "'" << std::endl;
+//        std::cerr
+//            << "Config::GetDocumentMember: Warning: could not find member: '"
+//            << *(tokenIt) << "'" << std::endl;
     }
 
     return result;

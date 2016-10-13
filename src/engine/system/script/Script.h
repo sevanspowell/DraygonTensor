@@ -4,6 +4,7 @@
 #include "engine/system/ISystem.h"
 #include "engine/system/scene/TransformComponentManager.h"
 #include "engine/system/script/LuaEnvironment.h"
+#include "engine/system/script/ScriptComponentManager.h"
 #include "math/Quaternion.h"
 #include "math/Vector3.h"
 
@@ -391,6 +392,25 @@ public:
      */
     void SetPause(bool shouldPause);
 
+    /**
+     * Gets the rate at which the system should be updated.
+     * If the returned value is 0, the system will be updated as often as possible.
+     * @param screenRefreshRate The refreshrate of the current monitor.
+     * @return The desired update rate
+     */
+    virtual unsigned getUpdateRate(uint32_t screenRefreshRate) const;
+
+    /**
+     * Gets the number of consecutive updates, used when system falls behind on updates.
+     * For example:
+     *   Rendering took longer than normal.
+     *   Physics is allowed to catch up by updating multiple times, keeping realtime.
+     * If the returned value is 0, then there is an unlimited number of consecutive updates.
+     * @return The max number of consecutive updates
+     * @remarks On systems that may lag behind on updates, this should not return 0. Otherwise an infinite loop may be entered.
+     */
+    virtual unsigned getMaxConsecutiveUpdates() const;
+
 private:
     /**
      * Process messages in the given message stream.
@@ -425,6 +445,14 @@ private:
                                          const ds_math::Vector3 &position,
                                          const ds_math::Quaternion &orientation,
                                          const ds_math::Vector3 &scale);
+    /**
+     * Create script component from component data.
+     *
+     * @param   entity   Entity, entity to create script component for.
+     * @param   config   const Config &, component data to create script
+     * component from.
+     */
+    void CreateScriptComponent(Entity entity, const Config &componentData);
 
     // Messaging
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;
@@ -445,6 +473,7 @@ private:
 
     // Keep track of transforms of entities
     TransformComponentManager *m_transformManager;
+    ScriptComponentManager *m_scriptManager;
 
     bool m_isFirstUpdate;
 };
