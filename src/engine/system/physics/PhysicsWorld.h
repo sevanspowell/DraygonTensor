@@ -34,6 +34,7 @@
 #include <vector>
 #include "engine/system/physics/CollisionFine.h"
 #include "engine/system/physics/Contacts.h"
+#include "engine/system/physics/ContactResolver.h"
 #include "engine/system/physics/ForceGenerator.h"
 #include "engine/system/physics/RigidBody.h"
 #include "math/Precision.h"

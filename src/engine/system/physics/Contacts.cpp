@@ -26,14 +26,14 @@ void Contact::calculateInternals(ds_math::scalar duration)
 
     calculateContactBasis();
 
-    relativeContactPosition[0] = contactPoint - body[0]->getPosition();
+    m_relativeContactPosition[0] = contactPoint - body[0]->getPosition();
 
     if (body[1])
-        relativeContactPosition[1] = contactPoint - body[1]->getPosition();
+        m_relativeContactPosition[1] = contactPoint - body[1]->getPosition();
 
-    contactVelocity = calculateLocalVelocity(0, duration);
+    m_contactVelocity = calculateLocalVelocity(0, duration);
     if (body[1])
-        contactVelocity -= calculateLocalVelocity(1, duration);
+        m_contactVelocity -= calculateLocalVelocity(1, duration);
 
     calculateDesiredDeltaVelocity(duration);
 }
@@ -78,29 +78,15 @@ void Contact::calculateDesiredDeltaVelocity(ds_math::scalar duration)
                 ((i % 2) ? -1 : 1);
         }
     }
-    // if (body[0]->getAwake())
-    // {
-    //     accelVel +=
-    //         Vector3::Dot(body[0]->getLastFrameAcceleration() * duration,
-    //         contactNormal);
-    // }
-
-    // if (body[1] && body[1]->getAwake())
-    // {
-    //     accelVel -=
-    //         Vector3::Dot(body[1]->getLastFrameAcceleration() * duration,
-    //         contactNormal);
-    // }
 
     scalar boundedResitution = restitution;
-    if (fabs(contactVelocity.x) < velocityLimit)
+    if (fabs(m_contactVelocity.x) < velocityLimit)
     {
         boundedResitution = 0.0;
     }
 
-    desiredDeltaVelocity =
-        -contactVelocity.x - boundedResitution * (contactVelocity.x - accelVel);
-    // desiredDeltaVelocity /= 2.0f;
+    m_desiredDeltaVelocity =
+        -m_contactVelocity.x - boundedResitution * (m_contactVelocity.x - accelVel);
 }
 
 ds_math::Vector3 Contact::calculateLocalVelocity(unsigned bodyIndex,
@@ -109,12 +95,12 @@ ds_math::Vector3 Contact::calculateLocalVelocity(unsigned bodyIndex,
     RigidBody *cBody = body[bodyIndex];
 
     // Cache transform transpose.
-    Matrix3 transformTranspose = Matrix3::Transpose(contactToWorld);
+    Matrix3 transformTranspose = Matrix3::Transpose(m_contactToWorld);
 
     // Work out the velocity in world space
     Vector3 vel = cBody->getVelocity() +
                   Vector3::Cross(cBody->getRotation(),
-                                 relativeContactPosition[bodyIndex]);
+                                 m_relativeContactPosition[bodyIndex]);
 
     // Workout velocity in local-space
     Vector3 contactVel = transformTranspose * vel;
@@ -166,9 +152,9 @@ void Contact::calculateContactBasis()
         contactTan[1].z = contactNormal.x * contactTan[0].y;
     }
 
-    contactToWorld[0] = contactNormal;
-    contactToWorld[1] = contactTan[0];
-    contactToWorld[2] = contactTan[1];
+    m_contactToWorld[0] = contactNormal;
+    m_contactToWorld[1] = contactTan[0];
+    m_contactToWorld[2] = contactTan[1];
 }
 
 
@@ -200,7 +186,7 @@ void Contact::applyImpulse(const ds_math::Vector3 &impulse,
     /// should be.
     Matrix3 inverseInertiaTensor;
     body->getInverseInertiaTensorWorld(&inverseInertiaTensor);
-    applyImpulseToBody(body, relativeContactPosition[0], impulse,
+    applyImpulseToBody(body, m_relativeContactPosition[0], impulse,
                        inverseInertiaTensor, *velocityChange, *rotationChange);
 }
 
@@ -216,16 +202,16 @@ void Contact::applyVelocityChange(ds_math::Vector3 velocityChange[2],
         body[1]->getInverseInertiaTensorWorld(&inverseInertiaTensor[1]);
 
     Vector3 impulse =
-        contactToWorld *
+        m_contactToWorld *
         ((friction == 0.0)
              ? calculateFrictionlessImpulse(inverseInertiaTensor) //;
              : calculateFrictionImpulse(inverseInertiaTensor));
 
     // Apply calculated impulse
-    applyImpulseToBody(body[0], relativeContactPosition[0], impulse,
+    applyImpulseToBody(body[0], m_relativeContactPosition[0], impulse,
                        inverseInertiaTensor[0], velocityChange[0],
                        rotationChange[0]);
-    applyImpulseToBody(body[1], relativeContactPosition[1], -impulse,
+    applyImpulseToBody(body[1], m_relativeContactPosition[1], -impulse,
                        inverseInertiaTensor[1], velocityChange[1],
                        rotationChange[1]);
 }
@@ -373,7 +359,7 @@ void Contact::applyPositionChange(ds_math::Vector3 linearChange[2],
             body[i]->getInverseInertiaTensorWorld(&iiTensor[i]);
 
             calculateFrictionlessInertia(
-                body[i], iiTensor[i], relativeContactPosition[i], contactNormal,
+                body[i], iiTensor[i], m_relativeContactPosition[i], contactNormal,
                 angularInertia[i], linearInertia[i]);
             // totalInertia = 0;
             totalInertia += linearInertia[i] + angularInertia[i];
@@ -391,10 +377,10 @@ void Contact::applyPositionChange(ds_math::Vector3 linearChange[2],
             scalar bSign = ((i == 0) ? 1 : -1);
             calculateMoveAmounts(bSign * penetration, linearInertia[i],
                                  angularInertia[i], totalInertia,
-                                 relativeContactPosition[i], contactNormal,
+                                 m_relativeContactPosition[i], contactNormal,
                                  linearMove[i], angularMove[i]);
 
-            calculateAngularMove(body[i], relativeContactPosition[i],
+            calculateAngularMove(body[i], m_relativeContactPosition[i],
                                  contactNormal, angularInertia[i],
                                  angularMove[i], angularChange[i]);
 
@@ -415,30 +401,11 @@ void Contact::applyPositionChange(ds_math::Vector3 linearChange[2],
 ds_math::Vector3
 Contact::calculateFrictionlessImpulse(ds_math::Matrix3 *inverseInertiaTensor)
 {
-    /*scalar deltaVel = 0;
-    scalar angularVel[2];
-    scalar linearVel[2];
-    for (unsigned i = 0; i < 2; i++)
-    {
-        calculateFrictionlessInertia(
-            body[i], inverseInertiaTensor[i], relativeContactPosition[i],
-            contactNormal[i], angularVel[i], linearVel[i]);
-        deltaVel += angularVel[i] + linearVel[i];
-    }
-
-    if (deltaVel == 0)
-        return Vector3(0, 0, 0);
-    else
-        return Vector3(desiredDeltaVelocity / deltaVel, 0, 0);*/
-
-
-    // Build a vector that shows the change in velocity in
-    // world space for a unit impulse in the direction of the contact
-    // normal.
+    // Calculate the change in world-space velocity in for an impulse along the contact normal.
     Vector3 deltaVelWorld =
-        Vector3::Cross(relativeContactPosition[0], contactNormal);
+        Vector3::Cross(m_relativeContactPosition[0], contactNormal);
     deltaVelWorld = inverseInertiaTensor[0] * deltaVelWorld;
-    deltaVelWorld = Vector3::Cross(deltaVelWorld, relativeContactPosition[0]);
+    deltaVelWorld = Vector3::Cross(deltaVelWorld, m_relativeContactPosition[0]);
 
     // Work out the change in velocity in contact coordiantes.
     scalar deltaVelocity = Vector3::Dot(deltaVelWorld, contactNormal);
@@ -451,10 +418,10 @@ Contact::calculateFrictionlessImpulse(ds_math::Matrix3 *inverseInertiaTensor)
     {
         // Go through the same transformation sequence again
         Vector3 deltaVelWorld =
-            Vector3::Cross(relativeContactPosition[1], contactNormal);
+            Vector3::Cross(m_relativeContactPosition[1], contactNormal);
         deltaVelWorld = inverseInertiaTensor[1] * deltaVelWorld;
         deltaVelWorld =
-            Vector3::Cross(deltaVelWorld, relativeContactPosition[1]);
+            Vector3::Cross(deltaVelWorld, m_relativeContactPosition[1]);
 
         // Add the change in velocity due to rotation
         deltaVelocity += Vector3::Dot(deltaVelWorld, contactNormal);
@@ -466,7 +433,7 @@ Contact::calculateFrictionlessImpulse(ds_math::Matrix3 *inverseInertiaTensor)
     if (deltaVelocity == 0)
         return Vector3(0, 0, 0);
     else
-        return Vector3(desiredDeltaVelocity / deltaVelocity, 0, 0);
+        return Vector3(m_desiredDeltaVelocity / deltaVelocity, 0, 0);
 }
 
 /**
@@ -492,14 +459,14 @@ Contact::calculateFrictionImpulse(ds_math::Matrix3 *inverseInertiaTensor)
 
     scalar totalInvMass = body[0]->getInverseMass();
     Matrix3 impulseToTorque =
-        calculateSkewSymmetricMatrix(relativeContactPosition[0]);
+        calculateSkewSymmetricMatrix(m_relativeContactPosition[0]);
     Matrix3 deltaWorldVel =
         -1 * ((impulseToTorque * inverseInertiaTensor[0]) * impulseToTorque);
 
     if (body[1])
     {
         Matrix3 impulseToTorque2 =
-            calculateSkewSymmetricMatrix(relativeContactPosition[1]);
+            calculateSkewSymmetricMatrix(m_relativeContactPosition[1]);
         deltaWorldVel += -1 * ((impulseToTorque2 * inverseInertiaTensor[1]) *
                                impulseToTorque2);
         totalInvMass += body[1]->getInverseMass();
@@ -507,7 +474,7 @@ Contact::calculateFrictionImpulse(ds_math::Matrix3 *inverseInertiaTensor)
 
     // Convert worl velocity to contact-space velocity.
     Matrix3 deltaVelocity =
-        (Matrix3::Transpose(contactToWorld) * deltaWorldVel) * contactToWorld;
+        (Matrix3::Transpose(m_contactToWorld) * deltaWorldVel) * m_contactToWorld;
 
     // Apply linear velocity change
     deltaVelocity.data[0][0] += totalInvMass;
@@ -518,8 +485,8 @@ Contact::calculateFrictionImpulse(ds_math::Matrix3 *inverseInertiaTensor)
     Matrix3 impulseMatrix = Matrix3::Inverse(deltaVelocity);
 
     // Find the target velocities to kill
-    Vector3 velKill(desiredDeltaVelocity, -contactVelocity.y,
-                    -contactVelocity.z);
+    Vector3 velKill(m_desiredDeltaVelocity, -m_contactVelocity.y,
+                    -m_contactVelocity.z);
 
     // Find the impulse to kill target velocities
     Vector3 impulseContact = impulseMatrix * velKill;
@@ -531,29 +498,13 @@ Contact::calculateFrictionImpulse(ds_math::Matrix3 *inverseInertiaTensor)
     if (planarImpulse > impulseContact.x * friction)
     {
         // We need to use dynamic friction
-
-        /*scalar invPlanarImpulse = 1 / planarImpulse;
-        scalar normalisedYImp = impulseContact.y * invPlanarImpulse;
-        scalar normalisedZImp = impulseContact.z * invPlanarImpulse;
-
-        // @todo Figure out what this is about. Appears to be dark magic.
-        scalar dynamicFrictionCoeff =
-            deltaVelocity.data[0][0] +
-            deltaVelocity.data[0][1] * friction * normalisedYImp +
-            deltaVelocity.data[0][2] * friction * normalisedZImp;
-
-        impulseContact.x = desiredDeltaVelocity * 1 / dynamicFrictionCoeff;
-        impulseContact.y = normalisedYImp * friction * impulseContact.x;
-        impulseContact.z = normalisedZImp * friction * impulseContact.x;*/
-
-        // We need to use dynamic friction
         impulseContact.y /= planarImpulse;
         impulseContact.z /= planarImpulse;
 
         impulseContact.x = deltaVelocity[0][0] +
                            deltaVelocity[0][1] * friction * impulseContact.y +
                            deltaVelocity[0][2] * friction * impulseContact.z;
-        impulseContact.x = desiredDeltaVelocity / impulseContact.x;
+        impulseContact.x = m_desiredDeltaVelocity / impulseContact.x;
         impulseContact.y *= friction * impulseContact.x;
         impulseContact.z *= friction * impulseContact.x;
     }

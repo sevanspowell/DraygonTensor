@@ -31,6 +31,7 @@
 #include <math/Vector3.h>
 #include <engine/system/physics/RigidBody.h>
 #include <engine/system/physics/Contacts.h>
+#include <cassert>
 
 /*
 
@@ -241,6 +242,7 @@ struct CollisionData
     {
         // Reduce the number of contacts remaining, add number used
         contactsLeft -= count;
+        assert(contactsLeft >= 0 && "Contact array too full.");
         contactCount += count;
 
         // Move the array forward

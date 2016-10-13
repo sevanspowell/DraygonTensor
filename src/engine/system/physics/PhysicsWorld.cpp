@@ -8,7 +8,7 @@ namespace ds_phys
 
 
 PhysicsWorld::PhysicsWorld(unsigned int maxContacts, unsigned int iterations)
-    : m_currentCPID(0), m_contactResolver(10)
+    : m_currentCPID(0), m_contactResolver(1024)
 {
     m_rigidBodies.reserve(100);
     // m_collisionConfiguration = new btDefaultCollisionConfiguration();
@@ -186,6 +186,30 @@ PhysicsWorld::removeCollisionPrimitive(CollisionPrimitive *primitive)
     return std::unique_ptr<CollisionPrimitive>();
 }
 
+static unsigned generateCollisions(CollisionPrimitive* b0, CollisionPrimitive* b1, CollisionData& data) {
+	if (!data.hasMoreContacts()) return 0;
+	if (!b0) return 0;
+	if (!b1) return 0;
+
+    if (CollisionBox *b0Ptr = dynamic_cast<CollisionBox *>(b0)) {
+    	if (CollisionBox *b1Ptr = dynamic_cast<CollisionBox *>(b1)) {
+            return CollisionDetector::boxAndBox(*b0Ptr, *b1Ptr, &data);
+		} else if (CollisionSphere *b1Ptr = dynamic_cast<CollisionSphere *>(b1)) {
+            return CollisionDetector::boxAndSphere(*b0Ptr, *b1Ptr, &data);
+		}
+    } else if (CollisionSphere *b0Ptr = dynamic_cast<CollisionSphere *>(b0)) {
+    	if (CollisionBox *b1Ptr = dynamic_cast<CollisionBox *>(b1)) {
+           return CollisionDetector::boxAndSphere(*b1Ptr, *b0Ptr, &data);
+		} else if (CollisionSphere *b1Ptr = dynamic_cast<CollisionSphere *>(b1)) {
+           return CollisionDetector::sphereAndSphere(*b0Ptr, *b1Ptr, &data);
+		}
+    }
+
+    return 0;
+}
+
+
+
 unsigned int PhysicsWorld::generateContacts()
 {
     m_collisionData.reset(PhysicsWorld::MAX_CONTACTS);
@@ -217,55 +241,18 @@ unsigned int PhysicsWorld::generateContacts()
         if (iter->second)
         {
             auto *cpPtr1 = iter->second.get();
-            if (CollisionBox *cbBox1 = dynamic_cast<CollisionBox *>(cpPtr1))
-            {
-                CollisionDetector::boxAndHalfSpace(*cbBox1, m_plane,
-                                                   &m_collisionData);
-                auto iter2 = iter;
-                for (++iter2; iter2 != m_collisionPrimitives.end(); iter2++)
-                {
-                    if (iter->second)
-                    {
-                        auto *cpPtr2 = iter2->second.get();
-                        if (CollisionBox *cbBox2 =
-                                dynamic_cast<CollisionBox *>(cpPtr2))
-                        {
-                            CollisionDetector::boxAndBox(*cbBox1, *cbBox2,
-                                                         &m_collisionData);
-                        }
-                        else if (CollisionSphere *cbSphere2 =
-                                     dynamic_cast<CollisionSphere *>(cpPtr2))
-                        {
-                            CollisionDetector::boxAndSphere(*cbBox1, *cbSphere2,
-                                                            &m_collisionData);
-                        }
-                    }
-                }
+            if (CollisionBox *cbBox1 = dynamic_cast<CollisionBox *>(cpPtr1)) {
+                CollisionDetector::boxAndHalfSpace(*cbBox1, m_plane,  &m_collisionData);
+            } else if (CollisionSphere *cbSphere1 = dynamic_cast<CollisionSphere *>(cpPtr1)) {
+                CollisionDetector::sphereAndHalfSpace(*cbSphere1, m_plane,  &m_collisionData);
             }
-            else if (CollisionSphere *cbSphere1 =
-                         dynamic_cast<CollisionSphere *>(cpPtr1))
-            {
-                CollisionDetector::sphereAndHalfSpace(*cbSphere1, m_plane,
-                                                      &m_collisionData);
-                auto iter2 = iter;
-                for (++iter2; iter2 != m_collisionPrimitives.end(); iter2++)
+
+            auto iter2 = iter;
+            for (++iter2; iter2 != m_collisionPrimitives.end(); iter2++) {
+                if (iter2->second)
                 {
-                    if (iter->second)
-                    {
-                        auto *cpPtr2 = iter2->second.get();
-                        if (CollisionBox *cbBox2 =
-                                dynamic_cast<CollisionBox *>(cpPtr2))
-                        {
-                            CollisionDetector::boxAndSphere(*cbBox2, *cbSphere1,
-                                                            &m_collisionData);
-                        }
-                        else if (CollisionSphere *cbSphere2 =
-                                     dynamic_cast<CollisionSphere *>(cpPtr2))
-                        {
-                            CollisionDetector::sphereAndSphere(
-                                *cbSphere1, *cbSphere2, &m_collisionData);
-                        }
-                    }
+                	auto *cpPtr2 = iter2->second.get();
+                	generateCollisions(cpPtr1, cpPtr2, m_collisionData);
                 }
             }
         }

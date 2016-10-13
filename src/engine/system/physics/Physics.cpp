@@ -34,12 +34,18 @@ static void setBlockInertiaTensor(ds_math::Matrix3 &mat,
                                   const ds_math::Vector3 &halfSizes,
                                   ds_math::scalar mass)
 {
-	std::cout << mass << std::endl;
     ds_math::Vector3 squares = halfSizes * halfSizes;
     setInertiaTensorCoeffs(mat,
     					   0.3f*mass*(squares.y + squares.z),
     					   0.3f*mass*(squares.x + squares.z),
 						   0.3f*mass*(squares.x + squares.y));
+}
+
+static void setSphereIntertiaTensor(ds_math::Matrix3 &mat,
+									ds_math::scalar radius,
+									ds_math::scalar mass) {
+	ds_math::scalar inertia = 2/5.0 * mass * radius * radius;
+	setInertiaTensorCoeffs(mat, inertia, inertia, inertia);
 }
 
 namespace ds
@@ -374,6 +380,10 @@ void Physics::CreateTransformComponent(Entity entity,
     }
 }
 
+//static bool loadBoxCollisionPrimitive(ds_phys::RigidBody& rb, float mass, ds_math::Vector3) {
+
+//}
+
 void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
 {
     // Does entity already have physics component?
@@ -447,35 +457,10 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
             	body->setMass(dataMass);
             }
 
-            std::cout << std::endl
-                      << " -- Prefab component contents -- " << std::endl;
-            std::cout << "restitution: " << dataRestitution << std::endl;
-            std::cout << "damping: " << dataDamping << std::endl;
-            std::cout << "angularDamping: " << dataAngularDamping << std::endl;
-            if (isInvMass == false)
-            {
-                std::cout << "mass: " << dataMass << std::endl;
-            }
-            else
-            {
-                std::cout << "inv. mass: " << dataInvMass << std::endl;
-            }
-            if (isInvInertiaTensor == false)
-            {
-                std::cout << "inertia tensor: " << inertiaTensor << std::endl;
-            }
-            else
-            {
-                std::cout << "inv. inertia tensor: " << invInertiaTensor
-                          << std::endl;
-            }
-
-
             // Get collision shapes
             std::vector<std::string> collisionShapeKeys =
                 componentData.GetObjectKeys("collisionShapes");
 
-            std::cout << "collisionShapes:" << std::endl;
             // Create each collision shape
             std::for_each(
                 collisionShapeKeys.begin(), collisionShapeKeys.end(),
@@ -555,7 +540,7 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
 
                                 	//@todo Per collision shape mass
                                 	ds_math::Matrix3 invInertia;
-                                	setBlockInertiaTensor(invInertia, dim, body->getMass());
+                                	setSphereIntertiaTensor(invInertia, dim.x, body->getMass());
                                 	body->setInertiaTensor(invInertia);
 
                                 	m_physicsWorld.addCollisionPrimitive(std::unique_ptr<ds_phys::CollisionPrimitive>(sphere));
@@ -593,21 +578,6 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
                         transform));
             }
 
-            // Add rigid body component to world
-            // body->setVelocity(ds_math::Vector3(0, 0, 0));
-            // body->setRotation(ds_math::Vector3(0, 0, 0));
-            // ds_math::scalar mass = 0.5f * 0.5f * 0.5f * 8.0f;
-            // body->setMass(mass);
-
-            // ds_math::Matrix3 tensor;
-            // tensor.set;
-            // body->setInertiaTensor(tensor);
-
-            // body->setLinearDamping(0.95f);
-            // body->setAngularDamping(0.8f);
-            // body->clearAccumulators();
-            // body->setAcceleration(0, -10.0f, 0.0f);
-            // body->calculateDerivedData();
             m_physicsWorld.addRigidBody(body);
         }
     }

@@ -1,4 +1,4 @@
-#include "engine/system/physics/Contacts.h"
+#include "engine/system/physics/ContactResolver.h"
 
 using namespace ds_phys;
 using namespace ds_math;
@@ -42,9 +42,9 @@ void ContactResolver::adjustVelocities(Contact *c,
         unsigned index = numContacts;
         for (unsigned i = 0; i < numContacts; i++)
         {
-            if (c[i].desiredDeltaVelocity > maxVel)
+            if (c[i].m_desiredDeltaVelocity > maxVel)
             {
-                maxVel = c[i].desiredDeltaVelocity;
+                maxVel = c[i].m_desiredDeltaVelocity;
                 index = i;
             }
         }
@@ -76,12 +76,12 @@ void ContactResolver::adjustVelocities(Contact *c,
                         if (c[i].body[cBody] == c[index].body[cBody2])
                         {
                             Vector3 deltaVel = velocityChange[cBody2] +
-                            		   Vector3::Cross(rotationChange[cBody2], c[i].relativeContactPosition[cBody]);
+                            		   Vector3::Cross(rotationChange[cBody2], c[i].m_relativeContactPosition[cBody]);
 
                             // The sign of the change is negative if we're
                             // dealing
                             // with the second body in a contact.
-                            c[i].contactVelocity += Matrix3::Transpose(c[i].contactToWorld) * deltaVel * (cBody ? -1 : 1);
+                            c[i].m_contactVelocity += Matrix3::Transpose(c[i].m_contactToWorld) * deltaVel * (cBody ? -1 : 1);
                             c[i].calculateDesiredDeltaVelocity(duration);
                         }
                     }
@@ -136,7 +136,7 @@ void ContactResolver::adjustPositions(Contact *c,
                         if (c[i].body[cBody1] == c[index].body[cBody2])
                         {
                             Vector3 deltaPosition = linearChange[cBody2] +
-                            				  Vector3::Cross(angularChange[cBody2],  c[i].relativeContactPosition[cBody1]);
+                            				  Vector3::Cross(angularChange[cBody2],  c[i].m_relativeContactPosition[cBody1]);
 
                             // If the body is the second one we need to reverse
                             // the number.
