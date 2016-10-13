@@ -1,4 +1,5 @@
 subdirs(
+    aiFirstDraft
     empty
     example
     milestone1
