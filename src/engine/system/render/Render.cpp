@@ -318,7 +318,7 @@ ScriptBindingSet Render::GetScriptBindings() const
 }
 
 unsigned Render::getUpdateRate(uint32_t screenRefreshRate) const {
-	return screenRefreshRate;
+	return screenRefreshRate + 1;
 }
 
 unsigned Render::getMaxConsecutiveUpdates() const {
