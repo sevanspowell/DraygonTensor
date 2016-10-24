@@ -77,13 +77,6 @@ public:
     CollisionPrimitiveID m_currentCPID;
     std::map<CollisionPrimitiveID, std::unique_ptr<CollisionPrimitive>> m_collisionPrimitives;
 
-    CollisionBox m_box;
-    CollisionBox m_box2;
-
-    CollisionSphere m_sphere;
-    CollisionSphere m_sphere2;
-
-    CollisionPlane m_plane;
     ContactResolver m_contactResolver;
 
 private:

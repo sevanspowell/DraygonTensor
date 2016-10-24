@@ -55,6 +55,7 @@ Physics::Physics()
     : m_physicsWorld(0, 0),
       m_fg(ds_phys::Gravity(ds_math::Vector3(0.0f, -1.0f, 0.0f)))
 {
+	addPlane(ds_math::Vector3(0, 1, 0), 0);
 }
 
 bool Physics::Initialize(const Config &config)
@@ -80,6 +81,13 @@ void Physics::AddForceGenerator(Entity entity)
 
         // m_physicsWorld.addForceGenerator(body, &m_fg);
     }
+}
+
+ds_phys::CollisionPrimitiveID Physics::addPlane(const ds_math::Vector3& norm, ds_math::scalar offset) {
+	ds_phys::CollisionPlane* plane = new ds_phys::CollisionPlane();
+	plane->direction = ds_math::Vector3::Normalize(norm);
+	plane->offset = offset;
+	return m_physicsWorld.addCollisionPrimitive(std::unique_ptr<ds_phys::CollisionPrimitive>(plane));
 }
 
 unsigned Physics::getUpdateRate(uint32_t screenRefreshRate) const {

@@ -28,6 +28,8 @@ public:
 
     void AddForceGenerator(Entity entity);
 
+    ds_phys::CollisionPrimitiveID addPlane(const ds_math::Vector3& norm, ds_math::scalar offset);
+
     virtual unsigned getUpdateRate(uint32_t screenRefreshRate) const;
 
     virtual unsigned getMaxConsecutiveUpdates() const;

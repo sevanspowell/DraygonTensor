@@ -17,15 +17,6 @@ PhysicsWorld::PhysicsWorld(unsigned int maxContacts, unsigned int iterations)
     // m_collisionWorld = new btCollisionWorld(m_dispatcher, m_broadphase,
     //                                         m_collisionConfiguration);
     m_collisionData.contactArray = m_contacts;
-
-    m_box.halfSize = ds_math::Vector3(0.5f, 0.5f, 0.5f);
-    m_box2.halfSize = ds_math::Vector3(0.5f, 0.5f, 0.5f);
-
-    m_sphere.radius = 0.5;
-
-    m_plane.body = nullptr;
-    m_plane.direction = ds_math::Vector3::Normalize(ds_math::Vector3(0, 1, 0));
-    m_plane.offset = 0.0f;
 }
 
 PhysicsWorld::~PhysicsWorld()
@@ -196,12 +187,24 @@ static unsigned generateCollisions(CollisionPrimitive* b0, CollisionPrimitive* b
             return CollisionDetector::boxAndBox(*b0Ptr, *b1Ptr, &data);
 		} else if (CollisionSphere *b1Ptr = dynamic_cast<CollisionSphere *>(b1)) {
             return CollisionDetector::boxAndSphere(*b0Ptr, *b1Ptr, &data);
+		} else if (CollisionPlane *b1Ptr = dynamic_cast<CollisionPlane *>(b1)) {
+            return CollisionDetector::boxAndHalfSpace(*b0Ptr, *b1Ptr, &data);
 		}
     } else if (CollisionSphere *b0Ptr = dynamic_cast<CollisionSphere *>(b0)) {
     	if (CollisionBox *b1Ptr = dynamic_cast<CollisionBox *>(b1)) {
            return CollisionDetector::boxAndSphere(*b1Ptr, *b0Ptr, &data);
 		} else if (CollisionSphere *b1Ptr = dynamic_cast<CollisionSphere *>(b1)) {
            return CollisionDetector::sphereAndSphere(*b0Ptr, *b1Ptr, &data);
+		} else if (CollisionPlane *b1Ptr = dynamic_cast<CollisionPlane *>(b1)) {
+            return CollisionDetector::sphereAndHalfSpace(*b0Ptr, *b1Ptr, &data);
+		}
+    } else if (CollisionPlane *b0Ptr = dynamic_cast<CollisionPlane *>(b0)) {
+    	if (CollisionBox *b1Ptr = dynamic_cast<CollisionBox *>(b1)) {
+           return CollisionDetector::boxAndHalfSpace(*b1Ptr, *b0Ptr, &data);
+		} else if (CollisionSphere *b1Ptr = dynamic_cast<CollisionSphere *>(b1)) {
+           return CollisionDetector::sphereAndHalfSpace(*b1Ptr, *b0Ptr, &data);
+		} else if (/*CollisionPlane *b1Ptr = */dynamic_cast<CollisionPlane *>(b1)) {
+           // Skip
 		}
     }
 
@@ -222,8 +225,6 @@ unsigned int PhysicsWorld::generateContacts()
         return m_collisionData.contactCount;
     }
 
-    m_plane.calculateInternals();
-
     // Calculate internals for all rigid bodies
     for (auto iter = m_collisionPrimitives.begin();
          iter != m_collisionPrimitives.end(); iter++)
@@ -241,12 +242,6 @@ unsigned int PhysicsWorld::generateContacts()
         if (iter->second)
         {
             auto *cpPtr1 = iter->second.get();
-            if (CollisionBox *cbBox1 = dynamic_cast<CollisionBox *>(cpPtr1)) {
-                CollisionDetector::boxAndHalfSpace(*cbBox1, m_plane,  &m_collisionData);
-            } else if (CollisionSphere *cbSphere1 = dynamic_cast<CollisionSphere *>(cpPtr1)) {
-                CollisionDetector::sphereAndHalfSpace(*cbSphere1, m_plane,  &m_collisionData);
-            }
-
             auto iter2 = iter;
             for (++iter2; iter2 != m_collisionPrimitives.end(); iter2++) {
                 if (iter2->second)
