@@ -702,12 +702,6 @@ unsigned CollisionDetector::capsuleAndHalfSpace(const CollisionCapsule &cap,
 		return 0;
 	}
 
-	/*CollisionBox box;
-	box.body = cap.body;
-	box.halfSize = ds_math::Vector3(cap.radius, cap.height/2.0 + cap.radius, cap.radius);
-	box.calculateInternals();
-	return boxAndHalfSpace(box, plane, data);*/
-
 	auto sphereOrigin1 = cap.getAxis(3) + cap.getAxis(1) * (cap.height/2.0);
 	auto sphereOrigin2 = cap.getAxis(3) - cap.getAxis(1) * (cap.height/2.0);
 	auto sphereDist1 = (ds_math::Vector3::Dot(plane.direction, sphereOrigin1) - cap.radius - plane.offset);
@@ -735,3 +729,75 @@ unsigned CollisionDetector::capsuleAndHalfSpace(const CollisionCapsule &cap,
 
 	//ds_math::scalar
 }
+
+unsigned CollisionDetector::capsuleAndSphere(const CollisionCapsule &cap,
+        const CollisionSphere &sphere,
+        CollisionData *data) {
+
+
+	auto capSphereOrigin1 = cap.getAxis(3) + cap.getAxis(1) * (cap.height/2.0);
+	auto capSphereOrigin2 = cap.getAxis(3) - cap.getAxis(1) * (cap.height/2.0);
+	auto capSphereDist1 = ds_math::Vector3::Dot(cap.getAxis(1), capSphereOrigin1);
+	auto capSphereDist2 = ds_math::Vector3::Dot(cap.getAxis(1), capSphereOrigin2);
+	auto sphereDist = ds_math::Vector3::Dot(cap.getAxis(1), sphere.getAxis(3));
+
+	if (sphereDist >= capSphereDist1) {
+		CollisionSphere ssphere;
+		ssphere.body = cap.body;
+		ssphere.radius = cap.radius;
+		ssphere.offset = ds_math::Matrix4::CreateTranslationMatrix(ds_math::Vector3(0, cap.height/2.0, 0));
+		ssphere.calculateInternals();
+		return sphereAndSphere(ssphere, sphere, data);
+
+	} else if (sphereDist <= capSphereDist2) {
+		CollisionSphere ssphere;
+		ssphere.body = cap.body;
+		ssphere.radius = cap.radius;
+		ssphere.offset = ds_math::Matrix4::CreateTranslationMatrix(ds_math::Vector3(0, -cap.height/2.0, 0));
+		ssphere.calculateInternals();
+		return sphereAndSphere(ssphere, sphere, data);
+
+	} else {
+		// Make sure we have contacts
+		if (data->contactsLeft <= 0) return 0;
+
+		// Cache the sphere positions
+		ds_math::Vector3 positionOne = sphere.getAxis(3) - ds_math::Vector3::Cross(cap.getAxis(1), ds_math::Vector3::Cross(cap.getAxis(1), cap.getAxis(3) - sphere.getAxis(3)));
+		ds_math::Vector3 positionTwo = sphere.getAxis(3);
+
+		// Find the vector between the objects
+		ds_math::Vector3 midline = positionOne - positionTwo;
+		ds_math::scalar size = midline.Magnitude();
+
+		// See if it is large enough.
+		if (size <= 0.0f || size >= cap.radius+sphere.radius)
+		{
+		 return 0;
+		}
+
+		// We manually create the normal, because we have the
+		// size to hand.
+		ds_math::Vector3 normal = midline * ((1.0)/size);
+
+		Contact* contact = data->contacts;
+		contact->contactNormal = normal;
+		contact->contactPoint = positionOne + midline * 0.5;
+		contact->penetration = (cap.radius+sphere.radius - size);
+		contact->setBodyData(cap.body, sphere.body,
+		 data->friction, data->restitution);
+
+		data->addContacts(1);
+	}
+
+	return 0;
+
+}
+
+
+
+
+
+
+
+
+

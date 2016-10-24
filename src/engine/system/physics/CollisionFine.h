@@ -96,11 +96,6 @@ public:
         return transform[index];
     }
 
-    ds_math::Vector3 getRow(unsigned index) const
-    {
-    	return ds_math::Vector3(transform[0][index], transform[1][index], transform[2][index]);
-    }
-
     /**
     * Returns the resultant transform of the primitive, calculated from
     * the combined offset of the primitive and the transform
@@ -306,6 +301,10 @@ public:
 
     static unsigned capsuleAndHalfSpace(const CollisionCapsule &cap,
             const CollisionPlane &plane,
+            CollisionData *data);
+
+    static unsigned capsuleAndSphere(const CollisionCapsule &cap,
+            const CollisionSphere &sphere,
             CollisionData *data);
 }; // end CollisionDetector
 
