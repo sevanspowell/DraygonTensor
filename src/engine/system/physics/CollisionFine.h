@@ -31,6 +31,7 @@
 #include <math/Vector3.h>
 #include <engine/system/physics/RigidBody.h>
 #include <engine/system/physics/Contacts.h>
+#include <cassert>
 
 /*
 
@@ -79,6 +80,7 @@ public:
     ds_math::Matrix4 offset;
 
     CollisionPrimitive();
+    virtual ~CollisionPrimitive() {}
 
     /**
     * Calculates the internals for the primitive.
@@ -240,6 +242,7 @@ struct CollisionData
     {
         // Reduce the number of contacts remaining, add number used
         contactsLeft -= count;
+        assert(contactsLeft >= 0 && "Contact array too full.");
         contactCount += count;
 
         // Move the array forward
@@ -259,10 +262,6 @@ class CollisionDetector
 {
 public:
     static unsigned sphereAndHalfSpace(const CollisionSphere &sphere,
-                                       const CollisionPlane &plane,
-                                       CollisionData *data);
-
-    static unsigned sphereAndTruePlane(const CollisionSphere &sphere,
                                        const CollisionPlane &plane,
                                        CollisionData *data);
 

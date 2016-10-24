@@ -32,6 +32,7 @@
 
 #include "engine/system/physics/PhysicsCore.h"
 #include "engine/system/physics/RigidBody.h"
+#include "engine/system/physics/CollisionFine.h"
 
 namespace ds_phys
 {
@@ -660,8 +661,45 @@ ds_math::Vector3 RigidBody::getAcceleration() const
     return m_acceleration;
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////JULES
 /// STUFF////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void RigidBody::addCollisionPrimitive(CollisionPrimitive* prim) {
+	m_primitives.push_back(prim);
+}
+
+void RigidBody::removeCollisionPrimitive(unsigned id) {
+	auto iter = m_primitives.begin();
+
+	for(unsigned i = 0; i < id; i++) {
+		iter++;
+	}
+
+	if (iter != m_primitives.end()) {
+		m_primitives.erase(iter);
+	}
+}
+
+CollisionPrimitive* RigidBody::getCollisionPrimitive(unsigned id) {
+	auto iter = m_primitives.begin();
+
+	for(unsigned i = 0; i < id; i++) {
+		iter++;
+	}
+
+	if (iter != m_primitives.end()) {
+		return *iter;
+	}
+
+	return nullptr;
+}
+
+unsigned RigidBody::getCollisionPrimitiveCount() {
+	return m_primitives.size();
+}
+
 }

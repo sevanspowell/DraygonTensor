@@ -28,6 +28,10 @@ public:
 
     void AddForceGenerator(Entity entity);
 
+    virtual unsigned getUpdateRate(uint32_t screenRefreshRate) const;
+
+    virtual unsigned getMaxConsecutiveUpdates() const;
+
 private:
     void ProcessEvents(ds_msg::MessageStream *messages);
 
@@ -35,7 +39,8 @@ private:
 
     void CreatePhysicsComponent(Entity entity, const Config &componentData);
 
-    void UpdateComponents();
+    void UpdateRigidBodyTransforms();
+    void PropagateTransform();
 
     /** Messaging */
     ds_msg::MessageStream m_messagesGenerated, m_messagesReceived;

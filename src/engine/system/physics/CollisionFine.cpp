@@ -50,16 +50,8 @@ void CollisionPrimitive::calculateInternals()
 bool IntersectionTests::sphereAndHalfSpace(const CollisionSphere &sphere,
                                            const CollisionPlane &plane)
 {
-
-    // // Find the distance from the origin
-    // real ballDistance =
-    //     plane.direction *
-    //     sphere.getAxis(3) -
-    //     sphere.radius;
-
     // // Check for the intersection
-    // return ballDistance <= plane.offset;
-    return false;
+     return (ds_math::Vector3::Dot(plane.direction, sphere.getAxis(3)) + sphere.radius) <= plane.offset;
 }
 
 bool IntersectionTests::sphereAndSphere(const CollisionSphere &one,
@@ -158,115 +150,68 @@ bool IntersectionTests::boxAndHalfSpace(const CollisionBox &box,
     return boxDistance <= plane.offset;
 }
 
-unsigned CollisionDetector::sphereAndTruePlane(const CollisionSphere &sphere,
-                                               const CollisionPlane &plane,
-                                               CollisionData *data)
-{
-    // // Make sure we have contacts
-    // if (data->contactsLeft <= 0) return 0;
-
-    // // Cache the sphere position
-    // ds_math::Vector3 position = sphere.getAxis(3);
-
-    // // Find the distance from the plane
-    // ds_math::scalar centreDistance = plane.direction * position -
-    // plane.offset;
-
-    // // Check if we're within radius
-    // if (centreDistance*centreDistance > sphere.radius*sphere.radius)
-    // {
-    //     return 0;
-    // }
-
-    // // Check which side of the plane we're on
-    // ds_math::Vector3 normal = plane.direction;
-    // ds_math::scalar penetration = -centreDistance;
-    // if (centreDistance < 0)
-    // {
-    //     normal *= -1;
-    //     penetration = -penetration;
-    // }
-    // penetration += sphere.radius;
-
-    // // Create the contact - it has a normal in the plane direction.
-    // Contact* contact = data->contacts;
-    // contact->contactNormal = normal;
-    // contact->penetration = penetration;
-    // contact->contactPoint = position - plane.direction * centreDistance;
-    // contact->setBodyData(sphere.body, NULL,
-    //     data->friction, data->restitution);
-
-    // data->addContacts(1);
-    // return 1;
-    return false;
-}
-
 unsigned CollisionDetector::sphereAndHalfSpace(const CollisionSphere &sphere,
                                                const CollisionPlane &plane,
                                                CollisionData *data)
 {
-    // // Make sure we have contacts
-    // if (data->contactsLeft <= 0) return 0;
+    // Make sure we have contacts
+    if (data->contactsLeft <= 0) return 0;
 
-    // // Cache the sphere position
-    // Vector3 position = sphere.getAxis(3);
+    // Cache the sphere position
+    ds_math::Vector3 position = sphere.getAxis(3);
 
-    // // Find the distance from the plane
-    // ds_math::scalar ballDistance =
-    //     plane.direction * position -
-    //     sphere.radius - plane.offset;
+    // Find the distance from the plane
+    ds_math::scalar ballDistance = ds_math::Vector3::Dot(plane.direction, position) - sphere.radius - plane.offset;
 
-    // if (ballDistance >= 0) return 0;
+    if (ballDistance >= 0) return 0;
 
-    // // Create the contact - it has a normal in the plane direction.
-    // Contact* contact = data->contacts;
-    // contact->contactNormal = plane.direction;
-    // contact->penetration = -ballDistance;
-    // contact->contactPoint =
-    //     position - plane.direction * (ballDistance + sphere.radius);
-    // contact->setBodyData(sphere.body, NULL,
-    //     data->friction, data->restitution);
+    // Create the contact - it has a normal in the plane direction.
+    Contact* contact = data->contacts;
+    contact->contactNormal = plane.direction;
+    contact->penetration = -ballDistance;
+    contact->contactPoint =
+        position - plane.direction * (ballDistance + sphere.radius);
+    contact->setBodyData(sphere.body, nullptr,
+        data->friction, data->restitution);
 
-    // data->addContacts(1);
-    // return 1;
-    return false;
+    data->addContacts(1);
+    return 1;
 }
 
 unsigned CollisionDetector::sphereAndSphere(const CollisionSphere &one,
                                             const CollisionSphere &two,
                                             CollisionData *data)
 {
-    //     // Make sure we have contacts
-    //     if (data->contactsLeft <= 0) return 0;
+	// Make sure we have contacts
+	if (data->contactsLeft <= 0) return 0;
 
-    //     // Cache the sphere positions
-    //     ds_math::Vector3 positionOne = one.getAxis(3);
-    //     ds_math::Vector3 positionTwo = two.getAxis(3);
+	// Cache the sphere positions
+	ds_math::Vector3 positionOne = one.getAxis(3);
+	ds_math::Vector3 positionTwo = two.getAxis(3);
 
-    //     // Find the vector between the objects
-    //     ds_math::Vector3 midline = positionOne - positionTwo;
-    //     ds_math::scalar size = midline.magnitude();
+	// Find the vector between the objects
+	ds_math::Vector3 midline = positionOne - positionTwo;
+	ds_math::scalar size = midline.Magnitude();
 
-    //     // See if it is large enough.
-    //     if (size <= 0.0f || size >= one.radius+two.radius)
-    //     {
-    //         return 0;
-    //     }
+	// See if it is large enough.
+	if (size <= 0.0f || size >= one.radius+two.radius)
+	{
+	 return 0;
+	}
 
-    //     // We manually create the normal, because we have the
-    //     // size to hand.
-    //     ds_math::Vector3 normal = midline * (((real)1.0)/size);
+	// We manually create the normal, because we have the
+	// size to hand.
+	ds_math::Vector3 normal = midline * ((1.0)/size);
 
-    //     Contact* contact = data->contacts;
-    //     contact->contactNormal = normal;
-    //     contact->contactPoint = positionOne + midline * (real)0.5;
-    //     contact->penetration = (one.radius+two.radius - size);
-    //     contact->setBodyData(one.body, two.body,
-    //         data->friction, data->restitution);
+	Contact* contact = data->contacts;
+	contact->contactNormal = normal;
+	contact->contactPoint = positionOne + midline * 0.5;
+	contact->penetration = (one.radius+two.radius - size);
+	contact->setBodyData(one.body, two.body,
+	 data->friction, data->restitution);
 
-    //     data->addContacts(1);
-    //     return 1;
-    return false;
+	data->addContacts(1);
+	return 1;
 }
 
 
@@ -553,104 +498,102 @@ unsigned CollisionDetector::boxAndPoint(const CollisionBox &box,
                                         const ds_math::Vector3 &point,
                                         CollisionData *data)
 {
-    // // Transform the point into box coordinates
-    // ds_math::Vector3 relPt = box.transform.transformInverse(point);
+     // Transform the point into box coordinates
+    ds_math::Vector3 relPt = ds_math::Matrix4::Inverse(box.transform) * point;
 
-    // ds_math::Vector3 normal;
+     ds_math::Vector3 normal;
 
-    // // Check each axis, looking for the axis on which the
-    // // penetration is least deep.
-    // ds_math::scalar min_depth = box.halfSize.x - fabs(relPt.x);
-    // if (min_depth < 0) return 0;
-    // normal = box.getAxis(0) * ((relPt.x < 0)?-1:1);
+     // Check each axis, looking for the axis on which the
+     // penetration is least deep.
+     ds_math::scalar min_depth = box.halfSize.x - fabs(relPt.x);
+     if (min_depth < 0) return 0;
+     normal = box.getAxis(0) * ((relPt.x < 0)?-1:1);
 
-    // ds_math::scalar depth = box.halfSize.y - fabs(relPt.y);
-    // if (depth < 0) return 0;
-    // else if (depth < min_depth)
-    // {
-    //     min_depth = depth;
-    //     normal = box.getAxis(1) * ((relPt.y < 0)?-1:1);
-    // }
+     ds_math::scalar depth = box.halfSize.y - fabs(relPt.y);
+     if (depth < 0) return 0;
+     else if (depth < min_depth)
+     {
+         min_depth = depth;
+         normal = box.getAxis(1) * ((relPt.y < 0)?-1:1);
+     }
 
-    // depth = box.halfSize.z - fabs(relPt.z);
-    // if (depth < 0) return 0;
-    // else if (depth < min_depth)
-    // {
-    //     min_depth = depth;
-    //     normal = box.getAxis(2) * ((relPt.z < 0)?-1:1);
-    // }
+     depth = box.halfSize.z - fabs(relPt.z);
+     if (depth < 0) return 0;
+     else if (depth < min_depth)
+     {
+         min_depth = depth;
+         normal = box.getAxis(2) * ((relPt.z < 0)?-1:1);
+     }
 
-    // // Compile the contact
-    // Contact* contact = data->contacts;
-    // contact->contactNormal = normal;
-    // contact->contactPoint = point;
-    // contact->penetration = min_depth;
+     // Compile the contact
+     Contact* contact = data->contacts;
+     contact->contactNormal = normal;
+     contact->contactPoint = point;
+     contact->penetration = min_depth;
 
-    // // Note that we don't know what rigid body the point
-    // // belongs to, so we just use NULL. Where this is called
-    // // this value can be left, or filled in.
-    // contact->setBodyData(box.body, NULL,
-    //     data->friction, data->restitution);
+     // Note that we don't know what rigid body the point
+     // belongs to, so we just use NULL. Where this is called
+     // this value can be left, or filled in.
+     contact->setBodyData(box.body, NULL,
+         data->friction, data->restitution);
 
-    // data->addContacts(1);
-    // return 1;
-    return false;
+     data->addContacts(1);
+     return 1;
 }
 
 unsigned CollisionDetector::boxAndSphere(const CollisionBox &box,
                                          const CollisionSphere &sphere,
                                          CollisionData *data)
 {
-    // // Transform the centre of the sphere into box coordinates
-    // ds_math::Vector3 centre = sphere.getAxis(3);
-    // ds_math::Vector3 relCentre = box.transform.transformInverse(centre);
+     // Transform the centre of the sphere into box coordinates
+     ds_math::Vector3 centre = sphere.getAxis(3);
+     ds_math::Vector3 relCentre = ds_math::Matrix4::Inverse(box.transform) * centre;
 
-    // // Early out check to see if we can exclude the contact
-    // if (fabs(relCentre.x) - sphere.radius > box.halfSize.x ||
-    //     fabs(relCentre.y) - sphere.radius > box.halfSize.y ||
-    //     fabs(relCentre.z) - sphere.radius > box.halfSize.z)
-    // {
-    //     return 0;
-    // }
+     // Early out check to see if we can exclude the contact
+     if (fabs(relCentre.x) - sphere.radius > box.halfSize.x ||
+         fabs(relCentre.y) - sphere.radius > box.halfSize.y ||
+         fabs(relCentre.z) - sphere.radius > box.halfSize.z)
+     {
+         return 0;
+     }
 
-    // ds_math::Vector3 closestPt(0,0,0);
-    // ds_math::scalar dist;
+     ds_math::Vector3 closestPt(0,0,0);
+     ds_math::scalar dist;
 
-    // // Clamp each coordinate to the box.
-    // dist = relCentre.x;
-    // if (dist > box.halfSize.x) dist = box.halfSize.x;
-    // if (dist < -box.halfSize.x) dist = -box.halfSize.x;
-    // closestPt.x = dist;
+     // Clamp each coordinate to the box.
+     dist = relCentre.x;
+     if (dist > box.halfSize.x) dist = box.halfSize.x;
+     if (dist < -box.halfSize.x) dist = -box.halfSize.x;
+     closestPt.x = dist;
 
-    // dist = relCentre.y;
-    // if (dist > box.halfSize.y) dist = box.halfSize.y;
-    // if (dist < -box.halfSize.y) dist = -box.halfSize.y;
-    // closestPt.y = dist;
+     dist = relCentre.y;
+     if (dist > box.halfSize.y) dist = box.halfSize.y;
+     if (dist < -box.halfSize.y) dist = -box.halfSize.y;
+     closestPt.y = dist;
 
-    // dist = relCentre.z;
-    // if (dist > box.halfSize.z) dist = box.halfSize.z;
-    // if (dist < -box.halfSize.z) dist = -box.halfSize.z;
-    // closestPt.z = dist;
+     dist = relCentre.z;
+     if (dist > box.halfSize.z) dist = box.halfSize.z;
+     if (dist < -box.halfSize.z) dist = -box.halfSize.z;
+     closestPt.z = dist;
 
-    // // Check we're in contact
-    // dist = ds_math::Vector3::Dot((closestPt - relCentre), (closestPt -
-    // relCentre));
-    // if (dist > sphere.radius * sphere.radius) return 0;
+     // Check we're in contact
+     dist = ds_math::Vector3::Dot((closestPt - relCentre), (closestPt -
+     relCentre));
+     if (dist > sphere.radius * sphere.radius) return 0;
 
-    // // Compile the contact
-    // ds_math::Vector3 closestPtWorld = box.transform.transform(closestPt);
+     // Compile the contact
+     ds_math::Vector3 closestPtWorld = box.transform * closestPt;
 
-    // Contact* contact = data->contacts;
-    // contact->contactNormal = (closestPtWorld - centre);
-    // contact->contactNormal.normalise();
-    // contact->contactPoint = closestPtWorld;
-    // contact->penetration = sphere.radius - real_sqrt(dist);
-    // contact->setBodyData(box.body, sphere.body,
-    //     data->friction, data->restitution);
+     Contact* contact = data->contacts;
+     contact->contactNormal = (closestPtWorld - centre);
+     contact->contactNormal = ds_math::Vector3::Normalize(contact->contactNormal);
+     contact->contactPoint = closestPtWorld;
+     contact->penetration = sphere.radius - sqrt(dist);
+     contact->setBodyData(box.body, sphere.body,
+         data->friction, data->restitution);
 
-    // data->addContacts(1);
-    // return 1;
-    return false;
+     data->addContacts(1);
+     return 1;
 }
 
 unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,

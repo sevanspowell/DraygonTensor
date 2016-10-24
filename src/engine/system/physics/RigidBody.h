@@ -31,11 +31,15 @@
 
 #include "math/Matrix3.h"
 #include "math/Matrix4.h"
-#include "math/Vector3.h"
 #include "math/Precision.h"
+#include "math/Quaternion.h"
+#include "math/Vector3.h"
+#include <vector>
 
 namespace ds_phys
 {
+class CollisionPrimitive;
+
 class RigidBody
 {
 public:
@@ -752,8 +756,14 @@ public:
     ///
     ds_math::Vector3 getAcceleration() const;
 
+    void addCollisionPrimitive(CollisionPrimitive* prim);
+    void removeCollisionPrimitive(unsigned id);
+    CollisionPrimitive* getCollisionPrimitive(unsigned id);
+    unsigned getCollisionPrimitiveCount();
 
 protected:
+    std::vector<CollisionPrimitive*> m_primitives;
+
     /**
          * @name Characteristic Data and State
          *

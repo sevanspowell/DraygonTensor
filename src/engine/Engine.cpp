@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <chrono>
+#include <thread>
 #include "engine/Engine.h"
 
 #include "engine/system/scene/TransformComponent.h"
@@ -23,13 +25,16 @@ void Engine::Start()
         while (m_running)
         {
             // Calculate deltaTime
-            static double prevSeconds =
-                ((Platform *)m_platform)->GetTicks() / 1000.0f;
+            static double prevSeconds = ((Platform *)m_platform)->GetTicks() / 1000.0f;
             double currSeconds = ((Platform *)m_platform)->GetTicks() / 1000.0f;
             float deltaTime = (float)(currSeconds - prevSeconds);
-            prevSeconds = currSeconds;
 
-            Update(deltaTime);
+            if (deltaTime >= 0.001) {
+            	prevSeconds = currSeconds;
+            	Update(deltaTime);
+            } else {
+            	std::this_thread::sleep_for(std::chrono::microseconds((long long int)(1000 - 50 + deltaTime*1000*1000)));
+            }
         }
 
         Shutdown();
