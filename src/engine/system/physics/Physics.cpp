@@ -477,8 +477,10 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
 
                                 if (dataType == "box")
                                 {
-                                	auto* box = new ds_phys::CollisionBox();
-                                	box->halfSize = dim;
+                                	auto* box = new ds_phys::CollisionCapsule();
+                                	//box->halfSize = dim;
+                                	box->radius = 0.5;
+                                	box->height = 1;
                                 	box->body = body;
                                 	box->offset = ds_math::Matrix4::CreateTranslationMatrix(offset);
 

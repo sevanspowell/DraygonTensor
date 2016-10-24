@@ -205,7 +205,13 @@ static unsigned generateCollisions(CollisionPrimitive* b0, CollisionPrimitive* b
            return CollisionDetector::sphereAndHalfSpace(*b1Ptr, *b0Ptr, &data);
 		} else if (/*CollisionPlane *b1Ptr = */dynamic_cast<CollisionPlane *>(b1)) {
            // Skip
+		} else if (CollisionCapsule *b1Ptr = dynamic_cast<CollisionCapsule *>(b1)) {
+    		return CollisionDetector::capsuleAndHalfSpace(*b1Ptr, *b0Ptr, &data);
 		}
+    } else if (CollisionCapsule *b0Ptr = dynamic_cast<CollisionCapsule *>(b0)) {
+    	if (CollisionPlane *b1Ptr = dynamic_cast<CollisionPlane *>(b1)) {
+    		return CollisionDetector::capsuleAndHalfSpace(*b0Ptr, *b1Ptr, &data);
+    	}
     }
 
     return 0;

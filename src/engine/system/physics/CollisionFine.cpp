@@ -54,17 +54,17 @@ bool IntersectionTests::sphereAndHalfSpace(const CollisionSphere &sphere,
      return (ds_math::Vector3::Dot(plane.direction, sphere.getAxis(3)) + sphere.radius) <= plane.offset;
 }
 
-bool IntersectionTests::sphereAndSphere(const CollisionSphere &one,
-                                        const CollisionSphere &two)
-{
-    // // Find the vector between the objects
-    // Vector3 midline = one.getAxis(3) - two.getAxis(3);
-
-    // // See if it is large enough.
-    // return ds_math::Vector3::Dot(midline, midline) <
-    //     (one.radius+two.radius)*(one.radius+two.radius);
-    return false;
-}
+//bool IntersectionTests::sphereAndSphere(const CollisionSphere &one,
+//                                        const CollisionSphere &two)
+//{
+//    // // Find the vector between the objects
+//    // Vector3 midline = one.getAxis(3) - two.getAxis(3);
+//
+//    // // See if it is large enough.
+//    // return ds_math::Vector3::Dot(midline, midline) <
+//    //     (one.radius+two.radius)*(one.radius+two.radius);
+//    return false;
+//}
 
 static inline ds_math::scalar transformToAxis(const CollisionBox &box,
                                               const ds_math::Vector3 &axis)
@@ -100,6 +100,31 @@ static inline bool overlapOnAxis(const CollisionBox &one,
 
     // Check for overlap
     return (distance < oneProject + twoProject);
+}
+
+bool IntersectionTests::capsuleAndHalfSpace(const CollisionCapsule& cap, const CollisionPlane &plane) {
+	//Sphere 1
+	{
+		// SphereOrigin1 = BodyOrigin + UpVec scaled by half height
+		auto sphereOrigin = cap.getAxis(3) + cap.getAxis(1) * (cap.height/2.0);
+
+		if ((ds_math::Vector3::Dot(plane.direction, sphereOrigin) - cap.radius - plane.offset) <= 0) {
+			return true;
+		}
+	}
+
+	//Sphere 2
+	{
+		// SphereOrigin2 = BodyOrigin - UpVec scaled by half height
+		auto sphereOrigin = cap.getAxis(3) - cap.getAxis(1) * (cap.height/2.0);
+
+		if ((ds_math::Vector3::Dot(plane.direction, sphereOrigin) - cap.radius - plane.offset) <= 0) {
+			return true;
+		}
+	}
+
+	// Cylinder Collision doesn't need to be considered as either sphere will take care of it.
+	return false;
 }
 
 // This preprocessor definition is only used as a convenience
@@ -668,4 +693,45 @@ unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,
 
     data->addContacts(contactsUsed);
     return contactsUsed;
+}
+
+unsigned CollisionDetector::capsuleAndHalfSpace(const CollisionCapsule &cap,
+        											   const CollisionPlane &plane,
+													   CollisionData *data) {
+    if (!IntersectionTests::capsuleAndHalfSpace(cap, plane)) {
+		return 0;
+	}
+
+	/*CollisionBox box;
+	box.body = cap.body;
+	box.halfSize = ds_math::Vector3(cap.radius, cap.height/2.0 + cap.radius, cap.radius);
+	box.calculateInternals();
+	return boxAndHalfSpace(box, plane, data);*/
+
+	auto sphereOrigin1 = cap.getAxis(3) + cap.getAxis(1) * (cap.height/2.0);
+	auto sphereOrigin2 = cap.getAxis(3) - cap.getAxis(1) * (cap.height/2.0);
+	auto sphereDist1 = (ds_math::Vector3::Dot(plane.direction, sphereOrigin1) - cap.radius - plane.offset);
+	auto sphereDist2 = (ds_math::Vector3::Dot(plane.direction, sphereOrigin2) - cap.radius - plane.offset);
+
+	auto sphereOrigin = sphereDist2 > sphereDist1 ? sphereOrigin1 : sphereOrigin2;
+	auto sphereDist = sphereDist2 > sphereDist1 ? sphereDist1 : sphereDist2;
+	auto sphereOffset = sphereDist2 > sphereDist1 ? cap.height/2.0 : -cap.height/2.0;
+
+	if (sphereDist <= 0) {
+		CollisionSphere sphere;
+		sphere.body = cap.body;
+		sphere.radius = cap.radius;
+		sphere.offset = ds_math::Matrix4::CreateTranslationMatrix(ds_math::Vector3(0, sphereOffset, 0));
+		sphere.calculateInternals();
+		return sphereAndHalfSpace(sphere, plane, data);
+	} else {
+		//No need to do cyl check. There's no way for it to just hit that.
+		return 0;
+	}
+
+	/*ds_math::Vector3 upVec = ds_math::Vector3(cap.getAxis(1));
+	ds_math::scalar sphere1 = ds_math::Vector3::Dot(upVec, cap.getAxis(1) *  cap.height/2.0);
+	ds_math::scalar sphere2 = ds_math::Vector3::Dot(upVec, cap.getAxis(1) * -cap.height/2.0);*/
+
+	//ds_math::scalar
 }

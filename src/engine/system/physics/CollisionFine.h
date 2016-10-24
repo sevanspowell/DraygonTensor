@@ -96,6 +96,11 @@ public:
         return transform[index];
     }
 
+    ds_math::Vector3 getRow(unsigned index) const
+    {
+    	return ds_math::Vector3(transform[0][index], transform[1][index], transform[2][index]);
+    }
+
     /**
     * Returns the resultant transform of the primitive, calculated from
     * the combined offset of the primitive and the transform
@@ -150,16 +155,25 @@ public:
     ds_math::scalar offset;
 };
 
+class CollisionCapsule : public CollisionPrimitive
+{
+	public:
+		ds_math::scalar height;
+		ds_math::scalar radius;
+};
+
 class IntersectionTests
 {
 public:
     static bool sphereAndHalfSpace(const CollisionSphere &sphere,
                                    const CollisionPlane &plane);
 
-    static bool sphereAndSphere(const CollisionSphere &one,
-                                const CollisionSphere &two);
+    /*static bool sphereAndSphere(const CollisionSphere &one,
+                                const CollisionSphere &two); //Unused */
 
     static bool boxAndBox(const CollisionBox &one, const CollisionBox &two);
+
+    static bool capsuleAndHalfSpace(const CollisionCapsule& cap, const CollisionPlane &plane);
 
     /**
     * Does an intersection test on an arbitrarily aligned box and a
@@ -289,6 +303,10 @@ public:
     static unsigned boxAndSphere(const CollisionBox &box,
                                  const CollisionSphere &sphere,
                                  CollisionData *data);
+
+    static unsigned capsuleAndHalfSpace(const CollisionCapsule &cap,
+            const CollisionPlane &plane,
+            CollisionData *data);
 }; // end CollisionDetector
 
 } // end namespace
