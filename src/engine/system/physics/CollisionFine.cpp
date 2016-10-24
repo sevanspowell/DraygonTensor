@@ -878,6 +878,105 @@ unsigned CollisionDetector::capsuleAndBox(const CollisionCapsule &cap,
 
 }
 
+unsigned CollisionDetector::capsuleAndCapsule(const CollisionCapsule &cap1,
+        const CollisionCapsule &cap2,
+        CollisionData *data) {
+
+	//@bug VERY UNOPTIMISED (should only need to do one collision check really)
+	unsigned totalResult = 0;
+
+	{
+		CollisionSphere c2s1;
+		c2s1.body = cap1.body;
+		c2s1.radius = cap1.radius;
+		c2s1.offset = ds_math::Matrix4::CreateTranslationMatrix(ds_math::Vector3(0, cap2.height/2.0, 0));
+		c2s1.calculateInternals();
+
+		totalResult += capsuleAndSphere(cap1, c2s1, data);
+	}
+
+	{
+		CollisionSphere c2s2;
+		c2s2.body = cap1.body;
+		c2s2.radius = cap1.radius;
+		c2s2.offset = ds_math::Matrix4::CreateTranslationMatrix(ds_math::Vector3(0, -cap2.height/2.0, 0));
+		c2s2.calculateInternals();
+
+		totalResult += capsuleAndSphere(cap1, c2s2, data);
+	}
+
+	{
+		CollisionSphere c1s1;
+		c1s1.body = cap1.body;
+		c1s1.radius = cap1.radius;
+		c1s1.offset = ds_math::Matrix4::CreateTranslationMatrix(ds_math::Vector3(0, cap1.height/2.0, 0));
+		c1s1.calculateInternals();
+
+		totalResult += capsuleAndSphere(cap2, c1s1, data);
+	}
+
+	{
+		CollisionSphere c1s2;
+		c1s2.body = cap1.body;
+		c1s2.radius = cap1.radius;
+		c1s2.offset = ds_math::Matrix4::CreateTranslationMatrix(ds_math::Vector3(0, -cap1.height/2.0, 0));
+		c1s2.calculateInternals();
+
+		totalResult += capsuleAndSphere(cap2, c1s2, data);
+	}
+
+	{
+		//@bug There's probbably a bug in here. Cyl v. Cyl code.
+
+		auto cap1SphereOrigin1 = cap1.getAxis(3) + cap1.getAxis(1) * (cap1.height/2.0);
+		auto cap1SphereOrigin2 = cap1.getAxis(3) - cap1.getAxis(1) * (cap1.height/2.0);
+		auto cap1SphereDist1 = ds_math::Vector3::Dot(cap1.getAxis(1), cap1SphereOrigin1);
+		auto cap1SphereDist2 = ds_math::Vector3::Dot(cap1.getAxis(1), cap1SphereOrigin2);
+		auto cap1MinDist = std::min(cap1SphereDist1, cap1SphereDist2);
+		auto cap1MaxDist = std::max(cap1SphereDist1, cap1SphereDist2);
+
+		auto cap2SphereOrigin1 = cap2.getAxis(3) + cap2.getAxis(1) * (cap2.height/2.0);
+		auto cap2SphereOrigin2 = cap2.getAxis(3) - cap2.getAxis(1) * (cap2.height/2.0);
+		auto cap2SphereDist1 = ds_math::Vector3::Dot(cap1.getAxis(1), cap2SphereOrigin1);
+		auto cap2SphereDist2 = ds_math::Vector3::Dot(cap1.getAxis(1), cap2SphereOrigin2);
+		auto cap2MinDist = std::min(cap2SphereDist1, cap2SphereDist2);
+		auto cap2MaxDist = std::max(cap2SphereDist1, cap2SphereDist2);
+
+		// If the cyls overlap
+		if (!((cap2MaxDist < cap1MinDist) || (cap2MinDist > cap1MaxDist))) {
+			ds_math::Vector3 positionOne = cap2.getAxis(3) - ds_math::Vector3::Cross(cap1.getAxis(1), ds_math::Vector3::Cross(cap1.getAxis(1), cap1.getAxis(3) - cap2.getAxis(3)));
+			ds_math::Vector3 positionTwo = cap1.getAxis(3) - ds_math::Vector3::Cross(cap1.getAxis(1), ds_math::Vector3::Cross(cap1.getAxis(1), cap2.getAxis(3) - cap1.getAxis(3)));
+
+			// Find the vector between the objects
+			ds_math::Vector3 midline = positionOne - positionTwo;
+			ds_math::scalar size = midline.Magnitude();
+
+			// See if it is large enough.
+			if (size <= 0.0f || size >= cap1.radius+cap2.radius)
+			{
+			 return totalResult;
+			}
+
+			// We manually create the normal, because we have the
+			// size to hand.
+			ds_math::Vector3 normal = midline * ((1.0)/size);
+
+			Contact* contact = data->contacts;
+			contact->contactNormal = normal;
+			contact->contactPoint = positionOne + midline * 0.5;
+			contact->penetration = (cap1.radius+cap2.radius - size);
+			contact->setBodyData(cap1.body, cap2.body,
+			 data->friction, data->restitution);
+
+			data->addContacts(1);
+			totalResult += 1;
+		}
+	}
+
+
+	return totalResult;
+
+}
 
 
 

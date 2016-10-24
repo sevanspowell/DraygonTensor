@@ -311,6 +311,11 @@ public:
     static unsigned capsuleAndBox(const CollisionCapsule &cap,
             const CollisionBox &box,
             CollisionData *data);
+
+
+    static unsigned capsuleAndCapsule(const CollisionCapsule &cap1,
+            const CollisionCapsule &cap2,
+            CollisionData *data);
 }; // end CollisionDetector
 
 } // end namespace
