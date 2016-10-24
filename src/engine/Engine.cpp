@@ -92,7 +92,7 @@ bool Engine::Init()
 
     const char *configFilePath = "../assets/config.json";
 
-    std::ifstream configFile(configFilePath, std::ios::ate);
+    std::ifstream configFile(configFilePath, std::ios::binary | std::ios::ate);
     bool didLoad = configFile.good();
 
     // Read file into buffer
@@ -101,17 +101,18 @@ bool Engine::Init()
     {
         // Reserve memory
         std::streamsize size = configFile.tellg();
-        configBuffer.reserve(size + 1);
+        configBuffer.resize(size);
 
         // Read file
-        configFile.seekg(0, std::ios::beg);
-        if (configFile.read(configBuffer.data(), size))
+        configFile.seekg(0, configFile.beg);
+        if (configFile.read(&configBuffer[0], size))
         {
             didLoad = true;
         }
         else
         {
             didLoad = false;
+            configBuffer.resize(0);
         }
     }
     // Terminate string

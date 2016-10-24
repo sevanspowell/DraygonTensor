@@ -48,7 +48,7 @@ bool Input::Initialize(const char *configFile)
                 JsonArray bindings;
                 json::parseArray(context["bindings"], &bindings);
 
-                for (unsigned int j = 0; j < bindings.size(); ++i)
+                for (unsigned int j = 0; j < bindings.size(); ++j)
                 {
                     JsonObject binding;
                     json::parseObject(bindings[j], &binding);
@@ -59,7 +59,7 @@ bool Input::Initialize(const char *configFile)
                         json::parseString(binding["key"], &key);
 
                         std::string msg;
-                        json::parseString(binding["key"], &msg);
+                        json::parseString(binding["msg"], &msg);
 
                         ds_platform::Keyboard::Key keycode =
                             ds_platform::Keyboard::Key::Key_Last;

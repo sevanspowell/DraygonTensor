@@ -66,7 +66,13 @@ bool Script::Initialize(const char *configFile)
 
         if (root["Script"] != nullptr)
         {
-            json::parseString(root["Script"], &bootScriptPath);
+            JsonObject script;
+            json::parseObject(root["Script"], &script);
+            
+            if (script["bootScript"] != nullptr)
+            {
+                json::parseString(script["bootScript"], &bootScriptPath);
+            }
         }
 
         if (bootScriptPath.empty() == false)

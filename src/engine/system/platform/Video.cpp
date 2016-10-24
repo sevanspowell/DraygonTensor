@@ -71,11 +71,13 @@ bool Video::Initialize(const char *configFile)
 
             if (video["title"] != nullptr)
             {
+                m_window.title = "";
                 ds::json::parseString(video["title"], &m_window.title);
             }
 
             if (video["renderer"] != nullptr)
             {
+                renderer = "";
                 ds::json::parseString(video["renderer"], &renderer);
                 // Ignore case
                 std::transform(renderer.begin(), renderer.end(),
@@ -101,7 +103,7 @@ bool Video::Initialize(const char *configFile)
                     m_window.contextInfo.openGL.minorVersion =
                         ds::json::parseInt(video["minorVersion"]);
 
-                    std::string profile = std::string("core");
+                    std::string profile = "";
                     ds::json::parseString(video["profile"], &profile);
                     // Ignore case
                     std::transform(profile.begin(), profile.end(),
