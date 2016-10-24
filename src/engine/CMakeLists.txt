@@ -17,6 +17,14 @@ set(ENGINE_INCLUDE_FILES
   entity/EntityManager.h
   entity/IComponentManager.h
   entity/Instance.h
+
+  json/Json.h
+  json/JsonObject.h
+  json/JsonTypes.h
+
+  strings/FixedString.h
+  strings/StringUtils.h
+
   message/Message.h
   message/MessageBus.h
   message/MessageFactory.h
@@ -87,6 +95,12 @@ set(ENGINE_SRC_FILES
   common/StringIntern.cpp
   entity/Entity.cpp
   entity/EntityManager.cpp
+
+  json/Json.cpp
+  json/JsonObject.cpp
+
+  strings/FixedString.cpp
+
   message/MessageBus.cpp
   message/MessageFactory.cpp
   message/MessageHelper.cpp

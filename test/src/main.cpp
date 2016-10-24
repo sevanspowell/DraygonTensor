@@ -8,6 +8,7 @@
 #include "math/Vector3TestSuite.h"
 #include "math/Vector4TestSuite.h"
 #include "math/Matrix3TestSuite.h"
+#include "engine/JsonTestSuite.h"
 
 int main(int argc, char **argv)
 {

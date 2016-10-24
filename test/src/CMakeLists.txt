@@ -1,6 +1,14 @@
 include_directories(${CMAKE_SOURCE_DIR}/test ${CMAKE_SOURCE_DIR}/src/)
 
 set(TEST_SUITE_INCLUDE_FILES
+  engine/JsonTestSuite.h
+  engine/common/CommonTestSuite.h
+  engine/common/StreamBufferTestSuite.h
+  math/Matrix3TestSuite.h
+  math/Matrix4TestSuite.h
+  math/QuaternionTestSuite.h
+  math/Vector3TestSuite.h
+  math/Vector4TestSuite.h
 )
 
 set(TEST_SUITE_SRC_FILES
