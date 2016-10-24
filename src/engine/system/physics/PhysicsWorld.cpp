@@ -189,6 +189,8 @@ static unsigned generateCollisions(CollisionPrimitive* b0, CollisionPrimitive* b
             return CollisionDetector::boxAndSphere(*b0Ptr, *b1Ptr, &data);
 		} else if (CollisionPlane *b1Ptr = dynamic_cast<CollisionPlane *>(b1)) {
             return CollisionDetector::boxAndHalfSpace(*b0Ptr, *b1Ptr, &data);
+		} else if (CollisionCapsule *b1Ptr = dynamic_cast<CollisionCapsule *>(b1)) {
+    		return CollisionDetector::capsuleAndBox(*b1Ptr, *b0Ptr, &data);
 		}
     } else if (CollisionSphere *b0Ptr = dynamic_cast<CollisionSphere *>(b0)) {
     	if (CollisionBox *b1Ptr = dynamic_cast<CollisionBox *>(b1)) {
@@ -211,7 +213,9 @@ static unsigned generateCollisions(CollisionPrimitive* b0, CollisionPrimitive* b
     		return CollisionDetector::capsuleAndHalfSpace(*b1Ptr, *b0Ptr, &data);
 		}
     } else if (CollisionCapsule *b0Ptr = dynamic_cast<CollisionCapsule *>(b0)) {
-    	if (CollisionSphere *b1Ptr = dynamic_cast<CollisionSphere *>(b1)) {
+    	if (CollisionBox *b1Ptr = dynamic_cast<CollisionBox *>(b1)) {
+    	    return CollisionDetector::capsuleAndBox(*b0Ptr, *b1Ptr, &data);
+    	} else if (CollisionSphere *b1Ptr = dynamic_cast<CollisionSphere *>(b1)) {
     		return CollisionDetector::capsuleAndSphere(*b0Ptr, *b1Ptr, &data);
     	} else if (CollisionPlane *b1Ptr = dynamic_cast<CollisionPlane *>(b1)) {
     		return CollisionDetector::capsuleAndHalfSpace(*b0Ptr, *b1Ptr, &data);

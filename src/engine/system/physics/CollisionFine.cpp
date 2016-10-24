@@ -759,9 +759,10 @@ unsigned CollisionDetector::capsuleAndSphere(const CollisionCapsule &cap,
 
 	} else {
 		// Make sure we have contacts
-		if (data->contactsLeft <= 0) return 0;
+		//if (data->contactsLeft <= 0) return 0;
 
 		// Cache the sphere positions
+		// (Get the position of the sphere along the capsule's up axis)
 		ds_math::Vector3 positionOne = sphere.getAxis(3) - ds_math::Vector3::Cross(cap.getAxis(1), ds_math::Vector3::Cross(cap.getAxis(1), cap.getAxis(3) - sphere.getAxis(3)));
 		ds_math::Vector3 positionTwo = sphere.getAxis(3);
 
@@ -787,6 +788,90 @@ unsigned CollisionDetector::capsuleAndSphere(const CollisionCapsule &cap,
 		 data->friction, data->restitution);
 
 		data->addContacts(1);
+		return 1;
+	}
+
+	return 0;
+
+}
+
+unsigned CollisionDetector::capsuleAndBox(const CollisionCapsule &cap,
+        const CollisionBox &box,
+        CollisionData *data) {
+
+
+	auto capSphereOrigin1 = cap.getAxis(3) + cap.getAxis(1) * (cap.height/2.0);
+	auto capSphereOrigin2 = cap.getAxis(3) - cap.getAxis(1) * (cap.height/2.0);
+	auto capSphereDist1 = ds_math::Vector3::Dot(cap.getAxis(1), capSphereOrigin1);
+	auto capSphereDist2 = ds_math::Vector3::Dot(cap.getAxis(1), capSphereOrigin2);
+	auto boxDist = ds_math::Vector3::Dot(cap.getAxis(1), box.getAxis(3));
+
+	if (boxDist >= capSphereDist1) {
+		CollisionSphere ssphere;
+		ssphere.body = cap.body;
+		ssphere.radius = cap.radius;
+		ssphere.offset = ds_math::Matrix4::CreateTranslationMatrix(ds_math::Vector3(0, cap.height/2.0, 0));
+		ssphere.calculateInternals();
+		return boxAndSphere(box, ssphere, data);
+
+	} else if (boxDist <= capSphereDist2) {
+		CollisionSphere ssphere;
+		ssphere.body = cap.body;
+		ssphere.radius = cap.radius;
+		ssphere.offset = ds_math::Matrix4::CreateTranslationMatrix(ds_math::Vector3(0, -cap.height/2.0, 0));
+		ssphere.calculateInternals();
+		return boxAndSphere(box, ssphere, data);
+
+	} else {
+	     // Transform the centre of the sphere into box coordinates
+	     ds_math::Vector3 centre = box.getAxis(3) - ds_math::Vector3::Cross(cap.getAxis(1), ds_math::Vector3::Cross(cap.getAxis(1), cap.getAxis(3) - box.getAxis(3)));
+	     ds_math::Vector3 relCentre = ds_math::Matrix4::Inverse(box.transform) * centre;
+
+	     // Early out check to see if we can exclude the contact
+	     if (fabs(relCentre.x) - cap.radius > box.halfSize.x ||
+	         fabs(relCentre.y) - cap.radius > box.halfSize.y ||
+	         fabs(relCentre.z) - cap.radius > box.halfSize.z)
+	     {
+	         return 0;
+	     }
+
+	     ds_math::Vector3 closestPt(0,0,0);
+	     ds_math::scalar dist;
+
+	     // Clamp each coordinate to the box.
+	     dist = relCentre.x;
+	     if (dist > box.halfSize.x) dist = box.halfSize.x;
+	     if (dist < -box.halfSize.x) dist = -box.halfSize.x;
+	     closestPt.x = dist;
+
+	     dist = relCentre.y;
+	     if (dist > box.halfSize.y) dist = box.halfSize.y;
+	     if (dist < -box.halfSize.y) dist = -box.halfSize.y;
+	     closestPt.y = dist;
+
+	     dist = relCentre.z;
+	     if (dist > box.halfSize.z) dist = box.halfSize.z;
+	     if (dist < -box.halfSize.z) dist = -box.halfSize.z;
+	     closestPt.z = dist;
+
+	     // Check we're in contact
+	     dist = ds_math::Vector3::Dot((closestPt - relCentre), (closestPt -
+	     relCentre));
+	     if (dist > cap.radius * cap.radius) return 0;
+
+	     // Compile the contact
+	     ds_math::Vector3 closestPtWorld = box.transform * closestPt;
+
+	     Contact* contact = data->contacts;
+	     contact->contactNormal = (closestPtWorld - centre);
+	     contact->contactNormal = ds_math::Vector3::Normalize(contact->contactNormal);
+	     contact->contactPoint = closestPtWorld;
+	     contact->penetration = cap.radius - sqrt(dist);
+	     contact->setBodyData(box.body, cap.body,
+	         data->friction, data->restitution);
+
+	     data->addContacts(1);
+		return 1;
 	}
 
 	return 0;
