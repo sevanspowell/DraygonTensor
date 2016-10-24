@@ -237,7 +237,7 @@ bool Render::MaterialManager::GetMaterialForResourceHandle(
     return result;
 }
 
-bool Render::Initialize(const Config &config)
+bool Render::Initialize(const char *configFile)
 {
     bool result = true;
 

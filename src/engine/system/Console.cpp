@@ -1,10 +1,10 @@
-#include "engine/common/StringIntern.h"
 #include "engine/system/Console.h"
+#include "engine/common/StringIntern.h"
 #include "engine/message/MessageHelper.h"
 
 namespace ds
 {
-bool Console::Initialize(const Config &config)
+bool Console::Initialize(const char *configFile)
 {
     bool result = true;
 
@@ -320,7 +320,8 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             (*messages) >> createPanelMsg;
 
             // m_buffer << "Console out: GUI panel created from ("
-            //          << createPanelMsg.startX << ", " << createPanelMsg.startY
+            //          << createPanelMsg.startX << ", " <<
+            //          createPanelMsg.startY
             //          << ") to (" << createPanelMsg.endX << ", "
             //          << createPanelMsg.endY << ") with material "
             //          << StringIntern::Instance().GetString(
@@ -334,7 +335,8 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             (*messages) >> createButtonMsg;
 
             // m_buffer << "Console out: GUI button created from ("
-            //          << createButtonMsg.startX << ", " << createButtonMsg.startY
+            //          << createButtonMsg.startX << ", " <<
+            //          createButtonMsg.startY
             //          << ") to (" << createButtonMsg.endX << ", "
             //          << createButtonMsg.endY << ") with materials: "
             //          << StringIntern::Instance().GetString(
@@ -379,7 +381,8 @@ void Console::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::DestroyEntity destroyEntityMsg;
             (*messages) >> destroyEntityMsg;
 
-            // m_buffer << "Console out: entity id: " << destroyEntityMsg.entity.id
+            // m_buffer << "Console out: entity id: " <<
+            // destroyEntityMsg.entity.id
             //          << " flagged for destruction." << std::endl;
             break;
         }

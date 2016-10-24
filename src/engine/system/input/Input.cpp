@@ -1,5 +1,6 @@
 #include <sstream>
 
+#include "engine/json/Json.h"
 #include "engine/message/MessageFactory.h"
 #include "engine/system/input/Input.h"
 
@@ -18,57 +19,68 @@ Input::Input()
 {
 }
 
-bool Input::Initialize(const Config &config)
+bool Input::Initialize(const char *configFile)
 {
     bool result = true;
 
     InitializeKeyNameToKeyCodeMap();
 
-    // Iterate over config and create input contexts
-    std::vector<std::string> contexts = config.GetObjectKeys("Input");
+    JsonObject root;
+    json::parseObject(configFile, &root);
 
-    // For each context
-    for (auto contextName : contexts)
+    if (root["Input"] != nullptr)
     {
-        // Create context
-        InputContext context(contextName);
+        JsonArray contextArray;
+        json::parseArray(root["Input"], &contextArray);
 
-        // Construct context config name (name of input context in config file).
-        std::stringstream contextConfigName;
-        contextConfigName << "Input." << contextName;
-
-        // For each element of context (key bind)
-        std::vector<std::string> keys =
-            config.GetObjectKeys(contextConfigName.str());
-        for (auto key : keys)
+        for (unsigned int i = 0; i < contextArray.size(); ++i)
         {
-            // Construct keybind config name (name of keybind in config file).
-            std::stringstream keyBindConfigName;
-            keyBindConfigName << contextConfigName.str() << "." << key;
+            JsonObject context;
+            json::parseObject(contextArray[i], &context);
 
-            // Get key bind message string value from config
-            std::string messageString;
-            if (config.GetString(keyBindConfigName.str(), &messageString))
+            if (context["name"] != nullptr && context["bindings"] != nullptr)
             {
-                // Get key code that matches string key
-                ds_platform::Keyboard::Key keycode =
-                    ds_platform::Keyboard::Key::Key_Last;
-                if (GetKeyCodeForKeyName(key, &keycode))
+                std::string name;
+                json::parseString(context["name"], &name);
+
+                InputContext contextOut(name);
+
+                JsonArray bindings;
+                json::parseArray(context["bindings"], &bindings);
+
+                for (unsigned int j = 0; j < bindings.size(); ++i)
                 {
-                    // Bind key code to message string
-                    context.BindKey(keycode, messageString);
+                    JsonObject binding;
+                    json::parseObject(bindings[j], &binding);
+
+                    if (binding["key"] != nullptr && binding["msg"] != nullptr)
+                    {
+                        std::string key;
+                        json::parseString(binding["key"], &key);
+
+                        std::string msg;
+                        json::parseString(binding["key"], &msg);
+
+                        ds_platform::Keyboard::Key keycode =
+                            ds_platform::Keyboard::Key::Key_Last;
+                        if (GetKeyCodeForKeyName(key, &keycode))
+                        {
+                            contextOut.BindKey(keycode, msg);
+                        }
+                    }
+                }
+
+                // Default context is always on the stack
+                if (name == "Default")
+                {
+                    m_inputContextStack.push_back(contextOut);
+                }
+                // Other contexts stored but not necessarily on stack
+                else
+                {
+                    m_inputContexts.push_back(contextOut);
                 }
             }
-        }
-
-        // Put contexts in appropriate storage location
-        if (contextName == "Default")
-        {
-            m_inputContextStack.push_back(context);
-        }
-        else
-        {
-            m_inputContexts.push_back(context);
         }
     }
 

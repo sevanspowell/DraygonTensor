@@ -1,8 +1,9 @@
 #include <algorithm>
 #include <chrono>
+#include <fstream>
 #include <thread>
-#include "engine/Engine.h"
 
+#include "engine/Engine.h"
 #include "engine/system/scene/TransformComponent.h"
 
 namespace ds
@@ -25,15 +26,20 @@ void Engine::Start()
         while (m_running)
         {
             // Calculate deltaTime
-            static double prevSeconds = ((Platform *)m_platform)->GetTicks() / 1000.0f;
+            static double prevSeconds =
+                ((Platform *)m_platform)->GetTicks() / 1000.0f;
             double currSeconds = ((Platform *)m_platform)->GetTicks() / 1000.0f;
             float deltaTime = (float)(currSeconds - prevSeconds);
 
-            if (deltaTime >= 0.001) {
-            	prevSeconds = currSeconds;
-            	Update(deltaTime);
-            } else {
-            	std::this_thread::sleep_for(std::chrono::microseconds((long long int)(1000 - 50 + deltaTime*1000*1000)));
+            if (deltaTime >= 0.001)
+            {
+                prevSeconds = currSeconds;
+                Update(deltaTime);
+            }
+            else
+            {
+                std::this_thread::sleep_for(std::chrono::microseconds(
+                    (long long int)(1000 - 50 + deltaTime * 1000 * 1000)));
             }
         }
 
@@ -84,10 +90,32 @@ bool Engine::Init()
 {
     bool result = true;
 
-    Config config;
     const char *configFilePath = "../assets/config.json";
 
-    bool didLoad = config.LoadFile(configFilePath);
+    std::ifstream configFile(configFilePath, std::ios::ate);
+    bool didLoad = configFile.good();
+
+    // Read file into buffer
+    std::vector<char> configBuffer;
+    if (didLoad)
+    {
+        // Reserve memory
+        std::streamsize size = configFile.tellg();
+        configBuffer.reserve(size + 1);
+
+        // Read file
+        configFile.seekg(0, std::ios::beg);
+        if (configFile.read(configBuffer.data(), size))
+        {
+            didLoad = true;
+        }
+        else
+        {
+            didLoad = false;
+        }
+    }
+    // Terminate string
+    configBuffer.push_back('\0');
 
     // Send a message about whether or not the config file loaded
     ds_msg::MessageHeader header;
@@ -106,7 +134,7 @@ bool Engine::Init()
     for (auto &system : m_systems)
     {
         // If any initialization fails, whole process fails.
-        result &= system->Initialize(config);
+        result &= system->Initialize(&configBuffer[0]);
     }
 
     return result;
@@ -135,26 +163,29 @@ void Engine::Update(float deltaTime)
     // Update systems
     for (auto &system : m_systems)
     {
-		if (system->getUpdateRate(screenRefreshRate) == 0)
-		{
-			system->Update(deltaTime);
-		}
-		else
-		{
-			unsigned maxUpdates = system->getMaxConsecutiveUpdates();
-			float accum = system->getUpdateAccum();
-			float updateDT = 1/(float)system->getUpdateRate(screenRefreshRate);
-			float boundedDeltaTime = maxUpdates == 0 ? deltaTime : std::min(maxUpdates * updateDT, deltaTime);
-			accum += boundedDeltaTime;
+        if (system->getUpdateRate(screenRefreshRate) == 0)
+        {
+            system->Update(deltaTime);
+        }
+        else
+        {
+            unsigned maxUpdates = system->getMaxConsecutiveUpdates();
+            float accum = system->getUpdateAccum();
+            float updateDT =
+                1 / (float)system->getUpdateRate(screenRefreshRate);
+            float boundedDeltaTime =
+                maxUpdates == 0 ? deltaTime
+                                : std::min(maxUpdates * updateDT, deltaTime);
+            accum += boundedDeltaTime;
 
-			while (accum >= updateDT)
-			{
-				system->Update(updateDT);
-				accum -= updateDT;
-			}
+            while (accum >= updateDT)
+            {
+                system->Update(updateDT);
+                accum -= updateDT;
+            }
 
-			system->setUpdateAccum(accum);
-		}
+            system->setUpdateAccum(accum);
+        }
     }
 }
 

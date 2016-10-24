@@ -1,66 +1,119 @@
 #include <algorithm>
+#include <fstream>
 
 #include <SDL2/SDL.h>
 
-#include "engine/system/platform/Video.h"
+#include "engine/json/Json.h"
 #include "engine/message/MessageHelper.h"
+#include "engine/system/platform/Video.h"
 
 namespace ds_platform
 {
-bool Video::Initialize(const ds::Config &config)
+bool Video::Initialize(const char *configFile)
 {
     bool result = true;
 
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) == 0)
     {
-        config.GetUnsignedInt("Video.redBits", &m_window.redBits);
-        config.GetUnsignedInt("Video.greenBits", &m_window.greenBits);
-        config.GetUnsignedInt("Video.blueBits", &m_window.blueBits);
-        config.GetUnsignedInt("Video.alphaBits", &m_window.alphaBits);
+        ds::JsonObject root;
+        ds::json::parseObject(configFile, &root);
 
-        config.GetUnsignedInt("Video.depthBits", &m_window.depthBits);
-        config.GetUnsignedInt("Video.stencilBits", &m_window.stencilBits);
-
-        config.GetBool("Video.fullscreen", &m_window.fullscreen);
-        config.GetBool("Video.lockMouse", &m_window.lockMouse);
-
-        config.GetUnsignedInt("Video.width", &m_window.width);
-        config.GetUnsignedInt("Video.height", &m_window.height);
-
-        config.GetString("Video.title", &m_window.title);
-
-        // Get renderer type
         std::string renderer = std::string("None");
-        config.GetString("Video.renderer", &renderer);
-        // Ignore case of renderer string
-        std::transform(renderer.begin(), renderer.end(), renderer.begin(),
-                       ::tolower);
 
-        if (renderer == "opengl")
+        if (root["Video"] != nullptr)
         {
-            // Set default OpenGL context values
-            m_window.contextInfo.type = GraphicsContext::ContextType::OpenGL;
-            m_window.contextInfo.openGL.majorVersion = 3;
-            m_window.contextInfo.openGL.minorVersion = 3;
-            m_window.contextInfo.openGL.profile =
-                GraphicsContext::ContextProfileOpenGL::Core;
+            ds::JsonObject video;
+            ds::json::parseObject(root["Video"], &video);
 
-            // Get values from config if they exist
-            config.GetUnsignedInt("Video.majorVersion",
-                                  &m_window.contextInfo.openGL.majorVersion);
-            config.GetUnsignedInt("Video.minorVersion",
-                                  &m_window.contextInfo.openGL.minorVersion);
-            std::string profile = std::string("core");
-            config.GetString("Video.profile", &profile);
-            // Ignore case of profile string
-            std::transform(profile.begin(), profile.end(), profile.begin(),
-                           ::tolower);
-            if (profile == std::string("compatability"))
+            if (video["redBits"] != nullptr)
             {
-                m_window.contextInfo.openGL.profile =
-                    GraphicsContext::ContextProfileOpenGL::Compatability;
+                m_window.redBits = ds::json::parseInt(video["redBits"]);
             }
-            // else, leave as default (core) profile
+            if (video["greenBits"] != nullptr)
+            {
+                m_window.greenBits = ds::json::parseInt(video["greenBits"]);
+            }
+            if (video["blueBits"] != nullptr)
+            {
+                m_window.blueBits = ds::json::parseInt(video["blueBits"]);
+            }
+            if (video["alphaBits"] != nullptr)
+            {
+                m_window.alphaBits = ds::json::parseInt(video["alphaBits"]);
+            }
+
+            if (video["depthBits"] != nullptr)
+            {
+                m_window.depthBits = ds::json::parseInt(video["depthBits"]);
+            }
+            if (video["stencilBits"] != nullptr)
+            {
+                m_window.stencilBits = ds::json::parseInt(video["stencilBits"]);
+            }
+
+            if (video["fullscreen"] != nullptr)
+            {
+                m_window.fullscreen = ds::json::parseBool(video["fullscreen"]);
+            }
+            if (video["lockMouse"] != nullptr)
+            {
+                m_window.lockMouse = ds::json::parseBool(video["lockMouse"]);
+            }
+
+            if (video["width"] != nullptr)
+            {
+                m_window.width = ds::json::parseInt(video["width"]);
+            }
+            if (video["height"] != nullptr)
+            {
+                m_window.height = ds::json::parseInt(video["height"]);
+            }
+
+            if (video["title"] != nullptr)
+            {
+                ds::json::parseString(video["title"], &m_window.title);
+            }
+
+            if (video["renderer"] != nullptr)
+            {
+                ds::json::parseString(video["renderer"], &renderer);
+                // Ignore case
+                std::transform(renderer.begin(), renderer.end(),
+                               renderer.begin(), ::tolower);
+            }
+
+            if (renderer == "opengl")
+            {
+                // Set default OpenGL context values
+                m_window.contextInfo.type =
+                    GraphicsContext::ContextType::OpenGL;
+                m_window.contextInfo.openGL.majorVersion = 3;
+                m_window.contextInfo.openGL.minorVersion = 3;
+                m_window.contextInfo.openGL.profile =
+                    GraphicsContext::ContextProfileOpenGL::Core;
+
+                if (video["majorVersion"] != nullptr &&
+                    video["minorVersion"] != nullptr &&
+                    video["profile"] != nullptr)
+                {
+                    m_window.contextInfo.openGL.majorVersion =
+                        ds::json::parseInt(video["majorVersion"]);
+                    m_window.contextInfo.openGL.minorVersion =
+                        ds::json::parseInt(video["minorVersion"]);
+
+                    std::string profile = std::string("core");
+                    ds::json::parseString(video["profile"], &profile);
+                    // Ignore case
+                    std::transform(profile.begin(), profile.end(),
+                                   profile.begin(), ::tolower);
+                    if (profile == std::string("compatability"))
+                    {
+                        m_window.contextInfo.openGL.profile = GraphicsContext::
+                            ContextProfileOpenGL::Compatability;
+                    }
+                    // else, leave as default (core) profile
+                }
+            }
         }
 
         result &= m_window.Create();

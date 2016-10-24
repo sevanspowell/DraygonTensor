@@ -9,7 +9,7 @@
 
 namespace ds
 {
-bool Platform::Initialize(const Config &config)
+bool Platform::Initialize(const char *configFile)
 {
     bool result = false;
 
@@ -17,7 +17,7 @@ bool Platform::Initialize(const Config &config)
     {
         result = true;
 
-        result &= m_video.Initialize(config);
+        result &= m_video.Initialize(configFile);
 
         // Grab events from video system and add them to messages generated
         AppendStreamBuffer(&m_messagesGenerated, m_video.CollectMessages());

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "engine/Config.h"
-#include "engine/system/platform/Window.h"
 #include "engine/message/Message.h"
+#include "engine/system/platform/Window.h"
 
 namespace ds_platform
 {
@@ -14,10 +14,10 @@ public:
      *
      * Creates a window with the default settings.
      *
-     * @param   config  const Config &, configuration loaded by the engine.
-     * @return          bool, TRUE if initialization succeeds, FALSE otherwise.
+     * @param   config   const char *, configuration loaded by the engine.
+     * @return           bool, TRUE if initialization succeeds, FALSE otherwise.
      */
-    bool Initialize(const ds::Config &config);
+    bool Initialize(const char *configFile);
 
     /**
      * Update the video system.

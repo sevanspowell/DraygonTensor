@@ -35,11 +35,11 @@ public:
      * Attempts to load the boot script and calls it's init() method if
      * successfully loaded.
      *
-     * @param  config  const Config &, configuration loaded by engine.
-     * @return         bool, TRUE if initialization was successful, FALSE
-     *                 otherwise.
+     * @param  configFile  const char *, configuration loaded by engine.
+     * @return             bool, TRUE if initialization was successful, FALSE
+     *                     otherwise.
      */
-    virtual bool Initialize(const Config &config);
+    virtual bool Initialize(const char *configFile);
 
     /**
      * Update the scripting system.
@@ -394,20 +394,25 @@ public:
 
     /**
      * Gets the rate at which the system should be updated.
-     * If the returned value is 0, the system will be updated as often as possible.
+     * If the returned value is 0, the system will be updated as often as
+     * possible.
      * @param screenRefreshRate The refreshrate of the current monitor.
      * @return The desired update rate
      */
     virtual unsigned getUpdateRate(uint32_t screenRefreshRate) const;
 
     /**
-     * Gets the number of consecutive updates, used when system falls behind on updates.
+     * Gets the number of consecutive updates, used when system falls behind on
+     * updates.
      * For example:
      *   Rendering took longer than normal.
-     *   Physics is allowed to catch up by updating multiple times, keeping realtime.
-     * If the returned value is 0, then there is an unlimited number of consecutive updates.
+     *   Physics is allowed to catch up by updating multiple times, keeping
+     * realtime.
+     * If the returned value is 0, then there is an unlimited number of
+     * consecutive updates.
      * @return The max number of consecutive updates
-     * @remarks On systems that may lag behind on updates, this should not return 0. Otherwise an infinite loop may be entered.
+     * @remarks On systems that may lag behind on updates, this should not
+     * return 0. Otherwise an infinite loop may be entered.
      */
     virtual unsigned getMaxConsecutiveUpdates() const;
 

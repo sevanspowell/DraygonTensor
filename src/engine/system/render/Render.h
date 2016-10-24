@@ -171,10 +171,10 @@ public:
      *
      * Returns FALSE if initialization fails.
      *
-     * @param   config  const Config &, configuration loaded by engine.
-     * @return          bool, TRUE if initialization succeeds, FALSE otherwise.
+     * @param   configFile   const char *, configuration loaded by engine.
+     * @return               bool, TRUE if initialization succeeds, FALSE otherwise.
      */
-    virtual bool Initialize(const Config &config);
+    virtual bool Initialize(const char *configFile);
 
     /**
      * Update the render system over the given timestep.

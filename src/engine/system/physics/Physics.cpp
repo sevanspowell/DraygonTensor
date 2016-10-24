@@ -57,7 +57,7 @@ Physics::Physics()
 {
 }
 
-bool Physics::Initialize(const Config &config)
+bool Physics::Initialize(const char *configFile)
 {
     m_transformComponentManager =
         GetComponentStore().GetComponentManager<TransformComponentManager>();

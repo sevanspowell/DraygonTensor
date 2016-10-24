@@ -3,8 +3,9 @@
 
 #include "engine/Config.h"
 #include "engine/common/StringIntern.h"
-#include "engine/system/script/Script.h"
 #include "engine/message/MessageHelper.h"
+#include "engine/system/script/Script.h"
+#include "engine/json/Json.h"
 
 namespace ds_lua
 {
@@ -23,7 +24,7 @@ Script::Script()
     m_isFirstUpdate = true;
 }
 
-bool Script::Initialize(const Config &config)
+bool Script::Initialize(const char *configFile)
 {
     bool result = false;
 
@@ -56,10 +57,17 @@ bool Script::Initialize(const Config &config)
                                         (void *)namePtr.second);
         }
 
-        std::string bootScriptPath;
 
         // Get path to boot script
-        config.GetString("Script.bootScript", &bootScriptPath);
+        JsonObject root;
+        json::parseObject(configFile, &root);
+
+        std::string bootScriptPath;
+
+        if (root["Script"] != nullptr)
+        {
+            json::parseString(root["Script"], &bootScriptPath);
+        }
 
         if (bootScriptPath.empty() == false)
         {
@@ -671,11 +679,13 @@ void Script::SetPause(bool shouldPause)
                           sizeof(ds_msg::PauseEvent), &pauseEvent);
 }
 
-unsigned Script::getUpdateRate(uint32_t screenRefreshRate) const {
-	return screenRefreshRate * 2;
+unsigned Script::getUpdateRate(uint32_t screenRefreshRate) const
+{
+    return screenRefreshRate * 2;
 }
 
-unsigned Script::getMaxConsecutiveUpdates() const {
+unsigned Script::getMaxConsecutiveUpdates() const
+{
     return 1;
 }
 

@@ -12,7 +12,7 @@ class Physics : public ISystem
 public:
     Physics();
 
-    virtual bool Initialize(const Config &config);
+    virtual bool Initialize(const char *configFile);
 
     virtual void Update(float deltaTime);
 

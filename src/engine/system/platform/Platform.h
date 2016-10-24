@@ -22,10 +22,10 @@ public:
      * Initialize the platform class and the method used to get information from
      * the user's hardware.
      *
-     * @param   config  const Config &, configuration loaded by the engine.
-     * @return          bool, TRUE if initialization succeeds, FALSE otherwise.
+     * @param   config   const char *, configuration loaded by the engine.
+     * @return           bool, TRUE if initialization succeeds, FALSE otherwise.
      */
-    virtual bool Initialize(const Config &config);
+    virtual bool Initialize(const char *configFile);
 
     /**
      * Poll the platform for events.

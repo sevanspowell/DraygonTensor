@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <fstream>
 
 #include "engine/Config.h"
 #include "engine/message/Message.h"
@@ -38,10 +39,14 @@ public:
      *
      * If initialization fails, method should return FALSE, otherwise TRUE.
      *
-     * @param   config  const Config &, configuration loaded by engine.
-     * @return          bool, TRUE if initialization succeeds, FALSE otherwise.
+     * @post   Passed config file contents is only valid for the lifetime of the
+     * Initialize call. Do not attempt to hold onto it.
+     *
+     * @param   configFile   const char *, config file contents.
+     * @return               bool, TRUE if initialization succeeds, FALSE
+     * otherwise.
      */
-    virtual bool Initialize(const Config &config) = 0;
+    virtual bool Initialize(const char *configFile) = 0;
 
     /**
      * Update the system over the given timestep.
@@ -105,49 +110,58 @@ public:
 
     /**
      * Gets the rate at which the system should be updated.
-     * If the returned value is 0, the system will be updated as often as possible.
+     * If the returned value is 0, the system will be updated as often as
+     * possible.
      * @param screenRefreshRate The refreshrate of the current monitor.
      * @return The desired update rate
      */
-    virtual unsigned getUpdateRate(uint32_t screenRefreshRate) const {
-    	return 0;
+    virtual unsigned getUpdateRate(uint32_t screenRefreshRate) const
+    {
+        return 0;
     }
 
     /**
-     * Gets the number of consecutive updates, used when system falls behind on updates.
+     * Gets the number of consecutive updates, used when system falls behind on
+     * updates.
      * For example:
      *   Rendering took longer than normal.
-     *   Physics is allowed to catch up by updating multiple times, keeping realtime.
-     * If the returned value is 0, then there is an unlimited number of consecutive updates.
+     *   Physics is allowed to catch up by updating multiple times, keeping
+     * realtime.
+     * If the returned value is 0, then there is an unlimited number of
+     * consecutive updates.
      * @return The max number of consecutive updates
-     * @remarks On systems that may lag behind on updates, this should not return 0. Otherwise an infinite loop may be entered.
+     * @remarks On systems that may lag behind on updates, this should not
+     * return 0. Otherwise an infinite loop may be entered.
      */
-    virtual unsigned getMaxConsecutiveUpdates() const {
-    	return 0;
+    virtual unsigned getMaxConsecutiveUpdates() const
+    {
+        return 0;
     }
 
     /**
      * Getter access to the internal update time accumulation buffer.
      * @return The amount of time the system has "saved up" from updates.
      */
-    float getUpdateAccum() {
-    	return m_accumBuffer;
+    float getUpdateAccum()
+    {
+        return m_accumBuffer;
     }
 
-     /**
-      * Sets the internal update time accumulation buffer.
-      * @param accum The amount of time the system has "saved up" from updates.
-      */
-    void setUpdateAccum(float accum) {
-	    m_accumBuffer = accum;
-    }
-
-   /**
-     * Set the component store this system has access to.
-     *
-     * @param   componentStore   ComponentStore &, structure where all
-     * components are kept.
+    /**
+     * Sets the internal update time accumulation buffer.
+     * @param accum The amount of time the system has "saved up" from updates.
      */
+    void setUpdateAccum(float accum)
+    {
+        m_accumBuffer = accum;
+    }
+
+    /**
+      * Set the component store this system has access to.
+      *
+      * @param   componentStore   ComponentStore &, structure where all
+      * components are kept.
+      */
     void SetComponentStore(ComponentStore *componentStore)
     {
         m_componentStore = componentStore;
@@ -180,7 +194,7 @@ protected:
 
 private:
     /** Contains the accumulated delta time for this system **/
-	float m_accumBuffer;
+    float m_accumBuffer;
 
     /** Pointer to where all components in the engine are stored. */
     ComponentStore *m_componentStore;
