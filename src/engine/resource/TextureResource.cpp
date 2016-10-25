@@ -1,20 +1,45 @@
 #define STB_IMAGE_IMPLEMENTATION
 
+#include <fstream>
 #include <sstream>
 
 #include <stb_image.h>
 
-#include "engine/resource/TextureResource.h"
 #include "engine/Config.h"
 #include "engine/common/Common.h"
+#include "engine/json/Json.h"
+#include "engine/resource/TextureResource.h"
 
 namespace ds
 {
 std::unique_ptr<IResource> TextureResource::CreateFromFile(std::string filePath)
 {
     // Open texture resource file
-    Config config;
-    bool didLoad = config.LoadFile(filePath);
+    std::ifstream texFile(filePath, std::ios::binary | std::ios::ate);
+    bool didLoad = texFile.good();
+
+    // Read file into buffer
+    std::vector<char> texFileBuffer;
+    if (didLoad)
+    {
+        // Reserve memory
+        std::streamsize size = texFile.tellg();
+        texFileBuffer.resize(size);
+
+        // Read file
+        texFile.seekg(0, texFile.beg);
+        if (texFile.read(&texFileBuffer[0], size))
+        {
+            didLoad = true;
+        }
+        else
+        {
+            didLoad = false;
+            texFileBuffer.resize(0);
+        }
+    }
+    // Terminate string
+    texFileBuffer.push_back('\0');
 
     std::unique_ptr<IResource> convertedTexPointer(nullptr);
 
@@ -25,10 +50,16 @@ std::unique_ptr<IResource> TextureResource::CreateFromFile(std::string filePath)
             new TextureResource());
         createdTexResource->SetResourceFilePath(filePath);
 
-        // Get type of the texture
-        std::string textureTypeAsString;
-        if (config.GetString("type", &textureTypeAsString))
+        JsonObject root;
+        json::parseObject(&texFileBuffer[0], &root);
+
+        if (root["type"] != nullptr)
         {
+            // Get type of the texture
+            std::string textureTypeAsString;
+
+            json::parseString(root["type"], &textureTypeAsString);
+
             ds_render::TextureType textureType = ds_render::TextureType::None;
 
             if (textureTypeAsString == "2D")
@@ -46,24 +77,19 @@ std::unique_ptr<IResource> TextureResource::CreateFromFile(std::string filePath)
         // Get containing folder of this texture resource
         std::string folder = ds_com::GetParentDirectory(filePath);
 
-        // Get keys to image paths
-        std::vector<std::string> imageKeys = config.GetObjectKeys("images");
-
-        // Make sure the tex resource has the right number of images
-        createdTexResource->SetNumImages(imageKeys.size());
-
-        // For each image key
-        for (unsigned int i = 0; i < imageKeys.size(); ++i)
+        if (root["images"] != nullptr)
         {
-            // Get path to image in config file
-            std::stringstream imageKey;
-            imageKey << "images"
-                     << "." << imageKeys[i];
+            JsonArray images;
+            json::parseArray(root["images"], &images);
 
-            // Get path to image file
-            std::string imagePath;
-            if (config.GetString(imageKey.str(), &imagePath))
+            // Make sure the tex resource has the right number of images
+            createdTexResource->SetNumImages(images.size());
+
+            for (unsigned int iImage = 0; iImage < images.size(); ++iImage)
             {
+                std::string imagePath;
+                json::parseString(images[iImage], &imagePath);
+
                 // Load image
                 std::string fileExtension = ExtractExtension(imagePath);
                 ImageFormat typeFlag = DetermineTypeFlag(fileExtension);
@@ -78,15 +104,16 @@ std::unique_ptr<IResource> TextureResource::CreateFromFile(std::string filePath)
                     stbi_load(fullImagePath.str().c_str(), &widthInPixels,
                               &heightInPixels, nullptr, 4);
 
-                createdTexResource->SetWidthInPixels(i, widthInPixels);
-                createdTexResource->SetHeightInPixels(i, heightInPixels);
-                createdTexResource->SetComponentFlag(i, ComponentFlag::COMPONENT_FLAG_RGBA);
-                createdTexResource->SetImageFormat(i, typeFlag);
-                createdTexResource->SetTextureContents(i, imageContents);
+                createdTexResource->SetWidthInPixels(iImage, widthInPixels);
+                createdTexResource->SetHeightInPixels(iImage, heightInPixels);
+                createdTexResource->SetComponentFlag(
+                    iImage, ComponentFlag::COMPONENT_FLAG_RGBA);
+                createdTexResource->SetImageFormat(iImage, typeFlag);
+                createdTexResource->SetTextureContents(iImage, imageContents);
             }
-        }
 
-        convertedTexPointer = std::move(createdTexResource);
+            convertedTexPointer = std::move(createdTexResource);
+        }
     }
     else
     {

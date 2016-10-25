@@ -1,10 +1,12 @@
+#include <algorithm>
 #include <cassert>
+#include <fstream>
 #include <iostream>
 #include <sstream>
-#include <algorithm>
 
 #include "engine/Config.h"
 #include "engine/common/Common.h"
+#include "engine/json/Json.h"
 #include "engine/resource/MaterialResource.h"
 #include "math/Matrix4.h"
 #include "math/Vector4.h"
@@ -17,8 +19,31 @@ MaterialResource::CreateFromFile(std::string filePath)
     std::unique_ptr<IResource> materialResource(nullptr);
 
     // Open material resource file
-    Config config;
-    bool didLoad = config.LoadFile(filePath);
+    std::ifstream materialFile(filePath, std::ios::binary | std::ios::ate);
+    bool didLoad = materialFile.good();
+
+    // Read file into buffer
+    std::vector<char> materialFileBuffer;
+    if (didLoad)
+    {
+        // Reserve memory
+        std::streamsize size = materialFile.tellg();
+        materialFileBuffer.resize(size);
+
+        // Read file
+        materialFile.seekg(0, materialFile.beg);
+        if (materialFile.read(&materialFileBuffer[0], size))
+        {
+            didLoad = true;
+        }
+        else
+        {
+            didLoad = false;
+            materialFileBuffer.resize(0);
+        }
+    }
+    // Terminate string
+    materialFileBuffer.push_back('\0');
 
     if (didLoad)
     {
@@ -29,10 +54,15 @@ MaterialResource::CreateFromFile(std::string filePath)
         // Get containing folder of this material resource
         std::string folder = ds_com::GetParentDirectory(filePath);
 
-        // Get path to shader to use
-        std::string relShaderPath;
-        if (config.GetString("shader", &relShaderPath))
+        JsonObject root;
+        json::parseObject(&materialFileBuffer[0], &root);
+
+        if (root["shader"] != nullptr)
         {
+            // Get path to shader to use
+            std::string relShaderPath;
+            json::parseString(root["shader"], &relShaderPath);
+
             std::stringstream fullShaderPath;
             fullShaderPath << folder << relShaderPath;
 
@@ -46,201 +76,234 @@ MaterialResource::CreateFromFile(std::string filePath)
                       << filePath << std::endl;
         }
 
-        // Get path to texture samplers to use
-        std::vector<std::string> textureKeys = config.GetObjectKeys("textures");
-
-        // For each texture sampler, grab texture sampler details and add it
-        // to the material resource
-        for (auto key : textureKeys)
+        if (root["textures"] != nullptr)
         {
-            // Get path to sampler
-            std::stringstream samplerKey;
-            samplerKey << "textures"
-                       << "." << key;
+            JsonArray textures;
+            json::parseArray(root["textures"], &textures);
 
-            // Key to texture field in config file
-            std::stringstream textureFieldKey;
-            textureFieldKey << samplerKey.str() << "."
-                            << "texture";
-
-            // Get path to texture resource file
-            std::string textureResourcePath;
-
-            if (config.GetString(textureFieldKey.str(), &textureResourcePath))
+            for (unsigned int iTex = 0; iTex < textures.size(); ++iTex)
             {
-                std::stringstream fullTextureResourcePath;
-                fullTextureResourcePath << folder << textureResourcePath;
+                JsonObject texture;
+                json::parseObject(textures[iTex], &texture);
 
-                // Create new texture sampler
-                static_cast<MaterialResource *>(materialResource.get())
-                    ->AddTextureSampler(key, fullTextureResourcePath.str());
-            }
-        }
-
-        // Get and load shader parameters
-        std::vector<std::string> shaderParameters =
-            config.GetObjectKeys("parameters");
-
-        // For each parameter
-        for (auto parameterName : shaderParameters)
-        {
-            ds_render::ShaderParameter parameter;
-
-            // Did the parameter load correctly?
-            bool loadedCorrectly = false;
-
-            // Setup parameter name
-            parameter.SetName(parameterName);
-
-            std::stringstream parameterKey;
-            parameterKey << "parameters"
-                         << "." << parameterName;
-
-            // Get parameter data type -- should only be one key
-            std::vector<std::string> dataType =
-                config.GetObjectKeys(parameterKey.str());
-            if (dataType.size() > 0)
-            {
-                // Type of the shader parameter: float, int, mat4, vec3,
-                // vec4
-                std::string type = dataType[0];
-
-                // Get key to data
-                std::stringstream dataKey;
-                dataKey << parameterKey.str() << "." << type;
-
-                if (type == "float")
+                if (texture["name"] != nullptr && texture["texture"] != nullptr)
                 {
-                    // Set appropriate type
-                    parameter.SetDataType(
-                        ds_render::ShaderParameter::ShaderParameterType::Float);
+                    // Get name of texture in shader
+                    std::string texName;
+                    // Get path to texture resource file
+                    std::string textureResourcePath;
 
-                    // Get parameter data
-                    float data;
-                    if (config.GetFloat(dataKey.str(), &data))
-                    {
-                        parameter.SetData(sizeof(float), &data);
-                        loadedCorrectly = true;
-                    }
-                }
-                else if (type == "int")
-                {
-                    // Set appropriate type
-                    parameter.SetDataType(
-                        ds_render::ShaderParameter::ShaderParameterType::Int);
+                    json::parseString(texture["name"], &texName);
+                    json::parseString(texture["texture"], &textureResourcePath);
 
-                    // Get parameter data
-                    int data;
-                    if (config.GetInt(dataKey.str(), &data))
-                    {
-                        parameter.SetData(sizeof(int), &data);
-                        loadedCorrectly = true;
-                    }
-                }
-                else if (type == "vec3")
-                {
-                    // Set appropriate type
-                    parameter.SetDataType(ds_render::ShaderParameter::
-                                              ShaderParameterType::Vector3);
+                    std::stringstream fullTextureResourcePath;
+                    fullTextureResourcePath << folder << textureResourcePath;
 
-                    // Get parameter data
-                    std::vector<float> vec3;
-                    config.GetFloatArray(dataKey.str(), &vec3);
-
-                    if (vec3.size() == 3)
-                    {
-                        parameter.SetData(sizeof(float) * 3, &vec3[0]);
-                        loadedCorrectly = true;
-                        std::cout << parameter.GetName()
-                                  << " is a vec3 with value: "
-                                  << *((ds_math::Vector3 *)parameter.GetData())
-                                  << std::endl;
-                    }
-                    else
-                    {
-                        std::cerr << "MaterialResource::CreateFromFile: vec3 "
-                                     "'"
-                                  << dataKey.str() << "' must be of size 3! "
-                                  << "In material resource: " << filePath
-                                  << std::endl;
-                    }
-                }
-                else if (type == "vec4")
-                {
-                    // Set appropriate type
-                    parameter.SetDataType(ds_render::ShaderParameter::
-                                              ShaderParameterType::Vector4);
-
-                    // Get parameter data
-                    std::vector<float> vec4;
-                    config.GetFloatArray(dataKey.str(), &vec4);
-
-                    if (vec4.size() == 4)
-                    {
-                        parameter.SetData(sizeof(float) * 4, &vec4[0]);
-                        loadedCorrectly = true;
-                        std::cout << parameter.GetName()
-                                  << " is a vec4 with value: "
-                                  << *((ds_math::Vector4 *)parameter.GetData())
-                                  << std::endl;
-                    }
-                    else
-                    {
-                        std::cerr << "MaterialResource::CreateFromFile: vec4 "
-                                     "'"
-                                  << dataKey.str() << "' must be of size 4! "
-                                  << "In material resource: " << filePath
-                                  << std::endl;
-                    }
-                }
-                else if (type == "mat4")
-                {
-                    // Set appropriate type
-                    parameter.SetDataType(ds_render::ShaderParameter::
-                                              ShaderParameterType::Matrix4);
-
-                    // Get parameter data
-                    std::vector<float> mat4;
-                    config.GetFloatArray(dataKey.str(), &mat4);
-
-                    if (mat4.size() == 16)
-                    {
-                        parameter.SetData(sizeof(float) * 16, &mat4[0]);
-                        loadedCorrectly = true;
-                        std::cout << parameter.GetName()
-                                  << " is a mat4 with value: "
-                                  << *((ds_math::Matrix4 *)parameter.GetData())
-                                  << std::endl;
-                    }
-                    else
-                    {
-                        std::cerr << "MaterialResource::CreateFromFile: mat4 "
-                                     "'"
-                                  << dataKey.str() << "' must be of size 16! "
-                                  << "In material resource: " << filePath
-                                  << std::endl;
-                    }
-                }
-
-                if (loadedCorrectly)
-                {
-                    // Add parameter to material resource
+                    // Create new texture sampler
                     static_cast<MaterialResource *>(materialResource.get())
-                        ->AddMaterialParameter(parameter);
+                        ->AddTextureSampler(texName,
+                                            fullTextureResourcePath.str());
                 }
                 else
                 {
-                    std::cerr << "Material parameter '" << parameterName
-                              << "' failed to load from file correctly."
-                              << std::endl;
+                    std::cerr
+                        << "MaterialResource::CreateFromFile: could not find "
+                           "'name' or 'texture' field for array element "
+                        << iTex << " in 'textures' resource: " << filePath << std::endl;
                 }
             }
-            else
+        }
+        else
+        {
+            std::cerr << "MaterialResource::CreateFromFile: could not find "
+                         "'textures' field in material resource: "
+                      << filePath << std::endl;
+        }
+
+        if (root["parameters"] != nullptr)
+        {
+            JsonArray parameters;
+            json::parseArray(root["parameters"], &parameters);
+
+            for (unsigned int iParam = 0; iParam < parameters.size(); ++iParam)
             {
-                std::cout << "Material parameter '" << parameterName
-                          << "' in file: " << filePath << " needs a type."
-                          << std::endl;
+                JsonObject parameter;
+                json::parseObject(parameters[iParam], &parameter);
+
+                if (parameter["name"] != nullptr &&
+                    parameter["type"] != nullptr &&
+                    parameter["value"] != nullptr)
+                {
+                    std::string paramName;
+                    std::string paramType;
+                    json::parseString(parameter["name"], &paramName);
+                    json::parseString(parameter["type"], &paramType);
+
+                    ds_render::ShaderParameter param;
+
+                    // Did the parameter load correctly?
+                    bool loadedCorrectly = false;
+
+                    // Setup parameter name
+                    param.SetName(paramName);
+
+                    if (paramType == "float")
+                    {
+                        // Set appropriate type
+                        param.SetDataType(ds_render::ShaderParameter::
+                                              ShaderParameterType::Float);
+
+                        float paramValue;
+                        paramValue = json::parseFloat(parameter["value"]);
+
+                        param.SetData(sizeof(float), &paramValue);
+                        loadedCorrectly = true;
+                    }
+                    else if (paramType == "int")
+                    {
+                        // Set appropriate type
+                        param.SetDataType(ds_render::ShaderParameter::
+                                              ShaderParameterType::Int);
+
+                        int paramValue;
+                        paramValue = json::parseInt(parameter["value"]);
+                        param.SetData(sizeof(int), &paramValue);
+                        loadedCorrectly = true;
+                    }
+                    else if (paramType == "vec3")
+                    {
+                        // Set appropriate type
+                        param.SetDataType(ds_render::ShaderParameter::
+                                              ShaderParameterType::Vector3);
+
+                        // Get parameter data
+                        JsonArray vector;
+                        json::parseArray(parameter["value"], &vector);
+
+                        if (vector.size() == 3)
+                        {
+                            std::vector<float> paramValue;
+                            paramValue.push_back(json::parseFloat(vector[0]));
+                            paramValue.push_back(json::parseFloat(vector[1]));
+                            paramValue.push_back(json::parseFloat(vector[2]));
+
+                            param.SetData(sizeof(float) * 3, &paramValue[0]);
+                            loadedCorrectly = true;
+                            std::cout << param.GetName()
+                                      << " is a vec3 with value: "
+                                      << *((ds_math::Vector3 *)param.GetData())
+                                      << std::endl;
+                        }
+                        else
+                        {
+                            std::cerr << "MaterialResource::CreateFromFile: "
+                                         "vec3 parameteter"
+                                         "'"
+                                      << paramName << "' must be of size 3! "
+                                      << "In material resource: " << filePath
+                                      << std::endl;
+                        }
+                    }
+                    else if (paramType == "vec4")
+                    {
+                        // Set appropriate type
+                        param.SetDataType(ds_render::ShaderParameter::
+                                              ShaderParameterType::Vector4);
+
+                        // Get parameter data
+                        JsonArray vector;
+                        json::parseArray(parameter["value"], &vector);
+
+                        if (vector.size() == 4)
+                        {
+                            std::vector<float> paramValue;
+                            paramValue.push_back(json::parseFloat(vector[0]));
+                            paramValue.push_back(json::parseFloat(vector[1]));
+                            paramValue.push_back(json::parseFloat(vector[2]));
+                            paramValue.push_back(json::parseFloat(vector[3]));
+
+                            param.SetData(sizeof(float) * 4, &paramValue[0]);
+                            loadedCorrectly = true;
+                            std::cout << param.GetName()
+                                      << " is a vec4 with value: "
+                                      << *((ds_math::Vector4 *)param.GetData())
+                                      << std::endl;
+                        }
+                        else
+                        {
+                            std::cerr << "MaterialResource::CreateFromFile: "
+                                         "vec4 parameteter"
+                                         "'"
+                                      << paramName << "' must be of size 4! "
+                                      << "In material resource: " << filePath
+                                      << std::endl;
+                        }
+                    }
+                    else if (paramType == "mat4")
+                    {
+                        // Set appropriate type
+                        param.SetDataType(ds_render::ShaderParameter::
+                                              ShaderParameterType::Matrix4);
+
+                        // Get parameter data
+                        JsonArray matrix;
+                        json::parseArray(parameter["value"], &matrix);
+
+                        if (matrix.size() == 16)
+                        {
+                            std::vector<float> mat4;
+                            for (int mElem = 0; mElem < 16; ++mElem)
+                            {
+                                mat4.push_back(json::parseFloat(matrix[mElem]));
+                            }
+
+                            param.SetData(sizeof(float) * 16, &mat4[0]);
+                            loadedCorrectly = true;
+                            std::cout << param.GetName()
+                                      << " is a mat4 with value: "
+                                      << *((ds_math::Matrix4 *)param.GetData())
+                                      << std::endl;
+                        }
+                        else
+                        {
+                            std::cerr
+                                << "MaterialResource::CreateFromFile: mat4 "
+                                   "'"
+                                << paramName << "' must be of size 16! "
+                                << "In material resource: " << filePath
+                                << std::endl;
+                        }
+                    }
+
+                    if (loadedCorrectly)
+                    {
+                        // Add parameter to material resource
+                        static_cast<MaterialResource *>(materialResource.get())
+                            ->AddMaterialParameter(param);
+                    }
+                    else
+                    {
+                        std::cerr << "Material parameter '" << paramName
+                                  << "' failed to load from file correctly."
+                                  << std::endl;
+                    }
+                }
+                else
+                {
+                    std::cerr
+                        << "MaterialResource::CreateFromFile: shader parameter "
+                           "in 'parameters' field of: "
+                        << filePath
+                        << " is missing either 'name', 'type' or 'value' field"
+                        << std::endl;
+                }
             }
+        }
+        else
+        {
+            std::cerr << "MaterialResource::CreateFromFile: could not find "
+                         "'parameters' field in material resource: "
+                      << filePath << std::endl;
         }
     }
     else

@@ -1,11 +1,12 @@
 #include <cassert>
 #include <fstream>
-#include <sstream>
 #include <iostream>
+#include <sstream>
 
 #include "engine/Config.h"
 #include "engine/common/Common.h"
 #include "engine/resource/ShaderResource.h"
+#include "engine/json/Json.h"
 
 namespace ds
 {
@@ -14,8 +15,31 @@ std::unique_ptr<IResource> ShaderResource::CreateFromFile(std::string filePath)
     std::unique_ptr<IResource> shaderResource(nullptr);
 
     // Open shader resource file
-    Config config;
-    bool didLoad = config.LoadFile(filePath);
+    std::ifstream shaderFile(filePath, std::ios::binary | std::ios::ate);
+    bool didLoad = shaderFile.good();
+
+    // Read file into buffer
+    std::vector<char> shaderFileBuffer;
+    if (didLoad)
+    {
+        // Reserve memory
+        std::streamsize size = shaderFile.tellg();
+        shaderFileBuffer.resize(size);
+
+        // Read file
+        shaderFile.seekg(0, shaderFile.beg);
+        if (shaderFile.read(&shaderFileBuffer[0], size))
+        {
+            didLoad = true;
+        }
+        else
+        {
+            didLoad = false;
+            shaderFileBuffer.resize(0);
+        }
+    }
+    // Terminate string
+    shaderFileBuffer.push_back('\0');
 
     if (didLoad)
     {
@@ -23,72 +47,92 @@ std::unique_ptr<IResource> ShaderResource::CreateFromFile(std::string filePath)
         shaderResource = std::unique_ptr<IResource>(new ShaderResource());
         shaderResource->SetResourceFilePath(filePath);
 
-        // Get shader source keys
-        std::vector<std::string> sourceKeys = config.GetObjectKeys("sources");
+        JsonObject root;
+        json::parseObject(&shaderFileBuffer[0], &root);
 
-        // For each key
-        for (auto key : sourceKeys)
+        if (root["sources"] != nullptr)
         {
-            // Get source file path
-            std::stringstream ss;
-            ss << "sources"
-               << "." << key;
-            std::string relPath;
-            if (config.GetString(ss.str(), &relPath))
+            JsonArray sources;
+            json::parseArray(root["sources"], &sources);
+
+            for (int iSource = 0; iSource < sources.size(); ++iSource)
             {
-                // Construct full path
-                std::stringstream fullPath;
-                std::string folder = ds_com::GetParentDirectory(filePath);
-                fullPath << folder << relPath;
+                JsonObject source;
+                json::parseObject(sources[iSource], &source);
 
-                // Open source file
-                std::ifstream ifs;
-                ifs.open(fullPath.str(), std::fstream::in);
-
-                // If opened file successfully
-                if (!ifs.fail())
+                if (source["type"] != nullptr && source["path"] != nullptr)
                 {
-                    // Get source as string
-                    std::string source;
-                    ifs.seekg(0, std::ios::end);
-                    source.resize(ifs.tellg());
-                    ifs.seekg(0, std::ios::beg);
-                    ifs.read(&source[0], source.size());
-                    ifs.close();
+                    std::string type;
+                    std::string path;
 
-                    // Translate key into shader source type
-                    // Make sure key is valid
-                    if (key == "Vertex" || key == "Fragment")
+                    json::parseString(source["type"], &type);
+                    json::parseString(source["path"], &path);
+
+                    // Construct full path
+                    std::stringstream fullPath;
+                    std::string folder = ds_com::GetParentDirectory(filePath);
+                    fullPath << folder << path;
+
+                    // Open source file
+                    std::ifstream ifs;
+                    ifs.open(fullPath.str(), std::fstream::in);
+                    // If opened file successfully
+                    if (!ifs.fail())
                     {
-                        // Get shader type
-                        ds_render::ShaderType type =
-                            ds_render::ShaderType::VertexShader;
+                        // Get source as string
+                        std::string source;
+                        ifs.seekg(0, std::ios::end);
+                        source.resize(ifs.tellg());
+                        ifs.seekg(0, std::ios::beg);
+                        ifs.read(&source[0], source.size());
+                        ifs.close();
 
-                        if (key == "Vertex")
+                        // Translate key into shader source type
+                        // Make sure key is valid
+                        if (type == "Vertex" || type == "Fragment")
                         {
-                            type = ds_render::ShaderType::VertexShader;
-                        }
-                        if (key == "Fragment")
-                        {
-                            type = ds_render::ShaderType::FragmentShader;
-                        }
+                            // Get shader type
+                            ds_render::ShaderType shaderType =
+                                ds_render::ShaderType::VertexShader;
 
-                        // Add to list of sources
-                        static_cast<ShaderResource *>(shaderResource.get())
-                            ->AddSource(type, source);
+                            if (type == "Vertex")
+                            {
+                                shaderType =
+                                    ds_render::ShaderType::VertexShader;
+                            }
+                            if (type == "Fragment")
+                            {
+                                shaderType =
+                                    ds_render::ShaderType::FragmentShader;
+                            }
+
+                            // Add to list of sources
+                            static_cast<ShaderResource *>(shaderResource.get())
+                                ->AddSource(shaderType, source);
+                        }
+                        else
+                        {
+                            std::cerr
+                                << "ShaderResource::CreateFromFile: invalid "
+                                   "shader type '"
+                                << type << "' given." << std::endl;
+                        }
                     }
                     else
                     {
-                        std::cerr << "ShaderResource::CreateFromFile: invalid "
-                                     "shader key '"
-                                  << key << "' given." << std::endl;
+                        std::cerr
+                            << "ShaderResource::CreateFromFile: could not "
+                               "open shader source: "
+                            << fullPath.str() << std::endl;
                     }
                 }
                 else
                 {
-                    std::cerr << "ShaderResource::CreateFromFile: could not "
-                                 "open shader source: "
-                              << fullPath.str() << std::endl;
+                    std::cerr
+                        << "ShaderResource::CreateFromFile: could not find "
+                           "'type' or 'path' field for array element "
+                        << iSource << " in 'sources' resource: " << filePath
+                        << std::endl;
                 }
             }
         }
