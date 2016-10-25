@@ -120,32 +120,6 @@ void Script::Update(float deltaTime)
 
     ProcessEvents(&m_messagesReceived);
 
-    // For each script component
-    // for (unsigned int i = 0; i < m_scriptManager->GetNumInstances(); ++i)
-    // {
-    //     Instance script = Instance::MakeInstance(i);
-
-    //     // Initialize script component
-    //     if (m_scriptManager->IsInitialized(script) == false)
-    //     {
-    //         std::stringstream fullScriptPath;
-    //         fullScriptPath << "../assets/"
-    //                        << m_scriptManager->GetScriptPath(script);
-    //         if (m_lua.ExecuteFile(fullScriptPath.str().c_str()))
-    //         {
-    //             // Get name of class
-    //             m_lua.CallLuaFunction(
-    //                 "chair.new", 1,
-    //                 ds_lua::LuaEnvironment::ArgumentType::ARGUMENT_FLOAT,
-    //                 (float)m_scriptManager->GetEntityForInstance(script).id);
-
-    //             entity = (ds::Entity *)luaL_checkudata(L, 1, "Entity");
-    //         }
-
-    //         m_scriptManager->SetInitialized(script, true);
-    //     }
-    // }
-
     if (m_bootScriptLoaded)
     {
         m_lua.CallLuaFunction(
