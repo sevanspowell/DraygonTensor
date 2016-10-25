@@ -2,6 +2,7 @@
 #include <sstream>
 
 #include "engine/common/HandleCommon.h"
+#include "engine/json/Json.h"
 #include "engine/message/MessageHelper.h"
 #include "engine/resource/MaterialResource.h"
 #include "engine/resource/ShaderResource.h"
@@ -79,8 +80,7 @@ bool Render::TextureManager::GetTextureForResourceHandle(
     // Attempt to find texture for the given resource handle
     std::vector<ManagedTexture>::const_iterator it =
         std::find_if(m_textures.begin(), m_textures.end(),
-                     [&](const ManagedTexture &managedTexture)
-                     {
+                     [&](const ManagedTexture &managedTexture) {
                          return managedTexture.texture.textureResourceHandle ==
                                 textureResourceHandle;
                      });
@@ -182,8 +182,7 @@ bool Render::MaterialManager::GetMaterialForResourceHandle(
     // Attempt to find material for the given resource handle
     std::vector<ManagedMaterial>::const_iterator it = std::find_if(
         m_materials.begin(), m_materials.end(),
-        [&](const ManagedMaterial &managedMaterial)
-        {
+        [&](const ManagedMaterial &managedMaterial) {
             return managedMaterial.material.GetMaterialResourceHandle() ==
                    materialResourceHandle;
         });
@@ -317,12 +316,14 @@ ScriptBindingSet Render::GetScriptBindings() const
     return ds_lua::LoadRenderScriptBindings();
 }
 
-unsigned Render::getUpdateRate(uint32_t screenRefreshRate) const {
-	return screenRefreshRate + 1;
+unsigned Render::getUpdateRate(uint32_t screenRefreshRate) const
+{
+    return screenRefreshRate + 1;
 }
 
-unsigned Render::getMaxConsecutiveUpdates() const {
-	return 1;
+unsigned Render::getMaxConsecutiveUpdates() const
+{
+    return 1;
 }
 
 void Render::SetSkyboxMaterial(const std::string &skyboxMaterial)
@@ -613,357 +614,181 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
             ds_msg::CreateComponent createComponentMsg;
             (*messages) >> createComponentMsg;
 
+            // Get component type
+            std::string componentType = StringIntern::Instance().GetString(
+                createComponentMsg.componentType);
             // Load up component data for component
+            std::string componentString = StringIntern::Instance().GetString(
+                createComponentMsg.componentData);
+
+            // For transform component only
             Config componentData;
             if (componentData.LoadMemory(StringIntern::Instance().GetString(
-                    createComponentMsg.componentData)))
+                    createComponentMsg.componentData)) == false)
             {
-                // Get component type
-                std::string componentType = StringIntern::Instance().GetString(
-                    createComponentMsg.componentType);
-                // Create render component
-                if (componentType == "renderComponent")
-                {
-                    // Check if render component already created for this entity
-                    Instance render =
-                        m_renderComponentManager->GetInstanceForEntity(
-                            createComponentMsg.entity);
+                break;
+            }
 
-                    if (!render.IsValid())
+            JsonObject root;
+            json::parseObject(componentString.c_str(), &root);
+            if (componentType == "renderComponent")
+            {
+                // Check if render component already created for this entity
+                Instance render =
+                    m_renderComponentManager->GetInstanceForEntity(
+                        createComponentMsg.entity);
+
+                if (!render.IsValid())
+                {
+                    if (root["mesh"] != nullptr && root["materials"] != nullptr)
                     {
                         std::string meshName;
-                        std::string materialName;
-                        if (componentData.GetString("mesh", &meshName))
+                        JsonArray materials;
+
+                        json::parseString(root["mesh"], &meshName);
+                        json::parseArray(root["materials"], &materials);
+
+                        std::stringstream meshResourcePath;
+                        meshResourcePath << "../assets/" << meshName;
+
+                        ds_render::Mesh mesh =
+                            CreateMeshFromMeshResource(meshResourcePath.str());
+
+                        if (mesh.GetNumSubMeshes() == materials.size())
                         {
-                            // Get mesh resource path
-                            std::stringstream meshResourcePath;
-                            meshResourcePath << "../assets/" << meshName;
-
-                            // Get material file paths
-                            std::vector<std::string> materialKeys =
-                                componentData.GetObjectKeys("materials");
-
-                            // Create Mesh
-                            ds_render::Mesh mesh = CreateMeshFromMeshResource(
-                                meshResourcePath.str());
-
-                            // Only continue if the number of submeshes matches
-                            // the number of materials provided
-                            if (mesh.GetNumSubMeshes() == materialKeys.size())
+                            for (unsigned int iMaterial = 0;
+                                 iMaterial < materials.size(); ++iMaterial)
                             {
-                                // For each material file path
-                                for (unsigned int iMaterial = 0;
-                                     iMaterial < materialKeys.size();
-                                     ++iMaterial)
+                                std::string materialName;
+                                json::parseString(materials[iMaterial],
+                                                  &materialName);
+
+                                // Load material resource
+                                // Get material resource path
+                                std::stringstream materialResourcePath;
+                                materialResourcePath << "../assets/"
+                                                     << materialName;
+
+                                // Get material resource handle
+                                MaterialResourceHandle materialResourceHandle;
+
+                                // If loaded material resource successfully
+                                if (m_materialResourceManager
+                                        .LoadMaterialResourceFromFile(
+                                            materialResourcePath.str(),
+                                            &materialResourceHandle) == true)
                                 {
-                                    // Load material resource
-                                    // Get material resource path
-                                    std::stringstream materialResourcePath;
-                                    materialResourcePath
-                                        << "../assets/"
-                                        << materialKeys[iMaterial];
-
-                                    // Get material resource handle
-                                    MaterialResourceHandle
-                                        materialResourceHandle;
-
-                                    // If loaded material resource successfully
-                                    if (m_materialResourceManager
-                                            .LoadMaterialResourceFromFile(
-                                                materialResourcePath.str(),
-                                                &materialResourceHandle) ==
-                                        true)
+                                    // Get material handle
+                                    ds_render::MaterialHandle materialHandle;
+                                    if (m_materialManager
+                                            .GetMaterialForResourceHandle(
+                                                materialResourceHandle,
+                                                &materialHandle) == true)
                                     {
-                                        // Get material handle
-                                        ds_render::MaterialHandle
-                                            materialHandle;
-                                        if (m_materialManager
-                                                .GetMaterialForResourceHandle(
-                                                    materialResourceHandle,
-                                                    &materialHandle) == true)
-                                        {
-                                            // Each material maps to one
-                                            // submesh,
-                                            // get that submesh and set material
-                                            ds_render::SubMesh subMesh =
-                                                mesh.GetSubMesh(iMaterial);
-                                            subMesh.materialHandle =
-                                                materialHandle;
+                                        // Each material maps to one
+                                        // submesh, get that submesh and set
+                                        // material
+                                        ds_render::SubMesh subMesh =
+                                            mesh.GetSubMesh(iMaterial);
+                                        subMesh.materialHandle = materialHandle;
 
-                                            mesh.SetSubMesh(iMaterial, subMesh);
-                                        }
+                                        mesh.SetSubMesh(iMaterial, subMesh);
                                     }
                                 }
+                            }
 
-                                Instance i = m_renderComponentManager
-                                                 ->CreateComponentForEntity(
-                                                     createComponentMsg.entity);
-                                m_renderComponentManager->SetMesh(i, mesh);
-                            }
-                            else
-                            {
-                                std::cerr << "Number of materials specified in "
-                                          << meshResourcePath.str()
-                                          << " not equal to number of "
-                                             "submeshes in mesh."
-                                          << std::endl;
-                            }
+                            Instance i = m_renderComponentManager
+                                             ->CreateComponentForEntity(
+                                                 createComponentMsg.entity);
+                            m_renderComponentManager->SetMesh(i, mesh);
                         }
-                    }
-                }
-                // Create transform component
-                else if (componentType == "transformComponent")
-                {
-                    // Check if transform component already created for this
-                    // entity
-                    Instance transform =
-                        m_transformComponentManager->GetInstanceForEntity(
-                            createComponentMsg.entity);
-
-                    // Only create component if one has not already been created
-                    if (!transform.IsValid())
-                    {
-                        TransformComponentManager::
-                            CreateComponentForEntityFromConfig(
-                                m_transformComponentManager,
-                                createComponentMsg.entity, componentData);
-                    }
-                }
-                // Create camera component
-                else if (componentType == "cameraComponent")
-                {
-                    // Check if camera component already created for this
-                    // entity
-                    Instance camera =
-                        m_cameraComponentManager->GetInstanceForEntity(
-                            createComponentMsg.entity);
-
-                    // Only create component if one has not already been created
-                    if (!camera.IsValid())
-                    {
-                        std::string projectionType;
-                        float verticalFov = 0.0f;
-                        float nearClip = 0.0f;
-                        float farClip = 0.0f;
-
-                        if (componentData.GetString("projection",
-                                                    &projectionType) &&
-                            componentData.GetFloat("vertical_fov",
-                                                   &verticalFov) &&
-                            componentData.GetFloat("near_clip", &nearClip) &&
-                            componentData.GetFloat("far_clip", &farClip))
+                        else
                         {
-                            // ds_math::Matrix4 projectionMatrix;
-
-                            // if (projectionType == "perspective")
-                            // {
-                            //     projectionMatrix =
-                            // ds_math::Matrix4::CreatePerspectiveFieldOfView(
-                            //             verticalFov, m_windowWidth /
-                            //             m_windowHeight,
-                            //             nearClip, farClip);
-                            // }
-                            // else if (projectionType == "orthographic")
-                            // {
-                            //     projectionMatrix =
-                            //         ds_math::Matrix4::CreateOrthographic(
-                            //             m_windowWidth, m_windowHeight,
-                            // nearClip,
-                            //             farClip);
-                            // }
-
-                            Entity e = createComponentMsg.entity;
-                            Instance i = m_cameraComponentManager
-                                             ->CreateComponentForEntity(e);
-                            m_cameraComponentManager->SetVerticalFieldOfView(
-                                i, verticalFov);
-                            m_cameraComponentManager->SetAspectRatio(
-                                i, m_windowWidth / (float)m_windowHeight);
-                            m_cameraComponentManager->SetNearClippingPlane(
-                                i, nearClip);
-                            m_cameraComponentManager->SetFarClippingPlane(
-                                i, farClip);
-
-                            // Is any camera currently active?
-                            if (m_cameraActive == false)
-                            {
-                                // If no camera is current, set this camera to
-                                // be
-                                // current camera
-                                m_activeCameraEntity = e;
-                                m_cameraActive = true;
-                            }
+                            std::cerr
+                                << "Number of materials specified in "
+                                << meshResourcePath.str()
+                                << " not equal to number of submeshes in mesh."
+                                << std::endl;
                         }
                     }
                 }
-                else if (componentType == "terrainComponent")
+            }
+            // Create transform component
+            else if (componentType == "transformComponent")
+            {
+                // Check if transform component already created for this
+                // entity
+                Instance transform =
+                    m_transformComponentManager->GetInstanceForEntity(
+                        createComponentMsg.entity);
+
+                // Only create component if one has not already been created
+                if (!transform.IsValid())
                 {
-                    // std::string heightMapName;
-                    // std::string materialName;
-                    // float heightScale;
+                    TransformComponentManager::
+                        CreateComponentForEntityFromConfig(
+                            m_transformComponentManager,
+                            createComponentMsg.entity, componentData);
+                }
+            }
+            // Create camera component
+            else if (componentType == "cameraComponent")
+            {
+                // Check if camera component already created for this
+                // entity
+                Instance camera =
+                    m_cameraComponentManager->GetInstanceForEntity(
+                        createComponentMsg.entity);
 
-                    // if (componentData.GetString("heightmap", &heightMapName)
-                    // &&
-                    //     componentData.GetString("material", &materialName) &&
-                    //     componentData.GetFloat("heightScale", &heightScale))
-                    // {
-                    //     std::stringstream heightMapPath;
-                    //     heightMapPath << "../assets/" << heightMapName;
+                // Only create component if one has not already been created
+                if (!camera.IsValid())
+                {
+                    std::string projectionType;
+                    float verticalFov = 1.04719;
+                    float nearClip = 0.1f;
+                    float farClip = 700.0f;
 
-                    //     std::unique_ptr<TerrainResource> terrainResource =
-                    //         m_factory.CreateResource<TerrainResource>(
-                    //             heightMapPath.str());
-                    //     terrainResource->SetHeightScale(heightScale);
+                    Entity e = createComponentMsg.entity;
+                    Instance i =
+                        m_cameraComponentManager->CreateComponentForEntity(e);
+                    m_cameraComponentManager->SetVerticalFieldOfView(
+                        i, verticalFov);
+                    m_cameraComponentManager->SetAspectRatio(
+                        i, m_windowWidth / (float)m_windowHeight);
+                    m_cameraComponentManager->SetNearClippingPlane(i, nearClip);
+                    m_cameraComponentManager->SetFarClippingPlane(i, farClip);
 
-                    //     // above function does this
-                    //     // std::unique_ptr<MaterialResource> materialResource
-                    //     =
-                    //         //
-                    //         m_factory.CreateResource<materialResource>(
-                    //             materialResourcePath.str());
+                    // Is any camera currently active?
+                    if (m_cameraActive == false)
+                    {
+                        // If no camera is current, set this camera to be
+                        // current camera
+                        m_activeCameraEntity = e;
+                        m_cameraActive = true;
+                    }
 
-                    //     // Create vertex buffer data store
-
-                    //     ds_com::StreamBuffer vertexBufferStore;
-
-                    //     const std::vector<ds_math::Vector3> positions =
-                    //         terrainResource->GetVerticesVector();
-
-                    //     for (const ds_math::Vector3 &position : positions)
-                    //     {
-                    //         vertexBufferStore << position;
-                    //     }
-
-                    //     // Describe position data
-                    //     ds_render::VertexBufferDescription::AttributeDescription
-                    //         positionAttributeDescriptor;
-
-                    //     positionAttributeDescriptor.attributeType =
-                    //         ds_render::AttributeType::Position;
-
-                    //     positionAttributeDescriptor.attributeDataType =
-                    //         ds_render::RenderDataType::Float;
-
-                    //     positionAttributeDescriptor.numElementsPerAttribute =
-                    //     3;
-                    //     positionAttributeDescriptor.stride = 0;
-                    //     positionAttributeDescriptor.offset = 0;
-                    //     positionAttributeDescriptor.normalized = false;
-
-                    //     // // Create texCoord data
-
-                    //     // // Get texture coordinate data
-
-                    //     // meshresource change to terrainresource
-
-                    //     const std::vector<
-                    //         struct TerrainResource::TextureCoordinates>
-                    //         textureCoordinates =
-                    //             terrainResource->GetTextureCoordinatesVector();
-
-                    //     for (const TerrainResource::TextureCoordinates
-                    //              &texCoord : textureCoordinates)
-                    //     {
-                    //         vertexBufferStore << texCoord.u;
-
-                    //         // Flip y texcoord
-                    //         vertexBufferStore
-                    //             << 1.0f - texCoord.v; // removed 1 -
-                    //         texcoord.v
-                    //     }
-
-                    //     // Describe texCoord data
-                    //     ds_render::VertexBufferDescription::AttributeDescription
-                    //         texCoordAttributeDescriptor;
-
-                    //     texCoordAttributeDescriptor.attributeType =
-                    //         ds_render::AttributeType::TextureCoordinate;
-
-                    //     texCoordAttributeDescriptor.attributeDataType =
-                    //         ds_render::RenderDataType::Float;
-
-                    //     texCoordAttributeDescriptor.numElementsPerAttribute =
-                    //     2;
-
-                    //     texCoordAttributeDescriptor.stride = 0;
-
-                    //     texCoordAttributeDescriptor.offset =
-                    //         terrainResource->GetVerticesCount() *
-                    //         sizeof(ds_math::Vector3);
-
-                    //     texCoordAttributeDescriptor.normalized = false;
-
-                    //     // Add position and texcoord attribute descriptions
-                    //     to
-
-                    //         // vertex buffer
-                    //         // descriptor
-
-                    //         ds_render::VertexBufferDescription
-                    //             vertexBufferDescriptor;
-
-                    //     vertexBufferDescriptor.AddAttributeDescription(
-                    //         positionAttributeDescriptor);
-
-                    //     // for texture
-                    //     vertexBufferDescriptor.AddAttributeDescription(
-                    //         texCoordAttributeDescriptor);
-
-                    //     // Create vertex buffer
-
-                    //     ds_render::VertexBufferHandle vb =
-                    //         m_renderer->CreateVertexBuffer(
-                    //             ds_render::BufferUsageType::Static,
-                    //             vertexBufferDescriptor,
-                    //             vertexBufferStore.AvailableBytes(),
-                    //             vertexBufferStore.GetDataPtr());
-
-                    //     // Create index buffer
-
-                    //     std::vector<int> indices =
-                    //         terrainResource->GetIndicesVector();
-
-                    //     // Create index buffer
-
-                    //     ds_render::IndexBufferHandle ib =
-                    //         m_renderer->CreateIndexBuffer(
-                    //             ds_render::BufferUsageType::Static,
-                    //             sizeof(unsigned int) * indices.size(),
-                    //             &indices[0]);
-
-                    //     ds_render::Mesh mesh = ds_render::Mesh(
-                    //         vb, ib, ds_render::MeshResourceHandle());
-
-                    //     // Create and load material
-                    //     std::stringstream materialResourcePath;
-                    //     materialResourcePath << "../assets/" << materialName;
-
-                    //     // Get handle to material resource created
-                    //     MaterialResourceHandle materialResourceHandle;
-                    //     if (m_materialResourceManager
-                    //             .LoadMaterialResourceFromFile(
-                    //                 materialResourcePath.str(),
-                    //                 &materialResourceHandle))
-                    //     {
-                    //         // Get material handle for material resource
-                    //         ds_render::MaterialHandle materialHandle;
-                    //         if
-                    //         (m_materialManager.GetMaterialForResourceHandle(
-                    //                 materialResourceHandle, &materialHandle)
-                    //                 ==
-                    //             true)
-                    //         {
-                    //             mesh.AddSubMesh(ds_render::SubMesh(
-                    //                 0, indices.size(), materialHandle));
-                    //         }
-                    //     }
-
-                    //     Instance i =
-                    //         m_renderComponentManager->CreateComponentForEntity(
-                    //             createComponentMsg.entity);
-
-                    //     m_renderComponentManager->SetMesh(i, mesh);
-                    // }
+                    if (root["projection"] != nullptr)
+                    {
+                        json::parseString(root["projection"], &projectionType);
+                    }
+                    if (root["vertical_fov"] != nullptr)
+                    {
+                        verticalFov = json::parseFloat(root["vertical_fov"]);
+                        m_cameraComponentManager->SetVerticalFieldOfView(
+                            i, verticalFov);
+                    }
+                    if (root["near_clip"] != nullptr)
+                    {
+                        nearClip = json::parseFloat(root["near_clip"]);
+                        m_cameraComponentManager->SetNearClippingPlane(
+                            i, nearClip);
+                    }
+                    if (root["far_clip"] != nullptr)
+                    {
+                        farClip = json::parseFloat(root["far_clip"]);
+                        m_cameraComponentManager->SetFarClippingPlane(i,
+                                                                      farClip);
+                    }
                 }
             }
 
