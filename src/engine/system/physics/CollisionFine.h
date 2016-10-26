@@ -150,16 +150,25 @@ public:
     ds_math::scalar offset;
 };
 
+class CollisionCapsule : public CollisionPrimitive
+{
+	public:
+		ds_math::scalar height;
+		ds_math::scalar radius;
+};
+
 class IntersectionTests
 {
 public:
     static bool sphereAndHalfSpace(const CollisionSphere &sphere,
                                    const CollisionPlane &plane);
 
-    static bool sphereAndSphere(const CollisionSphere &one,
-                                const CollisionSphere &two);
+    /*static bool sphereAndSphere(const CollisionSphere &one,
+                                const CollisionSphere &two); //Unused */
 
     static bool boxAndBox(const CollisionBox &one, const CollisionBox &two);
+
+    static bool capsuleAndHalfSpace(const CollisionCapsule& cap, const CollisionPlane &plane);
 
     /**
     * Does an intersection test on an arbitrarily aligned box and a
@@ -289,6 +298,24 @@ public:
     static unsigned boxAndSphere(const CollisionBox &box,
                                  const CollisionSphere &sphere,
                                  CollisionData *data);
+
+    static unsigned capsuleAndHalfSpace(const CollisionCapsule &cap,
+            const CollisionPlane &plane,
+            CollisionData *data);
+
+    static unsigned capsuleAndSphere(const CollisionCapsule &cap,
+            const CollisionSphere &sphere,
+            CollisionData *data);
+
+
+    static unsigned capsuleAndBox(const CollisionCapsule &cap,
+            const CollisionBox &box,
+            CollisionData *data);
+
+
+    static unsigned capsuleAndCapsule(const CollisionCapsule &cap1,
+            const CollisionCapsule &cap2,
+            CollisionData *data);
 }; // end CollisionDetector
 
 } // end namespace
