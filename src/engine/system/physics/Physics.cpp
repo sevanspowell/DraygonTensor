@@ -558,49 +558,35 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
 
                     body->addCollisionPrimitive(box);
 
-                    // ds_math::Matrix3 invInertia;
-                    // setBlockInertiaTensor(invInertia, dimensions,
-                    // body->getMass());
-                    // body->setInertiaTensor(invInertia);
-                    //@todo Per collision shape mass
-                    // body->setInverseInertiaTensor(inverseInertiaTensors[i]);
-                    // if (isInverseInertiaTensor == false) // Inertia tensor
-                    // {
-                    //     // ds_math::Matrix3 invInertia;
-                    //     // setBlockInertiaTensor(invInertia, dimensions,
-                    //     // body->getMass());
-                    //     std::cout << inertiaTensor << std::endl;
-                    //     body->setInertiaTensor(inertiaTensor);
-                    // }
-                    // else // Inverse inertia tensor
-                    // {
-                    //     body->setInverseInertiaTensor(inertiaTensor);
-                    // }
-
                     m_physicsWorld.addCollisionPrimitive(
                         std::unique_ptr<ds_phys::CollisionPrimitive>(box));
                 }
-                // else if (type == "sphere")
-                // {
-                //     float radius;
-                //     auto *box = new ds_phys::CollisionSphere();
-                //     // box->halfSize = dim;
-                //     box->radius = 0.5;
-                //     box->height = 1;
-                //     box->body = body;
-                //     box->offset =
-                //         ds_math::Matrix4::CreateTranslationMatrix(offset);
+                else if (type == "sphere")
+                {
+                    float radius = 0.0f;
 
-                //     body->addCollisionPrimitive(box);
+                    if (collisionShape["radius"] != nullptr)
+                    {
+                        radius = json::parseFloat(collisionShape["radius"]);
+                    }
+                    else
+                    {
+                        std::cerr << "Collision shape " << i << " (" << name
+                                  << ") needs radius field." << std::endl;
+                        continue;
+                    }
 
-                //     //@todo Per collision shape mass
-                //     ds_math::Matrix3 invInertia;
-                //     setBlockInertiaTensor(invInertia, dim, body->getMass());
-                //     body->setInertiaTensor(invInertia);
+                    auto *sphere = new ds_phys::CollisionSphere();
+                    sphere->radius = radius;
+                    sphere->body = body;
+                    sphere->offset =
+                        ds_math::Matrix4::CreateTranslationMatrix(offsets[i]);
 
-                //     m_physicsWorld.addCollisionPrimitive(
-                //         std::unique_ptr<ds_phys::CollisionPrimitive>(box));
-                // }
+                    body->addCollisionPrimitive(sphere);
+
+                    m_physicsWorld.addCollisionPrimitive(
+                        std::unique_ptr<ds_phys::CollisionPrimitive>(sphere));
+                }
                 else
                 {
                     std::cerr << "Collisions shape " << i << " (" << name
@@ -667,16 +653,12 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
                     assert(invMasses[i] != 0);
                     centreOfMass += ((1.0f / invMasses[i]) * offsets[i]);
                 }
-                std::cout << "centre of mass: " << centreOfMass << std::endl;
 
                 for (unsigned int i = 0; i < numColShapes; ++i)
                 {
                     // Calculate pos of each collision shape relative to centre
                     // of mass
                     ds_math::Vector3 comOffset = -centreOfMass + offsets[i];
-                    std::cout << "pos of body: " << body->getPosition();
-                    std::cout << " centre of mass offset: " << comOffset
-                              << std::endl;
 
                     // Use parallel axis theorum to transform current inertia
                     // tensor from centre of mass of collision shape to centre
@@ -698,15 +680,16 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
                             (1.0f / invMasses[i]) * pow(comOffset[j], 2);
                     }
 
-                    std::cout << "int: " << inertiaTensor << std::endl;
                     // Sum new inertia tensors to form composite inertia tensor
                     compositeInertiaTensor += inertiaTensor;
                 }
 
-                std::cout << "composite inertia tensor: "
-                          << compositeInertiaTensor << std::endl;
                 body->setInertiaTensor(compositeInertiaTensor);
             }
+
+            // body->setRestitution(dataRestitution);
+            body->setLinearDamping(dataDamping);
+            body->setAngularDamping(dataAngularDamping);
 
             m_physicsWorld.addRigidBody(body);
         }
