@@ -389,10 +389,6 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
         float dataRestitution = 0.6f;
         float dataDamping = 0.3f;
         float dataAngularDamping = 0.21f;
-        float dataMass = 1.0f;
-        float dataInvMass = 1.0f;
-        bool hasMass = true;
-        bool hasInvMass = false;
 
         if (root["restitution"] != nullptr)
         {
@@ -406,25 +402,14 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
         {
             dataAngularDamping = json::parseFloat(root["angularDamping"]);
         }
-        if (root["mass"] != nullptr)
-        {
-            dataMass = json::parseFloat(root["mass"]);
 
-            hasMass = true;
-            hasInvMass = false;
-        }
-        if (root["invMass"] != nullptr)
-        {
-            dataInvMass = json::parseFloat(root["invMass"]);
-
-            hasMass = false;
-            hasInvMass = true;
-        }
 
         // Create rigid body component
         ds_phys::RigidBody *body = new ds_phys::RigidBody();
 
         std::vector<float> invMasses;
+        std::vector<ds_math::Vector3> offsets;
+        std::vector<ds_math::Vector3> inverseInertiaTensors;
 
         if (root["collisionShapes"] != nullptr)
         {
@@ -478,6 +463,54 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
                         json::parseFloat(collisionShape["invMass"]));
                 }
 
+                // Get collision shape offset
+                JsonArray offset;
+                json::parseArray(collisionShape["offset"], &offset);
+
+                ds_math::Vector3 tmpOffset;
+                assert(offset.size() == 3);
+                // Take first 3 values of array
+                for (unsigned int j = 0; j < 3; ++j)
+                {
+                    tmpOffset[j] = json::parseFloat(offset[j]);
+                }
+                offsets.push_back(tmpOffset);
+
+                // Get inertia tensor
+                if (collisionShape["inertiaTensor"] != nullptr)
+                {
+                    JsonArray inertiaT;
+                    json::parseArray(collisionShape["inertiaTensor"],
+                                     &inertiaT);
+
+                    assert(inertiaT.size() == 3);
+                    ds_math::Vector3 tmpInertiaTensor;
+                    // Take first 3 values of array
+                    for (unsigned int j = 0; j < 3; ++j)
+                    {
+                        float inertiaProduct = json::parseFloat(inertiaT[j]);
+                        assert(inertiaProduct != 0);
+                        tmpInertiaTensor[j] = 1.0f / inertiaProduct;
+                    }
+                    inverseInertiaTensors.push_back(tmpInertiaTensor);
+                }
+                else if (collisionShape["invInertiaTensor"] != nullptr)
+                {
+                    JsonArray invInertiaT;
+                    json::parseArray(collisionShape["invInertiaTensor"],
+                                     &invInertiaT);
+
+                    assert(invInertiaT.size() == 3);
+                    ds_math::Vector3 tmpInverseInertiaTensor;
+                    // Take first 3 values of array
+                    for (unsigned int j = 0; j < 3; ++j)
+                    {
+                        tmpInverseInertiaTensor[j] =
+                            json::parseFloat(invInertiaT[j]);
+                    }
+                    inverseInertiaTensors.push_back(tmpInverseInertiaTensor);
+                }
+
                 std::string type;
                 if (collisionShape["type"] != nullptr)
                 {
@@ -495,7 +528,6 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
                     ds_math::Vector3 dimensions;
                     ds_math::Vector3 offset;
                     ds_math::Vector3 inertiaTensor;
-                    bool isInverseInertiaTensor = false;
 
                     if (collisionShape["halfSize"] != nullptr)
                     {
@@ -516,70 +548,13 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
                         continue;
                     }
 
-                    if (collisionShape["offset"] != nullptr)
-                    {
-                        JsonArray off;
-                        json::parseArray(collisionShape["offset"], &off);
-
-                        assert(off.size() == 3);
-                        // Take first 3 values of array
-                        for (unsigned int j = 0; j < 3; ++j)
-                        {
-                            offset[j] = json::parseFloat(off[j]);
-                        }
-                    }
-                    else
-                    {
-                        std::cerr << "Collision shape " << i << " (" << name
-                                  << ") needs offset field." << std::endl;
-                        continue;
-                    }
-
-                    if (collisionShape["inertiaTensor"] != nullptr)
-                    {
-                        JsonArray inertiaT;
-                        json::parseArray(collisionShape["inertiaTensor"],
-                                         &inertiaT);
-
-                        assert(inertiaT.size() == 3);
-                        // Take first 3 values of array
-                        for (unsigned int j = 0; j < 3; ++j)
-                        {
-                            inertiaTensor[j] = json::parseFloat(inertiaT[j]);
-                        }
-
-                        isInverseInertiaTensor = false;
-                    }
-                    else if (collisionShape["invInertiaTensor"] != nullptr)
-                    {
-                        JsonArray invInertiaT;
-                        json::parseArray(collisionShape["invInertiaTensor"],
-                                         &invInertiaT);
-
-                        assert(invInertiaT.size() == 3);
-                        // Take first 3 values of array
-                        for (unsigned int j = 0; j < 3; ++j)
-                        {
-                            inertiaTensor[j] = json::parseFloat(invInertiaT[j]);
-                        }
-
-                        isInverseInertiaTensor = true;
-                    }
-                    else
-                    {
-                        std::cerr << "Collision shape " << i << " (" << name
-                                  << ") needs inertiaTensor or "
-                                     "invInertiaTensor field."
-                                  << std::endl;
-                        continue;
-                    }
 
                     // Create box
                     auto *box = new ds_phys::CollisionBox();
                     box->halfSize = dimensions;
                     box->body = body;
                     box->offset =
-                        ds_math::Matrix4::CreateTranslationMatrix(offset);
+                        ds_math::Matrix4::CreateTranslationMatrix(offsets[i]);
 
                     body->addCollisionPrimitive(box);
 
@@ -588,18 +563,19 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
                     // body->getMass());
                     // body->setInertiaTensor(invInertia);
                     //@todo Per collision shape mass
-                    if (isInverseInertiaTensor == false) // Inertia tensor
-                    {
-                        // ds_math::Matrix3 invInertia;
-                        // setBlockInertiaTensor(invInertia, dimensions,
-                        // body->getMass());
-                        std::cout << inertiaTensor << std::endl;
-                        body->setInertiaTensor(inertiaTensor);
-                    }
-                    else // Inverse inertia tensor
-                    {
-                        body->setInverseInertiaTensor(inertiaTensor);
-                    }
+                    // body->setInverseInertiaTensor(inverseInertiaTensors[i]);
+                    // if (isInverseInertiaTensor == false) // Inertia tensor
+                    // {
+                    //     // ds_math::Matrix3 invInertia;
+                    //     // setBlockInertiaTensor(invInertia, dimensions,
+                    //     // body->getMass());
+                    //     std::cout << inertiaTensor << std::endl;
+                    //     body->setInertiaTensor(inertiaTensor);
+                    // }
+                    // else // Inverse inertia tensor
+                    // {
+                    //     body->setInverseInertiaTensor(inertiaTensor);
+                    // }
 
                     m_physicsWorld.addCollisionPrimitive(
                         std::unique_ptr<ds_phys::CollisionPrimitive>(box));
@@ -632,28 +608,6 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
                 }
             }
 
-            // Sum masses
-            float totalMass = 0.0f;
-            for (unsigned int i = 0; i < invMasses.size(); ++i)
-            {
-                if (invMasses[i] == 0.0f)
-                {
-                    totalMass = -1.0f;
-                    break;
-                }
-
-                totalMass += 1.0f / invMasses[i];
-            }
-
-            if (totalMass < 0.0f)
-            {
-                body->setInverseMass(0.0f);
-            }
-            else
-            {
-                body->setMass(totalMass);
-            }
-
             phys = m_physicsComponentManager->CreateComponentForEntity(entity);
             m_physicsComponentManager->SetRigidBody(phys, body);
 
@@ -676,6 +630,82 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
                 body->setOrientation(
                     m_transformComponentManager->GetWorldOrientation(
                         transform));
+            }
+
+            // Sum masses
+            float totalMass = 0.0f;
+            for (unsigned int i = 0; i < invMasses.size(); ++i)
+            {
+                if (invMasses[i] == 0.0f)
+                {
+                    totalMass = -1.0f;
+                    break;
+                }
+
+                totalMass += 1.0f / invMasses[i];
+            }
+
+            if (totalMass < 0.0f)
+            {
+                body->setInverseMass(0.0f);
+                // No need for inertia tensor, immovable object
+            }
+            else
+            {
+                body->setMass(totalMass);
+
+                assert(invMasses.size() == offsets.size() &&
+                       invMasses.size() == inverseInertiaTensors.size());
+                const size_t numColShapes = invMasses.size();
+
+                // Calculate composite inertia tensor
+                // Calculate centre of mass relative to body
+                ds_math::Vector3 compositeInertiaTensor(0.0f, 0.0f, 0.0f);
+                ds_math::Vector3 centreOfMass(0.0f, 0.0f, 0.0f);
+                for (unsigned int i = 0; i < numColShapes; ++i)
+                {
+                    assert(invMasses[i] != 0);
+                    centreOfMass += ((1.0f / invMasses[i]) * offsets[i]);
+                }
+                std::cout << "centre of mass: " << centreOfMass << std::endl;
+
+                for (unsigned int i = 0; i < numColShapes; ++i)
+                {
+                    // Calculate pos of each collision shape relative to centre
+                    // of mass
+                    ds_math::Vector3 comOffset = -centreOfMass + offsets[i];
+                    std::cout << "pos of body: " << body->getPosition();
+                    std::cout << " centre of mass offset: " << comOffset
+                              << std::endl;
+
+                    // Use parallel axis theorum to transform current inertia
+                    // tensor from centre of mass of collision shape to centre
+                    // of mass of rigid body
+                    ds_math::Vector3 inertiaTensor;
+                    for (unsigned int j = 0; j < 3; ++j)
+                    {
+                        // Get inertia tensor from inverse inertia tensor
+                        if (inverseInertiaTensors[i][j] != 0)
+                        {
+                            assert(inverseInertiaTensors[i][j] != 0);
+                            inertiaTensor[j] =
+                                1.0f / inverseInertiaTensors[i][j];
+                        }
+
+                        // Calculate new inertia tensor for this shape
+                        assert(invMasses[i] != 0);
+                        inertiaTensor[j] +=
+                            (1.0f / invMasses[i]) * pow(comOffset[j], 2);
+                    }
+
+                    std::cout << "int: " << inertiaTensor << std::endl;
+                    // Sum new inertia tensors to form composite inertia tensor
+                    compositeInertiaTensor += inertiaTensor;
+                }
+
+                std::cout << "composite inertia tensor: "
+                          << compositeInertiaTensor << std::endl;
+                body->setInertiaTensor(compositeInertiaTensor);
             }
 
             m_physicsWorld.addRigidBody(body);
