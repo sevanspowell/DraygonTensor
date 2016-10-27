@@ -2,8 +2,8 @@
 
 #include "engine/system/ISystem.h"
 #include "engine/system/physics/PhysicsComponentManager.h"
-#include "engine/system/scene/TransformComponentManager.h"
 #include "engine/system/physics/PhysicsWorld.h"
+#include "engine/system/scene/TransformComponentManager.h"
 
 namespace ds
 {
@@ -28,7 +28,8 @@ public:
 
     void AddForceGenerator(Entity entity);
 
-    ds_phys::CollisionPrimitiveID addPlane(const ds_math::Vector3& norm, ds_math::scalar offset);
+    ds_phys::CollisionPrimitiveID addPlane(const ds_math::Vector3 &norm,
+                                           ds_math::scalar offset);
 
     virtual unsigned getUpdateRate(uint32_t screenRefreshRate) const;
 
@@ -39,7 +40,7 @@ private:
 
     void CreateTransformComponent(Entity entity, const Config &componentData);
 
-    void CreatePhysicsComponent(Entity entity, const Config &componentData);
+    void CreatePhysicsComponent(Entity entity, const char *componentData);
 
     void UpdateRigidBodyTransforms();
     void PropagateTransform();

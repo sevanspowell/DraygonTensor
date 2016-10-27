@@ -43,7 +43,6 @@ class CollisionPrimitive;
 class RigidBody
 {
 public:
-
     RigidBody();
 
     /**
@@ -145,6 +144,17 @@ public:
     void setInertiaTensor(const ds_math::Matrix3 &inertiaTensor);
 
     ///
+    /// Set the inertia tensor for the rigid body from the inertia products.
+    ///
+    /// @param   inertiaTensor   const ds_math::Vector3 &, the inertia tensor
+    /// products for the rigid body.
+    ///
+    /// @warning Invalidates internal data for the rigid body. Call integration
+    /// function or calculateInternals before getting settings.
+    ///
+    void setInertiaTensor(const ds_math::Vector3 &inertiaTensor);
+
+    ///
     /// Gets the inverse mass of the rigid body
     ///
     /// @return The current inverse mass of the rigid body
@@ -189,6 +199,18 @@ public:
     /// Call integration function or calculateInternals before getting settings.
     ///
     void setInverseInertiaTensor(const ds_math::Matrix3 &inverseInertiaTensor);
+
+    ///
+    /// Set the inverse inertia tensor for the rigid body from the inertia
+    /// products.
+    ///
+    /// @param   invInertiaTensor   const ds_math::Vector3 &, the inverse
+    /// inertia tensor products for the rigid body.
+    ///
+    /// @warning Invalidates internal data for the rigid body. Call integration
+    /// function or calculateInternals before getting settings.
+    ///
+    void setInverseInertiaTensor(const ds_math::Vector3 &invInertiaTensor);
 
     ///
     /// Copies the current inverse inertia tensor of the rigid body into matrix
@@ -756,13 +778,13 @@ public:
     ///
     ds_math::Vector3 getAcceleration() const;
 
-    void addCollisionPrimitive(CollisionPrimitive* prim);
+    void addCollisionPrimitive(CollisionPrimitive *prim);
     void removeCollisionPrimitive(unsigned id);
-    CollisionPrimitive* getCollisionPrimitive(unsigned id);
+    CollisionPrimitive *getCollisionPrimitive(unsigned id);
     unsigned getCollisionPrimitiveCount();
 
 protected:
-    std::vector<CollisionPrimitive*> m_primitives;
+    std::vector<CollisionPrimitive *> m_primitives;
 
     /**
          * @name Characteristic Data and State

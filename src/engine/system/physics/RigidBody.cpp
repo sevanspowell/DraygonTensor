@@ -30,9 +30,9 @@
 #include <cassert>
 #include <cstring>
 
+#include "engine/system/physics/CollisionFine.h"
 #include "engine/system/physics/PhysicsCore.h"
 #include "engine/system/physics/RigidBody.h"
-#include "engine/system/physics/CollisionFine.h"
 
 namespace ds_phys
 {
@@ -259,6 +259,31 @@ bool RigidBody::hasFiniteMass() const
 void RigidBody::setInertiaTensor(const ds_math::Matrix3 &inertiaTensor)
 {
     m_inverseInertiaTensor = ds_math::Matrix3::Inverse(inertiaTensor);
+    checkInverseInertiaTensor(m_inverseInertiaTensor);
+}
+
+void RigidBody::setInertiaTensor(const ds_math::Vector3 &inertiaTensor)
+{
+    // Set diagonals
+    ds_math::Matrix3 inertiaTensorMat(1.0f);
+    inertiaTensorMat[0][0] = inertiaTensor.x;
+    inertiaTensorMat[1][1] = inertiaTensor.y;
+    inertiaTensorMat[2][2] = inertiaTensor.z;
+
+    m_inverseInertiaTensor = ds_math::Matrix3::Inverse(inertiaTensorMat);
+    checkInverseInertiaTensor(m_inverseInertiaTensor);
+}
+
+void RigidBody::setInverseInertiaTensor(
+    const ds_math::Vector3 &invInertiaTensor)
+{
+    // Set diagonals
+    ds_math::Matrix3 invInertiaTensorMat(1.0f);
+    invInertiaTensorMat[0][0] = invInertiaTensor.x;
+    invInertiaTensorMat[1][1] = invInertiaTensor.y;
+    invInertiaTensorMat[2][2] = invInertiaTensor.z;
+
+    m_inverseInertiaTensor = invInertiaTensorMat;
     checkInverseInertiaTensor(m_inverseInertiaTensor);
 }
 
@@ -668,38 +693,45 @@ ds_math::Vector3 RigidBody::getAcceleration() const
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void RigidBody::addCollisionPrimitive(CollisionPrimitive* prim) {
-	m_primitives.push_back(prim);
+void RigidBody::addCollisionPrimitive(CollisionPrimitive *prim)
+{
+    m_primitives.push_back(prim);
 }
 
-void RigidBody::removeCollisionPrimitive(unsigned id) {
-	auto iter = m_primitives.begin();
+void RigidBody::removeCollisionPrimitive(unsigned id)
+{
+    auto iter = m_primitives.begin();
 
-	for(unsigned i = 0; i < id; i++) {
-		iter++;
-	}
+    for (unsigned i = 0; i < id; i++)
+    {
+        iter++;
+    }
 
-	if (iter != m_primitives.end()) {
-		m_primitives.erase(iter);
-	}
+    if (iter != m_primitives.end())
+    {
+        m_primitives.erase(iter);
+    }
 }
 
-CollisionPrimitive* RigidBody::getCollisionPrimitive(unsigned id) {
-	auto iter = m_primitives.begin();
+CollisionPrimitive *RigidBody::getCollisionPrimitive(unsigned id)
+{
+    auto iter = m_primitives.begin();
 
-	for(unsigned i = 0; i < id; i++) {
-		iter++;
-	}
+    for (unsigned i = 0; i < id; i++)
+    {
+        iter++;
+    }
 
-	if (iter != m_primitives.end()) {
-		return *iter;
-	}
+    if (iter != m_primitives.end())
+    {
+        return *iter;
+    }
 
-	return nullptr;
+    return nullptr;
 }
 
-unsigned RigidBody::getCollisionPrimitiveCount() {
-	return m_primitives.size();
+unsigned RigidBody::getCollisionPrimitiveCount()
+{
+    return m_primitives.size();
 }
-
 }

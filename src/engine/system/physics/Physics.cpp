@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <sstream>
 
+#include "engine/json/Json.h"
 #include "engine/message/MessageHelper.h"
 #include "engine/system/physics/Physics.h"
 
@@ -10,7 +11,7 @@ extern ds::ScriptBindingSet LoadPhysicsScriptBindings();
 
 extern const char *physicsSystemLuaName;
 }
-
+/*
 static void setInertiaTensorCoeffs(ds_math::Matrix3 &mat,
                                    ds_math::scalar ix,
                                    ds_math::scalar iy,
@@ -30,6 +31,7 @@ static void setInertiaTensorCoeffs(ds_math::Matrix3 &mat,
     mat[2][2] = iz;
 }
 
+
 static void setBlockInertiaTensor(ds_math::Matrix3 &mat,
                                   const ds_math::Vector3 &halfSizes,
                                   ds_math::scalar mass)
@@ -39,6 +41,7 @@ static void setBlockInertiaTensor(ds_math::Matrix3 &mat,
                            0.3f * mass * (squares.x + squares.z),
                            0.3f * mass * (squares.x + squares.y));
 }
+*/
 
 // static void setSphereIntertiaTensor(ds_math::Matrix3 &mat,
 //									ds_math::scalar radius,
@@ -270,7 +273,10 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
                 // Create physics component
                 else if (componentType == "physicsComponent")
                 {
-                    CreatePhysicsComponent(entity, componentData);
+                    CreatePhysicsComponent(
+                        entity, StringIntern::Instance()
+                                    .GetString(createComponentMsg.componentData)
+                                    .c_str());
                 }
             }
 
@@ -362,217 +368,298 @@ void Physics::CreateTransformComponent(Entity entity,
 
 //}
 
-void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
+void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
 {
+    if (componentData == nullptr)
+    {
+        return;
+    }
+
     // Does entity already have physics component?
     Instance phys = m_physicsComponentManager->GetInstanceForEntity(entity);
 
     // If not, create one
     if (!phys.IsValid())
     {
+        JsonObject root;
+        json::parseObject(componentData, &root);
+
         // Get physics component data.
-        float dataMass;
-        float dataInvMass;
-        float dataDamping;
-        float dataAngularDamping;
-        float dataRestitution;
-        std::vector<float> dataInvInertiaTensor;
-        std::vector<float> dataInertiaTensor;
+        // These are default values.
+        float dataRestitution = 0.6f;
+        float dataDamping = 0.3f;
+        float dataAngularDamping = 0.21f;
+        float dataMass = 1.0f;
+        float dataInvMass = 1.0f;
+        bool hasMass = true;
+        bool hasInvMass = false;
 
-        // Get data that can only be in one form
-        if (componentData.GetFloat("restitution", &dataRestitution) &&
-            componentData.GetFloat("angularDamping", &dataAngularDamping) &&
-            componentData.GetFloat("damping", &dataDamping))
+        if (root["restitution"] != nullptr)
         {
-            bool isInvMass = false;
-            bool isInvInertiaTensor = false;
+            dataRestitution = json::parseFloat(root["restitution"]);
+        }
+        if (root["damping"] != nullptr)
+        {
+            dataDamping = json::parseFloat(root["damping"]);
+        }
+        if (root["angularDamping"] != nullptr)
+        {
+            dataAngularDamping = json::parseFloat(root["angularDamping"]);
+        }
+        if (root["mass"] != nullptr)
+        {
+            dataMass = json::parseFloat(root["mass"]);
 
-            ds_math::Vector3 invInertiaTensor;
-            ds_math::Vector3 inertiaTensor;
+            hasMass = true;
+            hasInvMass = false;
+        }
+        if (root["invMass"] != nullptr)
+        {
+            dataInvMass = json::parseFloat(root["invMass"]);
 
-            if (componentData.GetFloat("mass", &dataMass))
+            hasMass = false;
+            hasInvMass = true;
+        }
+
+        // Create rigid body component
+        ds_phys::RigidBody *body = new ds_phys::RigidBody();
+
+        std::vector<float> invMasses;
+
+        if (root["collisionShapes"] != nullptr)
+        {
+            JsonArray collisionShapes;
+            json::parseArray(root["collisionShapes"], &collisionShapes);
+
+            for (unsigned int i = 0; i < collisionShapes.size(); ++i)
             {
-                isInvMass = false;
-            }
-            else if (componentData.GetFloat("invMass", &dataInvMass))
-            {
-                isInvMass = true;
-            }
-            else
-            {
-                // Make sure we get atleast one piece of mass data
-                return;
-            }
+                JsonObject collisionShape;
+                json::parseObject(collisionShapes[i], &collisionShape);
 
-            if (componentData.GetFloatArray("inertiaTensor",
-                                            &dataInertiaTensor))
-            {
-                isInvInertiaTensor = false;
-                inertiaTensor =
-                    ds_math::Vector3(dataInertiaTensor[0], dataInertiaTensor[1],
-                                     dataInertiaTensor[2]);
-            }
-            else if (componentData.GetFloatArray("invInertiaTensor",
-                                                 &dataInvInertiaTensor))
-            {
-                isInvInertiaTensor = true;
-                invInertiaTensor = ds_math::Vector3(dataInvInertiaTensor[0],
-                                                    dataInvInertiaTensor[1],
-                                                    dataInvInertiaTensor[2]);
-            }
-            else
-            {
-                // Make sure we get atleast one piece of inertia
-                // tensor data
-                return;
-            }
+                // Get collision shape name
+                std::string name;
+                if (collisionShape["name"] != nullptr)
+                {
+                    json::parseString(collisionShape["name"], &name);
+                }
+                else
+                {
+                    std::cerr << "Collision shape missing name." << std::endl;
+                    continue;
+                }
 
-            // Create rigid body component
-            ds_phys::RigidBody *body = new ds_phys::RigidBody();
-            if (isInvMass)
-            {
-                body->setInverseMass(dataInvMass);
-            }
-            else
-            {
-                body->setMass(dataMass);
-            }
+                // Only get more data if we have each of these fields, they are
+                // necessary for calculating rigidbody info
+                if ((collisionShape["mass"] == nullptr &&
+                     collisionShape["invMass"] == nullptr) ||
+                    collisionShape["offset"] == nullptr ||
+                    (collisionShape["inertiaTensor"] == nullptr &&
+                     collisionShape["invInertiaTensor"] == nullptr))
+                {
+                    std::cerr << "Collision shape missing one or more of "
+                                 "mass/invMass, offset and "
+                                 "inertiaTensor/invInertiaTensor fields."
+                              << std::endl;
+                    continue;
+                }
 
-            // Get collision shapes
-            std::vector<std::string> collisionShapeKeys =
-                componentData.GetObjectKeys("collisionShapes");
+                // Get collision shape mass
+                if (collisionShape["mass"] != nullptr)
+                {
+                    float mass = json::parseFloat(collisionShape["mass"]);
+                    assert(mass != 0.0f);
+                    mass = (mass == 0.0f ? 1.0f : mass);
 
-            // Create each collision shape
-            std::for_each(
-                collisionShapeKeys.begin(), collisionShapeKeys.end(),
-                [&](const std::string &key) {
-                    // Get key path to collision shape
-                    std::stringstream colShapeBaseKey;
-                    colShapeBaseKey << "collisionShapes"
-                                    << "." << key;
+                    invMasses.push_back(1.0f / mass);
+                }
+                else
+                {
+                    invMasses.push_back(
+                        json::parseFloat(collisionShape["invMass"]));
+                }
 
-                    // Get shape type
-                    std::stringstream colShapeTypeKey;
-                    std::string dataType;
+                std::string type;
+                if (collisionShape["type"] != nullptr)
+                {
+                    json::parseString(collisionShape["type"], &type);
+                }
+                else
+                {
+                    std::cerr << "Collision shape " << i << " (" << name
+                              << ") needs type field." << std::endl;
+                    continue;
+                }
 
-                    colShapeTypeKey << colShapeBaseKey.str() << "."
-                                    << "type";
+                if (type == "box")
+                {
+                    ds_math::Vector3 dimensions;
+                    ds_math::Vector3 offset;
+                    ds_math::Vector3 inertiaTensor;
+                    bool isInverseInertiaTensor = false;
 
-                    if (componentData.GetString(colShapeTypeKey.str(),
-                                                &dataType))
+                    if (collisionShape["halfSize"] != nullptr)
                     {
-                        // Get shape dimensions
-                        std::stringstream colShapeDimKey;
-                        std::vector<float> dataDim;
+                        JsonArray dim;
+                        json::parseArray(collisionShape["halfSize"], &dim);
 
-                        colShapeDimKey << colShapeBaseKey.str() << "."
-                                       << "dim";
-
-                        if (componentData.GetFloatArray(colShapeDimKey.str(),
-                                                        &dataDim))
+                        assert(dim.size() == 3);
+                        // Take first 3 values of array
+                        for (unsigned int j = 0; j < 3; ++j)
                         {
-                            ds_math::Vector3 dim(dataDim[0], dataDim[1],
-                                                 dataDim[2]);
-
-                            // Get shape offset
-                            std::stringstream colShapeOffsetKey;
-                            std::vector<float> dataOffset;
-
-                            colShapeOffsetKey << colShapeBaseKey.str() << "."
-                                              << "offset";
-
-                            if (componentData.GetFloatArray(
-                                    colShapeOffsetKey.str(), &dataOffset))
-                            {
-                                ds_math::Vector3 offset(dataOffset[0],
-                                                        dataOffset[1],
-                                                        dataOffset[2]);
-
-                                if (dataType == "box")
-                                {
-                                    auto *box = new ds_phys::CollisionBox();
-                                    // box->halfSize = dim;
-                                    box->halfSize = dim;
-                                    box->body = body;
-                                    box->offset = ds_math::Matrix4::
-                                        CreateTranslationMatrix(offset);
-
-                                    body->addCollisionPrimitive(box);
-
-                                    //@todo Per collision shape mass
-                                    ds_math::Matrix3 invInertia;
-                                    setBlockInertiaTensor(invInertia, dim,
-                                                          body->getMass());
-                                    body->setInertiaTensor(invInertia);
-
-                                    m_physicsWorld.addCollisionPrimitive(
-                                        std::unique_ptr<
-                                            ds_phys::CollisionPrimitive>(box));
-                                }
-                                else if (dataType == "sphere")
-                                {
-
-                                    auto *box = new ds_phys::CollisionCapsule();
-                                    // box->halfSize = dim;
-                                    box->radius = 0.5;
-                                    box->height = 1;
-                                    box->body = body;
-                                    box->offset = ds_math::Matrix4::
-                                        CreateTranslationMatrix(offset);
-
-                                    body->addCollisionPrimitive(box);
-
-                                    //@todo Per collision shape mass
-                                    ds_math::Matrix3 invInertia;
-                                    setBlockInertiaTensor(invInertia, dim,
-                                                          body->getMass());
-                                    body->setInertiaTensor(invInertia);
-
-                                    m_physicsWorld.addCollisionPrimitive(
-                                        std::unique_ptr<
-                                            ds_phys::CollisionPrimitive>(box));
-
-
-                                    //                                	auto*
-                                    //                                box = new
-                                    //                                ds_phys::CollisionCapsule();
-                                    //                                	sphere->radius
-                                    //                                = dim.x;
-                                    //                                	sphere->body
-                                    //                                = body;
-                                    //                                	sphere->offset
-                                    //                                =
-                                    //                                ds_math::Matrix4::CreateTranslationMatrix(offset);
-                                    //
-                                    //                                	body->addCollisionPrimitive(sphere);
-                                    //
-                                    //                                	//@todo
-                                    //                                Per
-                                    //                                collision
-                                    //                                shape mass
-                                    //                                	ds_math::Matrix3
-                                    //                                invInertia;
-                                    //                                	setSphereIntertiaTensor(invInertia,
-                                    //                                dim.x,
-                                    //                                body->getMass());
-                                    //                                	body->setInertiaTensor(invInertia);
-                                    //
-                                    //                                	m_physicsWorld.addCollisionPrimitive(std::unique_ptr<ds_phys::CollisionPrimitive>(sphere));
-                                }
-                            }
+                            dimensions[j] = json::parseFloat(dim[j]);
                         }
                     }
+                    else
+                    {
+                        std::cerr << "Collision shape " << i << " (" << name
+                                  << ") needs halfSize field." << std::endl;
+                        continue;
+                    }
 
-                });
+                    if (collisionShape["offset"] != nullptr)
+                    {
+                        JsonArray off;
+                        json::parseArray(collisionShape["offset"], &off);
 
+                        assert(off.size() == 3);
+                        // Take first 3 values of array
+                        for (unsigned int j = 0; j < 3; ++j)
+                        {
+                            offset[j] = json::parseFloat(off[j]);
+                        }
+                    }
+                    else
+                    {
+                        std::cerr << "Collision shape " << i << " (" << name
+                                  << ") needs offset field." << std::endl;
+                        continue;
+                    }
+
+                    if (collisionShape["inertiaTensor"] != nullptr)
+                    {
+                        JsonArray inertiaT;
+                        json::parseArray(collisionShape["inertiaTensor"],
+                                         &inertiaT);
+
+                        assert(inertiaT.size() == 3);
+                        // Take first 3 values of array
+                        for (unsigned int j = 0; j < 3; ++j)
+                        {
+                            inertiaTensor[j] = json::parseFloat(inertiaT[j]);
+                        }
+
+                        isInverseInertiaTensor = false;
+                    }
+                    else if (collisionShape["invInertiaTensor"] != nullptr)
+                    {
+                        JsonArray invInertiaT;
+                        json::parseArray(collisionShape["invInertiaTensor"],
+                                         &invInertiaT);
+
+                        assert(invInertiaT.size() == 3);
+                        // Take first 3 values of array
+                        for (unsigned int j = 0; j < 3; ++j)
+                        {
+                            inertiaTensor[j] = json::parseFloat(invInertiaT[j]);
+                        }
+
+                        isInverseInertiaTensor = true;
+                    }
+                    else
+                    {
+                        std::cerr << "Collision shape " << i << " (" << name
+                                  << ") needs inertiaTensor or "
+                                     "invInertiaTensor field."
+                                  << std::endl;
+                        continue;
+                    }
+
+                    // Create box
+                    auto *box = new ds_phys::CollisionBox();
+                    box->halfSize = dimensions;
+                    box->body = body;
+                    box->offset =
+                        ds_math::Matrix4::CreateTranslationMatrix(offset);
+
+                    body->addCollisionPrimitive(box);
+
+                    // ds_math::Matrix3 invInertia;
+                    // setBlockInertiaTensor(invInertia, dimensions,
+                    // body->getMass());
+                    // body->setInertiaTensor(invInertia);
+                    //@todo Per collision shape mass
+                    if (isInverseInertiaTensor == false) // Inertia tensor
+                    {
+                        // ds_math::Matrix3 invInertia;
+                        // setBlockInertiaTensor(invInertia, dimensions,
+                        // body->getMass());
+                        std::cout << inertiaTensor << std::endl;
+                        body->setInertiaTensor(inertiaTensor);
+                    }
+                    else // Inverse inertia tensor
+                    {
+                        body->setInverseInertiaTensor(inertiaTensor);
+                    }
+
+                    m_physicsWorld.addCollisionPrimitive(
+                        std::unique_ptr<ds_phys::CollisionPrimitive>(box));
+                }
+                // else if (type == "sphere")
+                // {
+                //     float radius;
+                //     auto *box = new ds_phys::CollisionSphere();
+                //     // box->halfSize = dim;
+                //     box->radius = 0.5;
+                //     box->height = 1;
+                //     box->body = body;
+                //     box->offset =
+                //         ds_math::Matrix4::CreateTranslationMatrix(offset);
+
+                //     body->addCollisionPrimitive(box);
+
+                //     //@todo Per collision shape mass
+                //     ds_math::Matrix3 invInertia;
+                //     setBlockInertiaTensor(invInertia, dim, body->getMass());
+                //     body->setInertiaTensor(invInertia);
+
+                //     m_physicsWorld.addCollisionPrimitive(
+                //         std::unique_ptr<ds_phys::CollisionPrimitive>(box));
+                // }
+                else
+                {
+                    std::cerr << "Collisions shape " << i << " (" << name
+                              << ") has unknown type field." << std::endl;
+                }
+            }
+
+            // Sum masses
+            float totalMass = 0.0f;
+            for (unsigned int i = 0; i < invMasses.size(); ++i)
+            {
+                if (invMasses[i] == 0.0f)
+                {
+                    totalMass = -1.0f;
+                    break;
+                }
+
+                totalMass += 1.0f / invMasses[i];
+            }
+
+            if (totalMass < 0.0f)
+            {
+                body->setInverseMass(0.0f);
+            }
+            else
+            {
+                body->setMass(totalMass);
+            }
 
             phys = m_physicsComponentManager->CreateComponentForEntity(entity);
             m_physicsComponentManager->SetRigidBody(phys, body);
 
-            // TODO: Set mass etc.
-            // If this entity also has a transform component, update
-            // rigidbody
-            // with pos, orientation and scale of that transform component
+            // If this entity also has a transform component, update rigidbody
+            // with
+            // pos, orientation and scale of that transform component
             Instance transform =
                 m_transformComponentManager->GetInstanceForEntity(entity);
 
