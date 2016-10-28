@@ -142,7 +142,8 @@ RigidBody::RigidBody()
       m_angularDamping((ds_math::scalar)0.8),
       m_motion((ds_math::scalar)0.0),
       m_isAwake(true),
-      m_canSleep(true)
+      m_canSleep(true),
+      m_centerOfMassOffset(ds_math::Vector3(0.0f, 0.0f, 0.0f))
 {
 }
 
@@ -217,9 +218,18 @@ void RigidBody::calculateDerivedData()
     // Calculate the transform matrix for the body.
     calculateTransformMatrix(m_transformMatrix, m_position, m_orientation);
 
+    // Calculate the transform matrix for the center of mass of the body
+    calculateTransformMatrix(m_centerOfMassTransformMatrix,
+                             (m_position + m_centerOfMassOffset),
+                             m_orientation);
+
     // Calculate the inertiaTensor in world space.
+    // transformInertiaTensor(m_inverseInertiaTensorWorld, m_orientation,
+    //                        m_inverseInertiaTensor,
+    //                        m_transformMatrix);
     transformInertiaTensor(m_inverseInertiaTensorWorld, m_orientation,
-                           m_inverseInertiaTensor, m_transformMatrix);
+                           m_inverseInertiaTensor,
+                           m_centerOfMassTransformMatrix);
 }
 
 void RigidBody::setMass(const ds_math::scalar mass)
@@ -648,7 +658,8 @@ void RigidBody::addForceAtPoint(const ds_math::Vector3 &force,
 {
     // Convert to coordinates relative to center of mass.
     ds_math::Vector3 pt = point;
-    pt -= m_position;
+    // pt -= (m_position);
+    pt -= (m_position + m_centerOfMassOffset);
 
     m_forceAccum += force;
     m_torqueAccum += ds_math::Vector3::Cross(pt, force);
@@ -733,5 +744,25 @@ CollisionPrimitive *RigidBody::getCollisionPrimitive(unsigned id)
 unsigned RigidBody::getCollisionPrimitiveCount()
 {
     return m_primitives.size();
+}
+
+ds_math::Vector3 RigidBody::getCenterOfMassWorldSpace() const
+{
+    return (m_position + m_centerOfMassOffset);
+}
+
+ds_math::Vector3 RigidBody::getCenterOfMassLocalSpace() const
+{
+    return m_centerOfMassOffset;
+}
+
+void RigidBody::setCenterOfMassWorldSpace(const ds_math::Vector3 &centerOfMass)
+{
+    m_centerOfMassOffset = centerOfMass - m_position;
+}
+
+void RigidBody::setCenterOfMassLocalSpace(const ds_math::Vector3 &centerOfMass)
+{
+    m_centerOfMassOffset = centerOfMass;
 }
 }

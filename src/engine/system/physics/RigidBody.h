@@ -783,6 +783,36 @@ public:
     CollisionPrimitive *getCollisionPrimitive(unsigned id);
     unsigned getCollisionPrimitiveCount();
 
+    ///
+    /// Get the center of mass of the rigid body in world space.
+    ///
+    /// @return   ds_math::Vector3, center of mass of the rigid body in
+    /// world space.
+    ///
+    ds_math::Vector3 getCenterOfMassWorldSpace() const;
+    ///
+    /// Get the center of mass of the rigid body in local space.
+    ///
+    /// @return   ds_math::Vector3, center of mass of the rigid body in
+    /// local space.
+    ///
+    ds_math::Vector3 getCenterOfMassLocalSpace() const;
+
+    ///
+    /// Set the center of mass of the rigid body in world space.
+    ///
+    /// @param   centerOfMass   const ds_math::Vector3 &, new center of mass of
+    /// the object (in world space).
+    ///
+    void setCenterOfMassWorldSpace(const ds_math::Vector3 &centerOfMass);
+    ///
+    /// Set the center of mass of the rigid body in local space.
+    ///
+    /// @param   centerOfMass   const ds_math::Vector3 &, new center of mass of
+    /// the object (in local space).
+    ///
+    void setCenterOfMassLocalSpace(const ds_math::Vector3 &centerOfMass);
+
 protected:
     std::vector<CollisionPrimitive *> m_primitives;
 
@@ -986,9 +1016,14 @@ protected:
     ///
     ///
     ds_math::Vector3 m_lastFrameAcceleration;
-
     /*@}*/
 
+    ///
+    /// Centre of mass of the rigid body relative to the position of the object.
+    ///
+    ds_math::Vector3 m_centerOfMassOffset;
+
+    ds_math::Matrix4 m_centerOfMassTransformMatrix;
 
 private:
 };

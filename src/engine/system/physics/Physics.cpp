@@ -634,6 +634,8 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
             if (totalMass < 0.0f)
             {
                 body->setInverseMass(0.0f);
+                body->setCenterOfMassLocalSpace(
+                    ds_math::Vector3(0.0f, 0.0f, 0.0f));
                 // No need for inertia tensor, immovable object
             }
             else
@@ -647,21 +649,21 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
                 // Calculate composite inertia tensor
                 // Calculate centre of mass relative to body
                 ds_math::Vector3 compositeInertiaTensor(0.0f, 0.0f, 0.0f);
-                ds_math::Vector3 centreOfMass(0.0f, 0.0f, 0.0f);
+                ds_math::Vector3 centerOfMass(0.0f, 0.0f, 0.0f);
                 for (unsigned int i = 0; i < numColShapes; ++i)
                 {
                     assert(invMasses[i] != 0);
-                    centreOfMass += ((1.0f / invMasses[i]) * offsets[i]);
+                    centerOfMass += ((1.0f / invMasses[i]) * offsets[i]);
                 }
 
                 for (unsigned int i = 0; i < numColShapes; ++i)
                 {
-                    // Calculate pos of each collision shape relative to centre
+                    // Calculate pos of each collision shape relative to center
                     // of mass
-                    ds_math::Vector3 comOffset = -centreOfMass + offsets[i];
+                    ds_math::Vector3 comOffset = -centerOfMass + offsets[i];
 
                     // Use parallel axis theorum to transform current inertia
-                    // tensor from centre of mass of collision shape to centre
+                    // tensor from center of mass of collision shape to center
                     // of mass of rigid body
                     ds_math::Vector3 inertiaTensor;
                     for (unsigned int j = 0; j < 3; ++j)
@@ -685,6 +687,8 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
                 }
 
                 body->setInertiaTensor(compositeInertiaTensor);
+                body->setCenterOfMassLocalSpace(centerOfMass);
+                std::cout << "center of mass: " << centerOfMass << std::endl;
             }
 
             // body->setRestitution(dataRestitution);
