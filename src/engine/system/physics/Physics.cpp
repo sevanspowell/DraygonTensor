@@ -587,6 +587,45 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
                     m_physicsWorld.addCollisionPrimitive(
                         std::unique_ptr<ds_phys::CollisionPrimitive>(sphere));
                 }
+                else if (type == "capsule")
+                {
+                    float radius = 0.0f;
+                    float height = 0.0f;
+
+                    if (collisionShape["radius"] != nullptr)
+                    {
+                        radius = json::parseFloat(collisionShape["radius"]);
+                    }
+                    else
+                    {
+                        std::cerr << "Collision shape " << i << " (" << name
+                                  << ") needs radius field." << std::endl;
+                        continue;
+                    }
+                    if (collisionShape["height"] != nullptr)
+                    {
+                        height = json::parseFloat(collisionShape["height"]);
+                    }
+                    else
+                    {
+                        std::cerr << "Collision shape " << i << " (" << name
+                                  << ") needs height field." << std::endl;
+                        continue;
+                    }
+
+                    std::cout << "radius: " << radius << " height: " << height
+                              << std::endl;
+                    auto *capsule = new ds_phys::CollisionCapsule();
+                    capsule->radius = radius;
+                    capsule->height = height;
+                    capsule->offset =
+                        ds_math::Matrix4::CreateTranslationMatrix(offsets[i]);
+
+                    body->addCollisionPrimitive(capsule);
+
+                    m_physicsWorld.addCollisionPrimitive(
+                        std::unique_ptr<ds_phys::CollisionPrimitive>(capsule));
+                }
                 else
                 {
                     std::cerr << "Collisions shape " << i << " (" << name
@@ -688,7 +727,6 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
 
                 body->setInertiaTensor(compositeInertiaTensor);
                 body->setCenterOfMassLocalSpace(centerOfMass);
-                std::cout << "center of mass: " << centerOfMass << std::endl;
             }
 
             // body->setRestitution(dataRestitution);
