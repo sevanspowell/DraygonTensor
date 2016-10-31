@@ -52,10 +52,55 @@ static int l_AddForceGenerator(lua_State *L)
     return 0;
 }
 
+ds_phys::CollisionPrimitiveID l_AddPlane(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expect = 2;
+    if (n != expect)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expect);
+    }
+
+    // Push physics system pointer to stack
+    lua_getglobal(L, "__" META_NAME);
+
+    // If first item on stack isn't user data (our physics system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Physics *p = (ds::Physics *)lua_touserdata(L, -1);
+
+        assert(p != NULL);
+
+        // Pop physics system pointer off lua stack
+        lua_pop(L, 1);
+
+        ds_math::Vector3 *normal = NULL;
+        normal = (ds_math::Vector3 *)luaL_checkudata(L, 1, "Vector3");
+
+        ds_math::scalar offset = (ds_math::scalar)luaL_checknumber(L, 2);
+
+        if (normal != NULL)
+        {
+            p->addPlane(*normal, offset);
+        }
+    }
+
+    assert(lua_gettop(L) == 2);
+
+    return 0;
+}
+
 ds::ScriptBindingSet LoadPhysicsScriptBindings()
 {
     ds::ScriptBindingSet scriptBindings;
     scriptBindings.AddFunction("add_force_generator", l_AddForceGenerator);
+    scriptBindings.AddFunction("add_plane", l_AddPlane);
 
     return scriptBindings;
 }

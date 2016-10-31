@@ -57,7 +57,7 @@ Physics::Physics()
     : m_physicsWorld(0, 0),
       m_fg(ds_phys::Gravity(ds_math::Vector3(0.0f, -1.0f, 0.0f)))
 {
-    addPlane(ds_math::Vector3(0, 1, 0), 0);
+    // addPlane(ds_math::Vector3(0, 1, 0), 0);
 }
 
 bool Physics::Initialize(const char *configFile)
@@ -88,6 +88,7 @@ void Physics::AddForceGenerator(Entity entity)
 ds_phys::CollisionPrimitiveID Physics::addPlane(const ds_math::Vector3 &norm,
                                                 ds_math::scalar offset)
 {
+    std::cout << "Add plane" << std::endl;
     ds_phys::CollisionPlane *plane = new ds_phys::CollisionPlane();
     plane->direction = ds_math::Vector3::Normalize(norm);
     plane->offset = offset;
@@ -600,8 +601,7 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
                     {
                         std::cerr << "Collision shape " << i << " (" << name
                                   << ") needs radius field." << std::endl;
-                        continue;
-                    }
+                        }
                     if (collisionShape["height"] != nullptr)
                     {
                         height = json::parseFloat(collisionShape["height"]);
