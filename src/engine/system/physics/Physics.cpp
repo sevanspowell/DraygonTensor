@@ -88,7 +88,6 @@ void Physics::AddForceGenerator(Entity entity)
 ds_phys::CollisionPrimitiveID Physics::addPlane(const ds_math::Vector3 &norm,
                                                 ds_math::scalar offset)
 {
-    std::cout << "Add plane" << std::endl;
     ds_phys::CollisionPlane *plane = new ds_phys::CollisionPlane();
     plane->direction = ds_math::Vector3::Normalize(norm);
     plane->offset = offset;
