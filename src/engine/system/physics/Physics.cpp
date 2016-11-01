@@ -41,19 +41,19 @@ static void setBlockInertiaTensor(ds_math::Matrix3 &mat,
 						   0.3f*mass*(squares.x + squares.y));
 }
 
-//static void setSphereIntertiaTensor(ds_math::Matrix3 &mat,
-//									ds_math::scalar radius,
-//									ds_math::scalar mass) {
-//	ds_math::scalar inertia = 2/5.0 * mass * radius * radius;
-//	setInertiaTensorCoeffs(mat, inertia, inertia, inertia);
-//}
+static void setSphereIntertiaTensor(ds_math::Matrix3 &mat,
+									ds_math::scalar radius,
+									ds_math::scalar mass) {
+	ds_math::scalar inertia = 2/5.0 * mass * radius * radius;
+	setInertiaTensorCoeffs(mat, inertia, inertia, inertia);
+}
 
 namespace ds
 {
 // TODO: Update these values for m_physicsWorld constructor
 Physics::Physics()
     : m_physicsWorld(0, 0),
-      m_fg(ds_phys::Gravity(ds_math::Vector3(0.0f, -1.0f, 0.0f)))
+      m_fg(ds_phys::Gravity(ds_math::Vector3(0.0f, -9.8f, 0.0f)))
 {
 	addPlane(ds_math::Vector3(0, 1, 0), 0);
 }
@@ -79,7 +79,7 @@ void Physics::AddForceGenerator(Entity entity)
 
         assert(body != nullptr);
 
-        // m_physicsWorld.addForceGenerator(body, &m_fg);
+        m_physicsWorld.addForceGenerator(body, &m_fg);
     }
 }
 
@@ -493,37 +493,35 @@ void Physics::CreatePhysicsComponent(Entity entity, const Config &componentData)
                                 	m_physicsWorld.addCollisionPrimitive(std::unique_ptr<ds_phys::CollisionPrimitive>(box));
 
                                 } else if (dataType == "sphere") {
+                                	auto* sphere = new ds_phys::CollisionSphere();
+                                	sphere->radius = dim.x;
+                                	sphere->body = body;
+                                	sphere->offset = ds_math::Matrix4::CreateTranslationMatrix(offset);
 
-                                	auto* box = new ds_phys::CollisionCapsule();
-                                	//box->halfSize = dim;
-                                	box->radius = 0.5;
-                                	box->height = 1;
-                                	box->body = body;
-                                	box->offset = ds_math::Matrix4::CreateTranslationMatrix(offset);
-
-                                	body->addCollisionPrimitive(box);
+                                	body->addCollisionPrimitive(sphere);
 
                                 	//@todo Per collision shape mass
                                 	ds_math::Matrix3 invInertia;
-                                	setBlockInertiaTensor(invInertia, dim, body->getMass());
+                                	setSphereIntertiaTensor(invInertia, dim.x, body->getMass());
                                 	body->setInertiaTensor(invInertia);
 
-                                	m_physicsWorld.addCollisionPrimitive(std::unique_ptr<ds_phys::CollisionPrimitive>(box));
+                                	m_physicsWorld.addCollisionPrimitive(std::unique_ptr<ds_phys::CollisionPrimitive>(sphere));
+                                } else if (dataType == "capsule") {
+                                	auto* cap = new ds_phys::CollisionCapsule();
 
+                                	cap->radius = dim.x;
+                                	cap->height = dim.y*2;
+                                	cap->body = body;
+                                	cap->offset = ds_math::Matrix4::CreateTranslationMatrix(offset);
 
-//                                	auto* box = new ds_phys::CollisionCapsule();
-//                                	sphere->radius = dim.x;
-//                                	sphere->body = body;
-//                                	sphere->offset = ds_math::Matrix4::CreateTranslationMatrix(offset);
-//
-//                                	body->addCollisionPrimitive(sphere);
-//
-//                                	//@todo Per collision shape mass
-//                                	ds_math::Matrix3 invInertia;
-//                                	setSphereIntertiaTensor(invInertia, dim.x, body->getMass());
-//                                	body->setInertiaTensor(invInertia);
-//
-//                                	m_physicsWorld.addCollisionPrimitive(std::unique_ptr<ds_phys::CollisionPrimitive>(sphere));
+									body->addCollisionPrimitive(cap);
+
+									//@todo Per collision shape mass
+									ds_math::Matrix3 invInertia;
+									setBlockInertiaTensor(invInertia, dim, body->getMass());
+									body->setInertiaTensor(invInertia);
+
+									m_physicsWorld.addCollisionPrimitive(std::unique_ptr<ds_phys::CollisionPrimitive>(cap));
                                 }
                             }
                         }

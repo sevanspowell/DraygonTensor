@@ -249,6 +249,8 @@ struct CollisionData
     */
     void addContacts(unsigned count)
     {
+    	if ((contacts->body[0] == nullptr) && (contacts->body[1] == nullptr)) return;
+
         // Reduce the number of contacts remaining, add number used
         contactsLeft -= count;
         assert(contactsLeft >= 0 && "Contact array too full.");

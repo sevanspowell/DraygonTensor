@@ -102,9 +102,14 @@ bool Engine::Init()
     stream << header << configLoadMsg;
     PostMessages(stream);
 
+    result &= m_script->Initialize(config);
+
     // Initialize all systems
     for (auto &system : m_systems)
     {
+    	//Skip the script system.
+    	if (dynamic_cast<Script*>(system.get())) continue;
+
         // If any initialization fails, whole process fails.
         result &= system->Initialize(config);
     }
@@ -132,10 +137,8 @@ void Engine::Update(float deltaTime)
 
     uint32_t screenRefreshRate = m_platform->GetRefreshRate();
 
-    // Update systems
-    for (auto &system : m_systems)
-    {
-		if (system->getUpdateRate(screenRefreshRate) == 0)
+    auto updateSystem = [](float deltaTime, ISystem* system, uint32_t screenRefreshRate){
+    	if (system->getUpdateRate(screenRefreshRate) == 0)
 		{
 			system->Update(deltaTime);
 		}
@@ -155,7 +158,18 @@ void Engine::Update(float deltaTime)
 
 			system->setUpdateAccum(accum);
 		}
+    };
+
+    // Update systems
+    for (auto &system : m_systems)
+    {
+    	//Skip the script system.
+    	if (dynamic_cast<Script*>(system.get())) continue;
+
+    	updateSystem(deltaTime, system.get(), screenRefreshRate);
     }
+
+    updateSystem(deltaTime, m_script, screenRefreshRate);
 }
 
 void Engine::Shutdown()

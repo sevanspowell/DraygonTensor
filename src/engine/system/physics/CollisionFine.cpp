@@ -196,8 +196,11 @@ unsigned CollisionDetector::sphereAndHalfSpace(const CollisionSphere &sphere,
     contact->penetration = -ballDistance;
     contact->contactPoint =
         position - plane.direction * (ballDistance + sphere.radius);
-    contact->setBodyData(sphere.body, nullptr,
-        data->friction, data->restitution);
+
+
+	 contact->setBodyData(sphere.body ? (sphere.body->getMass() == 0 ? nullptr : sphere.body) : (nullptr),
+						  plane.body ? (plane.body->getMass() == 0 ? nullptr : plane.body) : (nullptr),
+						 data->friction, data->restitution);
 
     data->addContacts(1);
     return 1;
@@ -209,6 +212,8 @@ unsigned CollisionDetector::sphereAndSphere(const CollisionSphere &one,
 {
 	// Make sure we have contacts
 	if (data->contactsLeft <= 0) return 0;
+	if ((((one.body) && (one.body->getMass() == 0)) || !(one.body)) &&
+		(((two.body) && (two.body->getMass() == 0)) || !(two.body))) return 0;
 
 	// Cache the sphere positions
 	ds_math::Vector3 positionOne = one.getAxis(3);
@@ -232,8 +237,10 @@ unsigned CollisionDetector::sphereAndSphere(const CollisionSphere &one,
 	contact->contactNormal = normal;
 	contact->contactPoint = positionOne + midline * 0.5;
 	contact->penetration = (one.radius+two.radius - size);
-	contact->setBodyData(one.body, two.body,
-	 data->friction, data->restitution);
+
+	 contact->setBodyData(one.body ? (one.body->getMass() == 0 ? nullptr : one.body) : (nullptr),
+						  two.body ? (two.body->getMass() == 0 ? nullptr : two.body) : (nullptr),
+						 data->friction, data->restitution);
 
 	data->addContacts(1);
 	return 1;
@@ -328,7 +335,10 @@ void fillPointFaceBoxBox(const CollisionBox &one,
     contact->contactNormal = normal;
     contact->penetration = pen;
     contact->contactPoint = two.getTransform() * vertex;
-    contact->setBodyData(one.body, two.body, data->friction, data->restitution);
+
+	 contact->setBodyData(one.body ? (one.body->getMass() == 0 ? nullptr : one.body) : (nullptr),
+						  two.body ? (two.body->getMass() == 0 ? nullptr : two.body) : (nullptr),
+						 data->friction, data->restitution);
 }
 
 static inline ds_math::Vector3
@@ -394,8 +404,13 @@ unsigned CollisionDetector::boxAndBox(const CollisionBox &one,
                                       const CollisionBox &two,
                                       CollisionData *data)
 {
-    // if (!IntersectionTests::boxAndBox(one, two))
-    //     return 0;
+    // Make sure we have contacts
+    if (data->contactsLeft <= 0) return 0;
+
+	if ((((one.body) && (one.body->getMass() == 0)) || !(one.body)) &&
+		(((two.body) && (two.body->getMass() == 0)) || !(two.body))) return 0;
+
+	if (!IntersectionTests::boxAndBox(one, two)) return 0;
 
     // Find the vector between the two centres
     ds_math::Vector3 toCentre = two.getAxis(3) - one.getAxis(3);
@@ -508,8 +523,11 @@ unsigned CollisionDetector::boxAndBox(const CollisionBox &one,
         contact->penetration = pen;
         contact->contactNormal = axis;
         contact->contactPoint = vertex;
-        contact->setBodyData(one.body, two.body, data->friction,
-                             data->restitution);
+
+		 contact->setBodyData(one.body ? (one.body->getMass() == 0 ? nullptr : one.body) : (nullptr),
+							  two.body ? (two.body->getMass() == 0 ? nullptr : two.body) : (nullptr),
+							 data->friction, data->restitution);
+
         data->addContacts(1);
 
         return 1;
@@ -523,6 +541,11 @@ unsigned CollisionDetector::boxAndPoint(const CollisionBox &box,
                                         const ds_math::Vector3 &point,
                                         CollisionData *data)
 {
+    // Make sure we have contacts
+    if (data->contactsLeft <= 0) return 0;
+
+	if ((((box.body) && (box.body->getMass() == 0)) || !(box.body))) return 0;
+
      // Transform the point into box coordinates
     ds_math::Vector3 relPt = ds_math::Matrix4::Inverse(box.transform) * point;
 
@@ -559,8 +582,9 @@ unsigned CollisionDetector::boxAndPoint(const CollisionBox &box,
      // Note that we don't know what rigid body the point
      // belongs to, so we just use NULL. Where this is called
      // this value can be left, or filled in.
-     contact->setBodyData(box.body, NULL,
-         data->friction, data->restitution);
+	 contact->setBodyData(box.body ? (box.body->getMass() == 0 ? nullptr : box.body) : (nullptr),
+			 	 	 	  (nullptr),
+						 data->friction, data->restitution);
 
      data->addContacts(1);
      return 1;
@@ -570,6 +594,12 @@ unsigned CollisionDetector::boxAndSphere(const CollisionBox &box,
                                          const CollisionSphere &sphere,
                                          CollisionData *data)
 {
+    // Make sure we have contacts
+    if (data->contactsLeft <= 0) return 0;
+
+	if ((((box.body) && (box.body->getMass() == 0)) || !(box.body)) &&
+			(((sphere.body) && (sphere.body->getMass() == 0)) || !(sphere.body))) return 0;
+
      // Transform the centre of the sphere into box coordinates
      ds_math::Vector3 centre = sphere.getAxis(3);
      ds_math::Vector3 relCentre = ds_math::Matrix4::Inverse(box.transform) * centre;
@@ -611,11 +641,14 @@ unsigned CollisionDetector::boxAndSphere(const CollisionBox &box,
 
      Contact* contact = data->contacts;
      contact->contactNormal = (closestPtWorld - centre);
+     if (contact->contactNormal == ds_math::Vector3(0,0,0)) return 0;
      contact->contactNormal = ds_math::Vector3::Normalize(contact->contactNormal);
      contact->contactPoint = closestPtWorld;
      contact->penetration = sphere.radius - sqrt(dist);
-     contact->setBodyData(box.body, sphere.body,
-         data->friction, data->restitution);
+
+	 contact->setBodyData(box.body ? (box.body->getMass() == 0 ? nullptr : box.body) : (nullptr),
+			 	 	 	  sphere.body ? (sphere.body->getMass() == 0 ? nullptr : sphere.body) : (nullptr),
+						 data->friction, data->restitution);
 
      data->addContacts(1);
      return 1;
@@ -628,6 +661,9 @@ unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,
     // Make sure we have contacts
     if (data->contactsLeft <= 0)
         return 0;
+
+    if ((((box.body) && (box.body->getMass() == 0)) || !(box.body)) &&
+    		(((plane.body) && (plane.body->getMass() == 0)) || !(plane.body))) return 0;
 
     // Check for intersection
     if (!IntersectionTests::boxAndHalfSpace(box, plane))
@@ -680,8 +716,9 @@ unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,
             contact->penetration = (plane.offset - vertexDistance);
 
             // Write the appropriate data
-            contact->setBodyData(box.body, NULL, data->friction,
-                                 data->restitution);
+    		contact->setBodyData(box.body ? (box.body->getMass() == 0 ? nullptr : box.body) : (nullptr),
+    							 plane.body ? (plane.body->getMass() == 0 ? nullptr : plane.body) : (nullptr),
+    							 data->friction, data->restitution);
 
             // Move onto the next contact
             contact++;
@@ -698,7 +735,13 @@ unsigned CollisionDetector::boxAndHalfSpace(const CollisionBox &box,
 unsigned CollisionDetector::capsuleAndHalfSpace(const CollisionCapsule &cap,
         											   const CollisionPlane &plane,
 													   CollisionData *data) {
-    if (!IntersectionTests::capsuleAndHalfSpace(cap, plane)) {
+    // Make sure we have contacts
+    if (data->contactsLeft <= 0) return 0;
+
+	if ((((cap.body) && (cap.body->getMass() == 0)) || !(cap.body)) &&
+			(((plane.body) && (plane.body->getMass() == 0)) || !(plane.body))) return 0;
+
+	if (!IntersectionTests::capsuleAndHalfSpace(cap, plane)) {
 		return 0;
 	}
 
@@ -734,6 +777,11 @@ unsigned CollisionDetector::capsuleAndSphere(const CollisionCapsule &cap,
         const CollisionSphere &sphere,
         CollisionData *data) {
 
+    // Make sure we have contacts
+    if (data->contactsLeft <= 0) return 0;
+
+	if ((((cap.body) && (cap.body->getMass() == 0)) || !(cap.body)) &&
+			(((sphere.body) && (sphere.body->getMass() == 0)) || !(sphere.body))) return 0;
 
 	auto capSphereOrigin1 = cap.getAxis(3) + cap.getAxis(1) * (cap.height/2.0);
 	auto capSphereOrigin2 = cap.getAxis(3) - cap.getAxis(1) * (cap.height/2.0);
@@ -784,8 +832,10 @@ unsigned CollisionDetector::capsuleAndSphere(const CollisionCapsule &cap,
 		contact->contactNormal = normal;
 		contact->contactPoint = positionOne + midline * 0.5;
 		contact->penetration = (cap.radius+sphere.radius - size);
-		contact->setBodyData(cap.body, sphere.body,
-		 data->friction, data->restitution);
+
+		contact->setBodyData(cap.body ? (cap.body->getMass() == 0 ? nullptr : cap.body) : (nullptr),
+							 sphere.body ? (sphere.body->getMass() == 0 ? nullptr : sphere.body) : (nullptr),
+							 data->friction, data->restitution);
 
 		data->addContacts(1);
 		return 1;
@@ -795,10 +845,30 @@ unsigned CollisionDetector::capsuleAndSphere(const CollisionCapsule &cap,
 
 }
 
+///**
+// * Calculates a perpendicular arbitrary axis
+// * Credit: http://stackoverflow.com/questions/19649452/given-a-single-arbitrary-unit-vector-what-is-the-best-method-to-compute-an-arbi
+// * @param v
+// * @return
+// */
+//static ds_math::Vector3 calcArbitraryPerpendicularAxis(const ds_math::Vector3& v) {
+//	  float length = hypotf( v.x, hypotf(v.y, v.z));
+//	  float dir_scalar = (v.x > 0.0) ? length : -length;
+//	  float xt = v.x + dir_scalar;
+//	  float dot = -v.y / (dir_scalar * xt);
+//
+//	  return ds_math::Vector3(dot * xt,  1.0f + dot * v.y,  dot * v.z);
+//}
+
 unsigned CollisionDetector::capsuleAndBox(const CollisionCapsule &cap,
         const CollisionBox &box,
         CollisionData *data) {
 
+    // Make sure we have contacts
+    if (data->contactsLeft <= 0) return 0;
+
+	if ((((cap.body) && (cap.body->getMass() == 0)) || !(cap.body)) &&
+			(((box.body) && (box.body->getMass() == 0)) || !(box.body))) return 0;
 
 	auto capSphereOrigin1 = cap.getAxis(3) + cap.getAxis(1) * (cap.height/2.0);
 	auto capSphereOrigin2 = cap.getAxis(3) - cap.getAxis(1) * (cap.height/2.0);
@@ -823,55 +893,181 @@ unsigned CollisionDetector::capsuleAndBox(const CollisionCapsule &cap,
 		return boxAndSphere(box, ssphere, data);
 
 	} else {
-	     // Transform the centre of the sphere into box coordinates
-	     ds_math::Vector3 centre = box.getAxis(3) - ds_math::Vector3::Cross(cap.getAxis(1), ds_math::Vector3::Cross(cap.getAxis(1), cap.getAxis(3) - box.getAxis(3)));
-	     ds_math::Vector3 relCentre = ds_math::Matrix4::Inverse(box.transform) * centre;
+		CollisionBox sbox;
+		sbox.body = cap.body;
+		sbox.halfSize = ds_math::Vector3(cap.radius, cap.height/2.0, cap.radius);
+		sbox.calculateInternals();
+		return boxAndBox(sbox, box, data);
 
-	     // Early out check to see if we can exclude the contact
-	     if (fabs(relCentre.x) - cap.radius > box.halfSize.x ||
-	         fabs(relCentre.y) - cap.radius > box.halfSize.y ||
-	         fabs(relCentre.z) - cap.radius > box.halfSize.z)
-	     {
-	         return 0;
-	     }
 
-	     ds_math::Vector3 closestPt(0,0,0);
-	     ds_math::scalar dist;
+//		ds_math::Matrix4 capSpace = ds_math::Matrix4::Inverse(cap.getTransform());
+//
+//		ds_math::Vector3 capPos = ds_math::Vector3(0,0,0);
+//		ds_math::Vector3 boxPos = capSpace * box.getAxis(3);
+//		boxPos.y = 0;
+//
+//		ds_math::Vector3 boxVerts[8];
+//		boxVerts[0] = capSpace * (box.getTransform() * (ds_math::Vector3(-1,-1,-1) * box.halfSize));
+//		boxVerts[1] = capSpace * (box.getTransform() * (ds_math::Vector3(-1,-1, 1) * box.halfSize));
+//		boxVerts[2] = capSpace * (box.getTransform() * (ds_math::Vector3(-1, 1,-1) * box.halfSize));
+//		boxVerts[3] = capSpace * (box.getTransform() * (ds_math::Vector3(-1, 1, 1) * box.halfSize));
+//		boxVerts[4] = capSpace * (box.getTransform() * (ds_math::Vector3( 1,-1,-1) * box.halfSize));
+//		boxVerts[5] = capSpace * (box.getTransform() * (ds_math::Vector3( 1,-1, 1) * box.halfSize));
+//		boxVerts[6] = capSpace * (box.getTransform() * (ds_math::Vector3( 1, 1,-1) * box.halfSize));
+//		boxVerts[7] = capSpace * (box.getTransform() * (ds_math::Vector3( 1, 1, 1) * box.halfSize));
+//
+//		ds_math::Vector3 norms[4];
+//
+//		norms[0] = boxPos - capPos;
+//		norms[1] = capSpace * box.getTransform() * ds_math::Vector4(1, 0, 0, 0);
+//		norms[2] = capSpace * box.getTransform() * ds_math::Vector4(0, 1, 0, 0);
+//		norms[3] = capSpace * box.getTransform() * ds_math::Vector4(0, 0, 1, 0);
+//
+//		unsigned smallestAxis = -1;
+//		ds_math::scalar smallestPen = ds_math::SCALAR_MAX;
+//
+//		for(int cNorm = 0; cNorm < 4; cNorm++) {
+//
+//			ds_math::Vector3& norm = norms[cNorm];
+//
+//			norm.y = 0;
+//			if (norm == ds_math::Vector3(0,0,0)) {
+//				continue;
+//			} else {
+//				norm = ds_math::Vector3::Normalize(norm);
+//			}
+//
+//			ds_math::Vector3 capPnt1 = norm * -cap.radius;
+//			ds_math::Vector3 capPnt2 = norm *  cap.radius;
+//
+//			ds_math::scalar capMin = ds_math::Vector3::Dot(norm, capPnt1);
+//			ds_math::scalar capMax = ds_math::Vector3::Dot(norm, capPnt2);
+//
+//			ds_math::scalar boxMin =  ds_math::SCALAR_MAX;
+//			ds_math::scalar boxMax = -ds_math::SCALAR_MAX;
+//
+//			for(int cVertex = 0; cVertex < 8; cVertex++) {
+//				auto result = ds_math::Vector3::Dot(norm, boxVerts[cVertex]);
+//				if (result < boxMin) {
+//					boxMin = result;
+//				}
+//
+//				if (result > boxMax) {
+//					boxMax = result;
+//				}
+//			}
+//
+//
+//
+//			if (((boxMin <= capMax) && (boxMin >= capMin)) && ((boxMax > capMax) || (boxMax < capMin))) { // Min in, Max out
+//				auto pen = capMax - boxMin;
+//
+//				if (fabs(pen) < fabs(smallestPen)) {
+//					smallestAxis = cNorm;
+//					smallestPen = pen;
+//				}
+//
+//			} else if (((boxMax <= capMax) && (boxMax >= capMin)) && ((boxMin > capMax) || (boxMin < capMin))) { // Max in, Min out
+//				auto pen = capMin - boxMax;
+//
+//				if (fabs(pen) < fabs(smallestPen)) {
+//					smallestAxis = cNorm;
+//					smallestPen = pen;
+//				}
+//
+//			} else if (((boxMax <= capMax) && (boxMax >= capMin)) && ((boxMin <= capMax) && (boxMin >= capMin))) { // Max in, Min in (cube inside cap)
+//				float pen = (boxMin - capMax);
+//				float p2 = (capMin - boxMax);
+//				if (fabs(p2) < fabs(pen)) {
+//					pen = p2;
+//				}
+//
+//				if (fabs(pen) < fabs(smallestPen)) {
+//					smallestAxis = cNorm;
+//					smallestPen = pen;
+//				}
+//
+//			} else if ((boxMax >= capMax) && (boxMin <= capMin)) { // Max out, Min out (cap inside cube)
+//				float pen = (boxMin - capMax);
+//				float p2 = (capMin - boxMax);
+//				if (fabs(p2) < fabs(pen)) {
+//					pen = p2;
+//				}
+//
+//				if (fabs(pen) < fabs(smallestPen)) {
+//					smallestAxis = cNorm;
+//					smallestPen = pen;
+//				}
+//
+//			} else {
+//				return 0;
+//			}
+//		}
+//
+//		ds_math::Vector3 axis = ds_math::Vector3::Normalize(cap.getTransform() * ds_math::Vector4(norms[smallestAxis], 0));
+//
+//		ds_math::Vector3 contactPoint(ds_math::SCALAR_MAX, ds_math::SCALAR_MAX, ds_math::SCALAR_MAX);
+//		ds_math::scalar penDepth;
+//
+//
+//
+//		std::cout << "Axis: " << axis << " | Pen: " << smallestPen << std::endl;
+//		//cap.body->setPosition(cap.body->getPosition() + ds_math::Vector3(cap.getTransform() * ds_math::Vector4(-smallestPen*norms[smallestAxis], 0)));
+//
+//		Contact* contact = data->contacts;
+//		contact->contactNormal = axis;
+//		contact->penetration = -smallestPen;
+//		contact->contactPoint = cap.getAxis(3) + axis*cap.radius - axis*(contact->penetration/2.0);
+//
+//		contact->setBodyData(cap.body ? (cap.body->getMass() == 0 ? nullptr : cap.body) : (nullptr),
+//							 box.body ? (box.body->getMass() == 0 ? nullptr : box.body) : (nullptr),
+//							 data->friction, data->restitution);
+//
+//		data->addContacts(1);
+//		return 1;
 
-	     // Clamp each coordinate to the box.
-	     dist = relCentre.x;
-	     if (dist > box.halfSize.x) dist = box.halfSize.x;
-	     if (dist < -box.halfSize.x) dist = -box.halfSize.x;
-	     closestPt.x = dist;
+		/*ds_math::Vector3 boxMinPnt;
+		ds_math::Vector3 boxMaxPnt;
+		float boxMin = ds_math::SCALAR_MAX;
+		float boxMax = -ds_math::SCALAR_MAX;
 
-	     dist = relCentre.y;
-	     if (dist > box.halfSize.y) dist = box.halfSize.y;
-	     if (dist < -box.halfSize.y) dist = -box.halfSize.y;
-	     closestPt.y = dist;
 
-	     dist = relCentre.z;
-	     if (dist > box.halfSize.z) dist = box.halfSize.z;
-	     if (dist < -box.halfSize.z) dist = -box.halfSize.z;
-	     closestPt.z = dist;
+		ds_math::scalar boxDots[8];
 
-	     // Check we're in contact
-	     dist = ds_math::Vector3::Dot((closestPt - relCentre), (closestPt -
-	     relCentre));
-	     if (dist > cap.radius * cap.radius) return 0;
+		for(int i = 0; i < 8; i++) {
+			boxDots[i] = ds_math::Vector3::Dot(normal, boxVerts[i]);
+			if (boxDots[i] < boxMin) {
+				boxMinPnt = boxVerts[i];
+				boxMin = boxDots[i];
+			}
 
-	     // Compile the contact
-	     ds_math::Vector3 closestPtWorld = box.transform * closestPt;
+			if (boxDots[i] > boxMax) {
+				boxMaxPnt = boxVerts[i];
+				boxMax = boxDots[i];
+			}
+		}
 
-	     Contact* contact = data->contacts;
-	     contact->contactNormal = (closestPtWorld - centre);
-	     contact->contactNormal = ds_math::Vector3::Normalize(contact->contactNormal);
-	     contact->contactPoint = closestPtWorld;
-	     contact->penetration = cap.radius - sqrt(dist);
-	     contact->setBodyData(box.body, cap.body,
-	         data->friction, data->restitution);
+		auto capRadiusPnt = normal * cap.radius;
+		float capMax = ds_math::Vector3::Dot(normal, capRadiusPnt);
 
-	     data->addContacts(1);
-		return 1;
+		if (boxMin <= capMax) {
+
+			Contact* contact = data->contacts;
+			contact->contactNormal = box.getAxis(3) - cap.getAxis(3);
+			contact->penetration = -(boxMin - capMax);
+			contact->contactPoint = (capRadiusPnt + (contact->penetration/2.0 * -normal));
+			contact->contactPoint.y = boxMinPnt.y;
+			contact->contactPoint = cap.getTransform() * contact->contactPoint;
+
+			std::cout << contact->penetration << std::endl;
+
+			contact->setBodyData(cap.body ? (cap.body->getMass() == 0 ? nullptr : cap.body) : (nullptr),
+								 box.body ? (box.body->getMass() == 0 ? nullptr : box.body) : (nullptr),
+								 data->friction, data->restitution);
+
+			data->addContacts(1);
+			return 1;
+		}*/
 	}
 
 	return 0;
@@ -882,10 +1078,17 @@ unsigned CollisionDetector::capsuleAndCapsule(const CollisionCapsule &cap1,
         const CollisionCapsule &cap2,
         CollisionData *data) {
 
+
+	if ((((cap1.body) && (cap1.body->getMass() == 0)) || !(cap1.body)) &&
+			(((cap2.body) && (cap2.body->getMass() == 0)) || !(cap2.body))) return 0;
+
 	//@bug VERY UNOPTIMISED (should only need to do one collision check really)
 	unsigned totalResult = 0;
 
 	{
+	    // Make sure we have contacts
+	    if (data->contactsLeft <= 0) return 0;
+
 		CollisionSphere c2s1;
 		c2s1.body = cap1.body;
 		c2s1.radius = cap1.radius;
@@ -896,6 +1099,9 @@ unsigned CollisionDetector::capsuleAndCapsule(const CollisionCapsule &cap1,
 	}
 
 	{
+	    // Make sure we have contacts
+	    if (data->contactsLeft <= 0) return 0;
+
 		CollisionSphere c2s2;
 		c2s2.body = cap1.body;
 		c2s2.radius = cap1.radius;
@@ -906,6 +1112,9 @@ unsigned CollisionDetector::capsuleAndCapsule(const CollisionCapsule &cap1,
 	}
 
 	{
+	    // Make sure we have contacts
+	    if (data->contactsLeft <= 0) return 0;
+
 		CollisionSphere c1s1;
 		c1s1.body = cap1.body;
 		c1s1.radius = cap1.radius;
@@ -916,6 +1125,9 @@ unsigned CollisionDetector::capsuleAndCapsule(const CollisionCapsule &cap1,
 	}
 
 	{
+	    // Make sure we have contacts
+	    if (data->contactsLeft <= 0) return 0;
+
 		CollisionSphere c1s2;
 		c1s2.body = cap1.body;
 		c1s2.radius = cap1.radius;
@@ -926,6 +1138,9 @@ unsigned CollisionDetector::capsuleAndCapsule(const CollisionCapsule &cap1,
 	}
 
 	{
+	    // Make sure we have contacts
+	    if (data->contactsLeft <= 0) return 0;
+
 		//@bug There's probbably a bug in here. Cyl v. Cyl code.
 
 		auto cap1SphereOrigin1 = cap1.getAxis(3) + cap1.getAxis(1) * (cap1.height/2.0);
@@ -965,8 +1180,10 @@ unsigned CollisionDetector::capsuleAndCapsule(const CollisionCapsule &cap1,
 			contact->contactNormal = normal;
 			contact->contactPoint = positionOne + midline * 0.5;
 			contact->penetration = (cap1.radius+cap2.radius - size);
-			contact->setBodyData(cap1.body, cap2.body,
-			 data->friction, data->restitution);
+
+			contact->setBodyData(cap1.body ? (cap1.body->getMass() == 0 ? nullptr : cap1.body) : (nullptr),
+								 cap2.body ? (cap2.body->getMass() == 0 ? nullptr : cap2.body) : (nullptr),
+								 data->friction, data->restitution);
 
 			data->addContacts(1);
 			totalResult += 1;
