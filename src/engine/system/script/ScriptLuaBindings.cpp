@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "engine/entity/Entity.h"
 #include "engine/common/StringIntern.h"
 #include "engine/system/script/Script.h"
@@ -361,24 +363,134 @@ static int l_GetNextMessage(lua_State *L)
                 if (componentData.LoadMemory(
                         ds::StringIntern::Instance().GetString(
                             createComponentMsg.componentData)))
-                {
-                    if (typeString == "scriptComponent")
+                { 
+                    if (typeString == "scriptComponents")
                     {
-                        std::string scriptPath;
-                        if (componentData.GetString("scriptPath", &scriptPath))
+                        std::vector<std::string> scriptPaths =
+                            componentData.GetObjectKeys(
+                                "scriptPaths");
+                        // Create script_paths table
+                        lua_createtable(L, scriptPaths.size(), 0);
+                        if (scriptPaths.size() > 0)
                         {
-                            // Push scriptPath string
-                            size_t lastDotIndex = scriptPath.find_last_of(".");
-                            std::string noExtension =
-                                scriptPath.substr(0, lastDotIndex);
-                            lua_pushlstring(L, noExtension.c_str(),
-                                            noExtension.length());
+                            for (unsigned int i = 0; i < scriptPaths.size();
+                                 ++i)
+                            {
+                                const std::string &scriptPath = scriptPaths[i];
 
-                            // Set key field
-                            lua_setfield(L, -2,
-                                         "scriptPath"); // table.scriptPath =
-                                                        // scriptPath string
+                                // Push scriptPath string
+                                size_t lastDotIndex =
+                                    scriptPath.find_last_of(".");
+                                std::string noExtension =
+                                    scriptPath.substr(0, lastDotIndex);
+                                std::cout << noExtension << std::endl;
+                                // lua_pushlstring(L, noExtension.c_str(),
+                                //                 noExtension.length());
+
+                                // Set values of table
+                                std::stringstream parametersJSONKey;
+                                parametersJSONKey << "scriptPaths" << "." << scriptPath;
+                                std::vector<std::string> parameters = componentData.GetObjectKeys(parametersJSONKey.str());
+
+                                // Create new lua table to hold each script's parameters
+                                lua_newtable(L);
+
+                                if (parameters.size() > 0) {
+                                    for (unsigned int j = 0; j < parameters.size(); ++j) {
+                                        std::stringstream parameterJSONKey;
+                                        parameterJSONKey << parametersJSONKey.str() << "." << parameters[j];
+
+                                        std::stringstream parameterTypeJSONKey;
+                                        parameterTypeJSONKey << parameterJSONKey.str() << "." << "type";
+
+                                        std::string parameterType;
+                                        if (componentData.GetString(parameterTypeJSONKey.str(), &parameterType) == true)
+                                        {
+                                            std::stringstream parameterValueJSONKey;
+                                            parameterValueJSONKey << parameterJSONKey.str() << "." << "value";
+
+                                            if (parameterType == "int") {
+                                                int parameterValue;
+                                                if (componentData.GetInt(parameterValueJSONKey.str(), &parameterValue) == true)
+                                                {
+                                                    lua_pushnumber(L, parameterValue);
+
+                                                    lua_setfield(L, -2, parameters[j].c_str()); // scripts.script.parameterName = value
+                                                }
+                                            } else if (parameterType == "float") {
+                                                float parameterValue;
+                                                if (componentData.GetFloat(parameterValueJSONKey.str(), &parameterValue) == true)
+                                                {
+                                                    lua_pushnumber(L, parameterValue);
+
+                                                    lua_setfield(L, -2, parameters[j].c_str()); // scripts.script.parameterName = value
+                                                }
+                                            } else if (parameterType == "bool") {
+                                                    bool parameterValue;
+                                                    if (componentData.GetBool(parameterValueJSONKey.str(), &parameterValue) == true)
+                                                    {
+                                                        lua_pushboolean(L, parameterValue);
+
+                                                        lua_setfield(L, -2, parameters[j].c_str()); // scripts.script.parameterName = value
+                                                    }
+                                            } else if (parameterType == "string") {
+                                                std::string parameterValue;
+
+                                                if (componentData.GetString(parameterValueJSONKey.str(), &parameterValue) == true)
+                                                {
+                                                    lua_pushlstring(L, parameterValue.c_str(), parameterValue.length());
+
+                                                    lua_setfield(L, -2, parameters[j].c_str()); // scripts.script.parameterName = value
+                                                }
+                                            } else if (parameterType == "array of float") {
+                                                std::vector<float> parameterValue;
+
+                                                // Create new table to hold array
+                                                lua_newtable(L);
+
+                                                if (componentData.GetFloatArray(parameterValueJSONKey.str(), &parameterValue) == true)
+                                                {
+                                                    // Add elements to table
+                                                    for (unsigned int k = 0; k < parameterValue.size(); ++k)
+                                                    {
+                                                        lua_pushnumber(L, parameterValue[k]);
+
+                                                        lua_rawseti(L, -2, k + 1);
+                                                    }
+                                                }
+                                                
+                                                lua_setfield(L, -2, parameters[j].c_str()); // scripts.script.parameterName = table 
+                                            }
+                                        }
+                                    }
+
+                                }
+
+                                lua_setfield(L, -2, noExtension.c_str()); // scripts.script = parameterTable
+                            }
                         }
+
+                        // Set key field
+                        lua_setfield(L, -2,
+                                     "scripts"); // table.scripts =
+                        // script array 
+                        // std::string scriptPath;
+                        // if (componentData.GetString("scriptPath",
+                        // &scriptPath))
+                        // {
+                        //     // Push scriptPath string
+                        //     size_t lastDotIndex =
+                        //     scriptPath.find_last_of(".");
+                        //     std::string noExtension =
+                        //         scriptPath.substr(0, lastDotIndex);
+                        //     lua_pushlstring(L, noExtension.c_str(),
+                        //                     noExtension.length());
+
+                        //     // Set key field
+                        //     lua_setfield(L, -2,
+                        //                  "scriptPath"); // table.scriptPath =
+                        //                                 // scriptPath string
+                        // }
                     }
                 }
                 break;

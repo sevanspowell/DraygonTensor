@@ -194,6 +194,9 @@ Entity Script::SpawnPrefab(std::string prefabFile,
             fullComponentKey << "components"
                              << "." << component;
 
+            std::cout << fullPrefabFilePath.str() << ": "
+                      << fullComponentKey.str() << std::endl;
+
             std::string componentData =
                 prefab.StringifyObject(fullComponentKey.str());
 
