@@ -394,8 +394,8 @@ unsigned CollisionDetector::boxAndBox(const CollisionBox &one,
                                       const CollisionBox &two,
                                       CollisionData *data)
 {
-    // if (!IntersectionTests::boxAndBox(one, two))
-    //     return 0;
+    if (!IntersectionTests::boxAndBox(one, two))
+         return 0;
 
     // Find the vector between the two centres
     ds_math::Vector3 toCentre = two.getAxis(3) - one.getAxis(3);

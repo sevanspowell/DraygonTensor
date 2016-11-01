@@ -55,7 +55,7 @@ namespace ds
 // TODO: Update these values for m_physicsWorld constructor
 Physics::Physics()
     : m_physicsWorld(0, 0),
-      m_fg(ds_phys::Gravity(ds_math::Vector3(0.0f, -1.0f, 0.0f)))
+      m_fg(ds_phys::Gravity(ds_math::Vector3(0.0f, -10.0f, 0.0f)))
 {
     // addPlane(ds_math::Vector3(0, 1, 0), 0);
 }
@@ -370,6 +370,8 @@ void Physics::CreateTransformComponent(Entity entity,
 
 void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
 {
+    std::cout << "Adding physics component for: " << entity.id << std::endl;
+    // std::cout << "data: " << componentData << std::endl;
     if (componentData == nullptr)
     {
         return;
@@ -732,6 +734,7 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
             body->setLinearDamping(dataDamping);
             body->setAngularDamping(dataAngularDamping);
 
+            m_physicsWorld.addForceGenerator(body, &m_fg);
             m_physicsWorld.addRigidBody(body);
         }
     }

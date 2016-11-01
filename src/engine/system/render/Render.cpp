@@ -704,6 +704,10 @@ void Render::ProcessEvents(ds_msg::MessageStream *messages)
                         }
                         else
                         {
+                            std::cout << "submeshes: " << mesh.GetNumSubMeshes()
+                                      << std::endl;
+                            std::cout << "materials: " << materials.size()
+                                      << std::endl;
                             std::cerr
                                 << "Number of materials specified in "
                                 << meshResourcePath.str()

@@ -65,7 +65,7 @@ def updateCollisionShape(self, context):
 class CollisionShapes(bpy.types.PropertyGroup):
     """Class for collision shapes CollectionProperty"""
     CollisionShapeTypes = [
-        ('Box', 'Box', 'Box'),
+        ('box', 'box', 'box'),
         ('Sphere', 'Sphere', 'Sphere')]
     oldname = StringProperty(name="oldname")
     name = StringProperty(name="name", description="Name of this collision shape", get=getCollisionShapeName, set=setCollisionShapeName)
@@ -73,6 +73,10 @@ class CollisionShapes(bpy.types.PropertyGroup):
     shape = EnumProperty(name="shape",
         description="Shape of collision shape",
         items=CollisionShapeTypes)
+    isInvMass = BoolProperty(default=False)
+    mass = FloatProperty()
+    isInvInertiaTensor = BoolProperty(default=False)
+    inertiaTensor = FloatVectorProperty(size=3)
 
 def createCollisionBox(obj, name):
     if (obj.rigid_body):
@@ -127,7 +131,7 @@ class PHYSICS_PT_rigid_body_collisions(bpy.types.Panel):
             item = ob.rigid_body_collision_shapes[ob.rigid_body_collision_shapes_index]
             layout.prop(item, "shape", text="Shape")
             
-            if (item.shape == 'Box'):
+            if (item.shape == 'box'):
                 # Find box in scene
                 box = bpy.context.scene.objects[item.name]
                 
@@ -135,6 +139,14 @@ class PHYSICS_PT_rigid_body_collisions(bpy.types.Panel):
                 row.prop(box, "scale", text="Scale")
                 row = layout.row()
                 row.prop(box, "location", text="Offset")
+                row = layout.row()
+                row.prop(item, "isInvMass", text="Use inverse mass?")
+                row = layout.row()
+                row.prop(item, "mass", text="Mass")
+                row = layout.row()
+                row.prop(item, "isInvInertiaTensor", text="Use inverse inertia tensor?")
+                row = layout.row()
+                row.prop(item, "inertiaTensor", text="Inertia tensor: ")
             elif (item.shape == 'Sphere'):
                 row = layout.row()
                 #row.prop(item, "radius", text="Radius")
@@ -203,15 +215,15 @@ class PHYSICS_PT_rigid_body_dynamics(bpy.types.Panel):
         ob = context.object
         rb = ob.rigid_body
 
-        row = layout.row()
-        row.prop(ob, "rigid_body_use_inv_mass", text="Use Inverse Mass?")
-        row = layout.row()
-        if ob.rigid_body_use_inv_mass == True:
-            row.prop(ob, "rigid_body_inv_mass", text="Inverse Mass")
-        else:
-            row.prop(rb, "mass", text="Mass")
-        row = layout.row()
-        row.prop(ob, "rigid_body_use_inv_inertia_tensor", text="Use Inverse Inertia Tensor?")
+        # row = layout.row()
+        # row.prop(ob, "rigid_body_use_inv_mass", text="Use Inverse Mass?")
+        # row = layout.row()
+        # if ob.rigid_body_use_inv_mass == True:
+        #     row.prop(ob, "rigid_body_inv_mass", text="Inverse Mass")
+        # else:
+        #     row.prop(rb, "mass", text="Mass")
+        # row = layout.row()
+        # row.prop(ob, "rigid_body_use_inv_inertia_tensor", text="Use Inverse Inertia Tensor?")
         
         #row.prop(ob, "rigid_body_inertia_tensor", text="Inertia Tensor")
 
@@ -237,7 +249,6 @@ def writeObjectTexture(obj, folderpath):
         ext = os.path.splitext(img.filepath)[1]
         newimgpath = folderpath + "/" + img.name + ext
 
-    print("NEW IMAGE PATH" + newimgpath)
     try:
         shutil.copyfile(bpy.path.abspath(img.filepath), newimgpath)
     except shutil.Error as e:
@@ -247,9 +258,9 @@ def writeObjectTexture(obj, folderpath):
     out = open(texturepath, 'w')
     out.write("{\n")
     out.write(tab + "\"type\": \"2D\",\n")
-    out.write(tab + "\"images\": {\n")
-    out.write(tab + tab + "\"0\": \"" + getAssetRelativePath(newimgpath) + "\"\n")
-    out.write(tab + "}\n")
+    out.write(tab + "\"images\": [\n")
+    out.write(tab + tab + "\"" + getAssetRelativePath(newimgpath) + "\"\n")
+    out.write(tab + "]\n")
     out.write("}")
     out.write("\n")
     out.close()
@@ -264,14 +275,15 @@ def writeObjectMaterial(obj, folderpath, texturepath):
     # out.write(tab + "\"shader\": \"" + obj.active_material["shaderpath"] + "\",\n\n")
     out.write(tab + "\"shader\": \"" + "simple.shader" + "\",\n\n")
     
-    out.write(tab + "\"textures\": {\n")
-    out.write(tab + tab + "\"tex\": {\n")
+    out.write(tab + "\"textures\": [\n")
+    out.write(tab + tab + "{\n")
+    out.write(tab + tab + tab + "\"name\": \"tex\",\n")
     out.write(tab + tab + tab + "\"texture\": \"" + texturepath + "\"\n")
     out.write(tab + tab + "}\n")
-    out.write(tab + "},\n\n")
+    out.write(tab + "],\n\n")
     
-    out.write(tab + "\"parameters\": {\n")
-    out.write(tab + "}\n")
+    out.write(tab + "\"parameters\": [\n")
+    out.write(tab + "]\n")
     
     out.write("}")
     out.write("\n")
@@ -309,9 +321,9 @@ def writeObjectMesh(obj, folderpath):
 def outputRenderComponent(obj, folderpath, meshpath, materialpath, out):
     out.write(tab + tab + "\"renderComponent\": {\n")
     out.write(tab + tab + tab + "\"mesh\": \"" + meshpath + "\",\n")
-    out.write(tab + tab + tab + "\"materials\": {\n")
-    out.write(tab + tab + tab + tab + "\"" + materialpath + "\": \"\"\n")
-    out.write(tab + tab + tab + "}\n")
+    out.write(tab + tab + tab + "\"materials\": [\n")
+    out.write(tab + tab + tab + tab + "\"" + materialpath + "\"\n")
+    out.write(tab + tab + tab + "]\n")
     out.write(tab + tab + "}")
 
 def outputPhysicsComponent(obj, folderpath, out):
@@ -322,21 +334,37 @@ def outputPhysicsComponent(obj, folderpath, out):
     # TODO inverse mass
     #if (obj.rigid_body.use_inv_mass):
         #out.write(tab + tab + tab + "\"invMass\": " + str(obj.rigid_body.inv_mass) + ",\n")
-    out.write(tab + tab + tab + "\"mass\": " + str(obj.rigid_body.mass) + ",\n")
-    out.write(tab + tab + tab + "\"invInertiaTensor\": " + "[1.0, 1.0, 1.0],\n")
-    out.write(tab + tab + tab + "\"collisionShapes\": {\n")
+    # out.write(tab + tab + tab + "\"mass\": " + str(obj.rigid_body.mass) + ",\n")
+    # out.write(tab + tab + tab + "\"invInertiaTensor\": " + "[1.0, 1.0, 1.0],\n")
+    out.write(tab + tab + tab + "\"collisionShapes\": [\n")
+    out.write(tab + tab + tab + tab + "{\n")
     
     i = 0
     for shape in obj.rigid_body_collision_shapes:
         colobj = bpy.context.scene.objects[shape.name]
-        out.write(tab + tab + tab + tab + "\"" + shape.name + "\": " + "{ \"type\": \"" + shape.shape + "\", \"dim\": [" + str(colobj.scale[0] / 2.0) + ", " + str(colobj.scale[1] / 2.0) + ", " + str(colobj.scale[2] / 2.0) + "], \"offset\": [" + str(colobj.location[0]) + ", " + str(colobj.location[2]) + ", " + str(-colobj.location[1]) + "] }")
+        out.write(tab + tab + tab + tab + tab + "\"name\": \"" + shape.name + "\",\n")
+        out.write(tab + tab + tab + tab + tab + "\"type\": \"" + shape.shape + "\",\n")
+        if (shape.isInvMass):
+            out.write(tab + tab + tab + tab + tab + "\"invMass\": " + str(shape.mass) + ",\n")
+        else:
+            out.write(tab + tab + tab + tab + tab + "\"mass\": " + str(shape.mass) + ",\n")
+        if (shape.isInvInertiaTensor):
+            out.write(tab + tab + tab + tab + tab + "\"invInertiaTensor\": [" + str(shape.inertiaTensor[0]) + ", " + str(shape.inertiaTensor[1]) + ", " + str(shape.inertiaTensor[2]) + "],\n")
+        else:
+            out.write(tab + tab + tab + tab + tab + "\"inertiaTensor\": [" + str(shape.inertiaTensor[0]) + ", " + str(shape.inertiaTensor[1]) + ", " + str(shape.inertiaTensor[2]) + "],\n")
+
+        if (shape.shape == "box"):
+            out.write(tab + tab + tab + tab + tab + "\"halfSize\": [" + str(colobj.scale[0] / 2.0) + ", " + str(colobj.scale[1] / 2.0) + ", " + str(colobj.scale[2] / 2.0) + "],\n")
+                
+        out.write(tab + tab + tab + tab + tab + "\"offset\": [" + str(colobj.location[0]) + ", " + str(colobj.location[2]) + ", " + str(-colobj.location[1]) + "]\n")
+        out.write(tab + tab + tab + tab + "}")
         if (i < (len(obj.rigid_body_collision_shapes) - 1)):
             out.write(",\n")
         else:
             out.write("\n")
         i = i + 1
 
-    out.write(tab + tab + tab + "}\n")
+    out.write(tab + tab + tab + "]\n")
     out.write(tab + tab + "}")
 
 def writePrefab(obj, folderpath, meshpath, materialpath):
@@ -430,9 +458,6 @@ def register():
     bpy.types.Object.rigid_body_collision_shapes = CollectionProperty(type=CollisionShapes)
     bpy.types.Object.rigid_body_collision_shapes_index = IntProperty()
     bpy.types.Object.rigid_body_is_col_shape = BoolProperty(default=False)
-    bpy.types.Object.rigid_body_use_inv_mass = BoolProperty(default=False)
-    bpy.types.Object.rigid_body_use_inv_inertia_tensor = BoolProperty(default=False)
-    bpy.types.Object.rigid_body_inv_mass = FloatProperty(default=0.0, min=0.0)
     # bpy.utils.register_class(ExportDraygonTensorLua)
     bpy.types.INFO_MT_file_export.append(menu_func)
 
@@ -441,9 +466,6 @@ def unregister():
     del bpy.types.Object.rigid_body_collision_shapes
     del bpy.types.Object.rigid_body_collision_shapes_index
     del bpy.types.Object.rigid_body_is_col_shape
-    del bpy.types.Object.rigid_body_use_inv_mass
-    del bpy.types.Object.rigid_body_use_inv_inertia_tensor
-    del bpy.types.Object.rigid_body_inv_mass
     # bpy.utils.unregister_class(ExportDraygonTensorLua)
     bpy.types.INFO_MT_file_export.remove(menu_func)
 

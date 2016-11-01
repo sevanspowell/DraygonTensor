@@ -1,8 +1,10 @@
 subdirs(
+    aiImplem
     aiFirstDraft
     empty
     example
     milestone1
     objectScripts
     physics
+    test2
 )

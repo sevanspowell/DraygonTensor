@@ -76,7 +76,7 @@ void PhysicsWorld::addRigidBody(RigidBody *rigidBody)
     // rigidBody->setLinearDamping(0.95f);
     // rigidBody->setAngularDamping(0.80f);
     rigidBody->clearAccumulators();
-    rigidBody->setAcceleration(0.0f, -10.0f, 0.0f);
+    // rigidBody->setAcceleration(0.0f, -10.0f, 0.0f);
     rigidBody->setCanSleep(true);
 
     rigidBody->setAwake();
