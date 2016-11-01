@@ -300,7 +300,7 @@ def writeObjectMesh(obj, folderpath):
     obj.select = True
     location = copy.copy(obj.location)
     orientation = copy.copy(obj.rotation_euler)
-    #orientation = copy.copy(obj.rotation_quaternion)
+    # orientation = copy.copy(obj.rotation_quaternion)
     scale = copy.copy(obj.scale)
     
     obj.location = Vector((0.0, 0.0, 0.0))
@@ -313,7 +313,7 @@ def writeObjectMesh(obj, folderpath):
     
     obj.location = location
     obj.rotation_euler = orientation
-    #obj.rotation_quaternion = orientation
+    # obj.rotation_quaternion = orientation
     # obj.scale = scale
     
     return getAssetRelativePath(meshpath)
