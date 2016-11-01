@@ -31,7 +31,6 @@ static void setInertiaTensorCoeffs(ds_math::Matrix3 &mat,
     mat[2][2] = iz;
 }
 
-
 static void setBlockInertiaTensor(ds_math::Matrix3 &mat,
                                   const ds_math::Vector3 &halfSizes,
                                   ds_math::scalar mass)
@@ -41,7 +40,7 @@ static void setBlockInertiaTensor(ds_math::Matrix3 &mat,
                            0.3f * mass * (squares.x + squares.z),
                            0.3f * mass * (squares.x + squares.y));
 }
-*/
+
 
 // static void setSphereIntertiaTensor(ds_math::Matrix3 &mat,
 //									ds_math::scalar radius,
@@ -49,7 +48,14 @@ static void setBlockInertiaTensor(ds_math::Matrix3 &mat,
 //	ds_math::scalar inertia = 2/5.0 * mass * radius * radius;
 //	setInertiaTensorCoeffs(mat, inertia, inertia, inertia);
 //}
-
+static void setSphereIntertiaTensor(ds_math::Matrix3 &mat,
+                                    ds_math::scalar radius,
+                                    ds_math::scalar mass)
+{
+    ds_math::scalar inertia = 2 / 5.0 * mass * radius * radius;
+    setInertiaTensorCoeffs(mat, inertia, inertia, inertia);
+}
+*/
 namespace ds
 {
 // TODO: Update these values for m_physicsWorld constructor
@@ -81,7 +87,7 @@ void Physics::AddForceGenerator(Entity entity)
 
         assert(body != nullptr);
 
-        // m_physicsWorld.addForceGenerator(body, &m_fg);
+        m_physicsWorld.addForceGenerator(body, &m_fg);
     }
 }
 
@@ -602,7 +608,7 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
                     {
                         std::cerr << "Collision shape " << i << " (" << name
                                   << ") needs radius field." << std::endl;
-                        }
+                    }
                     if (collisionShape["height"] != nullptr)
                     {
                         height = json::parseFloat(collisionShape["height"]);

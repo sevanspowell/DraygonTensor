@@ -71,8 +71,8 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
 void PhysicsWorld::addRigidBody(RigidBody *rigidBody)
 {
     //@todo Remove when propper loading is done.
-    // rigidBody->setRotation(ds_math::Vector3(0, 0, 0));
 
+    // rigidBody->setRotation(ds_math::Vector3(0, 0, 0));
     // rigidBody->setLinearDamping(0.95f);
     // rigidBody->setAngularDamping(0.80f);
     rigidBody->clearAccumulators();

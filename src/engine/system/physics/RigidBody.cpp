@@ -234,16 +234,19 @@ void RigidBody::calculateDerivedData()
 
 void RigidBody::setMass(const ds_math::scalar mass)
 {
-    assert(mass != 0);
+    if (mass == 0) {
+    	m_inverseMass = 0;
+    } else {
+        m_inverseMass = ((ds_math::scalar)1.0) / mass;
+    }
 
-    m_inverseMass = ((ds_math::scalar)1.0) / mass;
 }
 
 ds_math::scalar RigidBody::getMass() const
 {
     if (m_inverseMass == 0)
     {
-        return ds_math::SCALAR_MAX;
+        return 0;
     }
     else
     {

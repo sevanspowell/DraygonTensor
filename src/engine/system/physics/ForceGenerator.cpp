@@ -44,7 +44,7 @@ void Gravity::updateForce(RigidBody *body, ds_math::scalar duration)
     if (body->hasFiniteMass())
     {
         // Apply mass-scaled force to body
-        body->addForce(m_gravity);
+        body->addForce(m_gravity * body->getMass());
     }
 }
 

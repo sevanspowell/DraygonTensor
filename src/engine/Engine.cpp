@@ -131,9 +131,14 @@ bool Engine::Init()
     stream << header << configLoadMsg;
     PostMessages(stream);
 
+    result &= m_script->Initialize(&configBuffer[0]);
+
     // Initialize all systems
     for (auto &system : m_systems)
     {
+    	//Skip the script system.
+    	if (dynamic_cast<Script*>(system.get())) continue;
+
         // If any initialization fails, whole process fails.
         result &= system->Initialize(&configBuffer[0]);
     }
@@ -161,33 +166,39 @@ void Engine::Update(float deltaTime)
 
     uint32_t screenRefreshRate = m_platform->GetRefreshRate();
 
+    auto updateSystem = [](float deltaTime, ISystem* system, uint32_t screenRefreshRate){
+    	if (system->getUpdateRate(screenRefreshRate) == 0)
+		{
+			system->Update(deltaTime);
+		}
+		else
+		{
+			unsigned maxUpdates = system->getMaxConsecutiveUpdates();
+			float accum = system->getUpdateAccum();
+			float updateDT = 1/(float)system->getUpdateRate(screenRefreshRate);
+			float boundedDeltaTime = maxUpdates == 0 ? deltaTime : std::min(maxUpdates * updateDT, deltaTime);
+			accum += boundedDeltaTime;
+
+			while (accum >= updateDT)
+			{
+				system->Update(updateDT);
+				accum -= updateDT;
+			}
+
+			system->setUpdateAccum(accum);
+		}
+    };
+
     // Update systems
     for (auto &system : m_systems)
     {
-        if (system->getUpdateRate(screenRefreshRate) == 0)
-        {
-            system->Update(deltaTime);
-        }
-        else
-        {
-            unsigned maxUpdates = system->getMaxConsecutiveUpdates();
-            float accum = system->getUpdateAccum();
-            float updateDT =
-                1 / (float)system->getUpdateRate(screenRefreshRate);
-            float boundedDeltaTime =
-                maxUpdates == 0 ? deltaTime
-                                : std::min(maxUpdates * updateDT, deltaTime);
-            accum += boundedDeltaTime;
+    	//Skip the script system.
+    	if (dynamic_cast<Script*>(system.get())) continue;
 
-            while (accum >= updateDT)
-            {
-                system->Update(updateDT);
-                accum -= updateDT;
-            }
-
-            system->setUpdateAccum(accum);
-        }
+    	updateSystem(deltaTime, system.get(), screenRefreshRate);
     }
+
+    updateSystem(deltaTime, m_script, screenRefreshRate);
 }
 
 void Engine::Shutdown()
