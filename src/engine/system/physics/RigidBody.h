@@ -155,11 +155,18 @@ public:
     void setInertiaTensor(const ds_math::Vector3 &inertiaTensor);
 
     ///
-    /// Gets the inverse mass of the rigid body
+    /// Gets the inertia tensor of the rigid body
     ///
-    /// @return The current inverse mass of the rigid body
+    /// @return The current inertia tensor of the rigid body
     ///
     void getInertiaTensor(ds_math::Matrix3 *inertiaTensor) const;
+
+    ///
+    /// Gets the inertia tensor of the rigid body
+    ///
+    /// @return The current inertia tensor of the rigid body
+    ///
+    ds_math::Vector3 getInertiaTensorProducts() const;
 
     ///
     /// Gets a new copy of the current inertia tensor of the rigid body

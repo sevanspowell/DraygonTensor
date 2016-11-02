@@ -234,12 +234,14 @@ void RigidBody::calculateDerivedData()
 
 void RigidBody::setMass(const ds_math::scalar mass)
 {
-    if (mass == 0) {
-    	m_inverseMass = 0;
-    } else {
+    if (mass == 0)
+    {
+        m_inverseMass = 0;
+    }
+    else
+    {
         m_inverseMass = ((ds_math::scalar)1.0) / mass;
     }
-
 }
 
 ds_math::scalar RigidBody::getMass() const
@@ -298,6 +300,15 @@ void RigidBody::setInverseInertiaTensor(
 
     m_inverseInertiaTensor = invInertiaTensorMat;
     checkInverseInertiaTensor(m_inverseInertiaTensor);
+}
+
+ds_math::Vector3 RigidBody::getInertiaTensorProducts() const
+{
+    ds_math::Matrix3 inertiaTensor =
+        ds_math::Matrix3::Inverse(m_inverseInertiaTensor);
+
+    return ds_math::Vector3(inertiaTensor[0][0], inertiaTensor[1][1],
+                            inertiaTensor[2][2]);
 }
 
 void RigidBody::getInertiaTensor(ds_math::Matrix3 *inertiaTensor) const

@@ -111,6 +111,20 @@ unsigned Physics::getMaxConsecutiveUpdates() const
     return 1;
 }
 
+ds_phys::RigidBody *Physics::getRigidBody(Entity entity)
+{
+    ds_phys::RigidBody *body = nullptr;
+
+    Instance phys = m_physicsComponentManager->GetInstanceForEntity(entity);
+
+    if (phys.IsValid())
+    {
+        body = m_physicsComponentManager->GetRigidBody(phys);
+    }
+
+    return body;
+}
+
 void Physics::Update(float deltaTime)
 {
 

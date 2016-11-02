@@ -54,6 +54,17 @@ private:
     ds_math::Vector3 m_gravity;
 };
 
+class ImpulseGenerator : public IForceGenerator
+{
+public:
+    ImpulseGenerator(const ds_math::Vector3 &force);
+
+    virtual void updateForce(RigidBody *body, ds_math::scalar duration);
+
+private:
+    ds_math::Vector3 m_force;
+};
+
 class ForceRegistry
 {
 public:

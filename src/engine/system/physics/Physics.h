@@ -35,6 +35,8 @@ public:
 
     virtual unsigned getMaxConsecutiveUpdates() const;
 
+    ds_phys::RigidBody *getRigidBody(Entity entity);
+
 private:
     void ProcessEvents(ds_msg::MessageStream *messages);
 
