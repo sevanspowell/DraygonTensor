@@ -27,7 +27,8 @@ def ensureUniqueName(name):
     originalName = name
     while (name in bpy.context.scene.objects):
         name = originalName + "_" + str(i)
-    
+        i = i + 1
+
     return name
 
 def setCollisionShapeName(self, value):
@@ -41,22 +42,22 @@ def setCollisionShapeName(self, value):
                 # If another collision shape already exists with this name, rename this one
                 value = ensureUniqueName(value)
                 bpy.context.scene.objects[self.name].name = value
-          
+
     if "name" in self:
         self["oldname"] = self["name"]
     else:
         self["oldname"] = ""
-          
+
     self["name"] = value
     return None
-        
+
 
 def getCollisionShapeName(self):
     if ("name" in self):
         return self["name"]
     else:
         return ""
-    
+
 def updateCollisionShape(self, context):
     if "name" in self:
         self["oldname"] = self["name"]
@@ -84,13 +85,88 @@ def createCollisionBox(obj, name):
             radius=0.5,
             location=(0, 0, 0),
             rotation=(0, 0, 0))
-            
+
         colbox = bpy.context.active_object
-        colbox.name = name      
+        colbox.name = name
         colbox.parent = obj
         colbox.rigid_body_is_col_shape = True
-        
+
         return colbox
+
+class Affordance(bpy.types.PropertyGroup):
+    affordanceName = StringProperty(name="affordanceName")
+    affordanceValue = FloatProperty(min=0.0)
+
+class OBJECT_UL_affordances(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index, flt_flag):
+        split = layout.split(0.5)
+        # split.label(str(item.id))
+        split.prop(item, "affordanceName", text="", emboss=False, translate=False, icon='BORDER_RECT')
+        split.prop(item, "affordanceValue", text="", emboss=False, translate=False, icon='BORDER_RECT')
+
+class OBJECT_OT_add_affordance(bpy.types.Operator):
+    bl_label = ""
+    bl_description = "Add an affordance to an object"
+    bl_idname = "affordance_props.add_affordance"
+
+    def execute(self, context):
+        ob = bpy.context.object
+
+        item = ob.affordances.add()
+        item.id = len(ob.affordances)
+        item.affordanceName = "New affordance"
+        item.affordanceValue = 0.0
+
+        return {'FINISHED'}
+
+class OBJECT_OT_remove_affordance(bpy.types.Operator):
+    bl_label = ""
+    bl_description = "Remove an affordance from an object"
+    bl_idname = "affordance_props.remove_affordance"
+
+    @classmethod
+    def poll(cls, context):
+        affordances = bpy.context.object.affordances
+        return bool(affordances.items())
+
+    def execute(self, context):
+        bpy.ops.object.mode_set(mode='OBJECT')
+        affordances = bpy.context.object.affordances
+        i = bpy.context.object.affordances_index
+        affordances.remove(i)
+
+        return {'FINISHED'}
+
+class OBJECT_PT_Affordances(bpy.types.Panel):
+    bl_label = "Game Affordances"
+    bl_idname = "OBJECT_PT_affordances"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "object"
+    bl_default_closed = True
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def draw(self, context):
+        layout = self.layout
+
+        ob = context.object
+
+        row = layout.row()
+        row.template_list("OBJECT_UL_affordances", "", ob, "affordances", ob, "affordances_index", rows=3)
+        col = row.column(align=True)
+        col.operator("affordance_props.add_affordance", icon='ZOOMIN', text="")
+        col.operator("affordance_props.remove_affordance", icon='ZOOMOUT', text="")
+
+        layout.operator("affordance_props.add_affordance", icon='ZOOMIN', text="New")
+
+        row = layout.row()
+        item = ob.affordances[ob.affordances_index]
+        row.prop(item, "affordanceValue", text="Value")
+
+
 
 class PHYSICS_UL_rigid_body_collision_shapes(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index, flt_flag):
@@ -123,18 +199,18 @@ class PHYSICS_PT_rigid_body_collisions(bpy.types.Panel):
         col = row.column(align=True)
         col.operator("rigid_body_props.add_col_shape", icon='ZOOMIN', text="")
         col.operator("rigid_body_props.remove_col_shape", icon='ZOOMOUT', text="")
-        
+
         layout.operator("rigid_body_props.add_col_shape", icon='ZOOMIN', text="New")
 
         ob = bpy.context.object
         if (len(ob.rigid_body_collision_shapes) >= 1):
             item = ob.rigid_body_collision_shapes[ob.rigid_body_collision_shapes_index]
             layout.prop(item, "shape", text="Shape")
-            
+
             if (item.shape == 'box'):
                 # Find box in scene
                 box = bpy.context.scene.objects[item.name]
-                
+
                 row = layout.row()
                 row.prop(box, "scale", text="Scale")
                 row = layout.row()
@@ -166,11 +242,11 @@ class PHYSICS_OT_add_rigid_body_collision_shape(bpy.types.Operator):
         name = ensureUniqueName(name)
         colbox = createCollisionBox(ob, name)
         item.name = colbox.name
- 
+
         bpy.ops.object.select_all(action='DESELECT')
         ob.select = True
         bpy.context.scene.objects.active = ob
-        
+
         return {'FINISHED'}
 
 class PHYSICS_OT_remove_rigid_body_collision_shape(bpy.types.Operator):
@@ -224,22 +300,23 @@ class PHYSICS_PT_rigid_body_dynamics(bpy.types.Panel):
         #     row.prop(rb, "mass", text="Mass")
         # row = layout.row()
         # row.prop(ob, "rigid_body_use_inv_inertia_tensor", text="Use Inverse Inertia Tensor?")
-        
+
         #row.prop(ob, "rigid_body_inertia_tensor", text="Inertia Tensor")
 
+##
 
-tab = "  "
+tab = "    "
 luatab = "    "
 
 def getAssetRelativePath(path):
     assetdirname = "assets/"
-    
+
     return path[path.find(assetdirname) + len(assetdirname):]
 
 def writeObjectTexture(obj, folderpath):
     import shutil
     texturepath = folderpath + "/" + obj.active_material.active_texture.name + ".texture"
-    
+
     # Make a copy of the source image and save it in the assets directory
     img = obj.active_material.active_texture.image
     newimgpath = ""
@@ -254,7 +331,7 @@ def writeObjectTexture(obj, folderpath):
     except shutil.Error as e:
         # Ignore same file error
         print("Warning: %s" % e)
-    
+
     out = open(texturepath, 'w')
     out.write("{\n")
     out.write(tab + "\"type\": \"2D\",\n")
@@ -264,7 +341,7 @@ def writeObjectTexture(obj, folderpath):
     out.write("}")
     out.write("\n")
     out.close()
-    
+
     return getAssetRelativePath(texturepath)
 
 def writeObjectMaterial(obj, folderpath, texturepath):
@@ -274,17 +351,17 @@ def writeObjectMaterial(obj, folderpath, texturepath):
     out.write("{\n")
     # out.write(tab + "\"shader\": \"" + obj.active_material["shaderpath"] + "\",\n\n")
     out.write(tab + "\"shader\": \"" + "simple.shader" + "\",\n\n")
-    
+
     out.write(tab + "\"textures\": [\n")
     out.write(tab + tab + "{\n")
     out.write(tab + tab + tab + "\"name\": \"tex\",\n")
     out.write(tab + tab + tab + "\"texture\": \"" + texturepath + "\"\n")
     out.write(tab + tab + "}\n")
     out.write(tab + "],\n\n")
-    
+
     out.write(tab + "\"parameters\": [\n")
     out.write(tab + "]\n")
-    
+
     out.write("}")
     out.write("\n")
     out.close()
@@ -302,23 +379,23 @@ def writeObjectMesh(obj, folderpath):
     orientation = copy.copy(obj.rotation_euler)
     # orientation = copy.copy(obj.rotation_quaternion)
     scale = copy.copy(obj.scale)
-    
+
     obj.location = Vector((0.0, 0.0, 0.0))
     obj.rotation_euler = Euler((0.0, 0.0, 0.0), 'XYZ')
     obj.scale = Vector((1.0, 1.0, 1.0))
     bpy.context.scene.update()
     #obj.rotation_quaternion = Quaternion((1.0, 0.0, 0.0, 0.0))
 
-    
+
     # Export .obj from selected object only
     bpy.ops.export_scene.obj(filepath=meshpath, axis_forward='-Z', axis_up='Y', use_materials=False, use_normals=True, use_uvs=True, use_triangles=True, use_selection=True)
-    
+
     obj.location = location
     obj.rotation_euler = orientation
     # obj.rotation_quaternion = orientation
     obj.scale = scale
     bpy.context.scene.update()
-    
+
     return getAssetRelativePath(meshpath)
 
 def outputRenderComponent(obj, folderpath, meshpath, materialpath, out):
@@ -340,10 +417,10 @@ def outputPhysicsComponent(obj, folderpath, out):
     # out.write(tab + tab + tab + "\"mass\": " + str(obj.rigid_body.mass) + ",\n")
     # out.write(tab + tab + tab + "\"invInertiaTensor\": " + "[1.0, 1.0, 1.0],\n")
     out.write(tab + tab + tab + "\"collisionShapes\": [\n")
-    out.write(tab + tab + tab + tab + "{\n")
-    
+
     i = 0
     for shape in obj.rigid_body_collision_shapes:
+        out.write(tab + tab + tab + tab + "{\n")
         colobj = bpy.context.scene.objects[shape.name]
         out.write(tab + tab + tab + tab + tab + "\"name\": \"" + shape.name + "\",\n")
         out.write(tab + tab + tab + tab + tab + "\"type\": \"" + shape.shape + "\",\n")
@@ -358,7 +435,7 @@ def outputPhysicsComponent(obj, folderpath, out):
 
         if (shape.shape == "box"):
             out.write(tab + tab + tab + tab + tab + "\"halfSize\": [" + str(abs(colobj.scale[0])/2.0) + ", " + str(abs(colobj.scale[2])/2.0) + ", " + str(abs(colobj.scale[1])/2.0) + "],\n")
-                
+
         out.write(tab + tab + tab + tab + tab + "\"offset\": [" + str(colobj.location[0]) + ", " + str(colobj.location[2]) + ", " + str(-colobj.location[1]) + "]\n")
         out.write(tab + tab + tab + tab + "}")
         if (i < (len(obj.rigid_body_collision_shapes) - 1)):
@@ -370,21 +447,41 @@ def outputPhysicsComponent(obj, folderpath, out):
     out.write(tab + tab + tab + "]\n")
     out.write(tab + tab + "}")
 
+def outputAffordanceComponent(obj, out):
+    out.write(tab + tab + "\"affordanceComponent\": {\n")
+    out.write(tab + tab + tab + "\"affordances\": [\n")
+
+    i = 0
+    for affordance in obj.affordances:
+        out.write(tab + tab + tab + tab + "{ " + "\"affordance\": " + "\"" + affordance.affordanceName + "\", \"value\": " + str(affordance.affordanceValue) + " }")
+
+        if (i < (len(obj.affordances) - 1)):
+            out.write(",\n")
+        else:
+            out.write("\n")
+        i = i + 1
+
+    out.write(tab + tab + tab + "]\n")
+    out.write(tab + tab + "}")
+
 def writePrefab(obj, folderpath, meshpath, materialpath):
     prefabpath = folderpath + "/" + obj.name + ".prefab"
-    
+
     out = open(prefabpath, 'w')
     out.write("{\n")
     out.write(tab + "\"components\": {\n")
     outputRenderComponent(obj, folderpath, meshpath, materialpath, out)
-    if (obj.rigid_body):
+    if (obj.rigid_body and len(obj.rigid_body_collision_shapes) > 0):
         out.write(",\n")
         outputPhysicsComponent(obj, folderpath, out)
+    if (obj.affordances_index > 0):
+        out.write(",\n")
+        outputAffordanceComponent(obj, out)
     out.write("\n")
     out.write(tab + "}\n")
     out.write("}")
     out.close()
-    
+
     return getAssetRelativePath(prefabpath)
 
 def writeAll(context, folderpath, levelpath):
@@ -394,9 +491,9 @@ def writeAll(context, folderpath, levelpath):
     levelout.write("-- GENERATED BY BLENDER SCRIPT\n")
     levelout.write("function " + levelname + "(offset)\n")
 
-    
+
     scene = bpy.context.scene
-    for obj in scene.objects: 
+    for obj in scene.objects:
         if (obj.type == 'MESH'):
             # Skip collision shapes
             if ("rigid_body_is_col_shape" in obj and obj.rigid_body_is_col_shape == True):
@@ -406,7 +503,7 @@ def writeAll(context, folderpath, levelpath):
             relmaterialpath = writeObjectMaterial(obj, folderpath, reltexturepath)
             relmeshpath = writeObjectMesh(obj, folderpath)
             relprefabpath = writePrefab(obj, folderpath, relmeshpath, relmaterialpath)
-            
+
             # Get position, orientation and scale
             position = "Vector3(" + str(obj.location.x) + ", " + str(obj.location.z) + ", " + str(-obj.location.y) + ")"
             scale = "Vector3(" + str(obj.scale.x) + ", " + str(obj.scale.z) + ", " + str(obj.scale.y) + ")"
@@ -415,7 +512,7 @@ def writeAll(context, folderpath, levelpath):
             orientation = obj.rotation_euler.to_quaternion()
 
             orientation = "Quaternion(" + str(orientation[1]) + ", " + str(orientation[3]) + ", " + str(-orientation[2]) + ", " + str(orientation[0]) + ")"
-            
+
             levelout.write(luatab + "local location = " + position + "\n")
             levelout.write(luatab + "if offset ~= nil then\n")
             levelout.write(luatab + luatab + "location = location + offset\n")
@@ -426,7 +523,7 @@ def writeAll(context, folderpath, levelpath):
     # Finish level file
     levelout.write("end")
     levelout.close()
-    
+
     return {'FINISHED'}
 
 class ExportDraygonTensorLua(bpy.types.Operator, ExportHelper):
@@ -437,7 +534,7 @@ class ExportDraygonTensorLua(bpy.types.Operator, ExportHelper):
     # Select folder, not file
     use_filter_folder = True
     filename_ext = ".lua"
-    
+
     # Filter everything that isn't a folder
     # filter_glob = StringProperty(
     #         default="/",
@@ -447,9 +544,9 @@ class ExportDraygonTensorLua(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         folderpath = os.path.dirname(self.filepath)
         print(folderpath)
-        
+
         bpy.ops.object.mode_set(mode='OBJECT')
-        
+
         return writeAll(context, folderpath, self.filepath)
 
 def menu_func(self, context):
@@ -461,6 +558,8 @@ def register():
     bpy.types.Object.rigid_body_collision_shapes = CollectionProperty(type=CollisionShapes)
     bpy.types.Object.rigid_body_collision_shapes_index = IntProperty()
     bpy.types.Object.rigid_body_is_col_shape = BoolProperty(default=False)
+    bpy.types.Object.affordances = CollectionProperty(type=Affordance)
+    bpy.types.Object.affordances_index = IntProperty()
     # bpy.utils.register_class(ExportDraygonTensorLua)
     bpy.types.INFO_MT_file_export.append(menu_func)
 
@@ -469,6 +568,7 @@ def unregister():
     del bpy.types.Object.rigid_body_collision_shapes
     del bpy.types.Object.rigid_body_collision_shapes_index
     del bpy.types.Object.rigid_body_is_col_shape
+    del bpy.types.Object.affordances
     # bpy.utils.unregister_class(ExportDraygonTensorLua)
     bpy.types.INFO_MT_file_export.remove(menu_func)
 
