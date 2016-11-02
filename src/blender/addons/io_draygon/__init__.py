@@ -81,7 +81,7 @@ class CollisionShapes(bpy.types.PropertyGroup):
 def createCollisionBox(obj, name):
     if (obj.rigid_body):
         bpy.ops.mesh.primitive_cube_add(
-            radius=1,
+            radius=0.5,
             location=(0, 0, 0),
             rotation=(0, 0, 0))
             
@@ -305,8 +305,10 @@ def writeObjectMesh(obj, folderpath):
     
     obj.location = Vector((0.0, 0.0, 0.0))
     obj.rotation_euler = Euler((0.0, 0.0, 0.0), 'XYZ')
+    obj.scale = Vector((1.0, 1.0, 1.0))
+    bpy.context.scene.update()
     #obj.rotation_quaternion = Quaternion((1.0, 0.0, 0.0, 0.0))
-    # obj.scale = Vector((1.0, 1.0, 1.0))
+
     
     # Export .obj from selected object only
     bpy.ops.export_scene.obj(filepath=meshpath, axis_forward='-Z', axis_up='Y', use_materials=False, use_normals=True, use_uvs=True, use_triangles=True, use_selection=True)
@@ -314,7 +316,8 @@ def writeObjectMesh(obj, folderpath):
     obj.location = location
     obj.rotation_euler = orientation
     # obj.rotation_quaternion = orientation
-    # obj.scale = scale
+    obj.scale = scale
+    bpy.context.scene.update()
     
     return getAssetRelativePath(meshpath)
 
@@ -354,7 +357,7 @@ def outputPhysicsComponent(obj, folderpath, out):
             out.write(tab + tab + tab + tab + tab + "\"inertiaTensor\": [" + str(shape.inertiaTensor[0]) + ", " + str(shape.inertiaTensor[1]) + ", " + str(shape.inertiaTensor[2]) + "],\n")
 
         if (shape.shape == "box"):
-            out.write(tab + tab + tab + tab + tab + "\"halfSize\": [" + str(colobj.scale[0] / 2.0) + ", " + str(colobj.scale[1] / 2.0) + ", " + str(colobj.scale[2] / 2.0) + "],\n")
+            out.write(tab + tab + tab + tab + tab + "\"halfSize\": [" + str(abs(colobj.scale[0])/2.0) + ", " + str(abs(colobj.scale[2])/2.0) + ", " + str(abs(colobj.scale[1])/2.0) + "],\n")
                 
         out.write(tab + tab + tab + tab + tab + "\"offset\": [" + str(colobj.location[0]) + ", " + str(colobj.location[2]) + ", " + str(-colobj.location[1]) + "]\n")
         out.write(tab + tab + tab + tab + "}")
@@ -406,8 +409,8 @@ def writeAll(context, folderpath, levelpath):
             
             # Get position, orientation and scale
             position = "Vector3(" + str(obj.location.x) + ", " + str(obj.location.z) + ", " + str(-obj.location.y) + ")"
-            # scale = "Vector3(" + str(obj.scale.x) + ", " + str(obj.scale.y) + ", " + str(obj.scale.z) + ")"
-            scale = "Vector3(1, 1, 1)"
+            scale = "Vector3(" + str(obj.scale.x) + ", " + str(obj.scale.z) + ", " + str(obj.scale.y) + ")"
+            #scale = "Vector3(1, 1, 1)"
             #orientation = obj.rotation_quaternion
             orientation = obj.rotation_euler.to_quaternion()
 
