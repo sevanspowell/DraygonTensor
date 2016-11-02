@@ -623,6 +623,7 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
                     std::cout << "radius: " << radius << " height: " << height
                               << std::endl;
                     auto *capsule = new ds_phys::CollisionCapsule();
+                    capsule->body = body;
                     capsule->radius = radius;
                     capsule->height = height;
                     capsule->offset =

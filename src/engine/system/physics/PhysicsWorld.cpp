@@ -181,6 +181,19 @@ static unsigned generateCollisions(CollisionPrimitive* b0, CollisionPrimitive* b
 	if (!data.hasMoreContacts()) return 0;
 	if (!b0) return 0;
 	if (!b1) return 0;
+	if (b0->body) {
+		if (b1->body) {
+			if ((!b0->body->hasFiniteMass()) && (!b1->body->hasFiniteMass())) return 0;
+		} else {
+			if (!b0->body->hasFiniteMass()) return 0;
+		}
+	} else {
+		if (b1->body) {
+			if (!b1->body->hasFiniteMass()) return 0;
+		}
+	}
+	if ((b0->body == b1->body) && (b0->body != nullptr)) return 0;
+
 
     if (CollisionBox *b0Ptr = dynamic_cast<CollisionBox *>(b0)) {
     	if (CollisionBox *b1Ptr = dynamic_cast<CollisionBox *>(b1)) {
