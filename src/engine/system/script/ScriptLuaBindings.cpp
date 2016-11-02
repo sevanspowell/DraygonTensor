@@ -1,7 +1,8 @@
 #include <sstream>
 
-#include "engine/entity/Entity.h"
 #include "engine/common/StringIntern.h"
+#include "engine/entity/Entity.h"
+#include "engine/json/Json.h"
 #include "engine/system/script/Script.h"
 
 #define META_NAME "Script"
@@ -360,15 +361,15 @@ static int l_GetNextMessage(lua_State *L)
                 lua_setfield(L, -2, "entity"); // table.entity = entity
 
                 ds::Config componentData;
-                if (componentData.LoadMemory(
-                        ds::StringIntern::Instance().GetString(
-                            createComponentMsg.componentData)))
-                { 
+                std::string componentDataStr =
+                    ds::StringIntern::Instance().GetString(
+                        createComponentMsg.componentData);
+                if (componentData.LoadMemory(componentDataStr))
+                {
                     if (typeString == "scriptComponents")
                     {
                         std::vector<std::string> scriptPaths =
-                            componentData.GetObjectKeys(
-                                "scriptPaths");
+                            componentData.GetObjectKeys("scriptPaths");
                         // Create script_paths table
                         lua_createtable(L, scriptPaths.size(), 0);
                         if (scriptPaths.size() > 0)
@@ -389,91 +390,177 @@ static int l_GetNextMessage(lua_State *L)
 
                                 // Set values of table
                                 std::stringstream parametersJSONKey;
-                                parametersJSONKey << "scriptPaths" << "." << scriptPath;
-                                std::vector<std::string> parameters = componentData.GetObjectKeys(parametersJSONKey.str());
+                                parametersJSONKey << "scriptPaths"
+                                                  << "." << scriptPath;
+                                std::vector<std::string> parameters =
+                                    componentData.GetObjectKeys(
+                                        parametersJSONKey.str());
 
-                                // Create new lua table to hold each script's parameters
+                                // Create new lua table to hold each script's
+                                // parameters
                                 lua_newtable(L);
 
-                                if (parameters.size() > 0) {
-                                    for (unsigned int j = 0; j < parameters.size(); ++j) {
+                                if (parameters.size() > 0)
+                                {
+                                    for (unsigned int j = 0;
+                                         j < parameters.size(); ++j)
+                                    {
                                         std::stringstream parameterJSONKey;
-                                        parameterJSONKey << parametersJSONKey.str() << "." << parameters[j];
+                                        parameterJSONKey
+                                            << parametersJSONKey.str() << "."
+                                            << parameters[j];
 
                                         std::stringstream parameterTypeJSONKey;
-                                        parameterTypeJSONKey << parameterJSONKey.str() << "." << "type";
+                                        parameterTypeJSONKey
+                                            << parameterJSONKey.str() << "."
+                                            << "type";
 
                                         std::string parameterType;
-                                        if (componentData.GetString(parameterTypeJSONKey.str(), &parameterType) == true)
+                                        if (componentData.GetString(
+                                                parameterTypeJSONKey.str(),
+                                                &parameterType) == true)
                                         {
-                                            std::stringstream parameterValueJSONKey;
-                                            parameterValueJSONKey << parameterJSONKey.str() << "." << "value";
+                                            std::stringstream
+                                                parameterValueJSONKey;
+                                            parameterValueJSONKey
+                                                << parameterJSONKey.str() << "."
+                                                << "value";
 
-                                            if (parameterType == "int") {
+                                            if (parameterType == "int")
+                                            {
                                                 int parameterValue;
-                                                if (componentData.GetInt(parameterValueJSONKey.str(), &parameterValue) == true)
+                                                if (componentData.GetInt(
+                                                        parameterValueJSONKey
+                                                            .str(),
+                                                        &parameterValue) ==
+                                                    true)
                                                 {
-                                                    lua_pushnumber(L, parameterValue);
+                                                    lua_pushnumber(
+                                                        L, parameterValue);
 
-                                                    lua_setfield(L, -2, parameters[j].c_str()); // scripts.script.parameterName = value
+                                                    lua_setfield(
+                                                        L, -2,
+                                                        parameters[j]
+                                                            .c_str()); // scripts.script.parameterName
+                                                    // =
+                                                    // value
                                                 }
-                                            } else if (parameterType == "float") {
+                                            }
+                                            else if (parameterType == "float")
+                                            {
                                                 float parameterValue;
-                                                if (componentData.GetFloat(parameterValueJSONKey.str(), &parameterValue) == true)
+                                                if (componentData.GetFloat(
+                                                        parameterValueJSONKey
+                                                            .str(),
+                                                        &parameterValue) ==
+                                                    true)
                                                 {
-                                                    lua_pushnumber(L, parameterValue);
+                                                    lua_pushnumber(
+                                                        L, parameterValue);
 
-                                                    lua_setfield(L, -2, parameters[j].c_str()); // scripts.script.parameterName = value
+                                                    lua_setfield(
+                                                        L, -2,
+                                                        parameters[j]
+                                                            .c_str()); // scripts.script.parameterName
+                                                    // =
+                                                    // value
                                                 }
-                                            } else if (parameterType == "bool") {
-                                                    bool parameterValue;
-                                                    if (componentData.GetBool(parameterValueJSONKey.str(), &parameterValue) == true)
-                                                    {
-                                                        lua_pushboolean(L, parameterValue);
+                                            }
+                                            else if (parameterType == "bool")
+                                            {
+                                                bool parameterValue;
+                                                if (componentData.GetBool(
+                                                        parameterValueJSONKey
+                                                            .str(),
+                                                        &parameterValue) ==
+                                                    true)
+                                                {
+                                                    lua_pushboolean(
+                                                        L, parameterValue);
 
-                                                        lua_setfield(L, -2, parameters[j].c_str()); // scripts.script.parameterName = value
-                                                    }
-                                            } else if (parameterType == "string") {
+                                                    lua_setfield(
+                                                        L, -2,
+                                                        parameters[j]
+                                                            .c_str()); // scripts.script.parameterName
+                                                    // =
+                                                    // value
+                                                }
+                                            }
+                                            else if (parameterType == "string")
+                                            {
                                                 std::string parameterValue;
 
-                                                if (componentData.GetString(parameterValueJSONKey.str(), &parameterValue) == true)
+                                                if (componentData.GetString(
+                                                        parameterValueJSONKey
+                                                            .str(),
+                                                        &parameterValue) ==
+                                                    true)
                                                 {
-                                                    lua_pushlstring(L, parameterValue.c_str(), parameterValue.length());
+                                                    lua_pushlstring(
+                                                        L,
+                                                        parameterValue.c_str(),
+                                                        parameterValue
+                                                            .length());
 
-                                                    lua_setfield(L, -2, parameters[j].c_str()); // scripts.script.parameterName = value
+                                                    lua_setfield(
+                                                        L, -2,
+                                                        parameters[j]
+                                                            .c_str()); // scripts.script.parameterName
+                                                    // =
+                                                    // value
                                                 }
-                                            } else if (parameterType == "array of float") {
-                                                std::vector<float> parameterValue;
+                                            }
+                                            else if (parameterType ==
+                                                     "array of float")
+                                            {
+                                                std::vector<float>
+                                                    parameterValue;
 
-                                                // Create new table to hold array
+                                                // Create new table to hold
+                                                // array
                                                 lua_newtable(L);
 
-                                                if (componentData.GetFloatArray(parameterValueJSONKey.str(), &parameterValue) == true)
+                                                if (componentData.GetFloatArray(
+                                                        parameterValueJSONKey
+                                                            .str(),
+                                                        &parameterValue) ==
+                                                    true)
                                                 {
                                                     // Add elements to table
-                                                    for (unsigned int k = 0; k < parameterValue.size(); ++k)
+                                                    for (unsigned int k = 0;
+                                                         k <
+                                                         parameterValue.size();
+                                                         ++k)
                                                     {
-                                                        lua_pushnumber(L, parameterValue[k]);
+                                                        lua_pushnumber(
+                                                            L,
+                                                            parameterValue[k]);
 
-                                                        lua_rawseti(L, -2, k + 1);
+                                                        lua_rawseti(L, -2,
+                                                                    k + 1);
                                                     }
                                                 }
-                                                
-                                                lua_setfield(L, -2, parameters[j].c_str()); // scripts.script.parameterName = table 
+
+                                                lua_setfield(
+                                                    L, -2,
+                                                    parameters[j]
+                                                        .c_str()); // scripts.script.parameterName
+                                                                   // = table
                                             }
                                         }
                                     }
-
                                 }
 
-                                lua_setfield(L, -2, noExtension.c_str()); // scripts.script = parameterTable
+                                lua_setfield(
+                                    L, -2,
+                                    noExtension.c_str()); // scripts.script =
+                                                          // parameterTable
                             }
                         }
 
                         // Set key field
-                        lua_setfield(L, -2,
-                                     "scripts"); // table.scripts =
-                        // script array 
+                        lua_setfield(L, -2, "scripts"); // table.scripts =
+                        // script array
                         // std::string scriptPath;
                         // if (componentData.GetString("scriptPath",
                         // &scriptPath))
@@ -491,6 +578,48 @@ static int l_GetNextMessage(lua_State *L)
                         //                  "scriptPath"); // table.scriptPath =
                         //                                 // scriptPath string
                         // }
+                    }
+                    else if (typeString == "affordanceComponent")
+                    {
+                        ds::JsonObject root;
+                        ds::json::parseObject(componentDataStr.c_str(), &root);
+
+                        if (root["affordances"] != nullptr)
+                        {
+                            ds::JsonArray affordances;
+                            ds::json::parseArray(root["affordances"],
+                                                 &affordances);
+
+                            // Create lua table for affordances
+                            lua_createtable(L, affordances.size(), 0);
+
+                            for (unsigned int i = 0; i < affordances.size();
+                                 ++i)
+                            {
+                                ds::JsonObject affordance;
+                                ds::json::parseObject(affordances[i],
+                                                      &affordance);
+
+                                if (affordance["affordance"] != nullptr &&
+                                    affordance["value"] != nullptr)
+                                {
+
+                                    std::string affordanceStr;
+                                    ds::json::parseString(
+                                        affordance["affordance"],
+                                        &affordanceStr);
+
+                                    float value = ds::json::parseFloat(
+                                        affordance["value"]);
+
+                                    lua_pushnumber(L, value);
+                                    lua_setfield(L, -2, affordanceStr.c_str());
+                                }
+                            }
+
+                            // Add affordance table
+                            lua_setfield(L, -2, "affordances");
+                        }
                     }
                 }
                 break;
