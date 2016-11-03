@@ -2661,15 +2661,9 @@ static int l_RigidBodyAddForce(lua_State *L)
 
         if (entity != NULL && force != NULL)
         {
-            ds_phys::RigidBody *body = p->getRigidBody(*entity);
-
-            if (body == nullptr)
-            {
-                return luaL_error(L, "Entity %d has no rigid body.",
-                                  entity->id);
-            }
-
-            body->addForce(*force);
+            std::shared_ptr<ds_phys::ImpulseGenerator> impulse(new ds_phys::ImpulseGenerator());
+            impulse->addImpulse(*force);
+            p->AddForceGenerator(*entity, impulse);
         }
         else
         {

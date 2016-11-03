@@ -175,7 +175,7 @@ private:
     {
         None,
         World,
-        Local 
+        Local
     };
 
     struct ImpulseInfo
