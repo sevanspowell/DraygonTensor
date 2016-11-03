@@ -26,7 +26,8 @@ public:
 
     virtual ScriptBindingSet GetScriptBindings() const;
 
-    void AddForceGenerator(Entity entity);
+    void AddForceGenerator(Entity entity,
+                           std::shared_ptr<ds_phys::IForceGenerator> forceGenerator);
 
     ds_phys::CollisionPrimitiveID addPlane(const ds_math::Vector3 &norm,
                                            ds_math::scalar offset);
@@ -36,6 +37,8 @@ public:
     virtual unsigned getMaxConsecutiveUpdates() const;
 
     ds_phys::RigidBody *getRigidBody(Entity entity);
+
+    void SetGravity(const ds_math::Vector3 &gravity);
 
 private:
     void ProcessEvents(ds_msg::MessageStream *messages);
@@ -57,8 +60,8 @@ private:
 
     ds_phys::PhysicsWorld m_physicsWorld;
 
-    // TODO: Temporary!
-    ds_phys::Gravity m_fg;
+    std::shared_ptr<ds_phys::Gravity> m_gravityFg;
+    // ds_phys::ImpulseGenerator *m_impulseFg;
     ds_phys::RigidBody m_body;
 };
 }

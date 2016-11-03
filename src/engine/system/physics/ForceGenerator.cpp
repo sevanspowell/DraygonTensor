@@ -25,6 +25,7 @@
  * @author Ian Millington
  * @author Samuel Evans-Powell (modified)
  */
+#include <cassert>
 #include <algorithm>
 
 #include "math/Vector3.h"
@@ -48,7 +49,87 @@ void Gravity::updateForce(RigidBody *body, ds_math::scalar duration)
     }
 }
 
-void ForceRegistry::add(RigidBody *body, IForceGenerator *fg)
+bool Gravity::isDone() const
+{
+    return false;
+}
+
+void Gravity::setGravity(const ds_math::Vector3 &gravity)
+{
+    m_gravity = gravity;
+}
+
+const ds_math::Vector3 &Gravity::getGravity() const
+{
+    return m_gravity;
+}
+
+ImpulseGenerator::ImpulseGenerator() : m_isDone(false)
+{
+}
+
+void ImpulseGenerator::updateForce(RigidBody *body, ds_math::scalar duration)
+{
+    // Apply impulse
+    switch (m_impulse.coordinateSpace)
+    {
+    case PointCoordinateSpace::None:
+        body->addForce(m_impulse.force);
+        break;
+    case PointCoordinateSpace::World:
+        body->addForceAtPoint(m_impulse.force, m_impulse.point);
+        break;
+    case PointCoordinateSpace::Local:
+        body->addForceAtBodyPoint(m_impulse.force, m_impulse.point);
+        break;
+    default:
+        body->addForce(m_impulse.force);
+        break;
+    }
+
+    // Now that force has been applied, done
+    m_isDone = true;
+}
+
+bool ImpulseGenerator::isDone() const
+{
+    return m_isDone;
+}
+
+void ImpulseGenerator::addImpulse(const ds_math::Vector3 &force)
+{
+    ImpulseInfo info;
+    info.coordinateSpace = PointCoordinateSpace::None;
+    info.force = force;
+    info.point = ds_math::Vector3(0.0f, 0.0f, 0.0f);
+
+    m_impulse = info;
+}
+
+void ImpulseGenerator::addImpulseAtPoint(const ds_math::Vector3 &force,
+                                         const ds_math::Vector3 &point)
+{
+    ImpulseInfo info;
+    info.coordinateSpace = PointCoordinateSpace::World;
+    info.force = force;
+    info.point = point;
+
+    m_impulse = info;
+}
+
+void ImpulseGenerator::addImpulseAtBodyPoint(const ds_math::Vector3 &force,
+                                             const ds_math::Vector3 &point)
+{
+    ImpulseInfo info;
+    info.coordinateSpace = PointCoordinateSpace::Local;
+    info.force = force;
+    info.point = point;
+
+    m_impulse = info;
+}
+
+void ForceRegistry::add(RigidBody *body,
+                        const std::shared_ptr<IForceGenerator> &fg)
 {
     ForceRegistration reg;
     reg.body = body;
@@ -57,7 +138,8 @@ void ForceRegistry::add(RigidBody *body, IForceGenerator *fg)
     m_registrations.push_back(reg);
 }
 
-void ForceRegistry::remove(RigidBody *body, IForceGenerator *fg)
+void ForceRegistry::remove(RigidBody *body,
+                           const std::shared_ptr<IForceGenerator> &fg)
 {
     ForceRegistration reg;
     reg.body = body;
@@ -89,12 +171,30 @@ void ForceRegistry::clear()
     m_registrations.clear();
 }
 
+void ForceRegistry::removeUnused()
+{
+    for (unsigned int i = 0; i < m_registrations.size(); ++i)
+    {
+        if (m_registrations[i].fg->isDone())
+        {
+            // Swap this element with last to prevent holes
+            m_registrations[i] = m_registrations[m_registrations.size() - 1];
+            // Remove last element (which has now been copied)
+            m_registrations.pop_back();
+        }
+    }
+}
+
 void ForceRegistry::updateForces(ds_math::scalar duration)
 {
+    // Clear unused force registrations
+    removeUnused();
+
+    // For each force registration
     std::for_each(m_registrations.begin(), m_registrations.end(),
-             [&](const ForceRegistration &reg)
-             {
-                 reg.fg->updateForce(reg.body, duration);
-             });
+                  [&](const ForceRegistration &reg)
+                  {
+                      reg.fg->updateForce(reg.body, duration);
+                  });
 }
 }

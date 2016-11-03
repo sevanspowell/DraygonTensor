@@ -61,7 +61,7 @@ namespace ds
 // TODO: Update these values for m_physicsWorld constructor
 Physics::Physics()
     : m_physicsWorld(0, 0),
-      m_fg(ds_phys::Gravity(ds_math::Vector3(0.0f, -10.0f, 0.0f)))
+      m_gravityFg(new ds_phys::Gravity(ds_math::Vector3(0.0f, -9.8f, 0.0f)))
 {
     // addPlane(ds_math::Vector3(0, 1, 0), 0);
 }
@@ -76,7 +76,13 @@ bool Physics::Initialize(const char *configFile)
     return true;
 }
 
-void Physics::AddForceGenerator(Entity entity)
+void Physics::SetGravity(const ds_math::Vector3 &gravity)
+{
+    m_gravityFg->setGravity(gravity);
+}
+
+void Physics::AddForceGenerator(Entity entity,
+                                std::shared_ptr<ds_phys::IForceGenerator> forceGenerator)
 {
     Instance phys = m_physicsComponentManager->GetInstanceForEntity(entity);
 
@@ -87,7 +93,7 @@ void Physics::AddForceGenerator(Entity entity)
 
         assert(body != nullptr);
 
-        m_physicsWorld.addForceGenerator(body, &m_fg);
+        m_physicsWorld.addForceGenerator(body, forceGenerator);
     }
 }
 
@@ -132,12 +138,16 @@ void Physics::Update(float deltaTime)
 
     ProcessEvents(&m_messagesReceived);
 
-    m_physicsWorld.startFrame();
+    if (deltaTime > 0.0f)
+    {
+        m_physicsWorld.startFrame();
 
-    m_physicsWorld.stepSimulation(deltaTime);
+        m_physicsWorld.stepSimulation(deltaTime);
 
-    // std::cout << m_physicsWorld.m_rigidBodies[0]->getPosition() << std::endl;
-    PropagateTransform();
+        // std::cout << m_physicsWorld.m_rigidBodies[0]->getPosition() <<
+        // std::endl;
+        PropagateTransform();
+    }
 
     m_messagesReceived.Clear();
 }
@@ -329,6 +339,26 @@ void Physics::ProcessEvents(ds_msg::MessageStream *messages)
             if (transform.IsValid())
             {
                 m_transformComponentManager->RemoveInstance(transform);
+            }
+
+            break;
+        }
+        case ds_msg::MessageType::SetLocalOrientation:
+        {
+            ds_msg::SetLocalOrientation setOrientationMsg;
+            (*messages) >> setOrientationMsg;
+
+            // Get component instance of entity to orient
+            Instance transform =
+                m_transformComponentManager->GetInstanceForEntity(
+                    setOrientationMsg.entity);
+
+            // If has transform component
+            if (transform.IsValid())
+            {
+                // Set orientation of entity
+                m_transformComponentManager->SetLocalOrientation(
+                    transform, setOrientationMsg.localOrientation);
             }
 
             break;
@@ -754,7 +784,7 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
             body->setLinearDamping(dataDamping);
             body->setAngularDamping(dataAngularDamping);
 
-            m_physicsWorld.addForceGenerator(body, &m_fg);
+            m_physicsWorld.addForceGenerator(body, m_gravityFg);
             m_physicsWorld.addRigidBody(body);
         }
     }

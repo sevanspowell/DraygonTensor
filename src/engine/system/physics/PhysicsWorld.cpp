@@ -53,13 +53,13 @@ void PhysicsWorld::stepSimulation(ds_math::scalar duration)
     m_forceRegistry.updateForces(duration);
 
     // Integrate rigid bodies
-    std::for_each(
-        m_rigidBodies.begin(), m_rigidBodies.end(), [&](RigidBody *rigidBody) {
-            if (rigidBody != nullptr)
-            {
-                rigidBody->integrate(duration);
-            }
-        });
+    std::for_each(m_rigidBodies.begin(), m_rigidBodies.end(),
+                  [&](RigidBody *rigidBody) {
+                      if (rigidBody != nullptr)
+                      {
+                          rigidBody->integrate(duration);
+                      }
+                  });
 
     unsigned int got = generateContacts();
 
@@ -104,14 +104,14 @@ void PhysicsWorld::removeRigidBody(RigidBody *rigidBody)
     }
 }
 
-void PhysicsWorld::addForceGenerator(RigidBody *rigidBody,
-                                     IForceGenerator *forceGenerator)
+void PhysicsWorld::addForceGenerator(
+    RigidBody *rigidBody, std::shared_ptr<IForceGenerator> forceGenerator)
 {
     m_forceRegistry.add(rigidBody, forceGenerator);
 }
 
-void PhysicsWorld::removeForceGenerator(RigidBody *rigidBody,
-                                        IForceGenerator *forceGenerator)
+void PhysicsWorld::removeForceGenerator(
+    RigidBody *rigidBody, std::shared_ptr<IForceGenerator> forceGenerator)
 {
     m_forceRegistry.remove(rigidBody, forceGenerator);
 }

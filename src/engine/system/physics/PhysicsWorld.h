@@ -29,15 +29,15 @@
  */
 #pragma once
 
-#include <map>
-#include <memory>
-#include <vector>
 #include "engine/system/physics/CollisionFine.h"
-#include "engine/system/physics/Contacts.h"
 #include "engine/system/physics/ContactResolver.h"
+#include "engine/system/physics/Contacts.h"
 #include "engine/system/physics/ForceGenerator.h"
 #include "engine/system/physics/RigidBody.h"
 #include "math/Precision.h"
+#include <map>
+#include <memory>
+#include <vector>
 
 namespace ds_phys
 {
@@ -60,27 +60,30 @@ public:
     void removeRigidBody(RigidBody *rigidBody);
 
     void addForceGenerator(RigidBody *rigidBody,
-                           IForceGenerator *forceGenerator);
+                           std::shared_ptr<IForceGenerator> forceGenerator);
 
     void removeForceGenerator(RigidBody *rigidBody,
-                              IForceGenerator *forceGenerator);
+                              std::shared_ptr<IForceGenerator> forceGenerator);
 
-    CollisionPrimitiveID addCollisionPrimitive(std::unique_ptr<CollisionPrimitive>&& primitive);
-    CollisionPrimitive* getCollisionPrimitive(CollisionPrimitiveID id);
-    CollisionPrimitiveID getCollisionPrimitiveID(CollisionPrimitive* primitive);
-    std::unique_ptr<CollisionPrimitive> removeCollisionPrimitive(CollisionPrimitiveID id);
-    std::unique_ptr<CollisionPrimitive> removeCollisionPrimitive(CollisionPrimitive* primitive);
+    CollisionPrimitiveID
+    addCollisionPrimitive(std::unique_ptr<CollisionPrimitive> &&primitive);
+    CollisionPrimitive *getCollisionPrimitive(CollisionPrimitiveID id);
+    CollisionPrimitiveID getCollisionPrimitiveID(CollisionPrimitive *primitive);
+    std::unique_ptr<CollisionPrimitive>
+    removeCollisionPrimitive(CollisionPrimitiveID id);
+    std::unique_ptr<CollisionPrimitive>
+    removeCollisionPrimitive(CollisionPrimitive *primitive);
 
     // TODO Not public
     std::vector<RigidBody *> m_rigidBodies;
 
     CollisionPrimitiveID m_currentCPID;
-    std::map<CollisionPrimitiveID, std::unique_ptr<CollisionPrimitive>> m_collisionPrimitives;
+    std::map<CollisionPrimitiveID, std::unique_ptr<CollisionPrimitive>>
+        m_collisionPrimitives;
 
     ContactResolver m_contactResolver;
 
 private:
-
     // Use Bullet to generate contacts
     // btCollisionDispatcher *m_dispatcher;
     // btCollisionWorld *m_collisionWorld;
