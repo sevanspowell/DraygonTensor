@@ -1729,6 +1729,51 @@ static int l_Pause(lua_State *L)
     return 0;
 }
 
+static int l_IdToEntity(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expect = 1;
+    if (n != expect)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expect);
+    }
+
+    // Push script system pointer to stack
+    lua_getglobal(L, "__" META_NAME);
+
+    // If first item on stack isn't user data (our script system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Script *p = (ds::Script *)lua_touserdata(L, -1);
+
+        assert(p != NULL);
+
+        // Pop script system pointer off lua stack
+        lua_pop(L, 1);
+
+        ds_math::scalar id = (ds_math::scalar)luaL_checknumber(L, 1);
+
+        ds::Entity *entity =
+            (ds::Entity *)lua_newuserdata(L, sizeof(ds::Entity));
+
+        entity->id = id;
+
+        luaL_getmetatable(L, "Entity");
+        lua_setmetatable(L, -2);
+    }
+
+    // Passed id and returned entity
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
 ds::ScriptBindingSet LoadScriptBindings()
 {
     ds::ScriptBindingSet scriptBindings;
@@ -1757,6 +1802,7 @@ ds::ScriptBindingSet LoadScriptBindings()
     scriptBindings.AddFunction("set_mouse_lock", l_SetMouseLock);
     scriptBindings.AddFunction("quit", l_Quit);
     scriptBindings.AddFunction("set_pause", l_Pause);
+    scriptBindings.AddFunction("id_to_entity", l_IdToEntity);
 
     return scriptBindings;
 }
