@@ -2661,7 +2661,8 @@ static int l_RigidBodyAddForce(lua_State *L)
 
         if (entity != NULL && force != NULL)
         {
-            std::shared_ptr<ds_phys::ImpulseGenerator> impulse(new ds_phys::ImpulseGenerator());
+            std::shared_ptr<ds_phys::ImpulseGenerator> impulse(
+                new ds_phys::ImpulseGenerator());
             impulse->addImpulse(*force);
             p->AddForceGenerator(*entity, impulse);
         }
@@ -2675,6 +2676,347 @@ static int l_RigidBodyAddForce(lua_State *L)
     assert(lua_gettop(L) == 2);
 
     return 0;
+}
+
+static int l_RigidBodyAddForceAtPoint(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expect = 3;
+    if (n != expect)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expect);
+    }
+
+    // Push physics system pointer to stack
+    lua_getglobal(L, "__Physics");
+
+    // If first item on stack isn't user data (our physics system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Physics *p = (ds::Physics *)lua_touserdata(L, -1);
+        assert(p != NULL);
+        // Pop physics system pointer off lua stack
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "RigidBody");
+
+        ds_math::Vector3 *force = NULL;
+        force = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
+
+        ds_math::Vector3 *point = NULL;
+        point = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
+
+        if (entity != NULL && force != NULL && point != NULL)
+        {
+            std::shared_ptr<ds_phys::ImpulseGenerator> impulse(
+                new ds_phys::ImpulseGenerator());
+            impulse->addImpulseAtPoint(*force, *point);
+            p->AddForceGenerator(*entity, impulse);
+        }
+        else
+        {
+            return luaL_error(L, "Given entity or Vector3 is not valid.");
+        }
+    }
+
+    // Entity force and point passed to this method
+    assert(lua_gettop(L) == 3);
+
+    return 0;
+}
+
+static int l_RigidBodyAddForceAtBodyPoint(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expect = 3;
+    if (n != expect)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expect);
+    }
+
+    // Push physics system pointer to stack
+    lua_getglobal(L, "__Physics");
+
+    // If first item on stack isn't user data (our physics system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Physics *p = (ds::Physics *)lua_touserdata(L, -1);
+        assert(p != NULL);
+        // Pop physics system pointer off lua stack
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "RigidBody");
+
+        ds_math::Vector3 *force = NULL;
+        force = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
+
+        ds_math::Vector3 *point = NULL;
+        point = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
+
+        if (entity != NULL && force != NULL && point != NULL)
+        {
+            std::shared_ptr<ds_phys::ImpulseGenerator> impulse(
+                new ds_phys::ImpulseGenerator());
+            impulse->addImpulseAtBodyPoint(*force, *point);
+            p->AddForceGenerator(*entity, impulse);
+        }
+        else
+        {
+            return luaL_error(L, "Given entity or Vector3 is not valid.");
+        }
+    }
+
+    // Entity force and point passed to this method
+    assert(lua_gettop(L) == 3);
+
+    return 0;
+}
+
+static int l_RigidBodySetVelocity(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expect = 2;
+    if (n != expect)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expect);
+    }
+
+    // Push physics system pointer to stack
+    lua_getglobal(L, "__Physics");
+
+    // If first item on stack isn't user data (our physics system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Physics *p = (ds::Physics *)lua_touserdata(L, -1);
+        assert(p != NULL);
+        // Pop physics system pointer off lua stack
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "RigidBody");
+
+        ds_math::Vector3 *velocity = NULL;
+        velocity = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
+
+        if (entity != NULL && velocity != NULL)
+        {
+            ds_phys::RigidBody *body = p->getRigidBody(*entity);
+
+            if (body == nullptr)
+            {
+                return luaL_error(L, "Entity %d has no rigid body.",
+                                  entity->id);
+            }
+
+            body->setVelocity(*velocity);
+        }
+        else
+        {
+            return luaL_error(L, "Given entity or Vector3 is not valid.");
+        }
+    }
+
+    // Entity and mass passed to this method
+    assert(lua_gettop(L) == 2);
+
+    return 0;
+}
+
+static int l_RigidBodyGetVelocity(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expect = 1;
+    if (n != expect)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expect);
+    }
+
+    // Push physics system pointer to stack
+    lua_getglobal(L, "__Physics");
+
+    // If first item on stack isn't user data (our physics system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Physics *p = (ds::Physics *)lua_touserdata(L, -1);
+        assert(p != NULL);
+        // Pop physics system pointer off lua stack
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "RigidBody");
+
+        if (entity != NULL)
+        {
+            ds_phys::RigidBody *body = p->getRigidBody(*entity);
+
+            if (body == nullptr)
+            {
+                return luaL_error(L, "Entity %d has no rigid body.",
+                                  entity->id);
+            }
+
+            ds_math::Vector3 *velocity = (ds_math::Vector3 *)lua_newuserdata(
+                L, sizeof(ds_math::Vector3));
+
+            *velocity = body->getVelocity();
+
+            luaL_getmetatable(L, "Vector3");
+            lua_setmetatable(L, -2);
+        }
+        else
+        {
+            return luaL_error(L, "Given entity is not valid.");
+        }
+    }
+
+    // Entity passed to this method, Vector3 returned
+    assert(lua_gettop(L) == 2);
+
+    return 1;
+}
+
+static int l_RigidBodySetAcceleration(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expect = 2;
+    if (n != expect)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expect);
+    }
+
+    // Push physics system pointer to stack
+    lua_getglobal(L, "__Physics");
+
+    // If first item on stack isn't user data (our physics system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Physics *p = (ds::Physics *)lua_touserdata(L, -1);
+        assert(p != NULL);
+        // Pop physics system pointer off lua stack
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "RigidBody");
+
+        ds_math::Vector3 *acceleration = NULL;
+        acceleration = (ds_math::Vector3 *)luaL_checkudata(L, 2, "Vector3");
+
+        if (entity != NULL && acceleration != NULL)
+        {
+            ds_phys::RigidBody *body = p->getRigidBody(*entity);
+
+            if (body == nullptr)
+            {
+                return luaL_error(L, "Entity %d has no rigid body.",
+                                  entity->id);
+            }
+
+            body->setAcceleration(*acceleration);
+        }
+        else
+        {
+            return luaL_error(L, "Given entity or Vector3 is not valid.");
+        }
+    }
+
+    // Entity and mass passed to this method
+    assert(lua_gettop(L) == 2);
+
+    return 0;
+}
+
+static int l_RigidBodyGetAcceleration(lua_State *L)
+{
+    // Get number of arguments provided
+    int n = lua_gettop(L);
+    int expect = 1;
+    if (n != expect)
+    {
+        return luaL_error(L, "Got %d arguments, expected %d.", n, expect);
+    }
+
+    // Push physics system pointer to stack
+    lua_getglobal(L, "__Physics");
+
+    // If first item on stack isn't user data (our physics system)
+    if (!lua_isuserdata(L, -1))
+    {
+        // Error
+        luaL_argerror(L, 1, "lightuserdata");
+    }
+    else
+    {
+        ds::Physics *p = (ds::Physics *)lua_touserdata(L, -1);
+        assert(p != NULL);
+        // Pop physics system pointer off lua stack
+        lua_pop(L, 1);
+
+        ds::Entity *entity = NULL;
+
+        entity = (ds::Entity *)luaL_checkudata(L, 1, "RigidBody");
+
+        if (entity != NULL)
+        {
+            ds_phys::RigidBody *body = p->getRigidBody(*entity);
+
+            if (body == nullptr)
+            {
+                return luaL_error(L, "Entity %d has no rigid body.",
+                                  entity->id);
+            }
+
+            ds_math::Vector3 *acceleration =
+                (ds_math::Vector3 *)lua_newuserdata(L,
+                                                    sizeof(ds_math::Vector3));
+
+            *acceleration = body->getAcceleration();
+
+            luaL_getmetatable(L, "Vector3");
+            lua_setmetatable(L, -2);
+        }
+        else
+        {
+            return luaL_error(L, "Given entity is not valid.");
+        }
+    }
+
+    // Entity passed to this method, Vector3 returned
+    assert(lua_gettop(L) == 2);
+
+    return 1;
 }
 
 static const luaL_Reg vector3Methods[] = {
@@ -2799,13 +3141,13 @@ static const luaL_Reg rigidBodyMethods[] = {
     {"get_direction_in_local_space", NULL},
     {"get_direction_in_world_space", NULL},
     {"add_force", l_RigidBodyAddForce},
-    {"add_force_at_point", NULL},
-    {"add_force_at_body_point", NULL},
+    {"add_force_at_point", l_RigidBodyAddForceAtPoint},
+    {"add_force_at_body_point", l_RigidBodyAddForceAtBodyPoint},
     {"add_torque", NULL},
-    {"get_acceleration", NULL},
-    {"set_acceleration", NULL},
-    {"get_velocity", NULL},
-    {"set_velocity", NULL},
+    {"get_acceleration", l_RigidBodyGetAcceleration},
+    {"set_acceleration", l_RigidBodySetAcceleration},
+    {"get_velocity", l_RigidBodyGetVelocity},
+    {"set_velocity", l_RigidBodySetVelocity},
     {"get_center_of_mass_world_space", NULL},
     {"get_center_of_mass_local_space", NULL},
     {"set_center_of_mass_world_space", NULL},
