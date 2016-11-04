@@ -1,0 +1,180 @@
+(setq org-babel-exp-code-template
+         (concat "\n=%name=:\n"
+              org-babel-exp-code-template)
+               )
+* Physics Explanation - The Plastics
+
+** Basis
+
+We used Ian Millington's 'cyclone' physics engine as a basis for our physics
+engine. His book 'Game Physics Engine Development' was a great help to us.
+
+** PhysicsWorld/Physics system interface
+
+To keep the 
+
+** Applying forces 
+
+Force generators are the primary tool we use to apply forces to a RigidBody.
+Just like in the cyclone engine, a ForceRegistry class is used to associate
+force generators (classes inheriting from the IForceGenerator interface) with
+rigid bodies. Until this association is removed, the ForceRegistry will loop
+through each RigidBody/ForceGenerator pair and apply the forces from the
+ForceGenerator to the RigidBody:
+
+
+#+NAME: ForceGenerator.h
+#+BEGIN_SRC c++
+void ForceRegistry::updateForces(ds_math::scalar duration)
+{
+    ...
+
+    // For each force registration
+    std::for_each(m_registrations.begin(), m_registrations.end(),
+                  [&](const ForceRegistration &reg) {
+                      // Apply forces from force generator (fg) to the rigid
+                      // body
+                      reg.fg->updateForce(reg.body, duration);
+                  });
+}
+#+END_SRC
+
+However, we found that we needed a way to apply forces to a RigidBody for a
+duration of time. To achieve this in the design of the cyclone engine, you would
+need to explicitly remove the force generator/rigid body association using the
+the 'ForceRegistry::remove()' method when you wanted the force generator to stop
+applying forces. Rather than do this, we extended the concepts found in the
+cyclone engine. Force generators are supplied to the ForceRegisty as a
+'shared pointer':
+
+
+#+NAME: ForceGenerator.cpp
+#+BEGIN_SRC c++
+void ForceRegistry::add(RigidBody *body,
+                        const std::shared_ptr<IForceGenerator> &fg)
+#+END_SRC
+
+This gives the ForceRegistry shared owenership over the force generator
+instance. To complement this, we added a 'isDone()' method to the
+IForceGenerator interface:
+
+#+NAME: ForceGenerator.h
+#+BEGIN_SRC c++
+class IForceGenerator
+{
+public:
+    /**
+     * Update the force applied to the given rigid body.
+     *
+     * @param   body       RigidBody *, body to apply forces to.
+     * @param   duration   ds_math::scalar, time between frames.
+     */
+    virtual void updateForce(RigidBody *body, ds_math::scalar duration) = 0;
+
+    /**
+     * Returns true if the force generator has finished applying forces, false
+     * otherwise.
+     *
+     * Note: this is used to determine if the force generator can be removed
+     * from the ForceRegistry.
+     *
+     * @return   bool, true if force generator has finished applying forces and
+     * false otherwise.
+     */
+    virtual bool isDone() const = 0;
+};
+#+END_SRC
+
+With these two things, the ForceRegistry can remove a force generator/rigid body
+when a force generator reports it has finished applying forces. Since the force
+generator is supplied as a 'shared pointer', it can dispose of the pointer
+without having to explicitly free any memory and without risking freeing a force
+generator someone else might still be using. This behaviour of the ForceRegistry
+is shown below:
+
+#+NAME: ForceGenerator.cpp
+#+BEGIN_SRC c++
+void ForceRegistry::removeUnused()
+{
+    for (unsigned int i = 0; i < m_registrations.size(); ++i)
+    {
+        // Remove force generators which are finished
+        if (m_registrations[i].fg->isDone())
+        {
+            // Swap this element with last to prevent holes
+            m_registrations[i] = m_registrations[m_registrations.size() - 1];
+            // Remove last element (which has now been copied)
+            m_registrations.pop_back();
+        }
+    }
+}
+#+END_SRC
+
+#+NAME: ForceGenerator.cpp
+#+BEGIN_SRC c++
+void ForceRegistry::updateForces(ds_math::scalar duration)
+{
+    // Clear unused force registrations
+    removeUnused();
+
+    // For each force registration
+    std::for_each(m_registrations.begin(), m_registrations.end(),
+                  [&](const ForceRegistration &reg) {
+                      // Apply forces from force generator (fg) to the rigid
+                      // body
+                      reg.fg->updateForce(reg.body, duration);
+                  });
+}
+#+END_SRC
+
+An example of this behaviour in use is the 'ImpulseGenerator' class. The
+ImpulseGenerator applies a force once and then immediately signals that it is
+done:
+
+
+#+NAME: ForceGenerator.cpp
+#+BEGIN_SRC c++
+void ImpulseGenerator::updateForce(RigidBody *body, ds_math::scalar duration)
+{
+    // Apply impulse
+    switch (m_impulse.coordinateSpace)
+    {
+    case PointCoordinateSpace::None:
+        body->addForce(m_impulse.force);
+        break;
+    case PointCoordinateSpace::World:
+        body->addForceAtPoint(m_impulse.force, m_impulse.point);
+        break;
+    case PointCoordinateSpace::Local:
+        body->addForceAtBodyPoint(m_impulse.force, m_impulse.point);
+        break;
+    default:
+        body->addForce(m_impulse.force);
+        break;
+    }
+
+    // Now that force has been applied, done
+    m_isDone = true;
+}
+#+END_SRC
+
+We use the impulse generator to apply forces to a rigid body from Lua:
+
+#+NAME: LuaMathAPI.cpp
+#+BEGIN_SRC c++
+  static int l_RigidBodyAddForce(lua_State *L)
+  {
+          ...
+              std::shared_ptr<ds_phys::ImpulseGenerator> impulse(
+                  new ds_phys::ImpulseGenerator());
+              impulse->addImpulse(*force);
+              p->AddForceGenerator(*entity, impulse);
+          ...
+  }
+#+END_SRC
+
+This 'fire and forget' method is very convenient. Not only that, we can be
+confident that memory associated with the ImpulseGenerator is freed after it has
+finished applying forces.
+
+** Polymorphic collision shapes

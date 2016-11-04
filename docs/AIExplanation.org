@@ -1,0 +1,93 @@
+* AI Explanation - The Plastics
+
+** Affordance Implementation
+- Implemented in Lua
+- Global Lua table
+  - Maps AffordanceName to list of entity-value key-value pairs.
+- AI has needs it wants to satisfy
+  - For example, if an NPC's thirst need is high, the NPC will query the global
+    affordance table for entities that afford 'drinking'. The table will return
+    a list of entity-value pairs, indicating which entities afford drinking and
+    how much they afford drinking.
+  - NPC will try to find the entity with the highest value for the affordance
+    that is closest (affordance value is weighted by distance from the NPC).
+- When an NPC has reached an object it would like to use to satisfy it's need,
+  the NPC grabs the object's interactible component and passes it's own entity
+  id to the interactible component's 'use' method.
+  - function use(entity) { ... }
+- The object's interactible component is responsible for telling the NPC how it
+  should sit on the chair (interactible component set's the interacting entity's
+  animation, position, transform parent, etc.)
+- In the case of something like a chair, the interactible component is also
+  responsible for telling the NPC if it can interact with it (e.g., a chair
+  might already have someone sitting in it).
+
+** Emotion
+- We decided to base our emotional model for the NPCs in the world off Lovheim's
+  Cube of Emotion [https://en.wikipedia.org/wiki/Lövheim_cube_of_emotion].
+- The model will use three different chemical values (serotonin, dopamine and
+  noradrenaline) to determine the emotions of an NPC (such as shame, contempt,
+  distress) as well as their overall mood.
+- In the system chemical values are a float value between 0 and 1 inclusive.
+- We simply clasify a chemical value of less than 0.5 as low and a chemical
+  value of greater than or equal to 0.5 as high.
+
+*** Emotion
+- We then use the following lookup table to determine the emotion the NPC is
+  currently feeling: [https://en.wikipedia.org/wiki/Lövheim_cube_of_emotion].
+
+*** Mood
+- In our system, mood is again a simple float value between 0 and 1 inclusive.
+- 0 is considered a bad mood, 1 a good mood.
+- The three chemical levels are combined into a general mood using the dot
+  product:
+  - Mood = (Dot({ 1, 1, 1 }, { SerotoninValue, NoradrenalineValue, DopamineValue
+    }) / 3), where 3 is the max value that can be returned by the dot product
+    (Dot({ 1, 1, 1 }, { 1, 1, 1 }))
+- This process means that mood is an average of the current emotional level and
+  so changes less often than the emotional levels (as is consistent with X's model).
+
+*** Affecting emotion
+- Unwieldy to manipulate chemical values directly (what do they mean?)
+- Easier to choose points on the cube we want to move towards (it is clear that
+  this corner of the cube represents the shame emotion for example { 0, 0, 0 })
+- Feed one of these points into the emotion system, this becomes our desired
+  emotion point.
+- Desired emotion vector = desired emotion point - current point
+- Feed this desired emotion vector into mood.
+- We made the simplifying assumption that when you're in a good mood, both good
+  and bad emotions affect you less, when you're in a bood mood though, good and
+  bad emotions are amplified (justify this!)
+- Emotion vector is scaled by mood:
+  - Proportion of emotion vector to apply = 1 - Invert mood (1/moodValue)
+  - Clamp proportion between 0.1 and 0.9 (so that an emotion vector always has
+    at least some effect and not too much)
+  - { SerotoninNew, NoradrenalineNew, DopamineNew } = { SerotononinOld,
+    NoradrenalineOld, DopamineOld } + { Scaled Emotion Vector }
+- We then recalculate mood as above (using dot product).
+
+**** Events and roles
+- An event's effect on an NPC depends on their role. In a soccer game, if a goal
+  is scored, the attackers are happy, the defenders sad and the referee doesn't
+  care too much emotionally.
+- So role determines desired emotion.
+- Event fed to Role -> desired emotion
+
+** Traits and quirks
+
+*** Traits
+- Model traits using traits table (global Lua table)
+- Pre-populated with a list of string-object pairs:
+  - "traitName": {SerotoninAmplifier value, NoradrenalineAmplifier value,
+    DopamineAmplifier value}
+- Models a particular NPC's disposition towards certain emotions.
+- NPC randomly gets assigned two or three traits.
+
+*** Quirks
+- Model quirks using quirk table:
+  - "quirkName": { function(entity) }
+  - Lua function, passed entityID as argument
+- Each NPC randomly gets assigned one quirk.
+- Quirk function is executed 'every so often'.
+- e.g. "tripOver": { function(entity) { entity:addForce(head, {1, 0, 0}) } }
+
