@@ -25,8 +25,8 @@
  * @author Ian Millington
  * @author Samuel Evans-Powell (modified)
  */
-#include <cassert>
 #include <algorithm>
+#include <cassert>
 
 #include "math/Vector3.h"
 
@@ -147,8 +147,7 @@ void ForceRegistry::remove(RigidBody *body,
 
     Registry::iterator it =
         std::find_if(m_registrations.begin(), m_registrations.end(),
-                     [&](const ForceRegistration &regA) -> bool
-                     {
+                     [&](const ForceRegistration &regA) -> bool {
                          if (regA.body == reg.body && regA.fg == reg.fg)
                          {
                              return true;
@@ -175,6 +174,7 @@ void ForceRegistry::removeUnused()
 {
     for (unsigned int i = 0; i < m_registrations.size(); ++i)
     {
+        // Remove force generators which are finished
         if (m_registrations[i].fg->isDone())
         {
             // Swap this element with last to prevent holes
@@ -192,8 +192,9 @@ void ForceRegistry::updateForces(ds_math::scalar duration)
 
     // For each force registration
     std::for_each(m_registrations.begin(), m_registrations.end(),
-                  [&](const ForceRegistration &reg)
-                  {
+                  [&](const ForceRegistration &reg) {
+                      // Apply forces from force generator (fg) to the rigid
+                      // body
                       reg.fg->updateForce(reg.body, duration);
                   });
 }
