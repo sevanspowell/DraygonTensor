@@ -65,6 +65,29 @@ void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
 }
 #+END_SRC
 
+The Physics system is also responsible for updating the PhysicsWorld each frame:
+
+#+NAME: Physics.cpp
+#+BEGIN_SRC c++
+void Physics::Update(float deltaTime)
+{
+    UpdateRigidBodyTransforms();
+
+    ProcessEvents(&m_messagesReceived);
+
+    if (deltaTime > 0.0f)
+    {
+        m_physicsWorld.startFrame();
+
+        m_physicsWorld.stepSimulation(deltaTime);
+
+        PropagateTransform();
+    }
+
+    m_messagesReceived.Clear();
+}
+#+END_SRC
+
 ** Applying forces 
 
 Force generators are the primary tool we use to apply forces to a RigidBody.
