@@ -11,7 +11,59 @@ engine. His book 'Game Physics Engine Development' was a great help to us.
 
 ** PhysicsWorld/Physics system interface
 
-To keep the 
+To keep the physics engine separate from other components of the engine, we
+created the 'Physics' system. The Physics system acts as the glue between the
+physics engine and the game engine. The Physics system translates messages
+received from other systems into the appropriate method calls on the
+PhysicsWorld class. For example, if the Physics system receives a message asking
+it to create an entity with a physics component, the Physics system will create
+the appropriate RigidBody, collision shapes and add it to the PhysicsWorld:
+
+#+NAME: Physics.cpp
+#+BEGIN_SRC c++
+void Physics::CreatePhysicsComponent(Entity entity, const char *componentData)
+{
+    ...
+
+        // Create rigid body component
+        ds_phys::RigidBody *body = new ds_phys::RigidBody();
+
+            ...
+
+                    // Create box
+                    auto *box = new ds_phys::CollisionBox();
+                    box->halfSize = dimensions;
+                    box->body = body;
+                    box->offset =
+                        ds_math::Matrix4::CreateTranslationMatrix(offsets[i]);
+
+                    body->addCollisionPrimitive(box);
+
+                    m_physicsWorld.addCollisionPrimitive(
+                        std::unique_ptr<ds_phys::CollisionPrimitive>(box));
+
+        ...
+
+            phys = m_physicsComponentManager->CreateComponentForEntity(entity);
+            m_physicsComponentManager->SetRigidBody(phys, body);
+
+            ...
+
+                body->setMass(totalMass);
+
+                ...
+
+                body->setInertiaTensor(compositeInertiaTensor);
+                body->setCenterOfMassLocalSpace(centerOfMass);
+
+            ...
+
+            m_physicsWorld.addForceGenerator(body, m_gravityFg);
+            m_physicsWorld.addRigidBody(body);
+
+    ...
+}
+#+END_SRC
 
 ** Applying forces 
 
@@ -87,10 +139,10 @@ public:
 
 With these two things, the ForceRegistry can remove a force generator/rigid body
 when a force generator reports it has finished applying forces. Since the force
-generator is supplied as a 'shared pointer', it can dispose of the pointer
-without having to explicitly free any memory and without risking freeing a force
-generator someone else might still be using. This behaviour of the ForceRegistry
-is shown below:
+generator is supplied as a 'shared pointer' (giving it shared ownership), it can
+dispose of the pointer without having to explicitly free any memory and without
+the risk of freeing a force generator someone else might still be using. This
+behaviour of the ForceRegistry is shown below:
 
 #+NAME: ForceGenerator.cpp
 #+BEGIN_SRC c++
