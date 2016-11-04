@@ -1,0 +1,230 @@
+* Software Quality
+
+** Testing
+
+All unit-testing was done using the GoogleTest unit-testing framework. 
+
+These tests are run from a separate executable built as part of building the
+project. This executable can be found in: 'test/bin'.
+
+The entry point for the unit-test suites is 'test/src/main.cpp':
+
+#+NAME: test/src/main.cpp
+#+BEGIN_SRC c++
+#include "gtest/gtest.h"
+
+#include "engine/ConfigTestSuite.h"
+#include "engine/common/CommonTestSuite.h"
+#include "engine/common/StreamBufferTestSuite.h"
+#include "math/Matrix4TestSuite.h"
+#include "math/QuaternionTestSuite.h"
+#include "math/Vector3TestSuite.h"
+#include "math/Vector4TestSuite.h"
+#include "math/Matrix3TestSuite.h"
+#include "engine/JsonTestSuite.h"
+
+int main(int argc, char **argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+#+END_SRC
+
+*** Math
+
+The following unit tests were written:
+
+#+NAME: test/src/Matrix3TestSuite.h
+#+BEGIN_SRC c++
+"Matrix3::TestDefaultConstructor"
+"Matrix3::TestLeadingConstructor"
+"Matrix3::TestElementConstructor"
+"Matrix3::TestVectorConstructor"
+"Matrix3::TestEquivalenceOperator"
+"Matrix3::TestInequivalenceOperator"
+"Matrix3::TestCopyConstructor"
+"Matrix3::TestCopyAssignmentOperator"
+"Matrix3::TestIndexOperator"
+"Matrix3::TestConstIndexOperator"
+"Matrix3::TestMultiplicationAssignmentOperator"
+"Matrix3::TestAdditionAssignmentOperator"
+"Matrix3::TestSubtractionAssignmentOperator"
+"Matrix3::TestTranspose"
+"Matrix3::TestTransformVector3"
+"Matrix3::TestInverseTransformVector3"
+"Matrix3::TestInverse"
+"Matrix3::TestBinaryAdditionOperator"
+"Matrix3::TestBinarySubtractionOperator"
+"Matrix3::TestMatrixMultiplication"
+"Matrix3::TestMatrixColumnMultiplication"
+"Matrix3::TestMatrixRowMultiplication"
+"Matrix3::TestMatrixFactorMultiplication"
+"Matrix3::TestOutputStreamOperator"
+#+END_SRC
+
+#+NAME: test/src/Matrix4TestSuite.h
+#+BEGIN_SRC c++
+"Matrix4::TestDefaultConstructor"
+"Matrix4::TestLeadingConstructor"
+"Matrix4::TestElementConstructor"
+"Matrix4::TestVectorConstructor"
+"Matrix4::TestEquivalenceOperator"
+"Matrix4::TestInequivalenceOperator"
+"Matrix4::TestCopyConstructor"
+"Matrix4::TestCopyAssignmentOperator"
+"Matrix4::TestIndexOperator"
+"Matrix4::TestConstIndexOperator"
+"Matrix4::TestMultiplicationAssignmentOperator"
+"Matrix4::TestAdditionAssignmentOperator"
+"Matrix4::TestSubtractionAssignmentOperator"
+"Matrix4::TestTranspose"
+"Matrix4::TestInverse"
+"Matrix4::TestTransformVector3"
+"Matrix4::TestTransformVector4"
+"Matrix4::TestInverseTransformVector3"
+"Matrix4::TestInverseTransformVector4"
+"Matrix4::TestCreateTranslationMatrix"
+"Matrix4::TestCreateScaleMatrix"
+"Matrix4::TestBinaryAdditionOperator"
+"Matrix4::TestBinarySubtractionOperator"
+"Matrix4::TestMatrixMultiplication"
+"Matrix4::TestMatrixColumnMultiplication"
+"Matrix4::TestMatrixRowMultiplication"
+"Matrix4::TestMatrixFactorMultiplication"
+"Matrix4::TestOutputStreamOperator"
+#+END_SRC
+
+#+NAME: test/src/QuaternionTestSuite.h
+#+BEGIN_SRC c++
+"Quaternion::TestDefaultConstructor"
+"Quaternion::TestConstructor"
+"Quaternion::TestCopyConstructor"
+"Quaternion::TestCopyAssignmentOperator"
+"Quaternion::TestIndexOperator"
+"Quaternion::TestConstIndexOperator"
+"Quaternion::TestEquivalenceOperator"
+"Quaternion::TestInequivalenceOperator"
+"Quaternion::TestDotProduct"
+"Quaternion::TestMagnitude"
+"Quaternion::TestNormalize"
+"Quaternion::TestInvert"
+"Quaternion::TestQuaternionMultiplication"
+"Quaternion::TestOutputOperator"
+#+END_SRC
+
+#+NAME: test/src/Vector3TestSuite.h
+#+BEGIN_SRC c++
+"Vector3::TestDefaultConstructor"
+"Vector3::TestConstructor"
+"Vector3::TestCopyConstructor"
+"Vector3::TestVector4Constructor"
+"Vector3::TestIndexOperator"
+"Vector3::TestConstIndexOperator"
+"Vector3::TestMultiplicationAssignmentOperator"
+"Vector3::TestAdditionAssignmentOperator"
+"Vector3::TestSubtractionAssignmentOperator"
+"Vector3::TestEquivalenceOperator"
+"Vector3::TestInequivalenceOperator"
+"Vector3::TestMagnitude"
+"Vector3::TestNormalize"
+"Vector3::TestInvert"
+"Vector3::TestClear"
+"Vector3::TestDotProduct"
+"Vector3::TestCrossProduct"
+"Vector3::TestAdditionOperator"
+"Vector3::TestSubtractionOperator"
+"Vector3::TestScaleOperator"
+"Vector3::TestOutputStreamOperator"
+"Vector3::TestUnitX"
+"Vector3::TestUnitY"
+"Vector3::TestUnitZ"
+#+END_SRC
+
+#+NAME: test/src/Vector4TestSuite.h
+#+BEGIN_SRC c++
+"Vector4::TestDefaultConstructor"
+"Vector4::TestConstructor"
+"Vector4::TestCopyConstructor"
+"Vector4::TestIndexOperator"
+"Vector4::TestConstIndexOperator"
+"Vector4::TestMultiplicationAssignmentOperator"
+"Vector4::TestAdditionAssignmentOperator"
+"Vector4::TestSubtractionAssignmentOperator"
+"Vector4::TestEquivalenceOperator"
+"Vector4::TestInequivalenceOperator"
+"Vector4::TestMagnitude"
+"Vector4::TestNormalize"
+"Vector4::TestInvert"
+"Vector4::TestClear"
+"Vector4::TestDotProduct"
+"Vector4::TestCrossProduct"
+"Vector4::TestAdditionOperator"
+"Vector4::TestSubtractionOperator"
+"Vector4::TestScaleOperator"
+"Vector4::TestOutputStreamOperator"
+"Vector4::TestUnitX"
+"Vector4::TestUnitY"
+"Vector4::TestUnitZ"
+"Vector4::TestUnitW"
+#+END_SRC
+
+*** Config 
+
+The following unit tests were written:
+
+#+NAME: test/src/engine/ConfigTestSuite.h
+#+BEGIN_SRC c++
+"Config::LoadFile"
+"Config::GetUnsignedInt"
+"Config::GetUnsignedIntNested"
+"Config::GetUnsignedIntNestedIncorrect"
+"Config::FailingToGetValueDoesNotModifyUnsignedInt"
+"Config::TwoLevelsOfNesting"
+"Config::GetUintIncorrectType"
+"Config::GetString"
+"Config::GetStringIncorrect"
+"Config::GetStringIncorrectDoesNotModifyOriginal"
+"Config::GetStringIncorrectType"
+"Config::GetBool"
+"Config::GetBoolIncorrect"
+"Config::GetBoolIncorrectDoesNotModifyOriginal"
+"Config::GetBoolIncorrectType"
+"Config::GetObjectKeys"
+"Config::GetObjectKeysNested"
+"Config::GetObjectKeysNotAnObject"
+"Config::GetObjectKeysEmptyObject"
+#+END_SRC
+
+#+NAME: test/src/engine/JsonTestSuite.h
+#+BEGIN_SRC c++
+"Json::ParseObject"
+"Json::ParseString"
+"Json::ParseNumber"
+"Json::ParseBool"
+"Json::ParseArray"
+"Json::ParseNested"
+"Json::Type"
+#+END_SRC
+
+#+NAME: test/src/engine/CommonTestSuite.h
+#+BEGIN_SRC c++
+"TokenizeString::CorrectNumberOfTokens"
+"TokenizeString::CorrectTokens"
+"TokenizeString::CorrectNumberOfTokensComplex"
+"TokenizeString::CorrectTokensComplex"
+#+END_SRC
+
+#+NAME: test/src/engine/StreamBufferTestSuite.h
+#+BEGIN_SRC c++
+"StreamBuffer::TestInsertExtract"
+"StreamBuffer::MultipleInsertExtract"
+"StreamBuffer::ReadFail"
+"StreamBuffer::InsertExtractLargerStructure"
+"StreamBuffer::OperatorsChar"
+"StreamBuffer::OperatorsFloat"
+"StreamBuffer::OperatorsInsertExtractLargerStructure"
+"StreamBuffer::PeekDataWorks"
+"StreamBuffer::PeekDataDoesntMoveReadHead"
+"StreamBuffer::SetStreamBuffer"
+"StreamBuffer::SetStreamBufferLargerStructure"
+#+END_SRC

@@ -1,0 +1,8 @@
+* Special Features
+
+- Mention CMake cross-platform build
+- Lua script components and parameters
+- Blender export stuff
+- Data files, data-driven development
+- 
+

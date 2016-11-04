@@ -1,0 +1,7 @@
+* User manual
+
+- Use the w, a, s and d keys to move around
+- Use the mouse to look around
+- Use the spacebar to jump
+- Use the escape key to quit. This will show a picture of the team's faces,
+  press the left mouse button to actually quit.
