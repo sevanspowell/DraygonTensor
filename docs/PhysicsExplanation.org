@@ -88,7 +88,7 @@ void Physics::Update(float deltaTime)
 }
 #+END_SRC
 
-** Applying forces 
+** Applying forces
 
 Force generators are the primary tool we use to apply forces to a RigidBody.
 Just like in the cyclone engine, a ForceRegistry class is used to associate
@@ -253,3 +253,172 @@ confident that memory associated with the ImpulseGenerator is freed after it has
 finished applying forces.
 
 ** Polymorphic collision shapes
+
+The collision shapes we use in the physics engine are polymoprhic. This allows
+us to define certain shared behavours between different collisions shapes and
+to safely store and access them in a well-defined manner.
+
+#+NAME: CollisionFine.h
+#+BEGIN_SRC c++
+class CollisionPrimitive
+{
+
+public:
+    /**
+    * This class exists to help the collision detector
+    * and intersection routines, so they should have
+    * access to its data.
+    */
+    friend class IntersectionTests;
+    friend class CollisionDetector;
+
+    /**
+    * The rigid body that is represented by this primitive.
+    */
+    RigidBody *body;
+
+    /**
+    * The offset of this primitive from the given rigid body.
+    */
+    ds_math::Matrix4 offset;
+
+    CollisionPrimitive();
+    virtual ~CollisionPrimitive() {}
+
+    /**
+    * Calculates the internals for the primitive.
+    */
+    void calculateInternals();
+
+    /**
+    * This is a convenience function to allow access to the
+    * axis vectors in the transform for this primitive.
+    */
+    ds_math::Vector3 getAxis(unsigned index) const
+    {
+        return transform[index];
+    }
+
+    /**
+    * Returns the resultant transform of the primitive, calculated from
+    * the combined offset of the primitive and the transform
+    * (orientation + position) of the rigid body to which it is
+    * attached.
+    */
+    const ds_math::Matrix4 &getTransform() const
+    {
+        return transform;
+    }
+
+protected:
+    /**
+    * The resultant transform of the primitive. This is
+    * calculated by combining the offset of the primitive
+    * with the transform of the rigid body.
+    */
+    ds_math::Matrix4 transform;
+
+
+}; // end class CollisionPrimitive
+#+END_SRC
+
+As it currently stands the polymorphic collision shape system isn't being
+utilised to it's full ability. Rather than having the collision shapes providing
+the neccesary information to generate contacts through an abstract set of
+methods defined in the base class, the current implementation needs to use RTTI
+to figure which contact generation method to use for any two given shapes.
+
+#+NAME: PhysicsWorld.cpp
+#+BEGIN_SRC c++
+if (CollisionBox *b0Ptr = dynamic_cast<CollisionBox *>(b0)) {
+    if (CollisionBox *b1Ptr = dynamic_cast<CollisionBox *>(b1)) {
+        return CollisionDetector::boxAndBox(*b0Ptr, *b1Ptr, &data);
+    }
+    else if (CollisionSphere *b1Ptr = dynamic_cast<CollisionSphere *>(b1))
+    {
+        return CollisionDetector::boxAndSphere(*b0Ptr, *b1Ptr, &data);
+    }
+    else if (CollisionPlane *b1Ptr = dynamic_cast<CollisionPlane *>(b1))
+    {
+        return CollisionDetector::boxAndHalfSpace(*b0Ptr, *b1Ptr, &data);
+    }
+    else if (CollisionCapsule *b1Ptr = dynamic_cast<CollisionCapsule *>(b1))
+    {
+        return CollisionDetector::capsuleAndBox(*b1Ptr, *b0Ptr, &data);
+    }
+}
+else if (CollisionSphere *b0Ptr = dynamic_cast<CollisionSphere *>(b0))
+{
+    if (CollisionBox *b1Ptr = dynamic_cast<CollisionBox *>(b1))
+    {
+        return CollisionDetector::boxAndSphere(*b1Ptr, *b0Ptr, &data);
+    }
+    else if (CollisionSphere *b1Ptr = dynamic_cast<CollisionSphere *>(b1))
+    {
+        return CollisionDetector::sphereAndSphere(*b0Ptr, *b1Ptr, &data);
+    }
+    else if (CollisionPlane *b1Ptr = dynamic_cast<CollisionPlane *>(b1))
+    {
+        return CollisionDetector::sphereAndHalfSpace(*b0Ptr, *b1Ptr, &data);
+    }
+    else if (CollisionCapsule *b1Ptr = dynamic_cast<CollisionCapsule *>(b1))
+    {
+        return CollisionDetector::capsuleAndSphere(*b1Ptr, *b0Ptr, &data);
+    }
+}
+else if (CollisionPlane *b0Ptr = dynamic_cast<CollisionPlane *>(b0))
+{
+    if (CollisionBox *b1Ptr = dynamic_cast<CollisionBox *>(b1))
+    {
+        return CollisionDetector::boxAndHalfSpace(*b1Ptr, *b0Ptr, &data);
+    }
+    else if (CollisionSphere *b1Ptr = dynamic_cast<CollisionSphere *>(b1))
+    {
+        return CollisionDetector::sphereAndHalfSpace(*b1Ptr, *b0Ptr, &data);
+    }
+    else if (/*CollisionPlane *b1Ptr = */ dynamic_cast<CollisionPlane *>(
+        b1))
+    {
+        // Skip
+    }
+    else if (CollisionCapsule *b1Ptr = dynamic_cast<CollisionCapsule *>(b1))
+    {
+        return CollisionDetector::capsuleAndHalfSpace(*b1Ptr, *b0Ptr,
+                                                      &data);
+    }
+}
+else if (CollisionCapsule *b0Ptr = dynamic_cast<CollisionCapsule *>(b0))
+{
+    if (CollisionBox *b1Ptr = dynamic_cast<CollisionBox *>(b1))
+    {
+        return CollisionDetector::capsuleAndBox(*b0Ptr, *b1Ptr, &data);
+    }
+    else if (CollisionSphere *b1Ptr = dynamic_cast<CollisionSphere *>(b1))
+    {
+        return CollisionDetector::capsuleAndSphere(*b0Ptr, *b1Ptr, &data);
+    }
+    else if (CollisionPlane *b1Ptr = dynamic_cast<CollisionPlane *>(b1))
+    {
+        return CollisionDetector::capsuleAndHalfSpace(*b0Ptr, *b1Ptr,
+                                                      &data);
+    }
+    else if (CollisionCapsule *b1Ptr = dynamic_cast<CollisionCapsule *>(b1))
+    {
+        return CollisionDetector::capsuleAndCapsule(*b0Ptr, *b1Ptr, &data);
+    }
+}
+#+END_SRC
+
+The advantage with the above is that each method can specifically tailor for and
+provide an optimised implementation for each pair of shapes for contact
+genration. The downside is that RTTI needs to be performed which can be quite
+expensive depending on the compiler and the manner in which it's used, it
+requires maintaining a function with n^2 if statements to call the correct
+function, or to write a system using RTTI to handle that more dynamically.
+
+Ideally, a lot of the contact generation code would be refactored into the base
+shape class to allow for a polymophic collision solver whilst not disallowing
+optimised solvers for specific pairs. This would help balance out maintaing a
+large set of RTTI-based if statements but without completely sacrificing the
+possible speed increase from tailored implementations. This is what was
+originally planned, however, it never came to fruition.
