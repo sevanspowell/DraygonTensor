@@ -422,3 +422,16 @@ optimised solvers for specific pairs. This would help balance out maintaing a
 large set of RTTI-based if statements but without completely sacrificing the
 possible speed increase from tailored implementations. This is what was
 originally planned, however, it never came to fruition.
+
+All collision shapes however the following set of features:
+    + An offset that is applied to the transformation of the owning rigid body.
+    Which allows the composition of multiple shapes into a more complex body or
+    an asymetric body.
+    + A pointer to the owning rigid body. This allows contact shapes to be
+    stored seperately from rigid bodies, or to be unowned. It also means that
+    contact generation can be ignorant of rigidbodies nor do they need to be
+    amalgamated.
+    + An update method to allows internal data to be updated as needed rather
+    than on every calculation.
+    + Some helper methods for geting the position and local-axises of the
+    collision shape.
