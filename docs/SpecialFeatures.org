@@ -4,7 +4,18 @@
 - Lua script components and parameters
 - Blender export stuff
 - Data files, data-driven development
-- 
+
+** Cross-platform build system 
+
+At the beginning of the semester, it was determined that members of the
+development team would like to develop on different platforms (Windows, OSX and
+Linux). So it was important that we create a build system that allows each
+member of the team to contribute to the project on their platform. We used CMake
+for this purpose. CMake allows us to create one set of project files from which
+Visual Studio, XCode and Makefile project files can be created.
+
+These CMake project files have the name "CMakeLists.txt" and are responsible for
+finding all dependecies for the project.
 
 ** Data-driven design
 
