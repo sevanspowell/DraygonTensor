@@ -678,8 +678,3 @@ return impulseContact;
 This results in friction effectively being applied as a planar force
 perpendicular to the collision normal, resiting certain kinds of movements and
 causing things to pivot and rotate rather than slide.
-
-
-
-
-.

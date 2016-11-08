@@ -107,7 +107,7 @@ The emotion system can be found in the
 An NPC's chemical values (serotonin, dopamine and noradrenaline) are stored in a
 single Vector3:
 
-#+NAME: emotions.lua 
+#+NAME: emotions.lua
 #+BEGIN_SRC lua
 function emotions:init()
   -- serotonin, dopamine, noradrenaline
@@ -122,24 +122,24 @@ the NPC is currently feeling.
 
 This table is implemented in Lua like so:
 
-#+NAME: emotions.lua 
+#+NAME: emotions.lua
 #+BEGIN_SRC lua
 function emotions:init()
   -- ...
   self.emotionLookupTable = {}
   self.emotionLookupTable[0] = {}
   self.emotionLookupTable[0][0] = {}
-  self.emotionLookupTable[0][0][0] = "Ashamed" 
+  self.emotionLookupTable[0][0][0] = "Ashamed"
   self.emotionLookupTable[0][0][1] = "Distressed"
   self.emotionLookupTable[0][1] = {}
-  self.emotionLookupTable[0][1][0] = "Scared" 
+  self.emotionLookupTable[0][1][0] = "Scared"
   self.emotionLookupTable[0][1][1] = "Angry"
   self.emotionLookupTable[1] = {}
   self.emotionLookupTable[1][0] = {}
-  self.emotionLookupTable[1][0][0] = "Disgusted" 
+  self.emotionLookupTable[1][0][0] = "Disgusted"
   self.emotionLookupTable[1][0][1] = "Suprised"
   self.emotionLookupTable[1][1] = {}
-  self.emotionLookupTable[1][1][0] = "Joyful" 
+  self.emotionLookupTable[1][1][0] = "Joyful"
   self.emotionLookupTable[1][1][1] = "Excited"
 
 end
@@ -148,7 +148,7 @@ end
 The values of 0 (< 0.5 chemical value) or 1 (>= 0.5 chemical value) are used to
 access the elements of the lookup table:
 
-#+NAME: emotions.lua 
+#+NAME: emotions.lua
 #+BEGIN_SRC lua
 function emotions:getCurrentEmotion()
   local serotonin = 1
@@ -176,10 +176,10 @@ into a general mood using the dot product:
     }) / 3), where 3 is the max value that can be returned by the dot product
     (Dot({ 1, 1, 1 }, { 1, 1, 1 }))
 This process means that mood is an average of the current emotional level and
-so changes less often than the emotional levels (as is consistent with Lovheim's 
+so changes less often than the emotional levels (as is consistent with Lovheim's
 model). This is illustrated in code below:
 
-#+NAME: emotions.lua 
+#+NAME: emotions.lua
 #+BEGIN_SRC lua
 -- Recalculate mood based on current chemical values
 function emotions:updateMood()
@@ -197,7 +197,7 @@ This new emotional level is used to recalculate the mood.
 
 This is illustrated below:
 
-#+NAME: emotions.lua 
+#+NAME: emotions.lua
 #+BEGIN_SRC lua
 -- Move the chemical levels towards some emotion point in the Loveheim cube.
 function emotions:affectEmotion(emotionPoint)
@@ -260,3 +260,44 @@ The quirk function is executed by the AI system 'every so often'. An example
 quirk might be:
  - e.g. "tripsOver": { function(entity) { entity:addForce(head, {1, 0, 0}) } }
 
+*** Needs
+
+This has been implemented but not utilised.
+
+In order to give NPCs the drive to complete certain actions we decided to
+implement a concept of "needs" that NPCs need to fulfill. These needs
+indirrectly link up to the affordance system, for example if a need called
+"tiredness" needed to be fulfilled, then the AI could search for objects that
+afford "rest" or "relaxation".
+
+Needs have several properties:
+  + Current Need Level
+    + This is the level at which the current need is needed.
+  + Desired Level
+    + This is the level at which an AI should start desiring the need to be
+    fulfilled.
+  + Critical Level
+    + This is the level at which an AI should start becoming focuses and
+    desperate to fufill.
+  + Critical Factor
+    + The critical factor is a power applied to needs when they're above the
+    critical level. This is so that critical needs can significantly outpace
+    non-critical needs, but allows critical needs to differenciate their
+    priority.
+  + Base change rate
+    + This is the change-rate/second of the need level. It specifies how fast
+    the need should grow in desire or shrink.
+  + Multiplier
+    + This is a multiplier applied to the base change rate to allow things such
+    as emotions to affect and sway how needs are dealt with over time. For
+    example a "tiredness" need could have it's multiplier increased when the
+    character feels stressed or sad, resulting in the need to be fufilled
+    more often.
+
+Each need of an AI is registered with a name in the need manager. The need
+manager handles updating the current need level and generating a list of needs
+that need to be satisfied in order of priority.
+
+The system has only been tested experimentally and worked when integrated with
+the affordence system. It hasn't been tested formallaly or in a unit testing
+manor yet and isn't utilized in the example project.
