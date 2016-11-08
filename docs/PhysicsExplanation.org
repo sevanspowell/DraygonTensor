@@ -528,6 +528,36 @@ Below is the high-level calculation for the impulse force:
     + Calulate the total energy from the resulting collision as a desired change
     in velocity
 
+#+NAME: Contacts.cpp
+#+BEGIN_SRC c++
+
+const static scalar velocityLimit = 0.25;
+
+scalar accelVel = 0;
+
+for (int i = 0; i < 2; i++)
+{
+    if ((body[i]) && (body[i]->getAwake()))
+    {
+        accelVel +=
+            Vector3::Dot(body[i]->getLastFrameAcceleration() * duration,
+                         contactNormal) *
+            ((i % 2) ? -1 : 1);
+    }
+}
+
+scalar boundedResitution = restitution;
+if (fabs(m_contactVelocity.x) < velocityLimit)
+{
+    boundedResitution = 0.0;
+}
+
+m_desiredDeltaVelocity =
+    -m_contactVelocity.x - boundedResitution * (m_contactVelocity.x - accelVel);
+
+
+#+END_SRC
+
 We use the frictionless collision impulse calculation to calulate the
 frictionless impulse. The top half of the formula, the desired change in
 velocity is calulcated in the section above:
@@ -539,6 +569,46 @@ velocity is calulcated in the section above:
         + Otherwise, divide the desired change in velocity by the inertia to get
         the frictionless impulse and return.
 
+#+NAME: Contacts.cpp
+#+BEGIN_SRC c++
+// Calculate the change in world-space velocity in for an impulse along the contact normal.
+Vector3 deltaVelWorld =
+    Vector3::Cross(m_relativeContactPosition[0], contactNormal);
+deltaVelWorld = inverseInertiaTensor[0] * deltaVelWorld;
+deltaVelWorld = Vector3::Cross(deltaVelWorld, m_relativeContactPosition[0]);
+
+// Work out the change in velocity in contact coordiantes.
+scalar deltaVelocity = Vector3::Dot(deltaVelWorld, contactNormal);
+
+// Add the linear component of velocity change
+deltaVelocity += body[0]->getInverseMass();
+
+// Check if we need to the second body's data
+if (body[1])
+{
+    // Go through the same transformation sequence again
+    Vector3 deltaVelWorld =
+        Vector3::Cross(m_relativeContactPosition[1], contactNormal);
+    deltaVelWorld = inverseInertiaTensor[1] * deltaVelWorld;
+    deltaVelWorld =
+        Vector3::Cross(deltaVelWorld, m_relativeContactPosition[1]);
+
+    // Add the change in velocity due to rotation
+    deltaVelocity += Vector3::Dot(deltaVelWorld, contactNormal);
+
+    // Add the change in velocity due to linear motion
+    deltaVelocity += body[1]->getInverseMass();
+}
+
+if (deltaVelocity == 0)
+    return Vector3(0, 0, 0);
+else
+    return Vector3(m_desiredDeltaVelocity / deltaVelocity, 0, 0);
+#+END_SRC
+
+It should be noted that the inpulse returned is in contact collison space as to
+remain compatible with how friction-based impulse is calculated.
+
 The friction-based inpule calulation is a little hard to explain as it
 implements ansiotropic friction. The rough gist of the high level arlgorthim is:
     + Calculate angular and linear veloicty changes seperately
@@ -547,6 +617,63 @@ implements ansiotropic friction. The rough gist of the high level arlgorthim is:
     + Calculate ansiotropic friction forces that oppose the rotation and linear
     movement in directions other than the contact normal.
     + Apply the friction to the angular and linear velocity changes.
+
+#+NAME: Contacts.cpp
+#+BEGIN_SRC c++
+scalar totalInvMass = body[0]->getInverseMass();
+Matrix3 impulseToTorque =
+    calculateSkewSymmetricMatrix(m_relativeContactPosition[0]);
+Matrix3 deltaWorldVel =
+    -1 * ((impulseToTorque * inverseInertiaTensor[0]) * impulseToTorque);
+
+if (body[1])
+{
+    Matrix3 impulseToTorque2 =
+        calculateSkewSymmetricMatrix(m_relativeContactPosition[1]);
+    deltaWorldVel += -1 * ((impulseToTorque2 * inverseInertiaTensor[1]) *
+                           impulseToTorque2);
+    totalInvMass += body[1]->getInverseMass();
+}
+
+// Convert worl velocity to contact-space velocity.
+Matrix3 deltaVelocity =
+    (Matrix3::Transpose(m_contactToWorld) * deltaWorldVel) * m_contactToWorld;
+
+// Apply linear velocity change
+deltaVelocity.data[0][0] += totalInvMass;
+deltaVelocity.data[1][1] += totalInvMass;
+deltaVelocity.data[2][2] += totalInvMass;
+
+// Invert to get the impulse needed per unit of velocity
+Matrix3 impulseMatrix = Matrix3::Inverse(deltaVelocity);
+
+// Find the target velocities to kill
+Vector3 velKill(m_desiredDeltaVelocity, -m_contactVelocity.y,
+                -m_contactVelocity.z);
+
+// Find the impulse to kill target velocities
+Vector3 impulseContact = impulseMatrix * velKill;
+
+// Check for exceeding friction
+scalar planarImpulse = sqrt(impulseContact.y * impulseContact.y +
+                            impulseContact.z * impulseContact.z);
+
+if (planarImpulse > impulseContact.x * friction)
+{
+    // We need to use dynamic friction
+    impulseContact.y /= planarImpulse;
+    impulseContact.z /= planarImpulse;
+
+    impulseContact.x = deltaVelocity[0][0] +
+                       deltaVelocity[0][1] * friction * impulseContact.y +
+                       deltaVelocity[0][2] * friction * impulseContact.z;
+    impulseContact.x = m_desiredDeltaVelocity / impulseContact.x;
+    impulseContact.y *= friction * impulseContact.x;
+    impulseContact.z *= friction * impulseContact.x;
+}
+
+return impulseContact;
+#+END_SRC
 
 This results in friction effectively being applied as a planar force
 perpendicular to the collision normal, resiting certain kinds of movements and
