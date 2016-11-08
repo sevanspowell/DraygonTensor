@@ -4,14 +4,14 @@ Note that all paths are relative to the submission root directory (i.e. "./" is 
 
 ** Build instructions
 - Navigate to the "./build"
-- Open the Visual Studio 2013 solution file (DrunkenSailerEngine.sln) present there.
-- Right-click on the "final" project and choose "Build" or "Rebuild", this will output an executable file to "./executable/bin".
+- Open the Visual Studio 2013 solution file (theplastics.sln) present there.
+- Right-click on each project in the solution (ds_math, drunkensailorengine then final) and choose "Build" or "Rebuild", this will output an executable file to "./executable/bin"
 
 ** Running the program
-- Navigate to the ./executable/bin directory.
+- Navigate to the ./executable directory.
 - Double-click the final.exe to execute the project.
 OR
-- Open the Visual Studio 2013 solution file present in "./build/DrunkenSailerEngine.sln"
+- Open the Visual Studio 2013 solution file present in "./build/theplastics.sln"
 - Right-click the "final" project and choose "Set as startup project".
 - Click the "Green play button" at the top of the window or press 'F5' to run the project from Visual Studio 2013.
 
