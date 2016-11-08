@@ -1,8 +1,8 @@
 * AI Explanation - The Plastics
 
 Our AI systems are almost entirely implemented in Lua scripts. These can be
-found in the './executable/assets/scripts' folder and in the
-'./executable/assets/boot.lua'.
+found in the './assets/scripts' folder and in the
+'./assets/boot.lua'.
 
 ** Affordances
 
@@ -20,7 +20,7 @@ The AI can query this affordance table to get a list of entities that will
 satisfy this affordance.
 
 The affordanceTable 'class' is defined in the
-'./executable/assets/scripts/affordanceTable.lua' script. An example Lua script
+'./assets/scripts/affordanceTable.lua' script. An example Lua script
 adding affordances is listed below:
 
 #+NAME: boot.lua
@@ -301,3 +301,5 @@ that need to be satisfied in order of priority.
 The system has only been tested experimentally and worked when integrated with
 the affordence system. It hasn't been tested formallaly or in a unit testing
 manor yet and isn't utilized in the example project.
+
+Please refer to './assets/scripts/needManager.lua'.
