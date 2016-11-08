@@ -1,7 +1,3 @@
-(setq org-babel-exp-code-template
-         (concat "\n=%name=:\n"
-              org-babel-exp-code-template)
-               )
 * Physics Explanation - The Plastics
 
 ** Basis
@@ -476,15 +472,15 @@ space the collision normal is mapped to the x-axis with the other two axies
 being perpendicular. This is to allow the precalulation of common data sets and
 to simplify calculations involving the collision normal.
 
-Allowing us to simplify equations involving th contact normal in many cases.
+Allowing us to simplify equations involving the contact normal in many cases.
 
 *** Position Correction
 
 Since our collision system is discrete, we need to correct the position of
 objects when they're detected as penetration occurs.　A naive implmentation
 would just move the object along the collision normal far enough to resolve the
-penitration. However, this is incorrect. The penitation depth is represents an
-amount of energy, that would otherwise be lost if not corrected propperly by
+penetration. However, this is incorrect. The penetration depth is represents an
+amount of energy, that would otherwise be lost if not corrected properly by
 changing both the distance of the object from the edge and the orientation of
 the object. This results in a more realistic collision result by propperly
 conserving and applying energy.
@@ -511,7 +507,7 @@ The high level of the algorithim we used for this was:
             + Recalculate the dependant data
 
 It's worth noting that angular correction is not taken into account when
-resolving penitration depth as it would require recalculating the contact, which
+resolving penetration depth as it would require recalculating the contact, which
 is too expensive to perform given the number of possible contacts pairs. This is
 another reason why angular change is limited, as cumulative angular corrections
 can result in over-turning an object.
@@ -519,9 +515,9 @@ can result in over-turning an object.
 *** Linear/Angular Velocity change
 
 Once the positions have been corrected we need correct velocities to be
-consistant with the physical system we're simulating.
+consistent with the physical system we're simulating.
 
-Bellow is the high-level calculation for the impulse force:
+Below is the high-level calculation for the impulse force:
     + Calculate the total amount of acceleration done in the frame along the
     collision normal.
     + Drop the resitution calculation for impacts less than a certain total
