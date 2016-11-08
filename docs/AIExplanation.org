@@ -1,16 +1,79 @@
 * AI Explanation - The Plastics
 
-** Affordance Implementation
-- Implemented in Lua
-- Global Lua table
-  - Maps AffordanceName to list of entity-value key-value pairs.
-- AI has needs it wants to satisfy
-  - For example, if an NPC's thirst need is high, the NPC will query the global
-    affordance table for entities that afford 'drinking'. The table will return
-    a list of entity-value pairs, indicating which entities afford drinking and
-    how much they afford drinking.
-  - NPC will try to find the entity with the highest value for the affordance
-    that is closest (affordance value is weighted by distance from the NPC).
+Our AI systems are almost entirely implemented in Lua scripts.
+
+** Affordances
+
+The AI has needs it wants to satisfy. It acts to satisfy these needs by querying
+the world for objects that "afford" satisfying that need. For example, if an
+NPC's thirst need is high, the NPC will query the world for an object that
+affords 'drinking'. The NPC will try to find the entity with the highest
+affordance value that is the closest (affordance value is weighted by distance
+from the NPC). 
+
+Affordances are implemented as a global Lua table. This global Lua table maps
+entities to their affordances and how much they afford those affordances.
+
+The AI can query this affordance table to get a list of entities that will
+satisfy this affordance.
+
+The affordanceTable 'class' is defined in the
+"assets/scripts/affordanceTable.lua" script. An example Lua script adding and
+querying affordances is listed below:
+
+#+NAME: boot.lua
+#+BEGIN_SRC lua
+  ...
+  -- Include affordance table 'class'
+  local affordance_table_class = require "scripts/affordanceTable"
+
+  ...
+
+  function init()
+    print("Script: init called!")
+
+    -- Create global affordance table
+    affordance_table = affordance_table_class:new()
+  end
+
+  ...
+
+  function update(deltaTime)
+    -- Load affordances from file 
+    while Script.is_next_message() do
+      local msg = Script.get_next_message()
+      if (msg.type == "create_component") then
+        if msg.component_type == 'affordanceComponent' then
+          for affordance, value in pairs(msg.affordances) do
+            affordance_table:registerAffordance(msg.entity, affordance, value)
+          end
+        end
+      end
+    end
+  end 
+#+END_SRC
+
+In this case affordances are loaded from file and transmitted to the Lua script
+via messages. 
+
+Querying affordances are done as follows:
+
+#+NAME: boot.lua cont.
+#+BEGIN_SRC lua
+  ...
+  for entity, value in pairs (affordance_table:queryAffordance("sit")) do
+    -- Choose closest entity that affords sitting the most
+  end
+  ...
+#+END_SRC
+
+The structure of the affordance table is illustrated below:
+
+| affordanceName |                                                     |
+|----------------+-----------------------------------------------------|
+| sit            | { entityID1: 0.5, entityID2: 0.25, entityID3: 0.1 } |
+| drink          | { entityID2: 0.00, entityID3: 3.0 }                 |
+
 - When an NPC has reached an object it would like to use to satisfy it's need,
   the NPC grabs the object's interactible component and passes it's own entity
   id to the interactible component's 'use' method.
