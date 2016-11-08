@@ -43,34 +43,127 @@ namespace ds_phys
 {
 typedef int CollisionPrimitiveID;
 
+/**
+ * Physics world class.
+ */
 class PhysicsWorld
 {
 public:
+    /**
+     * Physics world constructor.
+     *
+     * @param   maxContacts   unsigned int, maximum number of contacts to
+     * process.
+     * @param   iterations    unsigned int, maximum number of iterations to
+     * perform.
+     */
     PhysicsWorld(unsigned int maxContacts, unsigned int iterations = 0);
+    /**
+     * Physics world destructor.
+     */
     ~PhysicsWorld();
 
+    /**
+     * Generate contacts for this frame.
+     *
+     * @return   unsigned int, number of contacts generated.
+     */
     unsigned int generateContacts();
 
+    /**
+     * Perform frame initialization.
+     */
     void startFrame();
 
+    /**
+     * Step the simulation forward one timestep.
+     *
+     * @param   duration   ds_math::scalar, duration of the timestep to
+     * integrate the simulation over.
+     */
     void stepSimulation(ds_math::scalar duration);
 
+    /**
+     * Add a rigid body to the simulation.
+     *
+     * @param   rigidBody   RigidBody *, rigid body to add to the simulation.
+     */
     void addRigidBody(RigidBody *rigidBody);
 
+    /**
+     * Remove a rigid body to the simulation.
+     *
+     * @param   rigidBody   RigidBody *, rigid body to remove to the simulation.
+     */
     void removeRigidBody(RigidBody *rigidBody);
 
+    /**
+     * Add a force generator to the given rigid body.
+     *
+     * @param   rigidBody        RigidBody *, rigid body to add force generator
+     * to.
+     * @param   forceGenerator   std::shared_ptr<IForceGenerator>, force
+     * generator to add to the given rigid body.
+     */
     void addForceGenerator(RigidBody *rigidBody,
                            std::shared_ptr<IForceGenerator> forceGenerator);
 
+    /**
+     * Remove a force generator to the given rigid body.
+     *
+     * @param   rigidBody        RigidBody *, rigid body to remove force
+     * generator from.
+     * @param   forceGenerator   std::shared_ptr<IForceGenerator>, force
+     * generator to remove from the given rigid body.
+     */
     void removeForceGenerator(RigidBody *rigidBody,
                               std::shared_ptr<IForceGenerator> forceGenerator);
 
+    /**
+     * Add a collision primitive to the physics world.
+     *
+     * @param   primitive   std::unique_ptr<CollisionPrimitive> &&, pointer to
+     * collision primitive to add.
+     * @return              CollisionPrimitiveID, id of collision primitive
+     * added.
+     */
     CollisionPrimitiveID
     addCollisionPrimitive(std::unique_ptr<CollisionPrimitive> &&primitive);
+    /**
+     * Get the collision primitive associated with the given primitive id.
+     *
+     * @param   id   CollisionPrimitiveID, id of collision primitive to get.
+     * @return       CollisionPrimitive *, pointer to collision primitive with
+     * the given id or nullptr if no collision primitive with that id.
+     */
     CollisionPrimitive *getCollisionPrimitive(CollisionPrimitiveID id);
+    /**
+     * Get the collision primitive id of the given collision primitive.
+     *
+     * @param   primitive   CollisionPrimitive *, pointer to collision primitive
+     * to get the collision primitive id of.
+     * @return              CollisionPrimitiveID, id of the given collision
+     * primitive.
+     */
     CollisionPrimitiveID getCollisionPrimitiveID(CollisionPrimitive *primitive);
+    /**
+     * Remove a collision primitive from the physics world.
+     *
+     * @param   id   CollisionPrimitiveID, id of the collision primitive to
+     * remove from the physics world.
+     * @return       std::unique_ptr<CollisionPrimitive>, collision primitive
+     * that was removed.
+     */
     std::unique_ptr<CollisionPrimitive>
     removeCollisionPrimitive(CollisionPrimitiveID id);
+    /**
+     * Remove a collision primitive from the physics world.
+     *
+     * @param   primitive   CollisionPrimitive *, pointer to collision primitive
+     * to remove from the physics world.
+     * @return              std::unique_ptr<CollisionPrimitive>, collision
+     * primitive that was removed.
+     */
     std::unique_ptr<CollisionPrimitive>
     removeCollisionPrimitive(CollisionPrimitive *primitive);
 

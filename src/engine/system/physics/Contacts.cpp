@@ -258,7 +258,6 @@ static void calculateMoveAmounts(scalar penertration,
     // angularMove = 0;
     // linearMove = 0;
 
-    // @todo Figure out this projection sorcery.
     Vector3 projection =
         contactRelPos +
         (contactNorm * -Vector3::Dot(contactRelPos, contactNorm));

@@ -1,16 +1,82 @@
 * AI Explanation - The Plastics
 
-** Affordance Implementation
-- Implemented in Lua
-- Global Lua table
-  - Maps AffordanceName to list of entity-value key-value pairs.
-- AI has needs it wants to satisfy
-  - For example, if an NPC's thirst need is high, the NPC will query the global
-    affordance table for entities that afford 'drinking'. The table will return
-    a list of entity-value pairs, indicating which entities afford drinking and
-    how much they afford drinking.
-  - NPC will try to find the entity with the highest value for the affordance
-    that is closest (affordance value is weighted by distance from the NPC).
+Our AI systems are almost entirely implemented in Lua scripts. These can be
+found in the './executable/assets/scripts' folder and in the
+'./executable/assets/boot.lua'.
+
+** Affordances
+
+The AI has needs it wants to satisfy. It acts to satisfy these needs by querying
+the world for objects that "afford" satisfying that need. For example, if an
+NPC's thirst need is high, the NPC will query the world for an object that
+affords 'drinking'. The NPC will try to find the entity with the highest
+affordance value that is the closest (affordance value is weighted by distance
+from the NPC).
+
+Affordances are implemented as a global Lua table. This global Lua table maps
+entities to their affordances and how much they afford those affordances.
+
+The AI can query this affordance table to get a list of entities that will
+satisfy this affordance.
+
+The affordanceTable 'class' is defined in the
+'./executable/assets/scripts/affordanceTable.lua' script. An example Lua script
+adding affordances is listed below:
+
+#+NAME: boot.lua
+#+BEGIN_SRC lua
+  ...
+  -- Include affordance table 'class'
+  local affordance_table_class = require "scripts/affordanceTable"
+
+  ...
+
+  function init()
+    print("Script: init called!")
+
+    -- Create global affordance table
+    affordance_table = affordance_table_class:new()
+  end
+
+  ...
+
+  function update(deltaTime)
+    -- Load affordances from file
+    while Script.is_next_message() do
+      local msg = Script.get_next_message()
+      if (msg.type == "create_component") then
+        if msg.component_type == 'affordanceComponent' then
+          for affordance, value in pairs(msg.affordances) do
+            affordance_table:registerAffordance(msg.entity, affordance, value)
+          end
+        end
+      end
+    end
+  end
+#+END_SRC
+
+In this case affordances are loaded from file and transmitted to the Lua script
+via messages.
+
+Querying affordances are done as follows:
+
+#+NAME: boot.lua cont.
+#+BEGIN_SRC lua
+  ...
+  for entity, value in pairs (affordance_table:queryAffordance("sit")) do
+    -- Choose closest entity that affords sitting the most
+  end
+  ...
+#+END_SRC
+
+The structure of the affordance table is illustrated below:
+
+| affordanceName |                                                     |
+|----------------+-----------------------------------------------------|
+| sit            | { entityID1: 0.5, entityID2: 0.25, entityID3: 0.1 } |
+| drink          | { entityID2: 0.00, entityID3: 3.0 }                 |
+
+The following is not yet implemented:
 - When an NPC has reached an object it would like to use to satisfy it's need,
   the NPC grabs the object's interactible component and passes it's own entity
   id to the interactible component's 'use' method.
@@ -23,41 +89,137 @@
   might already have someone sitting in it).
 
 ** Emotion
-- We decided to base our emotional model for the NPCs in the world off Lovheim's
-  Cube of Emotion [https://en.wikipedia.org/wiki/Lövheim_cube_of_emotion].
-- The model will use three different chemical values (serotonin, dopamine and
-  noradrenaline) to determine the emotions of an NPC (such as shame, contempt,
-  distress) as well as their overall mood.
-- In the system chemical values are a float value between 0 and 1 inclusive.
-- We simply clasify a chemical value of less than 0.5 as low and a chemical
-  value of greater than or equal to 0.5 as high.
+
+We decided to base our emotional model for the NPCs in the world off Lovheim's
+Cube of Emotion [https://en.wikipedia.org/wiki/Lövheim_cube_of_emotion]. The
+model uses three different chemical values (serotonin, dopamine and
+noradrenaline) to determine the emotions of an NPC (such as shame, contempt,
+distress) as well as their overall mood. In the system chemical values are a
+float value between 0 and 1 inclusive. We simply clasify a chemical value of
+less than 0.5 as low and a chemical value of greater than or equal to 0.5 as
+high.
 
 *** Emotion
-- We then use the following lookup table to determine the emotion the NPC is
-  currently feeling: [https://en.wikipedia.org/wiki/Lövheim_cube_of_emotion].
+
+The emotion system can be found in the
+'./executable/assets/scripts/emotions.lua' script.
+
+An NPC's chemical values (serotonin, dopamine and noradrenaline) are stored in a
+single Vector3:
+
+#+NAME: emotions.lua 
+#+BEGIN_SRC lua
+function emotions:init()
+  -- serotonin, dopamine, noradrenaline
+  self.chemicals = Vector3(1, 1, 1)
+  -- ...
+end
+#+END_SRC
+
+We use the lookup table pictured here
+[https://en.wikipedia.org/wiki/Lövheim_cube_of_emotion] to determine the emotion
+the NPC is currently feeling.
+
+This table is implemented in Lua like so:
+
+#+NAME: emotions.lua 
+#+BEGIN_SRC lua
+function emotions:init()
+  -- ...
+  self.emotionLookupTable = {}
+  self.emotionLookupTable[0] = {}
+  self.emotionLookupTable[0][0] = {}
+  self.emotionLookupTable[0][0][0] = "Ashamed" 
+  self.emotionLookupTable[0][0][1] = "Distressed"
+  self.emotionLookupTable[0][1] = {}
+  self.emotionLookupTable[0][1][0] = "Scared" 
+  self.emotionLookupTable[0][1][1] = "Angry"
+  self.emotionLookupTable[1] = {}
+  self.emotionLookupTable[1][0] = {}
+  self.emotionLookupTable[1][0][0] = "Disgusted" 
+  self.emotionLookupTable[1][0][1] = "Suprised"
+  self.emotionLookupTable[1][1] = {}
+  self.emotionLookupTable[1][1][0] = "Joyful" 
+  self.emotionLookupTable[1][1][1] = "Excited"
+
+end
+#+END_SRC
+
+The values of 0 (< 0.5 chemical value) or 1 (>= 0.5 chemical value) are used to
+access the elements of the lookup table:
+
+#+NAME: emotions.lua 
+#+BEGIN_SRC lua
+function emotions:getCurrentEmotion()
+  local serotonin = 1
+  local dopamine = 1
+  local noradrenaline = 1
+  if self.chemicals:get_x() < 0.5 then
+    serotonin = 0
+  end
+  if self.chemicals:get_y() < 0.5 then
+    dopamine = 0
+  end
+  if self.chemicals:get_z() < 0.5 then
+    noradrenaline = 0
+  end
+
+  return self.emotionLookupTable[serotonin][dopamine][noradrenaline]
+end
+#+END_SRC
 
 *** Mood
-- In our system, mood is again a simple float value between 0 and 1 inclusive.
-- 0 is considered a bad mood, 1 a good mood.
-- The three chemical levels are combined into a general mood using the dot
-  product:
+In our system, mood is a simple float value between 0 and 1 inclusive. 0 is
+considered a bad mood, 1 a good mood. The three chemical levels are combined
+into a general mood using the dot product:
   - Mood = (Dot({ 1, 1, 1 }, { SerotoninValue, NoradrenalineValue, DopamineValue
     }) / 3), where 3 is the max value that can be returned by the dot product
     (Dot({ 1, 1, 1 }, { 1, 1, 1 }))
-- This process means that mood is an average of the current emotional level and
-  so changes less often than the emotional levels (as is consistent with X's model).
+This process means that mood is an average of the current emotional level and
+so changes less often than the emotional levels (as is consistent with Lovheim's 
+model). This is illustrated in code below:
+
+#+NAME: emotions.lua 
+#+BEGIN_SRC lua
+-- Recalculate mood based on current chemical values
+function emotions:updateMood()
+  self.mood = Vector3.dot(Vector3(1, 1, 1), self.chemicals) / Vector3.dot(Vector3(1, 1, 1), Vector3(1, 1, 1))
+end
+#+END_SRC
 
 *** Affecting emotion
-- Unwieldy to manipulate chemical values directly (what do they mean?)
-- Easier to choose points on the cube we want to move towards (it is clear that
-  this corner of the cube represents the shame emotion for example { 0, 0, 0 })
-- Feed one of these points into the emotion system, this becomes our desired
-  emotion point.
-- Desired emotion vector = desired emotion point - current point
+It is unwieldy to manipulate the chemical values of this system directly (it is
+not clear exactly what they mean). It is much easier to choose points on the
+cube we want to move towards (it is clear that one corner of the cube represents
+the shame emotion for example: { 0, 0, 0 }). We feed one of these points into
+the emotion system, which moves the NPC's emotional level towards this point.
+This new emotional level is used to recalculate the mood.
+
+This is illustrated below:
+
+#+NAME: emotions.lua 
+#+BEGIN_SRC lua
+-- Move the chemical levels towards some emotion point in the Loveheim cube.
+function emotions:affectEmotion(emotionPoint)
+  local emotionVector = emotionPoint - self.chemicals
+  -- Proportion of emotion vector to apply
+  local propApply = 1.0 - (1.0/self.mood)
+  -- Clamp proportion between 0.1 and 0.9 so emotion always has some effect
+  propApply = clamp(propApply, 0.1, 0.9)
+  local scaledEmotionVector = emotionVector * propApply
+
+  self.chemicals = self.chemicals + scaledEmotionVector
+
+  -- Recalc mood
+  self:updateMood()
+end
+#+END_SRC
+
+The algorithm for the above code snippet is listed below:
 - Feed this desired emotion vector into mood.
 - We made the simplifying assumption that when you're in a good mood, both good
   and bad emotions affect you less, when you're in a bood mood though, good and
-  bad emotions are amplified (justify this!)
+  bad emotions are amplified.
 - Emotion vector is scaled by mood:
   - Proportion of emotion vector to apply = 1 - Invert mood (1/moodValue)
   - Clamp proportion between 0.1 and 0.9 (so that an emotion vector always has
@@ -67,27 +229,34 @@
 - We then recalculate mood as above (using dot product).
 
 **** Events and roles
-- An event's effect on an NPC depends on their role. In a soccer game, if a goal
-  is scored, the attackers are happy, the defenders sad and the referee doesn't
-  care too much emotionally.
-- So role determines desired emotion.
-- Event fed to Role -> desired emotion
+The following is not implemented:
+
+We planned to use events to affect the emotional levels of NPCs. The effect an
+event has on an NPC depends on their role. In a soccer game, if a goal is
+scored, the attackers are happy, the defenders are sad and the referee doesn't
+care either way. This event is fed to the AI system, which uses the NPC's role
+to determine what emotion it wants the NPC to move towards.
 
 ** Traits and quirks
 
+The following is not yet implemented:
+
 *** Traits
-- Model traits using traits table (global Lua table)
-- Pre-populated with a list of string-object pairs:
+
+Traits are modelled using the traits table (a global Lua table). This is
+pre-populated with a list of string-object pairs:
   - "traitName": {SerotoninAmplifier value, NoradrenalineAmplifier value,
     DopamineAmplifier value}
-- Models a particular NPC's disposition towards certain emotions.
-- NPC randomly gets assigned two or three traits.
+The traits models a particular NPC's disposition towards certain emotions. The
+NPC randomly gets assigned two or three traits.
 
 *** Quirks
-- Model quirks using quirk table:
+
+Model quirks using quirk table, which maps a quirk name to a Lua function:
   - "quirkName": { function(entity) }
-  - Lua function, passed entityID as argument
-- Each NPC randomly gets assigned one quirk.
-- Quirk function is executed 'every so often'.
-- e.g. "tripOver": { function(entity) { entity:addForce(head, {1, 0, 0}) } }
+This lua function is passed the entityID as argument, allowing the function to
+manipulate the entity passed to it. Each NPC randomly gets assigned one quirk.
+The quirk function is executed by the AI system 'every so often'. An example
+quirk might be:
+ - e.g. "tripsOver": { function(entity) { entity:addForce(head, {1, 0, 0}) } }
 

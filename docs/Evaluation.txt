@@ -1,0 +1,17 @@
+* Evaluation
+
+** What does work?
+- Physics 
+- Rendering
+- Input system
+- Scripting system
+- AI Emotion and mood system
+- Rudimentary AI needs system
+
+** What doesn't work?
+- AI traits, quirks
+- Overarching AI system
+- 3 NPC AI roles
+- Player can't pickup physics objects
+- No broadphase collision detection
+- Collisions between objects with multiple collision shapes (if they're dynamic)

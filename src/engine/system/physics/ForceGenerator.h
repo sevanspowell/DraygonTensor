@@ -28,8 +28,8 @@
 #pragma once
 
 #include <map>
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include "math/Precision.h"
 #include "math/Vector3.h"
@@ -38,6 +38,9 @@
 
 namespace ds_phys
 {
+/**
+ * Interface for all force generators.
+ */
 class IForceGenerator
 {
 public:
@@ -194,11 +197,28 @@ private:
     bool m_isDone;
 };
 
+/**
+ * Force registry to associate rigid bodies with force generators.
+ */
 class ForceRegistry
 {
 public:
+    /**
+     * Add an association between a rigid body and a force generator.
+     *
+     * @param   body   RigidBody *, rigid body.
+     * @param   fg     const std::shared_ptr<IForceGenerator> &, force
+     * generator.
+     */
     void add(RigidBody *body, const std::shared_ptr<IForceGenerator> &fg);
 
+    /**
+     * Remove an association between a rigid body and a force generator.
+     *
+     * @param   body   RigidBody *, rigid body.
+     * @param   fg     const std::shared_ptr<IForceGenerator> &, force
+     * generator.
+     */
     void remove(RigidBody *body, const std::shared_ptr<IForceGenerator> &fg);
 
     /**

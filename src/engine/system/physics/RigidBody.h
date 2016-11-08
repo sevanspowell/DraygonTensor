@@ -40,6 +40,9 @@ namespace ds_phys
 {
 class CollisionPrimitive;
 
+/**
+ * Rigid body class.
+ */
 class RigidBody
 {
 public:

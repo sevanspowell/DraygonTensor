@@ -26,12 +26,12 @@
  */
 #pragma once
 
+#include <cassert>
+#include <engine/system/physics/Contacts.h>
+#include <engine/system/physics/RigidBody.h>
 #include <math/Matrix4.h>
 #include <math/Precision.h>
 #include <math/Vector3.h>
-#include <engine/system/physics/RigidBody.h>
-#include <engine/system/physics/Contacts.h>
-#include <cassert>
 
 /*
 
@@ -57,6 +57,9 @@ namespace ds_phys
 class IntersectionTests;
 class CollisionDetector;
 
+/**
+ * Base collision primitive.
+ */
 class CollisionPrimitive
 {
 
@@ -79,8 +82,16 @@ public:
     */
     ds_math::Matrix4 offset;
 
+    /**
+     * Constructor.
+     */
     CollisionPrimitive();
-    virtual ~CollisionPrimitive() {}
+    /**
+     * Destructor.
+     */
+    virtual ~CollisionPrimitive()
+    {
+    }
 
     /**
     * Calculates the internals for the primitive.
@@ -118,6 +129,9 @@ protected:
 
 }; // end class CollisionPrimitive
 
+/**
+ * Collision box class.
+ */
 class CollisionBox : public CollisionPrimitive
 {
 public:
@@ -127,6 +141,9 @@ public:
     ds_math::Vector3 halfSize;
 }; // end class CollisionBox
 
+/**
+ * Collision sphere class.
+ */
 class CollisionSphere : public CollisionPrimitive
 {
 public:
@@ -136,6 +153,9 @@ public:
     ds_math::scalar radius;
 };
 
+/**
+ * Collision plane class.
+ */
 class CollisionPlane : public CollisionPrimitive
 {
 public:
@@ -150,25 +170,55 @@ public:
     ds_math::scalar offset;
 };
 
+/**
+ * Collision capsule class.
+ */
 class CollisionCapsule : public CollisionPrimitive
 {
-	public:
-		ds_math::scalar height;
-		ds_math::scalar radius;
+public:
+    /** Height of the capsule */
+    ds_math::scalar height;
+    /** Radius of the capsule */
+    ds_math::scalar radius;
 };
 
+/**
+ * Class to hold all intersection tests between primitives.
+ */
 class IntersectionTests
 {
 public:
+    /**
+     * Sphere and half-space intersection test.
+     *
+     * @param   sphere   const CollisionSphere &, collision sphere to check.
+     * @param   plane    const CollisionPlane &, collision plane to check.
+     * @return           bool, true if the objects intersect, false otherwise.
+     */
     static bool sphereAndHalfSpace(const CollisionSphere &sphere,
                                    const CollisionPlane &plane);
 
     /*static bool sphereAndSphere(const CollisionSphere &one,
                                 const CollisionSphere &two); //Unused */
 
+    /**
+     * Box and plane intersection test.
+     *
+     * @param   box   const CollisionBox &, collision box to check.
+     * @param   box   const CollisionBox &, collision box to check.
+     * @return        bool, true if the objects intersect, false otherwise.
+     */
     static bool boxAndBox(const CollisionBox &one, const CollisionBox &two);
 
-    static bool capsuleAndHalfSpace(const CollisionCapsule& cap, const CollisionPlane &plane);
+    /**
+     * Capsule and plane intersection test.
+     *
+     * @param   capsule   const CollisionCapsule &, collision capsule to check.
+     * @param   plane     const CollisionPlane &, collision plane to check.
+     * @return            bool, true if the objects intersect, false otherwise.
+     */
+    static bool capsuleAndHalfSpace(const CollisionCapsule &cap,
+                                    const CollisionPlane &plane);
 
     /**
     * Does an intersection test on an arbitrarily aligned box and a
@@ -190,9 +240,9 @@ public:
 
 
 /**
-    * A helper structure that contains information for the detector to use
-    * in building its contact data.
-    */
+ * A helper structure that contains information for the detector to use
+ * in building its contact data.
+ */
 struct CollisionData
 {
     /**
@@ -249,7 +299,8 @@ struct CollisionData
     */
     void addContacts(unsigned count)
     {
-    	if ((contacts->body[0] == nullptr) && (contacts->body[1] == nullptr)) return;
+        if ((contacts->body[0] == nullptr) && (contacts->body[1] == nullptr))
+            return;
 
         // Reduce the number of contacts remaining, add number used
         contactsLeft -= count;
@@ -302,22 +353,22 @@ public:
                                  CollisionData *data);
 
     static unsigned capsuleAndHalfSpace(const CollisionCapsule &cap,
-            const CollisionPlane &plane,
-            CollisionData *data);
+                                        const CollisionPlane &plane,
+                                        CollisionData *data);
 
     static unsigned capsuleAndSphere(const CollisionCapsule &cap,
-            const CollisionSphere &sphere,
-            CollisionData *data);
+                                     const CollisionSphere &sphere,
+                                     CollisionData *data);
 
 
     static unsigned capsuleAndBox(const CollisionCapsule &cap,
-            const CollisionBox &box,
-            CollisionData *data);
+                                  const CollisionBox &box,
+                                  CollisionData *data);
 
 
     static unsigned capsuleAndCapsule(const CollisionCapsule &cap1,
-            const CollisionCapsule &cap2,
-            CollisionData *data);
+                                      const CollisionCapsule &cap2,
+                                      CollisionData *data);
 }; // end CollisionDetector
 
 } // end namespace
