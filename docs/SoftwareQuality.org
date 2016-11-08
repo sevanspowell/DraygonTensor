@@ -231,6 +231,14 @@ The following unit tests were written:
 
 ** Codestyle
 
-Used .clang-format file and clang-format to ensure that all code was formatted
-the same. This prevents disputes among team members. The .clang-format file is
-included in the submission in the root-directory.
+We used clang-format to ensure that all code was formatted the same. This
+prevents disputes among team members. The .clang-format file is included in the
+submission in the root-directory.
+
+The team put in place code style guidelines and coding standards at the start of
+semester and included compliance with the guidelines in our team charter.
+Unfortunately accountability to these guidelines was not kept over the semester
+and so they were not followed in some instances. 
+
+The CodingStyleGuide.md and CodingStandards.md files can be found in the 'docs/'
+directory of the submission.
