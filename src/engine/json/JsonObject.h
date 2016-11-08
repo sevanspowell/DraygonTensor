@@ -24,6 +24,8 @@
  *
  * Modified by Samuel Evans-Powell
  */
+#pragma once
+
 #include "engine/json/JsonTypes.h"
 
 namespace ds

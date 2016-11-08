@@ -29,6 +29,7 @@
 
 #include <map>
 #include <vector>
+#include <memory>
 
 #include "math/Precision.h"
 #include "math/Vector3.h"
