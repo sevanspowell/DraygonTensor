@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-// #include "engine/ConfigTestSuite.h"
+#include "engine/ConfigTestSuite.h"
 #include "engine/common/CommonTestSuite.h"
 #include "engine/common/StreamBufferTestSuite.h"
 #include "math/Matrix4TestSuite.h"

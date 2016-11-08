@@ -1,10 +1,5 @@
 * Special Features
 
-- Mention CMake cross-platform build
-- Lua script components and parameters
-- Blender export stuff
-- Data files, data-driven development
-
 ** Cross-platform build system
 
 At the beginning of the semester, it was determined that members of the
@@ -310,7 +305,9 @@ scripting API.
 We created a field that allows users to add affordances and their value for each
 object in the world. This is pictured below:
 
-~PIC~
+[[./affordances.png]]
+
+[[./affordancesClose.png]]
 
 These values were then included in the export script.
 
@@ -322,6 +319,8 @@ tensors. We also needed to add this concept to Blender ourselves.
 
 The result is pictured below:
 
-~PIC~
+[[./rigidbody.png]]
+
+[[./rigidbodyClose.png]]
 
 These values were then included in the export script.

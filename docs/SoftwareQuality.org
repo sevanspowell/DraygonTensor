@@ -231,7 +231,7 @@ The following unit tests were written:
 
 ** Codestyle
 
-We used clang-format to ensure that all code was formatted the same. This
+We used clang-format to ensure that all code was formatted consistently. This
 prevents disputes among team members. The .clang-format file is included in the
 submission in the root-directory.
 
@@ -242,3 +242,6 @@ and so they were not followed in some instances.
 
 The CodingStyleGuide.md and CodingStandards.md files can be found in the 'docs/'
 directory of the submission.
+
+Please note that the 'CodingStandards' document references the book found at
+(http://read.pudn.com/downloads106/ebook/438804/CPP101.pdf).
