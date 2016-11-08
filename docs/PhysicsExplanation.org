@@ -435,3 +435,38 @@ All collision shapes however the following set of features:
     than on every calculation.
     + Some helper methods for geting the position and local-axises of the
     collision shape.
+
+The primary reason for this system is to allow us to realistically approximate
+complex 3D rigid bodies using very simple collision detection algoithims.
+
+** Contact Generation
+
+** Physics Resolution
+
+*** General Method
+
+We implemented an iterative solver. An iterative solver loops through a list of
+contacts and attempts to solve the one with the greatest penetration. After
+solving it, it adjusts any dependant contacts, and then iterates again up to a
+certain limit or until all contacts are solved.
+
+Here's the high level algorithim:
+    + Gather Contacts
+    + For all contacts
+        + Precalculate certain data (change in speed etc.)
+    + Repeat until no penetrations are left or until X attempts
+        + Find largest penetration
+        + Resolve penetration
+        + Update penetrations
+    + Repeat until no velocity changes meet a threshold or until Y attempts
+        + Find largest potencial velocity change
+        + Resolve velocity change
+        + Update velocity changes
+
+This has the advantage that we can spread the solving of contacts across
+multiple frames if we so desire but introduces ordering problems as the order
+of resolution may affect the outcome of the simulation. It also has the problem
+of being discrete rather than continuous which introduces issues such as
+tunneling (objects going through one another). We implemented infinite-sized
+planes to combat this issue as it's impossible to tunnel through them, allowing
+the play area to be fully bounded if desired.
