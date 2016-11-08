@@ -439,16 +439,14 @@ All collision shapes however the following set of features:
 The primary reason for this system is to allow us to realistically approximate
 complex 3D rigid bodies using very simple collision detection algoithims.
 
-** Contact Generation
-
 ** Physics Resolution
 
 *** General Method
 
-We implemented an iterative solver. An iterative solver loops through a list of
-contacts and attempts to solve the one with the greatest penetration. After
-solving it, it adjusts any dependant contacts, and then iterates again up to a
-certain limit or until all contacts are solved.
+We implemented an iterative impulse-based solver. An iterative solver loops
+through a list of contacts and attempts to solve the one with the greatest
+penetration. After solving it, it adjusts any dependant contacts, and then
+iterates again up to a certain limit or until all contacts are solved.
 
 Here's the high level algorithim:
     + Gather Contacts
@@ -511,3 +509,54 @@ The high level of the algorithim we used for this was:
         + Apply the angular movement
         + If the body isn't sleeping, then
             + Recalculate the dependant data
+
+It's worth noting that angular correction is not taken into account when
+resolving penitration depth as it would require recalculating the contact, which
+is too expensive to perform given the number of possible contacts pairs. This is
+another reason why angular change is limited, as cumulative angular corrections
+can result in over-turning an object.
+
+*** Linear/Angular Velocity change
+
+Once the positions have been corrected we need correct velocities to be
+consistant with the physical system we're simulating.
+
+Bellow is the high-level calculation for the impulse force:
+    + Calculate the total amount of acceleration done in the frame along the
+    collision normal.
+    + Drop the resitution calculation for impacts less than a certain total
+    velocity.
+    + Calculate the relative velocity of seperation, ignoring the acceleration
+    during that frame (not realitic, but in a simulation like this getting the
+    correct acceleration)
+    + Calulate the total energy from the resulting collision as a desired change
+    in velocity
+
+We use the frictionless collision impulse calculation to calulate the
+frictionless impulse. The top half of the formula, the desired change in
+velocity is calulcated in the section above:
+    + Calculate the linear and angular inertia of each body including the
+    momentum along the collision normal.
+    + Add the inertia of each object in the collision together
+    + If the result is 0
+        + return a force of 0
+        + Otherwise, divide the desired change in velocity by the inertia to get
+        the frictionless impulse and return.
+
+The friction-based inpule calulation is a little hard to explain as it
+implements ansiotropic friction. The rough gist of the high level arlgorthim is:
+    + Calculate angular and linear veloicty changes seperately
+    + Calculate a matrix to transform impulses based on the velocity and angular
+    changes in contact space.
+    + Calculate ansiotropic friction forces that oppose the rotation and linear
+    movement in directions other than the contact normal.
+    + Apply the friction to the angular and linear velocity changes.
+
+This results in friction effectively being applied as a planar force
+perpendicular to the collision normal, resiting certain kinds of movements and
+causing things to pivot and rotate rather than slide.
+
+
+
+
+.
