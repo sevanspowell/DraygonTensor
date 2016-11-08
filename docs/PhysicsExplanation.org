@@ -471,29 +471,43 @@ tunneling (objects going through one another). We implemented infinite-sized
 planes to combat this issue as it's impossible to tunnel through them, allowing
 the play area to be fully bounded if desired.
 
-*** Special Notes
+*** Special Note
 
 The majority of collision calulations take place in "collision space". In this
 space the collision normal is mapped to the x-axis with the other two axies
 being perpendicular. This is to allow the precalulation of common data sets and
 to simplify calculations involving the collision normal.
 
-Simplifying a calulation like:
+Allowing us to simplify equations involving th contact normal in many cases.
 
-#+NAME: PhysicsWorld.cpp
-#+BEGIN_SRC c++
+*** Position Correction
 
-Λ = n * ((-(1 + ε)*((n * (V1 - V2)) + ω1*(r1 * n) - ω2*(r2 * n))) /
-         (1/m2 + 1/m2 + ((r1 * n) * J1 * (r1 * n) + (r2 * n)*J2*(r2 * n))))
+Since our collision system is discrete, we need to correct the position of
+objects when they're detected as penetration occurs.　A naive implmentation
+would just move the object along the collision normal far enough to resolve the
+penitration. However, this is incorrect. The penitation depth is represents an
+amount of energy, that would otherwise be lost if not corrected propperly by
+changing both the distance of the object from the edge and the orientation of
+the object. This results in a more realistic collision result by propperly
+conserving and applying energy.
 
-#+END_SRC
-
-into
-
-#+NAME: PhysicsWorld.cpp
-#+BEGIN_SRC c++
-
-Λ = n * (-(1 + ε)*((V1 - V2) + ω1*r1 - ω2*r2)) /
-        (1/m2 + 1/m2 + (J1 * r1^2 + J2 * r2^2))
-
-#+END_SRC
+The high level of the algorithim we used for this was:
+    + For each body in the collision
+        + Calculate the seperate and total linear and angular intertia
+            + We convert angular intertia around the collision normal into 'linear'
+            intertia frictionessly, as we apply friction later to get a more
+            accurate result.
+            + This gives us an upper limit to how much energy we can use and a
+            ratio between linear and rotational energy
+        + Calculate how much to move linearly and angularly based on the total
+          inertia and the ratio.
+          + We then also limit the anguar change to prevent things from rolling
+          around like a coin too often or constantly flipping over. We
+          componsate the linear move with the energy lost from the angular
+          movement cap by adding it to the linear movement.
+        + Calculate how far to actually rotate given the amount of energy.
+        + Calulate how far to actually move linearly given the amount of energy
+        + Apply the linear movement
+        + Apply the angular movement
+        + If the body isn't sleeping, then
+            + Recalculate the dependant data
