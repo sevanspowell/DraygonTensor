@@ -1,7 +1,7 @@
 * Software Quality
 
 ** Testing
-
+   
 All unit-testing was done using the GoogleTest unit-testing framework. 
 
 These tests are run from a separate executable built as part of building the
@@ -228,3 +228,9 @@ The following unit tests were written:
 "StreamBuffer::SetStreamBuffer"
 "StreamBuffer::SetStreamBufferLargerStructure"
 #+END_SRC
+
+** Codestyle
+
+Used .clang-format file and clang-format to ensure that all code was formatted
+the same. This prevents disputes among team members. The .clang-format file is
+included in the submission in the root-directory.
