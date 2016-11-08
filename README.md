@@ -2,8 +2,6 @@
 
 [![Built with Spacemacs](https://cdn.rawgit.com/syl20bnr/spacemacs/442d025779da2f62fc86c2082703697714db6514/assets/spacemacs-badge.svg)](http://github.com/syl20bnr/spacemacs)
 
-![Draygon](http://vignette4.wikia.nocookie.net/metroid/images/2/25/Draygon.jpg/revision/latest?cb=20131117053231)
-
 *The above image file is copyrighted by Nintendo or another organization. The individual who uploaded this work and first used it in an article, and later persons who place it into articles, assert that this qualifies as fair use of the material under United States copyright law.*
 
 ## Prerequisites 
