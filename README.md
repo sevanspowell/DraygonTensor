@@ -72,4 +72,4 @@ Before contributing, consult the [contribution guidelines](https://github.com/sa
     
 ## API
 
-API can be found [here](https://samdelion.github.io/DraygonTensor-api/).
+API can be found [here](https://sevanspowell.github.io/DraygonTensor-api/).
