@@ -135,9 +135,8 @@ const char *Input::GetName() const
     return ds_lua::inputSystemLuaName;
 }
 
-ScriptBindingSet Input::GetScriptBindings() const
+void Input::RegisterScriptBindings(lua_State *L)
 {
-    return ds_lua::LoadInputScriptBindings();
 }
 
 bool Input::WasKeyReleased(const std::string &keyName) const

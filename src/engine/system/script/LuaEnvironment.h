@@ -180,6 +180,13 @@ public:
                        const luaL_Reg *functions,
                        const luaL_Reg *special);
 
+    /**
+     * Get the Lua environment state.
+     *
+     * @return   lua_State *, lua state.
+     */
+    lua_State *GetState();
+
 private:
     // Prevent the LuaEnvironment from being copied.
     LuaEnvironment(const LuaEnvironment &);

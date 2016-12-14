@@ -95,12 +95,9 @@ public:
     virtual const char *GetName() const;
 
     /**
-     * Return required script bindings.
-     *
-     * @return  ScriptBindingSet, the script bindings the input system wants to
-     * register with the Script system.
+     * @copydoc ISystem::RegisterScriptBindings(lua_State *L)
      */
-    virtual ScriptBindingSet GetScriptBindings() const;
+    virtual void RegisterScriptBindings(lua_State *L);
 
     /**
      * Return true if the given key is not pressed this frame but was last

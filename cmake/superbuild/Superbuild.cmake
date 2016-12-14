@@ -107,6 +107,17 @@ else (NOT assimp_FOUND)
   set (ASSIMP_ROOT_DIR ${ASSIMP_INCLUDE_DIRS}/..)
 endif (NOT assimp_FOUND)
 
+# Try to find LuaBridge
+set(LUABRIDGE_ROOT_DIR ${CMAKE_SOURCE_DIR}/../../external/LuaBridge)
+find_package(LuaBridge)
+if (NOT LUABRIDGE_FOUND)
+  message("Will download LuaBridge..")
+  include(${CMAKE_SOURCE_DIR}/External-LuaBridge.cmake)
+  list(APPEND DRUNKEN_SAILOR_ENGINE_DEPENDENCIES LuaBridge)
+else (NOT LUABRIDGE_FOUND)
+  set (LUABRIDGE_ROOT_DIR ${LUABRIDGE_INCLUDE_DIR}/..)
+endif (NOT LUABRIDGE_FOUND)
+
 set(DS_LUAJIT_WORKAROUND 0 CACHE BOOL "Enable workaround")
 
 ExternalProject_Add(
@@ -126,6 +137,7 @@ ExternalProject_Add(
     -DSFML_ROOT=${SFML_ROOT}
     -DASSIMP_ROOT_DIR=${ASSIMP_ROOT_DIR}
     -DSTB_BASE_DIR=${STB_BASE_DIR}
+    -DLUABRIDGE_ROOT_DIR=${LUABRIDGE_ROOT_DIR}
 		-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
 	-DDS_LUAJIT_WORKAROUND=${DS_LUAJIT_WORKAROUND}

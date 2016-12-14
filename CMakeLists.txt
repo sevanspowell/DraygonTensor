@@ -95,8 +95,13 @@ if (WIN32)
   list(APPEND REQUIRED_DLLS ${ASSIMP_ROOT_DIR}/bin/assimp-${ASSIMP_MSVC_VERSION}-mt.dll)
 endif(WIN32)
 
+# Find LuaBridge
+find_package(LuaBridge REQUIRED)
+include_directories(SYSTEM ${LUABRIDGE_INCLUDE_DIR})
+
 if (DS_LUAJIT_WORKAROUND)
 	add_definitions(-DDS_LUAJIT_WORKAROUND)
 endif (DS_LUAJIT_WORKAROUND)
+
 
 subdirs(src test project)

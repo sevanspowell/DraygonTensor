@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "engine/Engine.h"
 #include "engine/system/Console.h"
 #include "engine/system/input/Input.h"
